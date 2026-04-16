@@ -484,6 +484,43 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
+  /* === SCROLL REVEAL === */
+  .reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Stagger children inside a reveal group */
+  .reveal-group.visible > .reveal-child:nth-child(1) { transition-delay: 0s; }
+  .reveal-group.visible > .reveal-child:nth-child(2) { transition-delay: 0.12s; }
+  .reveal-group.visible > .reveal-child:nth-child(3) { transition-delay: 0.24s; }
+  .reveal-group.visible > .reveal-child:nth-child(4) { transition-delay: 0.36s; }
+  .reveal-child {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+  .reveal-group.visible > .reveal-child {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal, .reveal-child {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+  }
+
   /* Trajectory line motif */
   .trajectory {
     position: absolute;
@@ -1126,7 +1163,7 @@
   <div class="container">
     <div class="hero-inner">
       <span class="eyebrow">AI Automation Agency</span>
-      <h1>The systems that<br/>run your business <span class="accent">for you.</span></h1>
+      <h1>AI systems that<br/>run your business <span class="accent">for you.</span></h1>
       <p class="hero-sub">We build and deploy custom AI workflows that eliminate the manual, repetitive work eating your team's time. Done-for-you, not done-with-you.</p>
       <div class="hero-ctas">
         <a href="#book" class="btn-primary">
@@ -1143,14 +1180,14 @@
 <!-- SERVICES -->
 <section class="services" id="services">
   <div class="container">
-    <div class="section-header">
+    <div class="section-header reveal">
       <div class="section-label">What we build</div>
       <h2 class="section-title">Workflows that drive outcomes, not tools that drain budget.</h2>
       <p class="section-sub">We don't sell software. We sell systems that run themselves. Every engagement starts with a discovery call to map what's broken, then we build exactly what your business needs.</p>
     </div>
 
-    <div class="services-grid">
-      <div class="service-card">
+    <div class="services-grid reveal-group">
+      <div class="service-card reveal-child">
         <span class="service-number">01 / LEAD GEN</span>
         <svg class="service-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M8 20 L20 8 L32 20 L20 32 Z" stroke="currentColor" stroke-width="1.5"/>
@@ -1161,7 +1198,7 @@
         <p class="service-desc">Automated systems that fill your pipeline with qualified, interested leads. ICP targeting, enrichment, personalised outreach, and deliverability infrastructure, all running on autopilot.</p>
       </div>
 
-      <div class="service-card">
+      <div class="service-card reveal-child">
         <span class="service-number">02 / WORKFLOW</span>
         <svg class="service-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect x="6" y="8" width="10" height="10" stroke="currentColor" stroke-width="1.5"/>
@@ -1173,7 +1210,7 @@
         <p class="service-desc">Eliminate the manual processes dragging down your team. Quoting, invoicing, reporting, onboarding, data entry, all the repetitive admin work, handled automatically.</p>
       </div>
 
-      <div class="service-card">
+      <div class="service-card reveal-child">
         <span class="service-number">03 / AI INTEGRATION</span>
         <svg class="service-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="20" cy="20" r="6" stroke="currentColor" stroke-width="1.5"/>
@@ -1194,7 +1231,7 @@
 <!-- CASE STUDY -->
 <section class="case-study" id="case-study">
   <div class="container">
-    <div class="case-study-inner">
+    <div class="case-study-inner reveal">
       <div>
         <span class="case-tag">Proven Result</span>
         <div class="case-number">£200K+</div>
@@ -1227,14 +1264,14 @@
 <!-- PROOF STATS (n8n dashboards) -->
 <section class="proof-stats" id="proof">
   <div class="container">
-    <div class="proof-header">
+    <div class="proof-header reveal">
       <div class="section-label">What's possible</div>
       <h2 class="section-title">Whether a small team or a large enterprise.</h2>
       <p class="section-sub" style="margin-left: auto; margin-right: auto;">Automation scales with you. These dashboards show what's possible when workflows run themselves, at any stage of business.</p>
     </div>
 
     <!-- Small team dashboard -->
-    <div class="dashboard">
+    <div class="dashboard reveal">
       <div class="dashboard-header">
         <div class="dashboard-title-group">
           <h3>Small team operations</h3>
@@ -1267,7 +1304,7 @@
     </div>
 
     <!-- Large enterprise dashboard -->
-    <div class="dashboard">
+    <div class="dashboard reveal">
       <div class="dashboard-header">
         <div class="dashboard-title-group">
           <h3>Large enterprise operations</h3>
@@ -1306,26 +1343,26 @@
 <!-- PROCESS -->
 <section class="process" id="process">
   <div class="container">
-    <div class="section-header">
+    <div class="section-header reveal">
       <div class="section-label">How it works</div>
       <h2 class="section-title">From broken workflow to deployed system in weeks.</h2>
       <p class="section-sub">Most automation agencies charge £10k+ and take six months. We scope tight, ship fast, and hand over working systems.</p>
     </div>
 
-    <div class="process-steps">
-      <div class="process-step">
+    <div class="process-steps reveal-group">
+      <div class="process-step reveal-child">
         <div class="step-number">DISCOVERY CALL</div>
         <h3 class="step-title">Map what's broken.</h3>
         <p class="step-desc">A 30-minute call where we dig into your workflow, find what's eating your team's time, and identify what's automatable. No pitch deck. No fluff.</p>
       </div>
 
-      <div class="process-step">
+      <div class="process-step reveal-child">
         <div class="step-number">CUSTOM PROPOSAL</div>
         <h3 class="step-title">Scoped and priced.</h3>
         <p class="step-desc">Within 48 hours you get a written proposal with the exact deliverables, timeline, and fixed price. Nothing ambiguous. No surprise invoices.</p>
       </div>
 
-      <div class="process-step">
+      <div class="process-step reveal-child">
         <div class="step-number">BUILD &amp; DEPLOY</div>
         <h3 class="step-title">Live in weeks.</h3>
         <p class="step-desc">We build it, test it, deploy it, and hand over written SOPs so your team can run it without us. Optional retainer for ongoing iteration and maintenance.</p>
@@ -1337,7 +1374,7 @@
 <!-- FINAL CTA -->
 <section class="final-cta" id="book">
   <div class="container">
-    <div class="final-cta-inner">
+    <div class="final-cta-inner reveal">
       <div class="section-label" style="justify-content: center;">Let's talk</div>
       <h2>What's broken in your business?</h2>
       <p>Book a 30-minute discovery call. We'll diagnose your workflow and show you exactly what's automatable, no strings.</p>
@@ -1411,6 +1448,35 @@
         toggle.classList.remove('open');
         toggle.setAttribute('aria-expanded', 'false');
       });
+    });
+  })();
+</script>
+
+<script>
+  // ===== SCROLL REVEAL =====
+  (function() {
+    if (!('IntersectionObserver' in window)) {
+      // Fallback: just show everything
+      document.querySelectorAll('.reveal, .reveal-group').forEach(function(el) {
+        el.classList.add('visible');
+      });
+      return;
+    }
+
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {
+      threshold: 0.15,
+      rootMargin: '0px 0px -60px 0px'
+    });
+
+    document.querySelectorAll('.reveal, .reveal-group').forEach(function(el) {
+      observer.observe(el);
     });
   })();
 </script>
