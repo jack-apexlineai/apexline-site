@@ -174,23 +174,37 @@ footer a:hover{color:var(--text)}
 .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
 .reveal.in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}}
-/* intro: logo pops up, the bead runs once round the ring, then the page shows. Pure CSS, ends itself. */
+/* intro: luxury loader. Logo resolves out of blur, a comet runs once round the ring, light sweeps the A, wordmark settles, then the page is revealed. Pure CSS, ends itself. */
 .intro{display:none}
-html.has-intro .intro{display:flex;position:fixed;inset:0;z-index:9999;background:var(--bg);align-items:center;justify-content:center;cursor:pointer;animation:introOut .35s ease .9s forwards}
-.intro:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(77,168,255,.10) 0%,transparent 55%);pointer-events:none}
-.ilogo{position:relative;width:140px;height:140px;animation:iPop .35s cubic-bezier(.2,.8,.2,1) both}
+html.has-intro .intro{display:flex;position:fixed;inset:0;z-index:9999;background:#070A12;align-items:center;justify-content:center;cursor:pointer;animation:iOut .7s cubic-bezier(.4,0,.2,1) 2.25s forwards}
+.intro:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 46%,rgba(77,168,255,.13) 0%,rgba(77,168,255,.04) 28%,transparent 55%);opacity:0;animation:iFade 1.4s ease .1s forwards;pointer-events:none}
+.ibox{position:relative;display:flex;flex-direction:column;align-items:center;animation:iBoxOut .75s cubic-bezier(.4,0,.2,1) 2.15s forwards}
+.ilogo{position:relative;width:168px;height:168px;opacity:0;animation:iIn 1s cubic-bezier(.22,1,.36,1) .05s forwards}
 .ilogo img{width:100%;height:100%;display:block}
-.orbit{position:absolute;inset:0;animation:iSpin .75s cubic-bezier(.6,0,.3,1) .1s both}
-.orbit b{position:absolute;left:49.9%;top:7.5%;width:4.6%;height:4.6%;margin:-2.3% 0 0 -2.3%;border-radius:50%;background:#8FF4FF;box-shadow:0 0 6px 2px rgba(80,230,255,.9),0 0 18px 5px rgba(77,168,255,.45)}
-@keyframes iPop{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:scale(1)}}
+.isheen{position:absolute;inset:0;-webkit-mask:url(img/apex-ring.webp) center/100% no-repeat;mask:url(img/apex-ring.webp) center/100% no-repeat;overflow:hidden;pointer-events:none}
+.isheen:after{content:"";position:absolute;top:-20%;bottom:-20%;left:0;width:45%;background:linear-gradient(100deg,transparent 0%,rgba(255,255,255,0) 20%,rgba(255,255,255,.75) 50%,rgba(255,255,255,0) 80%,transparent 100%);transform:translateX(-160%) skewX(-12deg);animation:iSheen .95s cubic-bezier(.45,0,.2,1) 1.55s forwards}
+.orbit{position:absolute;inset:0;animation:iSpin 1.3s cubic-bezier(.62,0,.28,1) .45s both}
+.itail{position:absolute;inset:0;border-radius:50%;opacity:0;background:conic-gradient(from 0deg,rgba(120,235,255,0) 0deg,rgba(120,235,255,0) 250deg,rgba(120,235,255,.85) 360deg);
+  -webkit-mask:radial-gradient(circle closest-side,transparent 83.6%,#000 84.4%,#000 86%,transparent 86.8%);mask:radial-gradient(circle closest-side,transparent 83.6%,#000 84.4%,#000 86%,transparent 86.8%);animation:iTail 1.3s ease .45s forwards}
+.orbit b{position:absolute;left:49.9%;top:7.5%;width:4.6%;height:4.6%;margin:-2.3% 0 0 -2.3%;border-radius:50%;background:#B8F8FF;box-shadow:0 0 6px 2px rgba(110,235,255,.95),0 0 22px 6px rgba(77,168,255,.45);opacity:0;animation:iBead 1.6s ease .4s forwards}
+.iword{margin-top:26px;font-family:var(--display);font-weight:500;font-size:13px;letter-spacing:.55em;padding-left:.55em;color:#C9D6E3;opacity:0;transform:translateY(8px);animation:iWord .9s cubic-bezier(.22,1,.36,1) .95s forwards}
+.iline{margin-top:14px;height:1px;width:0;background:linear-gradient(90deg,transparent,rgba(120,200,255,.8),transparent);animation:iLine 1.1s cubic-bezier(.65,0,.35,1) 1.05s forwards}
+@keyframes iFade{to{opacity:1}}
+@keyframes iIn{0%{opacity:0;transform:scale(.9);filter:blur(12px)}100%{opacity:1;transform:scale(1);filter:blur(0)}}
 @keyframes iSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-@keyframes introOut{to{opacity:0;visibility:hidden;pointer-events:none}}
+@keyframes iTail{0%{opacity:0}18%{opacity:1}78%{opacity:1}100%{opacity:0}}
+@keyframes iBead{0%{opacity:0}15%{opacity:1}82%{opacity:1;transform:scale(1)}90%{transform:scale(1.7);box-shadow:0 0 10px 4px rgba(140,240,255,1),0 0 34px 12px rgba(77,168,255,.55)}100%{opacity:1;transform:scale(1)}}
+@keyframes iSheen{to{transform:translateX(330%) skewX(-12deg)}}
+@keyframes iWord{to{opacity:1;transform:none}}
+@keyframes iLine{to{width:150px}}
+@keyframes iBoxOut{to{opacity:0;transform:scale(1.06);filter:blur(4px)}}
+@keyframes iOut{to{opacity:0;visibility:hidden;pointer-events:none}}
 </style>
 <link rel="preload" as="image" href="img/apex-ring.webp">
 <script>(function(){try{var calm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;if(!calm&&!location.hash&&!sessionStorage.getItem('apexIntro')){sessionStorage.setItem('apexIntro','1');document.documentElement.classList.add('has-intro');}}catch(e){}})();</script>
 </head>
 <body>
-<div class="intro" id="intro" aria-hidden="true"><div class="ilogo"><img src="img/apex-ring.webp" alt="" width="140" height="140"><i class="orbit"><b></b></i></div></div>
+<div class="intro" id="intro" aria-hidden="true"><div class="ibox"><div class="ilogo"><img src="img/apex-ring.webp" alt="" width="168" height="168"><div class="isheen"></div><div class="orbit"><i class="itail"></i><b></b></div></div><div class="iword">APEXLINE</div><div class="iline"></div></div></div>
 
 <nav><div class="wrap">
   <a class="logo" href="#top"><img class="mark" src="img/apex-logo.webp" alt="" width="34" height="34">ApexLine</a>
@@ -367,7 +381,7 @@ html.has-intro .intro{display:flex;position:fixed;inset:0;z-index:9999;backgroun
     var on=document.documentElement.classList.contains('has-intro'), ov=document.getElementById('intro');
     if(!on||!ov){ if(ov) ov.remove(); startReveal(); return; }
     var done=false; function end(){ if(done) return; done=true; document.documentElement.classList.remove('has-intro'); if(ov.parentNode) ov.remove(); }
-    setTimeout(startReveal,850); setTimeout(end,1300);
+    setTimeout(startReveal,2350); setTimeout(end,3000);
     ov.addEventListener('click',function(){ end(); startReveal(); });
   })();
   var bt=document.querySelectorAll('#billing button');
