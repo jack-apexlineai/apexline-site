@@ -181,7 +181,7 @@ html.has-intro .intro{display:flex;position:fixed;inset:0;z-index:9999;backgroun
 .ibox{position:relative;display:flex;flex-direction:column;align-items:center;animation:iBoxOut .75s cubic-bezier(.4,0,.2,1) 2.15s forwards}
 .ilogo{position:relative;width:168px;height:168px;opacity:0;animation:iIn 1s cubic-bezier(.22,1,.36,1) .05s forwards}
 .ilogo img{width:100%;height:100%;display:block}
-.isheen{position:absolute;inset:0;-webkit-mask:url(img/apex-ring.webp) center/100% no-repeat;mask:url(img/apex-ring.webp) center/100% no-repeat;overflow:hidden;pointer-events:none}
+.isheen{position:absolute;inset:0;-webkit-mask:url(img/apex-ring-v2.webp) center/100% no-repeat;mask:url(img/apex-ring-v2.webp) center/100% no-repeat;overflow:hidden;pointer-events:none}
 .isheen:after{content:"";position:absolute;top:-20%;bottom:-20%;left:0;width:45%;background:linear-gradient(100deg,transparent 0%,rgba(255,255,255,0) 20%,rgba(255,255,255,.9) 50%,rgba(255,255,255,0) 80%,transparent 100%);transform:translateX(-160%) skewX(-12deg);animation:iSheen .95s cubic-bezier(.45,0,.2,1) 1.55s forwards}
 .orbit{position:absolute;inset:0;animation:iSpin 1.3s cubic-bezier(.62,0,.28,1) .45s both}
 .itail{position:absolute;inset:0;border-radius:50%;opacity:0;background:conic-gradient(from 0deg,rgba(120,235,255,0) 0deg,rgba(120,235,255,0) 200deg,rgba(150,240,255,1) 360deg);
@@ -200,11 +200,11 @@ html.has-intro .intro{display:flex;position:fixed;inset:0;z-index:9999;backgroun
 @keyframes iBoxOut{to{opacity:0;transform:scale(1.06);filter:blur(4px)}}
 @keyframes iOut{to{opacity:0;visibility:hidden;pointer-events:none}}
 </style>
-<link rel="preload" as="image" href="img/apex-ring.webp">
+<link rel="preload" as="image" href="img/apex-ring-v2.webp">
 <script>(function(){try{var calm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;if(!calm&&!location.hash&&!sessionStorage.getItem('apexIntro')){sessionStorage.setItem('apexIntro','1');document.documentElement.classList.add('has-intro');}}catch(e){}})();</script>
 </head>
 <body>
-<div class="intro" id="intro" aria-hidden="true"><div class="ibox"><div class="ilogo"><img src="img/apex-ring.webp" alt="" width="168" height="168"><div class="isheen"></div><div class="orbit"><i class="itail"></i><b></b></div></div><div class="iword">APEXLINE</div><div class="iline"></div></div></div>
+<div class="intro" id="intro" aria-hidden="true"><div class="ibox"><div class="ilogo"><img src="img/apex-ring-v2.webp" alt="" width="168" height="168"><div class="isheen"></div><div class="orbit"><i class="itail"></i><b></b></div></div><div class="iword">APEXLINE</div><div class="iline"></div></div></div>
 
 <nav><div class="wrap">
   <a class="logo" href="#top"><img class="mark" src="img/apex-logo.webp" alt="" width="34" height="34">ApexLine</a>
