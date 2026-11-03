@@ -41,6 +41,7 @@ nav{position:sticky;top:0;z-index:50;background:rgba(11,15,26,.78);backdrop-filt
 nav .wrap{display:flex;align-items:center;height:68px;gap:28px}
 .logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:600;font-size:20px}
 .logo svg{width:30px;height:30px}
+.logo .mark{width:34px;height:34px;display:block}
 nav .links{display:flex;gap:26px;margin-left:auto;font-family:var(--ui);font-weight:500;font-size:15px;color:var(--silver)}
 nav .links a:hover{color:var(--text)}
 nav .btn{padding:10px 16px;font-size:14px}
@@ -173,23 +174,22 @@ footer a:hover{color:var(--text)}
 .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
 .reveal.in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}}
-/* intro */
-.intro{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;transition:opacity .55s ease;cursor:pointer}
-.intro:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(77,168,255,.13) 0%,transparent 55%);pointer-events:none}
-.intro svg{position:relative;width:120px;height:120px;transition:transform .9s cubic-bezier(.65,0,.35,1);filter:drop-shadow(0 0 28px rgba(77,168,255,.35))}
-.intro rect{opacity:0;animation:inFade .5s ease .05s forwards}
-.intro path{stroke-dasharray:60;stroke-dashoffset:60;animation:inDraw 1s cubic-bezier(.4,0,.2,1) .25s forwards}
+/* intro: the ApexLine mark pops up, then flies into the nav */
+.intro{position:fixed;inset:0;z-index:9999;background:rgba(11,15,26,1);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background-color .8s ease,opacity .4s ease}
+.intro:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(77,168,255,.10) 0%,transparent 55%);pointer-events:none;transition:opacity .6s}
+.intro.fade{background-color:rgba(11,15,26,0);pointer-events:none}
+.intro.fade:before{opacity:0}
+.intro img{position:relative;width:150px;height:150px;opacity:0;transform:scale(.82);animation:logoPop .9s cubic-bezier(.2,.8,.2,1) .2s forwards;transition:transform 1.1s cubic-bezier(.65,0,.35,1)}
 .intro.out{opacity:0;pointer-events:none}
-@keyframes inFade{to{opacity:1}}
-@keyframes inDraw{to{stroke-dashoffset:0}}
-body.intro-on nav .logo svg{visibility:hidden}
+@keyframes logoPop{0%{opacity:0;transform:scale(.82)}60%{opacity:1;transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
+body.intro-on nav .logo .mark{visibility:hidden}
 </style>
 </head>
 <body>
-<div class="intro" id="intro" aria-hidden="true" hidden><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#121829"/><path d="M6 26 L16 6 L26 26 M10.5 19 L21.5 19" stroke="#4DA8FF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
+<div class="intro" id="intro" aria-hidden="true" hidden><img src="img/apex-logo.webp" alt="" width="150" height="150"></div>
 
 <nav><div class="wrap">
-  <a class="logo" href="#top"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#121829"/><path d="M6 26 L16 6 L26 26 M10.5 19 L21.5 19" stroke="#4DA8FF" stroke-width="2.5" fill="none"/></svg>ApexLine</a>
+  <a class="logo" href="#top"><img class="mark" src="img/apex-logo.webp" alt="" width="34" height="34">ApexLine</a>
   <div class="links"><a href="#features">WasteLine</a><a href="#pricing">Pricing</a><a href="#custom">Custom builds</a><a href="case-study.html">Case study</a><a href="#faq">FAQ</a></div>
   <a class="btn btn-p" href="book.html">Book a demo</a>
 </div></nav>
@@ -263,7 +263,7 @@ body.intro-on nav .logo svg{visibility:hidden}
     <div class="txt reveal"><div class="mono">Reports</div><h2 style="margin:12px 0 14px">Know your numbers without opening a spreadsheet.</h2>
       <p class="muted">A clean business report on any dates you choose, or sent automatically. Revenue, average order, jobs by service, lorry profit and who owes you.</p>
       <ul><li>Compare against the period before</li><li>Emailed at 7am on your schedule</li><li>Saved in your Google Drive</li></ul></div>
-    <div class="shot reveal"><img src="img/wl-report.webp" alt="WasteLine business report PDF" width="820" height="1000"></div>
+    <div class="shot reveal"><img src="img/wl-report.webp" alt="WasteLine business report PDF" width="820" height="1176"></div>
   </div>
 </div></section>
 
@@ -349,7 +349,7 @@ body.intro-on nav .logo svg{visibility:hidden}
 </div></section>
 
 <footer><div class="wrap">
-  <span class="logo" style="font-size:16px"><svg viewBox="0 0 32 32" style="width:24px;height:24px"><rect width="32" height="32" rx="7" fill="#121829"/><path d="M6 26 L16 6 L26 26 M10.5 19 L21.5 19" stroke="#4DA8FF" stroke-width="2.5" fill="none"/></svg>ApexLine</span>
+  <span class="logo" style="font-size:16px"><img class="mark" src="img/apex-logo.webp" alt="" width="26" height="26" style="width:26px;height:26px">ApexLine</span>
   <span>WasteLine is a product of ApexLine. © 2026</span>
   <div class="r"><a href="mailto:apexlineai@gmail.com">apexlineai@gmail.com</a><a href="https://wa.me/447949088642" target="_blank" rel="noopener">+44 7949 088642</a></div>
 </div></footer>
@@ -358,21 +358,23 @@ body.intro-on nav .logo svg{visibility:hidden}
 (function(){
   var io=('IntersectionObserver' in window)?new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.05}):null;
   function startReveal(){ document.querySelectorAll('.reveal').forEach(function(el){ if(io) io.observe(el); else el.classList.add('in'); }); }
-  // Intro: the A draws itself, then flies into the nav logo. Once per visit.
+  // Intro: the ApexLine mark pops up, then flies into the nav logo. Once per visit.
   (function(){
     var ov=document.getElementById('intro'), seen=false, calm=false;
     try{ seen=!!sessionStorage.getItem('apexIntro'); sessionStorage.setItem('apexIntro','1'); }catch(e){}
     try{ calm=window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
     if(!ov||seen||calm||location.hash){ startReveal(); return; }
-    var body=document.body, svg=ov.querySelector('svg'), done=false, t=[];
+    var body=document.body, logo=ov.querySelector('img'), done=false, t=[];
     ov.hidden=false; body.classList.add('intro-on');
-    function finish(){ if(done) return; done=true; t.forEach(clearTimeout); ov.classList.add('out'); body.classList.remove('intro-on'); startReveal(); setTimeout(function(){ ov.remove(); },600); }
+    function finish(){ if(done) return; done=true; t.forEach(clearTimeout); ov.classList.add('out'); body.classList.remove('intro-on'); startReveal(); setTimeout(function(){ ov.remove(); },800); }
+    t.push(setTimeout(function(){ logo.style.animation='none'; logo.style.opacity='1'; logo.style.transform='scale(1)'; },1150));
     t.push(setTimeout(function(){
-      var to=document.querySelector('nav .logo svg'); if(!to){ finish(); return; }
-      var a=svg.getBoundingClientRect(), b=to.getBoundingClientRect();
-      svg.style.transform='translate('+((b.left+b.width/2)-(a.left+a.width/2))+'px,'+((b.top+b.height/2)-(a.top+a.height/2))+'px) scale('+(b.width/a.width)+')';
-    },1350));
-    t.push(setTimeout(finish,2250));
+      var to=document.querySelector('nav .logo .mark'); if(!to){ finish(); return; }
+      var a=logo.getBoundingClientRect(), b=to.getBoundingClientRect();
+      ov.classList.add('fade'); startReveal();
+      logo.style.transform='translate('+((b.left+b.width/2)-(a.left+a.width/2))+'px,'+((b.top+b.height/2)-(a.top+a.height/2))+'px) scale('+(b.width/a.width)+')';
+    },1500));
+    t.push(setTimeout(function(){ body.classList.remove('intro-on'); ov.remove(); done=true; },2650));
     ov.addEventListener('click',finish);
   })();
   var bt=document.querySelectorAll('#billing button');
