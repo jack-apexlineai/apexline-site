@@ -50,8 +50,12 @@ nav .btn{padding:10px 16px;font-size:14px}
 .hero{padding:84px 0 40px;overflow:hidden;position:relative}
 .hero:before{content:"";position:absolute;inset:-200px -200px auto auto;width:800px;height:800px;background:radial-gradient(circle,rgba(77,168,255,.16),transparent 60%);pointer-events:none}
 .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--accent-border);background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:6px 14px;font-family:var(--ui);font-weight:700;font-size:13px;margin-bottom:26px}
-.pill i{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px rgba(0,212,170,.15)}
-.hero h1 span{color:var(--accent)}
+.pill i{position:relative;width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px rgba(0,212,170,.15)}
+.pill i:after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--ok);animation:ping 1.8s cubic-bezier(0,0,.2,1) infinite}
+@keyframes ping{0%{transform:scale(1);opacity:.75}75%,100%{transform:scale(3);opacity:0}}
+@media(prefers-reduced-motion:reduce){.pill i:after{animation:none}}
+.hero h1 .hl{color:var(--accent)}
+.hero h1 .nw{white-space:nowrap}
 .hero .lead{margin:22px 0 32px}
 .ctas{display:flex;gap:12px;flex-wrap:wrap}
 .trust{display:flex;gap:22px;flex-wrap:wrap;margin-top:26px;font-family:var(--ui);font-weight:500;font-size:14px;color:var(--silver)}
@@ -169,9 +173,20 @@ footer a:hover{color:var(--text)}
 .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
 .reveal.in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}}
+/* intro */
+.intro{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;transition:opacity .55s ease;cursor:pointer}
+.intro:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(77,168,255,.13) 0%,transparent 55%);pointer-events:none}
+.intro svg{position:relative;width:120px;height:120px;transition:transform .9s cubic-bezier(.65,0,.35,1);filter:drop-shadow(0 0 28px rgba(77,168,255,.35))}
+.intro rect{opacity:0;animation:inFade .5s ease .05s forwards}
+.intro path{stroke-dasharray:60;stroke-dashoffset:60;animation:inDraw 1s cubic-bezier(.4,0,.2,1) .25s forwards}
+.intro.out{opacity:0;pointer-events:none}
+@keyframes inFade{to{opacity:1}}
+@keyframes inDraw{to{stroke-dashoffset:0}}
+body.intro-on nav .logo svg{visibility:hidden}
 </style>
 </head>
 <body>
+<div class="intro" id="intro" aria-hidden="true" hidden><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#121829"/><path d="M6 26 L16 6 L26 26 M10.5 19 L21.5 19" stroke="#4DA8FF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
 
 <nav><div class="wrap">
   <a class="logo" href="#top"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#121829"/><path d="M6 26 L16 6 L26 26 M10.5 19 L21.5 19" stroke="#4DA8FF" stroke-width="2.5" fill="none"/></svg>ApexLine</a>
@@ -182,7 +197,7 @@ footer a:hover{color:var(--text)}
 <header class="hero" id="top"><div class="wrap">
   <div class="reveal">
     <div class="pill"><i></i>WasteLine · built for UK skip hire</div>
-    <h1>Run your whole yard<br>from <span>one screen.</span></h1>
+    <h1><span class="nw">Run your</span> <span class="nw">whole yard</span><br>from <span class="hl nw">one screen.</span></h1>
     <p class="lead">Orders, invoices, waste in and waste out tickets, digital waste tracking, the day plan and a driver app. No paper tickets, no chasing, no double entry.</p>
     <div class="ctas">
       <a class="btn btn-p" href="#book">Start your 14-day free trial →</a>
@@ -197,9 +212,9 @@ footer a:hover{color:var(--text)}
 </div></header>
 
 <div class="strip"><div class="wrap">
-  <div><b>2,000+</b><span>orders run through the same system</span></div>
-  <div><b>£600k+</b><span>revenue processed at WasteHub · <a href="case-study.html" style="color:var(--accent)">case study</a></span></div>
-  <div><b>1 min</b><span>order admin, down from 10</span></div>
+  <div><b>2,000+</b><span>orders placed through the system in under a year · <a href="case-study.html" style="color:var(--accent)">case study</a></span></div>
+  <div><b>1 person</b><span>running the whole office, no admin staff</span></div>
+  <div><b>0</b><span>paper tickets. Every note and ticket filed in your Drive</span></div>
   <div><b>Same day</b><span>install, on your own Google account</span></div>
 </div></div>
 
@@ -242,13 +257,13 @@ footer a:hover{color:var(--text)}
     <div class="txt reveal"><div class="mono">Day plan</div><h2 style="margin:12px 0 14px">Tomorrow's work, planned in minutes.</h2>
       <p class="muted">Every booked job on one board. Drag to a lorry, reorder, send. Drivers get it on their phone straight away.</p>
       <ul><li>Suggested plan in one click</li><li>Tip runs and empties worked out for you</li><li>Unpaid jobs flagged before they go out</li></ul></div>
-    <div class="shot reveal"><img src="img/wl-plan.webp" alt="WasteLine day plan" loading="lazy" width="1360" height="900"></div>
+    <div class="shot reveal"><img src="img/wl-plan.webp" alt="WasteLine day plan" width="1360" height="900"></div>
   </div>
   <div class="split rev">
     <div class="txt reveal"><div class="mono">Reports</div><h2 style="margin:12px 0 14px">Know your numbers without opening a spreadsheet.</h2>
       <p class="muted">A clean business report on any dates you choose, or sent automatically. Revenue, average order, jobs by service, lorry profit and who owes you.</p>
       <ul><li>Compare against the period before</li><li>Emailed at 7am on your schedule</li><li>Saved in your Google Drive</li></ul></div>
-    <div class="shot reveal"><img src="img/wl-report.webp" alt="WasteLine business report PDF" loading="lazy" width="820" height="1000"></div>
+    <div class="shot reveal"><img src="img/wl-report.webp" alt="WasteLine business report PDF" width="820" height="1000"></div>
   </div>
 </div></section>
 
@@ -306,11 +321,11 @@ footer a:hover{color:var(--text)}
 <section><div class="wrap proof">
   <div class="reveal">
     <div class="mono">Proof</div>
-    <p class="quote" style="margin-top:14px">"I built WasteLine to run my own skip business. It took order admin from <span>10 minutes to 1</span>, and it has handled <span>2,000+ orders</span> since."</p>
+    <p class="quote" style="margin-top:14px">"I built WasteLine to run my own waste business. It's handled <span>2,000+ orders</span> in its first year, and I've grown without <span>hiring an office team</span>."</p>
     <div class="who"><i>J</i><div><b style="color:var(--text)">Jack Simpson</b><br><span class="muted">Founder, ApexLine, WasteHub</span></div></div>
     <a class="btn btn-s" href="case-study.html" style="margin-top:26px">Read the WasteHub case study →</a>
   </div>
-  <div class="shot reveal"><img src="img/wl-tickets.webp" alt="WasteLine tickets screen" loading="lazy" width="1360" height="900"></div>
+  <div class="shot reveal"><img src="img/wl-tickets.webp" alt="WasteLine tickets screen" width="1360" height="900"></div>
 </div></section>
 
 <section id="faq" style="padding-top:20px"><div class="wrap faq">
@@ -341,8 +356,25 @@ footer a:hover{color:var(--text)}
 
 <script>
 (function(){
-  var io=('IntersectionObserver' in window)?new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12}):null;
-  document.querySelectorAll('.reveal').forEach(function(el){ if(io) io.observe(el); else el.classList.add('in'); });
+  var io=('IntersectionObserver' in window)?new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.05}):null;
+  function startReveal(){ document.querySelectorAll('.reveal').forEach(function(el){ if(io) io.observe(el); else el.classList.add('in'); }); }
+  // Intro: the A draws itself, then flies into the nav logo. Once per visit.
+  (function(){
+    var ov=document.getElementById('intro'), seen=false, calm=false;
+    try{ seen=!!sessionStorage.getItem('apexIntro'); sessionStorage.setItem('apexIntro','1'); }catch(e){}
+    try{ calm=window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+    if(!ov||seen||calm||location.hash){ startReveal(); return; }
+    var body=document.body, svg=ov.querySelector('svg'), done=false, t=[];
+    ov.hidden=false; body.classList.add('intro-on');
+    function finish(){ if(done) return; done=true; t.forEach(clearTimeout); ov.classList.add('out'); body.classList.remove('intro-on'); startReveal(); setTimeout(function(){ ov.remove(); },600); }
+    t.push(setTimeout(function(){
+      var to=document.querySelector('nav .logo svg'); if(!to){ finish(); return; }
+      var a=svg.getBoundingClientRect(), b=to.getBoundingClientRect();
+      svg.style.transform='translate('+((b.left+b.width/2)-(a.left+a.width/2))+'px,'+((b.top+b.height/2)-(a.top+a.height/2))+'px) scale('+(b.width/a.width)+')';
+    },1350));
+    t.push(setTimeout(finish,2250));
+    ov.addEventListener('click',finish);
+  })();
   var bt=document.querySelectorAll('#billing button');
   bt.forEach(function(b){ b.onclick=function(){ var y=b.dataset.b==='y';
     bt.forEach(function(x){x.classList.toggle('on',x===b);});
