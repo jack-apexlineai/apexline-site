@@ -505,7 +505,7 @@ function api(token, name, args) {
     tipLookup: tipLookup_, getTipIns: getTipIns_, saveTipDraft: saveTipDraft_, voidTipDraft: voidTipDraft_, saveTipIn: saveTipIn_, tipMarkPaid: tipMarkPaid_, tipLink: tipLink_, tipCheck: tipCheckOne_, openDrive: openDrive_,
     getOnSite: getOnSite_, addOnSite: addOnSite_, remindHire: remindHire_, tipInvoice: tipInvoice_, tipInvoicePaid: tipInvoicePaid_, getDriverApp: getDriverApp_,
     saveDefraTemplate: saveDefraTemplate_, sendEtaNow: sendEtaNow_,
-    saveLogo: saveLogo_, saveWasteOut: saveWasteOut_, getTickets: getTickets_, getTipForm: getTipForm_, saveTipTicket: saveTipTicket_, getRevenueRange: getRevenueRange_, sendReport: sendReport_, getReportSchedule: getReportSchedule_, saveReportSchedule: saveReportSchedule_, sendDocs: sendDocs_, getProfit: getProfit_, saveDisposal: saveDisposal_, importFuel: importFuel_, addFuel: addFuel_, deleteFuel: deleteFuel_, getReports: getReports_
+    saveLogo: saveLogo_, saveWasteOut: saveWasteOut_, getTickets: getTickets_, getTipForm: getTipForm_, saveTipTicket: saveTipTicket_, getRevenueRange: getRevenueRange_, sendReport: sendReport_, getReportSchedule: getReportSchedule_, saveReportSchedule: saveReportSchedule_, sendDocs: sendDocs_, getProfit: getProfit_, saveDisposal: saveDisposal_, addLorryCost: addLorryCost_, deleteLorryCost: deleteLorryCost_, importFuel: importFuel_, addFuel: addFuel_, deleteFuel: deleteFuel_, getReports: getReports_
   };
   if (!map[name]) throw new Error('Unknown action: ' + name);
   var ok = ROLE === 'director' || (ROLE === 'office' ? OFFICE_ACTIONS : BOOKING_ACTIONS).indexOf(name) > -1;
@@ -2529,7 +2529,7 @@ var MODULE_OF = { createOrder: 'orders', runImport: 'orders',
   accountsExport: 'accounts', sendEtaNow: 'eta',
   tipLookup: 'tipin', getTipIns: 'tipin', saveTipIn: 'tipin', saveTipDraft: 'tipin', voidTipDraft: 'tipin', tipMarkPaid: 'tipin', tipCheck: 'tipin', tipLink: 'tipin',
   tipInvoice: 'tipin', tipInvoicePaid: 'tipin', getOnSite: 'onsite', addOnSite: 'onsite', remindHire: 'onsite', getDriverApp: 'driver',
-  getProfit: 'profit', saveDisposal: 'profit', importFuel: 'profit', addFuel: 'profit', deleteFuel: 'profit', getReports: 'reports',
+  getProfit: 'profit', saveDisposal: 'profit', addLorryCost: 'profit', deleteLorryCost: 'profit', importFuel: 'profit', addFuel: 'profit', deleteFuel: 'profit', getReports: 'reports',
   sendReport: 'reports', getReportSchedule: 'reports', saveReportSchedule: 'reports' };
 var TRIAL_DAYS = 14;
 /* Support contact shown on the "Contact ApexLine" button. */
@@ -2715,7 +2715,9 @@ function getWaste_() {
     if (wv.length) { var ti = wv[0].indexOf('Ticket No'), tl = wv[0].indexOf('Ticket link');
       wv.slice(1).forEach(function (r) { if (r[ti] && r[tl]) tk[r[ti]] = r[tl]; }); }
     out.forEach(function (o) { if (!o['WTN link'] && tk[o['Order No']]) o.ticketLink = tk[o['Order No']]; }); } catch (e) { }
-  var s = settings_(), tpl = defraTemplateInfo_();
+  var s = settings_(), tpl = defraTemplateInfo_(), me = String(s['Business name'] || '').trim().toLowerCase();
+  // Our own skip jobs vs loads other carriers tipped in at the yard
+  out.forEach(function (o) { o.src = (/^RT/.test(o['Receipt ID']) || o.ticketLink || (o.Carrier && String(o.Carrier).trim().toLowerCase() !== me)) ? 'tipin' : 'ours'; });
   return { list: out.reverse(), site: { name: s['Receiving site name'] || s['Business name'], address: s['Receiving site address'] || s['Business address'],
     permit: s['Environmental permit number'] || '', api: !!s['DWT API code'] }, template: tpl,
     containers: DEFRA_CONTAINERS, wastes: wastes_().map(function (w) { return { name: w.name, ewc: w.ewc }; }) };
@@ -4433,6 +4435,30 @@ function defraExport_(rows) {
    Tonnes come from the weighbridge ticket, or the estimate. Any job's disposal cost can be typed over. */
 var FUEL_HEAD = ['Date', 'Registration', 'Litres', 'Net cost', 'Source', 'Added', 'Key'];
 var DISP_HEAD = ['Order No', 'Disposal cost', 'Note', 'Updated'];
+var MAINT_HEAD = ['Date', 'Registration', 'Type', 'Details', 'Cost (ex VAT)', 'Added', 'Key'];
+var MAINT_TYPES = ['Repair', 'Service', 'MOT', 'Tyres', 'Parts', 'Insurance', 'Tax', 'Other'];
+/* Repairs, MOT, servicing, tyres and other lorry running costs, set against each lorry's profit. */
+function maintTab_() {
+  var ss = ss_(), sh = ss.getSheetByName('Lorry Costs');
+  if (!sh) { sh = ss.insertSheet('Lorry Costs'); sh.getRange(1, 1, sh.getMaxRows(), MAINT_HEAD.length).setNumberFormat('@');
+    sh.getRange(1, 1, 1, MAINT_HEAD.length).setValues([MAINT_HEAD]); styleTab_(sh, [80, 100, 90, 260, 100, 90, 140]); }
+  return sh;
+}
+function addLorryCost_(f) {
+  if (ROLE !== 'director') throw new Error('Director only.');
+  f = f || {}; var d = isoDay_(f.date), net = whMoney(f.net);
+  if (!d || !(net > 0) || !f.reg) throw new Error('Add the date, lorry and cost.');
+  var type = MAINT_TYPES.indexOf(f.type) > -1 ? f.type : 'Other';
+  maintTab_().appendRow([whFmtDate(d), f.reg, type, String(f.details || '').slice(0, 200), net.toFixed(2), whFmtDate(new Date()), 'c' + Date.now()]);
+  return { ok: true };
+}
+function deleteLorryCost_(key) {
+  if (ROLE !== 'director') throw new Error('Director only.');
+  var sh = maintTab_(), n = sh.getLastRow(); if (n < 2) return { ok: true };
+  var v = sh.getRange(2, 7, n - 1, 1).getDisplayValues();
+  for (var i = v.length - 1; i >= 0; i--) if (v[i][0] === key) sh.deleteRow(i + 2);
+  return { ok: true };
+}
 
 function fuelTab_() {
   var ss = ss_(), sh = ss.getSheetByName('Fuel');
@@ -4532,7 +4558,7 @@ function getProfit_(from, to) {
   var lsh = sh_(TAB.LOR), lv = lsh && lsh.getLastRow() > 1 ? lsh.getRange(2, 1, lsh.getLastRow() - 1, LOR_HEAD.length).getDisplayValues() : [];
   var L = lv.filter(function (r) { return r[0]; }).map(function (r) {
     return { reg: r[0], type: r[1], driver: r[3], active: !/^n/i.test(r[6]), dayRate: whMoney(r[7]) || 0, fuelWeek: whMoney(r[8]) || 0,
-      jobs: 0, revenue: 0, disposal: 0, fuel: 0, fuelEst: false, fuelHow: '', driverCost: 0, days: 0, jobList: [], fuelList: [], dset: {}, d28: {}, f28: 0, n28: 0 };
+      jobs: 0, revenue: 0, disposal: 0, repairs: 0, repairList: [], fuel: 0, fuelEst: false, fuelHow: '', driverCost: 0, days: 0, jobList: [], fuelList: [], dset: {}, d28: {}, f28: 0, n28: 0 };
   });
   var by = {}; L.forEach(function (l) { by[regKey_(l.reg)] = l; });
   var a28 = new Date(b); a28.setDate(a28.getDate() - 27); a28.setHours(0, 0, 0, 0);   // last 4 weeks, for a fuel card average
@@ -4568,6 +4594,11 @@ function getProfit_(from, to) {
     if (!inRange_(d, a, b)) return;
     l.fuel = whRound2(l.fuel + n); l.fuelList.push({ date: r[0], litres: r[2], net: n, source: r[4], key: r[6] });
   });
+  var ms = ss_().getSheetByName('Lorry Costs');
+  if (ms && ms.getLastRow() > 1) ms.getRange(2, 1, ms.getLastRow() - 1, MAINT_HEAD.length).getDisplayValues().forEach(function (r) {
+    var l = by[regKey_(r[1])], d = whParseDate(r[0]); if (!l || !inRange_(d, a, b)) return;
+    var n = whMoney(r[4]) || 0; l.repairs = whRound2(l.repairs + n); l.repairList.push({ date: r[0], type: r[2], details: r[3], net: n, key: r[6] });
+  });
   L.forEach(function (l) {
     l.days = Object.keys(l.dset).length; delete l.dset;
     l.driverCost = whRound2(l.days * l.dayRate);
@@ -4581,16 +4612,16 @@ function getProfit_(from, to) {
     else if (l.fuelWeek && l.days) { l.fuel = whRound2(l.fuelWeek / 5 * l.days); l.fuelEst = true; l.fuelHow = 'weekly estimate'; }
     else l.fuel = 0;
     delete l.f28; delete l.n28;
-    l.costs = whRound2(l.fuel + l.driverCost + l.disposal); l.profit = whRound2(l.revenue - l.costs);
+    l.costs = whRound2(l.fuel + l.driverCost + l.disposal + l.repairs); l.profit = whRound2(l.revenue - l.costs);
     l.jobList.sort(function (x, y) { return (whParseDate(x.date) - whParseDate(y.date)) || (x.no < y.no ? -1 : 1); });
   });
-  var shown = L.filter(function (l) { return l.active || l.jobs; }), worked = shown.filter(function (l) { return l.jobs > 0 || l.days > 0; });
+  var shown = L.filter(function (l) { return l.active || l.jobs || l.repairs; }), worked = shown.filter(function (l) { return l.jobs > 0 || l.days > 0; });
   var sum = function (k) { return whRound2(shown.reduce(function (t, l) { return t + l[k]; }, 0)); };
-  var tot = { jobs: sum('jobs'), revenue: sum('revenue'), fuel: sum('fuel'), driverCost: sum('driverCost'), disposal: sum('disposal'), profit: sum('profit') };
+  var tot = { jobs: sum('jobs'), revenue: sum('revenue'), fuel: sum('fuel'), driverCost: sum('driverCost'), disposal: sum('disposal'), repairs: sum('repairs'), profit: sum('profit') };
   var nW = worked.length || 1, avg = {}; Object.keys(tot).forEach(function (k) { avg[k] = whRound2(worked.reduce(function (t, l) { return t + l[k]; }, 0) / nW); });
   var missing = shown.filter(function (l) { return !l.dayRate; }).map(function (l) { return l.reg; });
   return { from: whFmtDate(a), to: whFmtDate(b), lorries: shown, total: tot, average: avg, lorriesWorked: worked.length, missingRates: missing,
-    wastes: wastes_().map(function (w) { return { name: w.name, tip: w.tip }; }) };
+    costTypes: MAINT_TYPES, wastes: wastes_().map(function (w) { return { name: w.name, tip: w.tip }; }) };
 }
 
 /* ============================== reports (Full Yard) ==============================

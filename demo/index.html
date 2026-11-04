@@ -507,7 +507,7 @@ function api(token, name, args) {
     tipLookup: tipLookup_, getTipIns: getTipIns_, saveTipDraft: saveTipDraft_, voidTipDraft: voidTipDraft_, saveTipIn: saveTipIn_, tipMarkPaid: tipMarkPaid_, tipLink: tipLink_, tipCheck: tipCheckOne_, openDrive: openDrive_,
     getOnSite: getOnSite_, addOnSite: addOnSite_, remindHire: remindHire_, tipInvoice: tipInvoice_, tipInvoicePaid: tipInvoicePaid_, getDriverApp: getDriverApp_,
     saveDefraTemplate: saveDefraTemplate_, sendEtaNow: sendEtaNow_,
-    saveLogo: saveLogo_, saveWasteOut: saveWasteOut_, getTickets: getTickets_, getTipForm: getTipForm_, saveTipTicket: saveTipTicket_, getRevenueRange: getRevenueRange_, sendReport: sendReport_, getReportSchedule: getReportSchedule_, saveReportSchedule: saveReportSchedule_, sendDocs: sendDocs_, getProfit: getProfit_, saveDisposal: saveDisposal_, importFuel: importFuel_, addFuel: addFuel_, deleteFuel: deleteFuel_, getReports: getReports_
+    saveLogo: saveLogo_, saveWasteOut: saveWasteOut_, getTickets: getTickets_, getTipForm: getTipForm_, saveTipTicket: saveTipTicket_, getRevenueRange: getRevenueRange_, sendReport: sendReport_, getReportSchedule: getReportSchedule_, saveReportSchedule: saveReportSchedule_, sendDocs: sendDocs_, getProfit: getProfit_, saveDisposal: saveDisposal_, addLorryCost: addLorryCost_, deleteLorryCost: deleteLorryCost_, importFuel: importFuel_, addFuel: addFuel_, deleteFuel: deleteFuel_, getReports: getReports_
   };
   if (!map[name]) throw new Error('Unknown action: ' + name);
   var ok = ROLE === 'director' || (ROLE === 'office' ? OFFICE_ACTIONS : BOOKING_ACTIONS).indexOf(name) > -1;
@@ -2531,7 +2531,7 @@ var MODULE_OF = { createOrder: 'orders', runImport: 'orders',
   accountsExport: 'accounts', sendEtaNow: 'eta',
   tipLookup: 'tipin', getTipIns: 'tipin', saveTipIn: 'tipin', saveTipDraft: 'tipin', voidTipDraft: 'tipin', tipMarkPaid: 'tipin', tipCheck: 'tipin', tipLink: 'tipin',
   tipInvoice: 'tipin', tipInvoicePaid: 'tipin', getOnSite: 'onsite', addOnSite: 'onsite', remindHire: 'onsite', getDriverApp: 'driver',
-  getProfit: 'profit', saveDisposal: 'profit', importFuel: 'profit', addFuel: 'profit', deleteFuel: 'profit', getReports: 'reports',
+  getProfit: 'profit', saveDisposal: 'profit', addLorryCost: 'profit', deleteLorryCost: 'profit', importFuel: 'profit', addFuel: 'profit', deleteFuel: 'profit', getReports: 'reports',
   sendReport: 'reports', getReportSchedule: 'reports', saveReportSchedule: 'reports' };
 var TRIAL_DAYS = 14;
 /* Support contact shown on the "Contact ApexLine" button. */
@@ -2717,7 +2717,9 @@ function getWaste_() {
     if (wv.length) { var ti = wv[0].indexOf('Ticket No'), tl = wv[0].indexOf('Ticket link');
       wv.slice(1).forEach(function (r) { if (r[ti] && r[tl]) tk[r[ti]] = r[tl]; }); }
     out.forEach(function (o) { if (!o['WTN link'] && tk[o['Order No']]) o.ticketLink = tk[o['Order No']]; }); } catch (e) { }
-  var s = settings_(), tpl = defraTemplateInfo_();
+  var s = settings_(), tpl = defraTemplateInfo_(), me = String(s['Business name'] || '').trim().toLowerCase();
+  // Our own skip jobs vs loads other carriers tipped in at the yard
+  out.forEach(function (o) { o.src = (/^RT/.test(o['Receipt ID']) || o.ticketLink || (o.Carrier && String(o.Carrier).trim().toLowerCase() !== me)) ? 'tipin' : 'ours'; });
   return { list: out.reverse(), site: { name: s['Receiving site name'] || s['Business name'], address: s['Receiving site address'] || s['Business address'],
     permit: s['Environmental permit number'] || '', api: !!s['DWT API code'] }, template: tpl,
     containers: DEFRA_CONTAINERS, wastes: wastes_().map(function (w) { return { name: w.name, ewc: w.ewc }; }) };
@@ -4435,6 +4437,30 @@ function defraExport_(rows) {
    Tonnes come from the weighbridge ticket, or the estimate. Any job's disposal cost can be typed over. */
 var FUEL_HEAD = ['Date', 'Registration', 'Litres', 'Net cost', 'Source', 'Added', 'Key'];
 var DISP_HEAD = ['Order No', 'Disposal cost', 'Note', 'Updated'];
+var MAINT_HEAD = ['Date', 'Registration', 'Type', 'Details', 'Cost (ex VAT)', 'Added', 'Key'];
+var MAINT_TYPES = ['Repair', 'Service', 'MOT', 'Tyres', 'Parts', 'Insurance', 'Tax', 'Other'];
+/* Repairs, MOT, servicing, tyres and other lorry running costs, set against each lorry's profit. */
+function maintTab_() {
+  var ss = ss_(), sh = ss.getSheetByName('Lorry Costs');
+  if (!sh) { sh = ss.insertSheet('Lorry Costs'); sh.getRange(1, 1, sh.getMaxRows(), MAINT_HEAD.length).setNumberFormat('@');
+    sh.getRange(1, 1, 1, MAINT_HEAD.length).setValues([MAINT_HEAD]); styleTab_(sh, [80, 100, 90, 260, 100, 90, 140]); }
+  return sh;
+}
+function addLorryCost_(f) {
+  if (ROLE !== 'director') throw new Error('Director only.');
+  f = f || {}; var d = isoDay_(f.date), net = whMoney(f.net);
+  if (!d || !(net > 0) || !f.reg) throw new Error('Add the date, lorry and cost.');
+  var type = MAINT_TYPES.indexOf(f.type) > -1 ? f.type : 'Other';
+  maintTab_().appendRow([whFmtDate(d), f.reg, type, String(f.details || '').slice(0, 200), net.toFixed(2), whFmtDate(new Date()), 'c' + Date.now()]);
+  return { ok: true };
+}
+function deleteLorryCost_(key) {
+  if (ROLE !== 'director') throw new Error('Director only.');
+  var sh = maintTab_(), n = sh.getLastRow(); if (n < 2) return { ok: true };
+  var v = sh.getRange(2, 7, n - 1, 1).getDisplayValues();
+  for (var i = v.length - 1; i >= 0; i--) if (v[i][0] === key) sh.deleteRow(i + 2);
+  return { ok: true };
+}
 
 function fuelTab_() {
   var ss = ss_(), sh = ss.getSheetByName('Fuel');
@@ -4534,7 +4560,7 @@ function getProfit_(from, to) {
   var lsh = sh_(TAB.LOR), lv = lsh && lsh.getLastRow() > 1 ? lsh.getRange(2, 1, lsh.getLastRow() - 1, LOR_HEAD.length).getDisplayValues() : [];
   var L = lv.filter(function (r) { return r[0]; }).map(function (r) {
     return { reg: r[0], type: r[1], driver: r[3], active: !/^n/i.test(r[6]), dayRate: whMoney(r[7]) || 0, fuelWeek: whMoney(r[8]) || 0,
-      jobs: 0, revenue: 0, disposal: 0, fuel: 0, fuelEst: false, fuelHow: '', driverCost: 0, days: 0, jobList: [], fuelList: [], dset: {}, d28: {}, f28: 0, n28: 0 };
+      jobs: 0, revenue: 0, disposal: 0, repairs: 0, repairList: [], fuel: 0, fuelEst: false, fuelHow: '', driverCost: 0, days: 0, jobList: [], fuelList: [], dset: {}, d28: {}, f28: 0, n28: 0 };
   });
   var by = {}; L.forEach(function (l) { by[regKey_(l.reg)] = l; });
   var a28 = new Date(b); a28.setDate(a28.getDate() - 27); a28.setHours(0, 0, 0, 0);   // last 4 weeks, for a fuel card average
@@ -4570,6 +4596,11 @@ function getProfit_(from, to) {
     if (!inRange_(d, a, b)) return;
     l.fuel = whRound2(l.fuel + n); l.fuelList.push({ date: r[0], litres: r[2], net: n, source: r[4], key: r[6] });
   });
+  var ms = ss_().getSheetByName('Lorry Costs');
+  if (ms && ms.getLastRow() > 1) ms.getRange(2, 1, ms.getLastRow() - 1, MAINT_HEAD.length).getDisplayValues().forEach(function (r) {
+    var l = by[regKey_(r[1])], d = whParseDate(r[0]); if (!l || !inRange_(d, a, b)) return;
+    var n = whMoney(r[4]) || 0; l.repairs = whRound2(l.repairs + n); l.repairList.push({ date: r[0], type: r[2], details: r[3], net: n, key: r[6] });
+  });
   L.forEach(function (l) {
     l.days = Object.keys(l.dset).length; delete l.dset;
     l.driverCost = whRound2(l.days * l.dayRate);
@@ -4583,16 +4614,16 @@ function getProfit_(from, to) {
     else if (l.fuelWeek && l.days) { l.fuel = whRound2(l.fuelWeek / 5 * l.days); l.fuelEst = true; l.fuelHow = 'weekly estimate'; }
     else l.fuel = 0;
     delete l.f28; delete l.n28;
-    l.costs = whRound2(l.fuel + l.driverCost + l.disposal); l.profit = whRound2(l.revenue - l.costs);
+    l.costs = whRound2(l.fuel + l.driverCost + l.disposal + l.repairs); l.profit = whRound2(l.revenue - l.costs);
     l.jobList.sort(function (x, y) { return (whParseDate(x.date) - whParseDate(y.date)) || (x.no < y.no ? -1 : 1); });
   });
-  var shown = L.filter(function (l) { return l.active || l.jobs; }), worked = shown.filter(function (l) { return l.jobs > 0 || l.days > 0; });
+  var shown = L.filter(function (l) { return l.active || l.jobs || l.repairs; }), worked = shown.filter(function (l) { return l.jobs > 0 || l.days > 0; });
   var sum = function (k) { return whRound2(shown.reduce(function (t, l) { return t + l[k]; }, 0)); };
-  var tot = { jobs: sum('jobs'), revenue: sum('revenue'), fuel: sum('fuel'), driverCost: sum('driverCost'), disposal: sum('disposal'), profit: sum('profit') };
+  var tot = { jobs: sum('jobs'), revenue: sum('revenue'), fuel: sum('fuel'), driverCost: sum('driverCost'), disposal: sum('disposal'), repairs: sum('repairs'), profit: sum('profit') };
   var nW = worked.length || 1, avg = {}; Object.keys(tot).forEach(function (k) { avg[k] = whRound2(worked.reduce(function (t, l) { return t + l[k]; }, 0) / nW); });
   var missing = shown.filter(function (l) { return !l.dayRate; }).map(function (l) { return l.reg; });
   return { from: whFmtDate(a), to: whFmtDate(b), lorries: shown, total: tot, average: avg, lorriesWorked: worked.length, missingRates: missing,
-    wastes: wastes_().map(function (w) { return { name: w.name, tip: w.tip }; }) };
+    costTypes: MAINT_TYPES, wastes: wastes_().map(function (w) { return { name: w.name, tip: w.tip }; }) };
 }
 
 /* ============================== reports (Full Yard) ==============================
@@ -5393,6 +5424,8 @@ header.side .nav button.locked span:first-of-type:after{content:" · locked";fon
 .tplbar.bad{background:#FEF5DC;border-color:#F5DFA0}
 .estpill{font-size:11px;font-weight:600;border-radius:999px;padding:1px 7px;background:#FEF5DC;color:#8A5A00;margin-left:4px}
 .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin-bottom:16px}
+.srcp{margin-top:4px;font-size:11px}.srcp.ours{background:var(--brand-l);color:var(--brand)}.srcp.tip{background:var(--soft);color:var(--muted)}
+.pgsum{padding-top:16px;border-top:1px dashed var(--line)}
 .pcard{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
 .pcard.avg{background:var(--brand-l);border-color:var(--brand-m)}
 .pcard .ph2{display:flex;align-items:center;gap:8px;margin-bottom:10px}
@@ -6013,7 +6046,7 @@ a.link.drv{text-decoration:none}
   <div class="tplbar" id="wTpl"></div><input type="file" id="wTplFile" accept=".xlsx" class="hide">
   <div class="stats" id="wStats"></div>
   <div class="panel hide" id="wAdd"></div>
-  <div class="ufilters"><div class="seg" id="wFilt"></div><input class="in" id="wQ" placeholder="Search producer, order or EWC" autocomplete="off"></div>
+  <div class="ufilters"><div class="seg" id="wFilt"></div><div class="seg" id="wSrc"></div><input class="in" id="wQ" placeholder="Search producer, order or EWC" autocomplete="off"></div>
   <div class="bulk hide" id="wBulk"><b id="wSel"></b><button class="fx" id="wExport">Download Defra spreadsheet</button><button class="fx alt" id="wSubmit">Mark submitted</button><button class="link" id="wNone">Clear</button></div>
   <div class="tablewrap"><table class="tbl" id="wTable"></table></div>
 </div>
@@ -6125,7 +6158,7 @@ a.link.drv{text-decoration:none}
   <div class="tbar"><h2>Lorry profit</h2><span class="sub2" id="pfSum"></span><div style="flex:1"></div><button class="howbtn" data-how="profit">&#9654; How to use</button><button class="btn2" id="pfFuelBtn" style="padding:9px 14px">Upload fuel card statement</button><input type="file" id="pfFile" accept=".csv,text/csv" class="hide"></div>
   <div class="rsel"><div class="seg" id="pfMode"></div><button class="fx alt" id="pfPrev">&larr;</button><input class="in" type="date" id="pfFrom"><span class="sub2">to</span><input class="in" type="date" id="pfTo"><button class="fx alt" id="pfNext">&rarr;</button><button class="fx" id="pfGo">Show</button></div>
   <div id="pfNote"></div>
-  <div class="pgrid" id="pfGrid"></div>
+  <div id="pfGrid"></div>
   <div class="panel hide" id="pfJobs"></div>
 </div>
 
@@ -7976,7 +8009,7 @@ $('navTip').addEventListener('click',function(){ setTimeout(tiPadSetup,100); });
 window.addEventListener('resize',function(){ if(!$('tipView').classList.contains('hide')&&!TPAD.drawn) tiPadSetup(); });
 
 /* ---------- waste tracking ---------- */
-var WD=null, WSEL={}, WFILT='todo';
+var WD=null, WSEL={}, WFILT='todo', WSRC='all';
 function goWaste(){ view('wasteView','navWaste'); $('wTable').innerHTML='<tr><td class="empty"><div class="spin" style="margin:10px auto"></div></td></tr>';
   run().withSuccessHandler(function(d){ WD=d; renderWaste(); }).withFailureHandler(function(e){ toast('bad','!',esc(e&&e.message||e)); }).getWaste(); }
 function wDue(x){ var d=whParseDate(x['Due by']); if(!d) return 0; var t=new Date(); t.setHours(0,0,0,0); return Math.round((d-t)/864e5); }
@@ -7989,6 +8022,7 @@ function renderWaste(){
   $('wTpl').innerHTML=T.ok?'<span>✓ <b>Defra template loaded</b> <span class="sub2">('+esc(T.date)+'). Every download is a fresh copy of it.</span></span><div style="flex:1"></div><button class="link" id="wTplUp">Replace template</button>'
     :'<span><b>One-off setup:</b> download Defra\'s spreadsheet template from <a class="link" target="_blank" href="https://www.gov.uk/guidance/report-receipt-of-waste">gov.uk</a>, then upload it here. Defra only accepts its own spreadsheet.</span><div style="flex:1"></div><button class="fx" id="wTplUp">Upload Defra template</button>';
   $('wTplUp').onclick=function(){ $('wTplFile').value=''; $('wTplFile').click(); };
+  if(!$('wSrc').dataset.done){ renderSeg('wSrc',[['all','All loads'],['ours','Our skip jobs'],['tipin','Tipped in by others']],function(v){ WSRC=v; WSEL={}; renderWaste(); }); setSeg('wSrc','all'); $('wSrc').dataset.done=1; }
   if(!$('wFilt').dataset.done){ renderSeg('wFilt',[['todo','To submit'],['weight','Needs weight'],['ready','Ready'],['done','Submitted'],['all','All']],function(v){ WFILT=v; WSEL={}; renderWaste(); }); setSeg('wFilt','todo'); $('wFilt').dataset.done=1; }
   var todo=all.filter(function(x){return x.Status!=='Submitted';}), late=todo.filter(function(x){return wDue(x)<0;}), today=todo.filter(function(x){return wDue(x)===0;});
   var mo=new Date().toISOString().slice(5,7), subM=all.filter(function(x){ return x.Status==='Submitted'&&String(x['Submitted at']).slice(3,5)===mo; }).length;
@@ -7998,14 +8032,14 @@ function renderWaste(){
     '<div class="stat"><div class="sv">'+all.filter(function(x){return x.Status==='Ready';}).length+'</div><div class="sl">Ready to submit</div><div class="ss">'+(est?est+' on an estimated weight':'all weighed')+'</div></div>'+
     '<div class="stat"><div class="sv">'+subM+'</div><div class="sl">Submitted this month</div><div class="ss">'+all.length+' loads logged in total</div></div>';
   var f={todo:function(x){return x.Status!=='Submitted';},weight:function(x){return x.Status==='Needs weight';},ready:function(x){return x.Status==='Ready';},done:function(x){return x.Status==='Submitted';},all:function(){return true;}}[WFILT];
-  var l=all.filter(f).filter(function(x){ return !q||(x.Producer+' '+x['Order No']+' '+x['EWC code']+' '+x['Origin site']).toLowerCase().indexOf(q)>-1; });
+  var l=all.filter(f).filter(function(x){ return WSRC==='all'||x.src===WSRC; }).filter(function(x){ return !q||(x.Producer+' '+x['Order No']+' '+x['EWC code']+' '+x['Origin site']).toLowerCase().indexOf(q)>-1; });
   var n=Object.keys(WSEL).length; show('wBulk',n>0); $('wSel').textContent=n+' selected';
   if(!l.length){ $('wTable').innerHTML='<tr><td class="empty">'+(all.length?'Nothing here.':'No loads yet. They appear when drivers complete exchanges and collections, and when tickets are saved in Waste in.')+'</td></tr>'; return; }
   $('wTable').innerHTML='<thead><tr><th class="cb"><input type="checkbox" id="wAll"></th><th>Received</th><th>Producer</th><th>Waste</th><th>Weight (t)</th><th>Carrier</th><th>Status</th><th></th></tr></thead><tbody>'+
     l.map(function(x){ var dd=wDue(x), sub=x.Status==='Submitted', isEst=x.Estimated==='Yes';
       var flags=(x.Hazardous==='Yes'?' <span class="pill bad">Hazardous</span>':'')+(x.POPs==='Yes'?' <span class="pill warn">POPs</span>':'');
       return '<tr class="'+(WSEL[x.row]?'sel':'')+'"><td class="cb"><input type="checkbox" data-wsel="'+x.row+'"'+(WSEL[x.row]?' checked':'')+'></td>'+
-        '<td><b>'+esc(x['Received at'])+'</b><div class="muted2">'+esc(x['Order No']||x['Receipt ID'])+'</div></td>'+
+        '<td><b>'+esc(x['Received at'])+'</b><div class="muted2">'+esc(x['Order No']||x['Receipt ID'])+'</div>'+(x.src==='tipin'?'<span class="pill srcp tip">Tipped in by others</span>':'<span class="pill srcp ours">Our skip job</span>')+'</td>'+
         '<td>'+esc(x.Producer)+'<div class="muted2 clip">'+esc(x['Origin site'])+'</div></td>'+
         '<td>'+esc(x['EWC code'])+' · '+esc(x.Description)+flags+'<div class="muted2">'+esc(String(x.Container||'').replace(/^\[[A-Z]+\]\s*/,''))+'</div></td>'+
         '<td>'+(sub?esc(x.Weight+' t'):'<div class="wgt"><input class="in" data-ww="'+x.row+'" value="'+esc(isEst?'':x.Weight)+'" placeholder="'+esc(x.Weight?(isEst?'est. ':'')+x.Weight:'tonnes')+'" inputmode="decimal"><span>t</span></div>')+
@@ -8116,17 +8150,18 @@ function pfCard(l,avg){
     '<div class="pl neg"><span>Fuel'+(!avg&&l.fuelHow?' <span class="estpill'+(l.fuelHow==='fuel card'?' card':'')+'">'+esc(l.fuelHow)+'</span>':'')+'</span><b>−'+gbp(l.fuel)+'</b></div>'+
     '<div class="pl neg"><span>Driver'+(!avg&&!l.dayRate?' <span class="estpill">no day rate</span>':'')+'</span><b>−'+gbp(l.driverCost)+'</b></div>'+
     '<div class="pl neg"><span>Disposal</span><b>−'+gbp(l.disposal)+'</b></div>'+
+    '<div class="pl neg"><span>Repairs & servicing</span><b>−'+gbp(l.repairs||0)+'</b></div>'+
     '<div class="pl res '+res+'"><span>Profit</span><b>'+(l.profit<0?'−':'')+gbp(Math.abs(l.profit))+'</b></div>'+
-    (avg?'':'<div class="pfoot">Press for each job →</div>')+'</div>'; }
+    (avg?'':'<div class="pfoot">Press for each job, repairs and MOT →</div>')+'</div>'; }
 function drawProfit(){
   var d=PF; $('pfSum').textContent=d.from+' to '+d.to;
   $('pfNote').innerHTML='<div class="sub2" style="margin:-6px 0 12px">Driver pay counts on days a lorry clocked in or did a job. A day or a few days use each lorry\'s fuel card average per working day; a week or more uses the fuel card lines themselves.</div>'+(d.missingRates.length?'<div class="note w" style="margin:0 0 14px">No driver day rate for '+esc(d.missingRates.join(', '))+'. Add it in <button class="link" onclick="goSet()">Settings</button> so driver costs count.</div>':'');
   if(!d.lorries.length){ $('pfGrid').innerHTML='<div class="card" style="color:var(--muted)">No lorries yet. Add them in Settings.</div>'; $('pfJobs').classList.add('hide'); return; }
   var t=d.total;
-  $('pfGrid').innerHTML=d.lorries.map(function(l){ return pfCard(l,false); }).join('')+(d.lorriesWorked>1?pfCard(d.average,true):'')+
+  $('pfGrid').innerHTML='<div class="pgrid">'+d.lorries.map(function(l){ return pfCard(l,false); }).join('')+'</div><div class="pgrid pgsum">'+(d.lorriesWorked>1?pfCard(d.average,true):'')+
     '<div class="pcard"><div class="ph2"><b>All lorries</b></div><div class="pl top"><span>'+t.jobs+' jobs done</span><b></b></div><div class="pl top"><span>Revenue (ex VAT)</span><b>'+gbp(t.revenue)+'</b></div>'+
-    '<div class="pl neg"><span>Fuel</span><b>−'+gbp(t.fuel)+'</b></div><div class="pl neg"><span>Driver</span><b>−'+gbp(t.driverCost)+'</b></div><div class="pl neg"><span>Disposal</span><b>−'+gbp(t.disposal)+'</b></div>'+
-    '<div class="pl res '+(t.profit>=0?'gain':'loss')+'"><span>Profit</span><b>'+(t.profit<0?'−':'')+gbp(Math.abs(t.profit))+'</b></div></div>';
+    '<div class="pl neg"><span>Fuel</span><b>−'+gbp(t.fuel)+'</b></div><div class="pl neg"><span>Driver</span><b>−'+gbp(t.driverCost)+'</b></div><div class="pl neg"><span>Disposal</span><b>−'+gbp(t.disposal)+'</b></div><div class="pl neg"><span>Repairs & servicing</span><b>−'+gbp(t.repairs||0)+'</b></div>'+
+    '<div class="pl res '+(t.profit>=0?'gain':'loss')+'"><span>Profit</span><b>'+(t.profit<0?'−':'')+gbp(Math.abs(t.profit))+'</b></div></div>'+'</div>';
   Array.prototype.forEach.call($('pfGrid').querySelectorAll('[data-pf]'),function(c){ c.onclick=function(){ PFOPEN=PFOPEN===c.dataset.pf?'':c.dataset.pf; drawPfJobs(); }; });
   drawPfJobs(); }
 function drawPfJobs(){
@@ -8138,11 +8173,18 @@ function drawPfJobs(){
       '<td class="r">'+(j.back||j.override?'<input class="in" style="width:96px;text-align:right" data-disp="'+esc(j.no)+'" value="'+(j.disposal||0).toFixed(2)+'">'+(j.override?'<div class="muted2">typed in · <button class="link" data-dreset="'+esc(j.no)+'">use default</button></div>':''):'–')+'</td></tr>'; }).join('')||'<tr><td colspan="6" class="empty">No completed jobs in these dates.</td></tr>')+
     '</tbody></table></div>'+
     (l.fuelList.length?'<div class="ph" style="margin-top:14px"><b>Fuel</b></div>'+l.fuelList.map(function(f){ return '<div class="rrow"><div>'+esc(f.date)+(f.litres?' · '+esc(f.litres)+' L':'')+'<div class="muted2">'+esc(f.source)+'</div></div><div class="r"><b>'+gbp(f.net)+'</b> <button class="link danger" data-fdel="'+esc(f.key)+'">Remove</button></div></div>'; }).join(''):'')+
-    '<div class="acts" style="margin-top:12px"><input class="in" type="date" id="pfFd" style="width:auto" value="'+$('pfTo').value+'"><input class="in" id="pfFn" placeholder="Fuel £ ex VAT" style="width:130px" inputmode="decimal"><input class="in" id="pfFl" placeholder="Litres" style="width:90px" inputmode="decimal"><button class="fx alt" id="pfFadd">Add fuel by hand</button></div>';
+    '<div class="acts" style="margin-top:12px"><input class="in" type="date" id="pfFd" style="width:auto" value="'+$('pfTo').value+'"><input class="in" id="pfFn" placeholder="Fuel £ ex VAT" style="width:130px" inputmode="decimal"><input class="in" id="pfFl" placeholder="Litres" style="width:90px" inputmode="decimal"><button class="fx alt" id="pfFadd">Add fuel by hand</button></div>'+
+    '<div class="ph" style="margin-top:18px"><b>Repairs, servicing and MOT</b></div>'+
+    ((l.repairList||[]).length?l.repairList.map(function(c){ return '<div class="rrow"><div>'+esc(c.date)+' · <b>'+esc(c.type)+'</b>'+(c.details?'<div class="muted2">'+esc(c.details)+'</div>':'')+'</div><div class="r"><b>'+gbp(c.net)+'</b> <button class="link" data-cdel="'+esc(c.key)+'">Remove</button></div></div>'; }).join(''):'<div class="muted2">Nothing in these dates.</div>')+
+    '<div class="acts" style="margin-top:12px;flex-wrap:wrap"><input class="in" type="date" id="pfCd" style="width:auto" value="'+$('pfTo').value+'"><select class="in" id="pfCt" style="width:auto">'+(PF.costTypes||['Repair','Service','MOT','Tyres','Other']).map(function(t){ return '<option>'+esc(t)+'</option>'; }).join('')+'</select>'+
+    '<input class="in" id="pfCx" placeholder="Details, e.g. new clutch" style="width:200px"><input class="in" id="pfCn" placeholder="£ ex VAT" style="width:110px" inputmode="decimal"><button class="fx alt" id="pfCadd">Add cost</button></div>';
   $('pfClose').onclick=function(){ PFOPEN=''; drawPfJobs(); };
   Array.prototype.forEach.call(el.querySelectorAll('[data-disp]'),function(i){ i.onchange=function(){ run().withSuccessHandler(function(){ toast('ok','✓','Disposal cost saved'); loadProfit(); }).withFailureHandler(function(e){ toast('bad','!',esc(e&&e.message||e)); }).saveDisposal(i.dataset.disp,i.value,''); }; });
   Array.prototype.forEach.call(el.querySelectorAll('[data-dreset]'),function(b){ b.onclick=function(){ run().withSuccessHandler(loadProfit).saveDisposal(b.dataset.dreset,'',''); }; });
   Array.prototype.forEach.call(el.querySelectorAll('[data-fdel]'),function(b){ b.onclick=function(){ b.disabled=true; run().withSuccessHandler(loadProfit).withFailureHandler(function(e){ b.disabled=false; toast('bad','!',esc(e&&e.message||e)); }).deleteFuel(b.dataset.fdel); }; });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-cdel]'),function(b){ b.onclick=function(){ b.disabled=true; run().withSuccessHandler(loadProfit).withFailureHandler(function(e){ b.disabled=false; toast('bad','!',esc(e&&e.message||e)); }).deleteLorryCost(b.dataset.cdel); }; });
+  $('pfCadd').onclick=function(){ var b=this; b.disabled=true; run().withSuccessHandler(function(){ toast('ok','✓','Cost added to '+esc(l.reg)); loadProfit(); }).withFailureHandler(function(e){ b.disabled=false; toast('bad','!',esc(e&&e.message||e)); })
+    .addLorryCost({date:$('pfCd').value,reg:l.reg,type:$('pfCt').value,details:$('pfCx').value,net:$('pfCn').value}); };
   $('pfFadd').onclick=function(){ var b=this; b.disabled=true; run().withSuccessHandler(function(){ toast('ok','✓','Fuel added'); loadProfit(); }).withFailureHandler(function(e){ b.disabled=false; toast('bad','!',esc(e&&e.message||e)); })
     .addFuel({date:$('pfFd').value,reg:l.reg,net:$('pfFn').value,litres:$('pfFl').value}); };
 }
