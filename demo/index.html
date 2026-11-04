@@ -503,7 +503,7 @@ function api(token, name, args) {
     getSettingsPage: getSettingsPage_, saveSettingsPage: saveSettingsPage_, saveLorries: saveLorries_, saveZones: saveZones_,
     markPaidMany: markPaidMany_, chaseOrders: chaseOrders_, checkOrder: checkOrder_, cancelOrder: cancelOrder_, payLink: payLink_,
     getRevenue: getRevenue_, getWaste: getWaste_, saveReceipts: saveReceipts_, addReceipt: addReceipt_, exportWaste: exportWaste_,
-    markWasteSubmitted: markWasteSubmitted_, accountsExport: accountsExport_,
+    markWasteSubmitted: markWasteSubmitted_, accountsExport: accountsExport_, accountsExportNew: accountsExportNew_,
     tipLookup: tipLookup_, getTipIns: getTipIns_, saveTipDraft: saveTipDraft_, voidTipDraft: voidTipDraft_, saveTipIn: saveTipIn_, tipMarkPaid: tipMarkPaid_, tipLink: tipLink_, tipCheck: tipCheckOne_, openDrive: openDrive_,
     getOnSite: getOnSite_, addOnSite: addOnSite_, remindHire: remindHire_, tipInvoice: tipInvoice_, tipInvoicePaid: tipInvoicePaid_, getDriverApp: getDriverApp_,
     saveDefraTemplate: saveDefraTemplate_, sendEtaNow: sendEtaNow_,
@@ -602,7 +602,7 @@ var SET_DEFAULTS = {
   'Order number prefix': 'DS', 'Default payment terms': 'Upfront', 'Services': 'Delivery, Exchange, Collection, Wait & load',
   'Lorries start at': '07:00', 'Hire period (days)': '14', 'Remind after (days)': '10', 'Intended treatment (R/D code)': 'R13',
   'Email customers automatically (Yes/No)': 'Yes', 'Send customer ETA messages (Yes/No)': 'Yes', 'Weighbridge on site (Yes/No)': 'No', 'Empty skips a lorry can carry': '3',
-  'Accounts software (Xero/QuickBooks/Other)': 'Xero', 'Xero VAT rate name': '20% (VAT on Income)', 'QuickBooks VAT code': '20.0% S', 'Sales account code': '200',
+  'Accounts software (Xero/QuickBooks/Other)': 'Xero', 'Invoices sent by (WasteLine/Accounts software)': 'WasteLine', 'Xero VAT rate name': '20% (VAT on Income)', 'QuickBooks VAT code': '20.0% S', 'Sales account code': '200',
   'Chargeable items': 'Mattresses, Fridges and freezers, Tyres, Plasterboard (unless agreed), Sofas and armchairs, Other hazardous or bulky items',
   'Terms and conditions': 'Undisclosed or unapproved waste (for example plasterboard, sofas or mattresses) is charged at the extra disposal cost. | ' +
     'Make sure access is clear for delivery. If we cannot deliver, a wasted journey charge applies. | ' +
@@ -917,7 +917,10 @@ function sendOrder_(r, mode, pay) { r = rowRef_(r);
   }
 }
 /* An invoice is attached only when the customer still has to pay by bank. */
-function wantsInvoice_(o) { return o['Status'] !== 'Paid' && o['Status'] !== 'No charge' && /Bank transfer|On account/.test(o['Payment method']); }
+function owesByBank_(o) { return o['Status'] !== 'Paid' && o['Status'] !== 'No charge' && /Bank transfer|On account/.test(o['Payment method']); }
+/* Invoices sent by the accounts software (Xero/QuickBooks): WasteLine never emails its own invoice, so the customer never gets two. */
+function invoicesByAccounts_() { return /^acc|xero|quick/i.test(String(setting_('Invoices sent by (WasteLine/Accounts software)') || 'WasteLine')); }
+function wantsInvoice_(o) { return owesByBank_(o) && !invoicesByAccounts_(); }
 /* File a PDF blob in a folder, replacing any older copy with the same name. */
 function saveBlob_(folder, blob) {
   if (!folder.fresh) dFind_(folder.id, blob.getName()).forEach(function (f) { try { Drive.Files.update({ trashed: true }, f.id); } catch (e) { } });
@@ -994,6 +997,29 @@ function dFolder_(parentId, name) {
   return { id: c.id, url: folderUrl_(c.id), fresh: true };
 }
 
+/* Emails left today. With the ApexLine email service on there is no Google limit to worry about. */
+function mailStatusSvc_() { try { return !!licence_().mail; } catch (e) { return false; } }
+function mailStatus_() {
+  var svc = false; try { svc = !!licence_().mail; } catch (e) { }
+  var left = 100; try { left = MailApp.getRemainingDailyQuota(); } catch (e) { }
+  return { service: svc, left: left };
+}
+/* Send through the ApexLine email service (no daily Google limit). Returns false if it isn't on or didn't send,
+   and the email then goes through Google as normal. */
+var MAIL_URL = 'https://iyxsehwyvriujaixnwow.supabase.co/functions/v1/send-mail';
+function mailViaService_(msg) {
+  var key = PROPS.getProperty('INSTALL_KEY'); if (!key) return false;
+  try { if (!licence_().mail) return false; } catch (e) { return false; }
+  var list = function (v) { return String(v || '').split(/[,;]/).map(function (x) { return x.trim(); }).filter(function (x) { return /@/.test(x); }); };
+  var att = (msg.attachments || []).map(function (b) { return { filename: b.getName(), content: Utilities.base64Encode(b.getBytes()) }; });
+  try {
+    var res = UrlFetchApp.fetch(MAIL_URL, { method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+      headers: { Authorization: 'Bearer ' + LICENCE_ANON, apikey: LICENCE_ANON },
+      payload: JSON.stringify({ install_key: key, from_name: msg.name || '', reply_to: msg.replyTo || '', to: list(msg.to), cc: list(msg.cc), bcc: list(msg.bcc),
+        subject: msg.subject, text: msg.body || '', html: msg.htmlBody || '', attachments: att }) });
+    return res.getResponseCode() === 200;
+  } catch (e) { return false; }
+}
 function sendMail_(to, subject, body, htmlBody, attachments, cc) {
   var copy = setting_('Copy emails to');
   var msg = { to: to, subject: subject, body: body, attachments: attachments || [], name: setting_('Business name') };
@@ -1002,7 +1028,8 @@ function sendMail_(to, subject, body, htmlBody, attachments, cc) {
   var reply = setting_('Business email'); if (reply) msg.replyTo = reply;
   // The office copy counts towards Google's daily email limit (100 on free Gmail). When the limit is close, keep it for customers.
   var left = 100; try { left = MailApp.getRemainingDailyQuota(); } catch (e) { }
-  if (copy && copy.toLowerCase() !== String(to).toLowerCase() && left > 25) msg.bcc = copy;
+  if (copy && copy.toLowerCase() !== String(to).toLowerCase() && (left > 25 || mailStatusSvc_())) msg.bcc = copy;
+  if (mailViaService_(msg)) return;
   MailApp.sendEmail(msg);
 }
 
@@ -1155,7 +1182,7 @@ function confirmHtml_(o, s, forEmail) {
       bizLines_(s).map(h_).join('<br>') + '</p>';
   if (forEmail) return '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#1a1a1a;max-width:640px">' +
     docCss_(col).replace('body{', '.x{') + '<div style="border-top:5px solid ' + col + ';padding-top:10px"><div class="brand">' + h_(s['Business name']) + '</div></div>' + body +
-    '<p>Your order confirmation' + (o['Status'] === 'No charge' ? ' is' : ' and invoice are') + ' attached.</p><p>Thanks,<br>' + h_(s['Business name']) + '</p></div>';
+    '<p>Your order confirmation' + (o['Status'] === 'No charge' || invoicesByAccounts_() ? ' is' : ' and invoice are') + ' attached.</p><p>Thanks,<br>' + h_(s['Business name']) + '</p></div>';
   return '<html><head><meta charset="utf-8">' + docCss_(col) + '</head><body>' + docHeader_(s, 'ORDER<br>CONFIRMATION', col) + body + '</body></html>';
 }
 
@@ -1192,7 +1219,7 @@ function confirmEmailHtml_(o, s) {
     (o['Status'] === 'No charge' ? '' : '<table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:14px;background:#f6f7f8;padding:10px">' +
       '<tr><td style="padding:10px 12px" colspan="2"><table style="width:100%;border-collapse:collapse">' + money + '</table></td></tr></table>') +
     '<div style="margin-top:14px;padding:12px;border-left:4px solid ' + col + ';background:#f6f7f8">' + pay.html + '</div>' +
-    (wantsInvoice_(o) ? '<p style="margin:10px 0 0;color:#555">Your invoice is attached.</p>' : '') +
+    (wantsInvoice_(o) ? '<p style="margin:10px 0 0;color:#555">Your invoice is attached.</p>' : owesByBank_(o) ? '<p style="margin:10px 0 0;color:#555">Your invoice will follow separately from our accounts system.</p>' : '') +
     (items.length && !coll ? '<p style="margin:16px 0 0;font-size:12.5px;color:#555"><b>Extra charges apply for:</b> ' + items.map(h_).join(', ') + '.</p>' : '') +
     (terms.length ? '<p style="margin:10px 0 2px;font-size:12px;color:#666"><b>By going ahead you agree to our terms' + (s['Full T&Cs link'] ? ' (<a href="' + h_(s['Full T&Cs link']) + '">full terms</a>)' : '') + ':</b></p>' +
       '<ul style="margin:0;padding-left:18px;font-size:12px;color:#666">' + terms.map(function (x) { return '<li>' + h_(x) + '</li>'; }).join('') + '</ul>' : '') +
@@ -1208,7 +1235,7 @@ function orderEmailText_(o, s) {
     .concat(o['Site notes'] ? ['Notes: ' + o['Site notes']] : [])
     .concat(o['Status'] === 'No charge' ? [''] : ['', st.list.map(function (c) { return (c.k === 'skip' ? what : c.l) + ': ' + money_(c.n) + ' + VAT'; }).join('\n'), 'VAT: ' + money_(o['VAT']), 'Total: ' + money_(o['Total']), ''])
     .concat([emailPay_(o, s).text, ''])
-    .concat(wantsInvoice_(o) ? ['Your invoice is attached.', ''] : [])
+    .concat(wantsInvoice_(o) ? ['Your invoice is attached.', ''] : owesByBank_(o) ? ['Your invoice will follow separately from our accounts system.', ''] : [])
     .concat(items.length && !coll ? ['Extra charges apply for: ' + items.join(', ') + '.', ''] : [])
     .concat(terms.length ? ['By going ahead you agree to our terms:'].concat(terms.map(function (x) { return '- ' + x; })).concat(['']) : [])
     .concat(['Questions? Call ' + s['Business phone'] + ' or reply to this email.', '', s['Business name']]).join('\n');
@@ -2179,7 +2206,8 @@ function getHome_() {
     bookedToday: live.filter(function (o) { return o.created === today; }).length,
     unpaidCount: unpaid.length, unpaidValue: whRound2(unpaid.reduce(function (a, u) { return a + (u.total || 0); }, 0)),
     overdue: unpaid.filter(function (u) { return u.overdue > 0; }).length,
-    recent: all.slice(-8).reverse(), role: ROLE
+    recent: all.slice(-8).reverse(), role: ROLE,
+    mail: mailStatus_()
   };
   if (ROLE === 'director') out.revenue = getRevenue_();
   try { if (licence_().mod.onsite) { var os = onSiteCalc_(); out.onsite = { counts: os.counts, hire: os.hire }; out.stock = stockCalc_(os.list); } } catch (e) { }
@@ -2320,7 +2348,7 @@ var SETTING_GROUPS = [
     ['Tipping price per tonne', 0, 'money'], ['Tipping price per load', 0, 'money']]],
   ['Card payments and lookups', 'Stripe takes card payments. Companies House fills in company details.', [['Stripe secret key', 0, 'secret'], ['Companies House API key', 0, 'secret']]],
   ['Customer texts (ETA add-on)', 'Set up by ApexLine when you add on-the-way texts.', [['Send customer ETA messages (Yes/No)', 0, 'yesno'], ['Twilio Account SID', 0], ['Twilio Auth Token', 0, 'secret'], ['Twilio from number', 0]]],
-  ['Accounts export', '', [['Accounts software (Xero/QuickBooks/Other)', 0, 'pick:Xero/QuickBooks/Other'], ['Sales account code', 0], ['Xero VAT rate name', 0], ['QuickBooks VAT code', 0]]],
+  ['Accounts export', 'Pick who emails invoices to customers, so they never get two: WasteLine, or your accounts software (Xero or QuickBooks).', [['Invoices sent by (WasteLine/Accounts software)', 0, 'pick:WasteLine/Accounts software'], ['Accounts software (Xero/QuickBooks/Other)', 0, 'pick:Xero/QuickBooks/Other'], ['Sales account code', 0], ['Xero VAT rate name', 0], ['QuickBooks VAT code', 0]]],
   ['Logins', 'Each login needs its own PIN, 4 to 8 digits.', [['Director PIN', 1, 'secret'], ['Office PIN', 1, 'secret'], ['Booking PIN', 1, 'secret']]]
 ];
 var EDIT_SETTINGS = []; SETTING_GROUPS.forEach(function (g) { g[2].forEach(function (f) { EDIT_SETTINGS.push(f[0]); }); });
@@ -2528,7 +2556,7 @@ var ADDONS = ['eta', 'accounts'];
 var MODULE_OF = { createOrder: 'orders', runImport: 'orders',
   getBoard: 'plan', saveBoard: 'plan', editJob: 'plan', payLink: 'cards', sendCardLink: 'cards', checkOrder: 'cards',
   getWaste: 'waste', saveReceipts: 'waste', addReceipt: 'waste', exportWaste: 'waste', markWasteSubmitted: 'waste', saveDefraTemplate: 'waste',
-  accountsExport: 'accounts', sendEtaNow: 'eta',
+  accountsExport: 'accounts', accountsExportNew: 'accounts', sendEtaNow: 'eta',
   tipLookup: 'tipin', getTipIns: 'tipin', saveTipIn: 'tipin', saveTipDraft: 'tipin', voidTipDraft: 'tipin', tipMarkPaid: 'tipin', tipCheck: 'tipin', tipLink: 'tipin',
   tipInvoice: 'tipin', tipInvoicePaid: 'tipin', getOnSite: 'onsite', addOnSite: 'onsite', remindHire: 'onsite', getDriverApp: 'driver',
   getProfit: 'profit', saveDisposal: 'profit', addLorryCost: 'profit', deleteLorryCost: 'profit', importFuel: 'profit', addFuel: 'profit', deleteFuel: 'profit', getReports: 'reports',
@@ -2611,7 +2639,7 @@ function licence_() {
     var hide = (Array.isArray(r.hide) ? r.hide : []).filter(function (k) { return MODULES[k]; });
     hide.forEach(function (k) { mod[k] = false; });
     return fin({ trialEnd: r.trial_ends ? whFmtDate(new Date(r.trial_ends)) : '', daysLeft: r.days_left || 0,
-      trial: inTrial, paid: plan !== '' && plan !== 'free' || !!r.paid, plan: plan, planName: PLAN_NAMES[plan] || '', mod: mod, hide: hide });
+      trial: inTrial, paid: plan !== '' && plan !== 'free' || !!r.paid, plan: plan, planName: PLAN_NAMES[plan] || '', mod: mod, hide: hide, mail: !!r.mail });
   }
 
   // Last resort (brand-new install that cannot reach the server yet): local 14-day trial, so nothing is blocked.
@@ -2855,7 +2883,22 @@ function sendEtaNow_(r, no) {
 function accountsSoftware_() { var v = String(setting_('Accounts software (Xero/QuickBooks/Other)') || 'Xero').toLowerCase();
   return /quick|qbo/.test(v) ? 'quickbooks' : /xero/.test(v) ? 'xero' : 'sheet'; }
 
-function accountsExport_(fmt, from, to) {
+/* Every invoice sent to the accounts software is logged once, so "new invoices only" can never send one twice. */
+var ACCLOG_HEAD = ['Invoice No', 'Exported at', 'Total (inc VAT)', 'File'];
+function accLogTab_() {
+  var ss = ss_(), sh = ss.getSheetByName('Accounts Log');
+  if (!sh) { sh = ss.insertSheet('Accounts Log'); sh.getRange(1, 1, sh.getMaxRows(), ACCLOG_HEAD.length).setNumberFormat('@');
+    sh.getRange(1, 1, 1, ACCLOG_HEAD.length).setValues([ACCLOG_HEAD]); try { styleTab_(sh, [110, 130, 110, 280]); } catch (e) { } }
+  return sh;
+}
+function accLog_() { var sh = accLogTab_(), n = sh.getLastRow(), out = {};
+  if (n > 1) sh.getRange(2, 1, n - 1, 3).getDisplayValues().forEach(function (r) { if (r[0]) out[r[0]] = whMoney(r[2]) || 0; }); return out; }
+/* "New invoices only": everything not yet sent, from the last 90 days. */
+function accountsExportNew_(fmt) {
+  var b = new Date(), a = new Date(); a.setDate(a.getDate() - 90);
+  return accountsExport_(fmt, whFmtDate(a), whFmtDate(b), true);
+}
+function accountsExport_(fmt, from, to, onlyNew) {
   needModule_('accounts');
   if (ROLE !== 'director') throw new Error('Director only.');
   fmt = fmt || accountsSoftware_();
@@ -2875,6 +2918,13 @@ function accountsExport_(fmt, from, to) {
     });
   });
   lines = lines.concat(tipAccountLines_(a, b).filter(function (l) { return l.n > 0; }));
+  var logged = accLog_(), changed = [];
+  if (onlyNew) {
+    var tot = {}; lines.forEach(function (l) { var k = l.o['Order No']; tot[k] = whRound2((tot[k] || 0) + l.n * 1.2); });
+    Object.keys(tot).forEach(function (k) { if (logged[k] != null && Math.abs(logged[k] - tot[k]) > 0.01) changed.push(k); });
+    lines = lines.filter(function (l) { return logged[l.o['Order No']] == null; });
+    if (!lines.length) return { none: true, changed: changed, software: fmt || accountsSoftware_() };
+  }
   if (!lines.length) throw new Error('No invoices in those dates.');
 
   // group by invoice so one invoice never spans two files
@@ -2909,7 +2959,12 @@ function accountsExport_(fmt, from, to) {
     var x = saveExport_(name, [csvRow(head)].concat(f.map(function (l) { return csvRow(row(l)); })).join('\n'));
     return { url: x.url, name: name };
   });
-  return { url: out[0].url, files: out, lines: lines.length, invoices: groups.length, software: fmt,
+  // log what went out, so the next "new invoices only" skips it
+  var now = Utilities.formatDate(new Date(), 'Europe/London', 'dd/MM/yy HH:mm'), add = [];
+  groups.forEach(function (g) { var k = g[0].o['Order No']; if (logged[k] == null) add.push([k, now, whRound2(g.reduce(function (t, l) { return t + l.n * 1.2; }, 0)).toFixed(2), out[0].name]); });
+  if (add.length) { var lt = accLogTab_(); lt.getRange(lt.getLastRow() + 1, 1, add.length, ACCLOG_HEAD.length).setValues(add); }
+  var before = groups.filter(function (g) { return logged[g[0].o['Order No']] != null; }).map(function (g) { return g[0].o['Order No']; });
+  return { url: out[0].url, files: out, lines: lines.length, invoices: groups.length, software: fmt, changed: changed, already: before,
     tip: fmt === 'quickbooks' ? 'In QuickBooks choose "Exclusive" for VAT when you import.' :
          fmt === 'xero' ? 'In Xero go to Sales > Invoices > Import. If Xero rejects the VAT rate, copy its exact name into Settings.' : '' };
 }
@@ -6019,6 +6074,7 @@ a.link.drv{text-decoration:none}
 <div id="homeView" class="page hide">
   <div class="hero"><div><div class="eyebrow" id="hDate"></div><h2 id="hHi"></h2></div><div style="flex:1"></div><button class="btn1" id="hNew">+ New order</button></div>
   <div id="hSite"></div>
+  <div id="hMail"></div>
   <div class="stats" id="hStats"></div>
   <div class="dash">
     <div class="panel hide" id="hRev"></div>
@@ -6270,8 +6326,8 @@ a.link.drv{text-decoration:none}
   <div class="tbar"><h2>Orders</h2><span id="oSum" class="sub2"></span><div style="flex:1"></div><button class="btn2" id="oAccBtn" style="padding:9px 14px">Export for accounts</button></div>
   <div class="panel hide" id="oAcc"><div class="ph"><b>Export invoices for your accounts</b></div>
     <div class="ufilters" style="margin:0"><span class="pill" id="aFmtLbl"></span>
-      <input class="in" type="date" id="aFrom"><input class="in" type="date" id="aTo"><button class="fx" id="aGo">Create file</button></div>
-    <div class="sub2" style="margin-top:8px">The file is made for the accounts software set in Settings, saved in your Google Drive (Exports folder) and opened in a new tab. Big date ranges are split into several files so each one imports.</div></div>
+      <button class="fx" id="aNew">New invoices only</button><span class="sub2">or pick dates:</span><input class="in" type="date" id="aFrom"><input class="in" type="date" id="aTo"><button class="fx alt" id="aGo">Create file</button></div>
+    <div class="sub2" style="margin-top:8px"><b>New invoices only</b> gives you every invoice not already sent to your accounts, so nothing can ever go in twice. Do it once a day. The file is made for the accounts software set in Settings, saved in your Google Drive (Exports folder) and opened in a new tab. Big date ranges are split into several files so each one imports.</div></div>
   <div class="ufilters"><input class="in" id="oQ" placeholder="Search order, customer, site or postcode" autocomplete="off"><div class="rphold" id="oRange"></div><select class="in" id="oStatus"><option value="">Any status</option><option>Unpaid</option><option>Part paid</option><option>Paid</option><option>Cancelled</option></select>
     <div class="vwtog" id="oVw"><button type="button" data-vw="list" title="List view"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg></button><button type="button" data-vw="grid" title="Grid view"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg></button></div></div>
   <div class="tablewrap" id="oListWrap"><table class="tbl" id="oTable"></table></div>
@@ -7507,6 +7563,7 @@ function loadHome(pre){
     $('hLive').onclick=function(){ if(modOn('live')) goLive(); };
     var sh=stockHtml(H.stock,false); show('hStock',!!sh); $('hStock').innerHTML=sh?'<div class="ph"><b>Skip stock</b><button class="link" id="hStk">Skips on site</button></div>'+sh:''; if($('hStk')) $('hStk').onclick=function(){ if(modOn('onsite')) goSite(); };
     var oc=H.onsite&&H.onsite.counts; setSiteCount(oc);
+    var ml=H.mail; $('hMail').innerHTML=ml&&!ml.service&&ml.left<40?'<div class="note '+(ml.left<15?'bad':'n')+'" style="margin:0 0 14px"><b>'+ml.left+' of 100 emails left today.</b> Google limits free Gmail accounts to 100 a day, so confirmations and WTNs may stop sending. Ask ApexLine about unlimited email.</div>':'';
     $('hSite').innerHTML=oc&&(oc.over||oc.due)?'<button class="sitebar'+(oc.over?' red':'')+'" id="hSiteGo"><b>'+(oc.over?oc.over+' skip'+(oc.over>1?'s have':' has')+' been out longer than the '+H.onsite.hire+'-day hire period':oc.due+' skip'+(oc.due>1?'s are':' is')+' nearly at the end of the hire period')+'.</b> '+(oc.over&&oc.due?oc.due+' more coming up. ':'')+'<span>View skips on site →</span></button>':'';
     if($('hSiteGo')) $('hSiteGo').onclick=function(){ if(modOn('onsite')) goSite(oc.over?'over':'due'); };
     $('hTmr').innerHTML='<div class="kv2"><span>Jobs booked</span><b>'+H.jobsTomorrow+'</b></div><div class="kv2"><span>Not on a lorry yet</span><b>'+H.unassignedTomorrow+'</b></div><div class="kv2"><span>Not paid (excluding on account)</span><b'+(H.unpaidTomorrow?' style="color:var(--bad)"':'')+'>'+H.unpaidTomorrow+'</b></div>';
@@ -8238,10 +8295,17 @@ function drawReports(){
 }
 
 /* ---------- accounts export (director) ---------- */
+function accNew(){ var b=$('aNew'), w=null; try{ w=window.open('','_blank'); }catch(e){} b.disabled=true; b.textContent='Checking…';
+  run().withSuccessHandler(function(r){ b.disabled=false; b.textContent='New invoices only';
+      var ch=(r.changed||[]).length?'<br><b>Changed after they were sent:</b> '+esc(r.changed.join(', '))+'. Update those in your accounts by hand.':'';
+      if(r.none){ if(w) w.close(); toast('ok','✓','<b>Nothing new to send.</b> Every invoice is already in your accounts.'+ch,!!ch); return; }
+      if(w&&!w.closed) w.location=r.url; else window.open(r.url,'_blank');
+      toast('ok','✓','<b>'+r.invoices+' new invoice'+(r.invoices===1?'':'s')+' ready to import</b>'+(r.files.length>1?'<br>Split into '+r.files.length+' files: '+r.files.map(function(x,i){ return '<a target="_blank" href="'+esc(x.url)+'">part '+(i+1)+'</a>'; }).join(', '):'')+ch+(r.tip?'<br>'+esc(r.tip):''),true); })
+    .withFailureHandler(function(e){ if(w) w.close(); b.disabled=false; b.textContent='New invoices only'; toast('bad','!',esc(e&&e.message||e)); }).accountsExportNew(''); }
 function accExport(){ var b=$('aGo'), w=null, f=whFmtDate(new Date($('aFrom').value+'T12:00:00')), t=whFmtDate(new Date($('aTo').value+'T12:00:00'));
   try{ w=window.open('','_blank'); }catch(e){} b.disabled=true; b.textContent='Creating…';
   run().withSuccessHandler(function(r){ b.disabled=false; b.textContent='Create file'; if(w&&!w.closed) w.location=r.url; else window.open(r.url,'_blank');
-      toast('ok','✓','<b>'+r.invoices+' invoice'+(r.invoices===1?'':'s')+' ready</b> ('+r.lines+' lines)'+(r.files.length>1?'<br>Split into '+r.files.length+' files so each one imports: '+r.files.map(function(x,i){ return '<a target="_blank" href="'+esc(x.url)+'">part '+(i+1)+'</a>'; }).join(', '):'')+(r.tip?'<br>'+esc(r.tip):''),true); })
+      toast('ok','✓','<b>'+r.invoices+' invoice'+(r.invoices===1?'':'s')+' ready</b> ('+r.lines+' lines)'+((r.already||[]).length?'<br><b>Already sent before:</b> '+esc(r.already.join(', '))+'. Don\'t import those again.':'')+(r.files.length>1?'<br>Split into '+r.files.length+' files so each one imports: '+r.files.map(function(x,i){ return '<a target="_blank" href="'+esc(x.url)+'">part '+(i+1)+'</a>'; }).join(', '):'')+(r.tip?'<br>'+esc(r.tip):''),true); })
     .withFailureHandler(function(e){ if(w) w.close(); b.disabled=false; b.textContent='Create file'; toast('bad','!',esc(e&&e.message||e)); }).accountsExport('',f,t); }
 
 function statusPill(s){ return '<span class="pill '+({Paid:'ok','Part paid':'warn',Unpaid:'bad',Cancelled:'','No charge':''})[s]+'">'+esc(s||'')+'</span>'; }
@@ -8612,7 +8676,7 @@ function wire(){
   $('howX').onclick=howClose; $('howGo').onclick=howClose; $('howOv').onclick=function(e){ if(e.target===this) howClose(); }; $('wQ').oninput=renderWaste; $('wNone').onclick=function(){ WSEL={}; renderWaste(); };
   $('wExport').onclick=wasteExport; $('wSubmit').onclick=wasteSubmit;
   $('oAccBtn').onclick=function(){ $('aFmtLbl').textContent='For '+({xero:'Xero',quickbooks:'QuickBooks',sheet:'any software (spreadsheet)'}[D.acct]||'Xero'); $('oAcc').classList.toggle('hide'); var t=new Date(); if(!$('aTo').value){ $('aTo').value=t.toISOString().slice(0,10); t.setDate(1); $('aFrom').value=t.toISOString().slice(0,10); } };
-  $('aGo').onclick=accExport;
+  $('aGo').onclick=accExport; $('aNew').onclick=accNew;
   $('pDate').onchange=function(){ $('pLinks').innerHTML=''; loadPlan(); }; $('pRefresh').onclick=function(){ loadPlan(true); };
   $('pSuggest').onclick=suggestPlan; $('pReset').onclick=resetPlan; $('pSave').onclick=function(){ savePlan(false); }; $('pSend').onclick=function(){ savePlan(true); };
   ['ncCompany','ncName','ncEmail','ncPhone','ncBilling'].forEach(function(id){ $(id).oninput=function(){
