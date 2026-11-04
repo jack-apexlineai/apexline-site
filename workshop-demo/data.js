@@ -341,6 +341,9 @@ WS.seed = function () {
   function ago(mins) {
     var now = new Date(), d = new Date(now.getTime() - mins * 60000);
     var floor = new Date(); floor.setHours(7, 30, 0, 0);
+    // opened before the shift starts, or late at night: treat the last ten hours
+    // as the working day so the board still reads like a day's work
+    if (floor > now) floor = new Date(now.getTime() - 10 * 3600000);
     if (d < floor) d = floor;
     if (d > now) d = now;
     return WS.stampOf(d);
@@ -381,43 +384,60 @@ WS.seed = function () {
     };
   }
 
-  /* ---------------- history: about two weeks of finished work ---------------- */
-  var histDays = [-14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1];
-  histDays.forEach(function (d) {
-    var dow = WS.parse(WS.day(d)).getDay();
-    if (dow === 0) return;
-    var count = dow === 6 ? 1 : int(2, 4);
-    for (var i = 0; i < count; i++) {
-      var v = vehicles[int(0, vehicles.length - 1)];
-      var type = pick(types);
-      var f = settings.fitters[int(0, 3)];
-      var est = std(type);
-      var hours = Math.round((est * (0.68 + r() * 0.52)) * 4) / 4;
-      if (hours < 0.5) hours = 0.5;
-      var withDefect = r() < .4;
-      var date = WS.day(d);
-      var startH = 8 + (i * 2);
-      var job = newJob({
-        vehicle: v, type: type, date: date, bay: settings.bays[int(0, 3)], fitterId: f.id,
-        status: 'done', tasksDone: true, estHours: est, order: i,
-        parts: type === 'PMI' || type === 'Service' ? someParts(int(1, 3)) : someParts(int(0, 2)),
-        clockOns: [clockOn(f.id, date, startH > 15 ? 15 : startH, 0, hours)],
-        inspection: type === 'PMI' ? filledInspection(v, f, date, withDefect) : null,
-        qc: { by: 'Dave Mitchell', at: WS.at(date, 16, 10), note: 'Checked and road tested.' },
+  /* ---------------- history: about ten weeks of finished work ----------------
+     Each fitter is deliberately quicker or slower at certain jobs, which is what
+     the suggestion engine reads back out. A real shop has months of this. */
+  var TENDENCY = {
+    f1: { PMI: 0.84, LOLER: 0.88, 'MOT prep': 0.95, Repair: 1.02, Service: 0.96, Defect: 0.95, Tyres: 1.05 },
+    f2: { PMI: 0.99, LOLER: 1.08, 'MOT prep': 1.02, Repair: 1.16, Service: 0.88, Defect: 1.0, Tyres: 0.92 },
+    f3: { PMI: 1.12, LOLER: 1.0, 'MOT prep': 0.9, Repair: 0.86, Service: 1.0, Defect: 0.9, Tyres: 1.0 },
+    f4: { PMI: 1.3, LOLER: 1.25, 'MOT prep': 1.2, Repair: 1.22, Service: 1.12, Defect: 1.1, Tyres: 0.94 },
+    f5: { PMI: 1.05, LOLER: 1.1, 'MOT prep': 1.05, Repair: 0.94, Service: 1.0, Defect: 0.92, Tyres: 1.0 }
+  };
+  function tendency(fitterId, type) {
+    var t = TENDENCY[fitterId] || {};
+    return t[type] != null ? t[type] : 1;
+  }
+
+  for (var hd = -70; hd <= -1; hd++) {
+    var dow0 = WS.parse(WS.day(hd)).getDay();
+    if (dow0 === 0) continue;
+    var count0 = dow0 === 6 ? 1 : int(2, 4);
+    for (var hi = 0; hi < count0; hi++) {
+      var hv = vehicles[int(0, vehicles.length - 1)];
+      var htype = pick(types);
+      // the apprentice gets less of the heavy work, the mobile man is mostly out
+      var hf = settings.fitters[htype === 'LOLER' || htype === 'MOT prep' ? int(0, 2) : int(0, 4)];
+      if (hf.id === 'f5' && r() < 0.6) hf = settings.fitters[int(0, 3)];
+      var hest = std(htype);
+      var hours0 = hest * tendency(hf.id, htype) * (0.88 + r() * 0.24);
+      hours0 = Math.round(hours0 * 4) / 4;
+      if (hours0 < 0.25) hours0 = 0.25;
+      var hDefect = r() < .4;
+      var hdate = WS.day(hd);
+      var hstart = 8 + (hi * 2);
+      if (hstart > 15) hstart = 15;
+      var hjob = newJob({
+        vehicle: hv, type: htype, date: hdate, bay: settings.bays[int(0, 3)], fitterId: hf.id,
+        status: 'done', tasksDone: true, estHours: hest, order: hi,
+        parts: htype === 'PMI' || htype === 'Service' ? someParts(int(1, 3)) : someParts(int(0, 2)),
+        clockOns: [clockOn(hf.id, hdate, hstart, 0, hours0)],
+        inspection: htype === 'PMI' ? filledInspection(hv, hf, hdate, hDefect) : null,
+        qc: { by: 'Dave Mitchell', at: WS.at(hdate, 16, 10), note: 'Checked and road tested.' },
         audit: [
-          { at: WS.at(date, 7, 30), who: 'Office', what: 'Job card created' },
-          { at: WS.at(date, startH > 15 ? 15 : startH, 0), who: f.name, what: 'Clocked on' },
-          { at: WS.at(date, 15, 40), who: f.name, what: 'Job marked done, sent to QC' },
-          { at: WS.at(date, 16, 10), who: 'Dave Mitchell', what: 'QC signed off' }
+          { at: WS.at(hdate, 7, 30), who: 'Office', what: 'Job card created' },
+          { at: WS.at(hdate, hstart, 0), who: hf.name, what: 'Clocked on' },
+          { at: WS.at(hdate, 15, 40), who: hf.name, what: 'Job marked done, sent to QC' },
+          { at: WS.at(hdate, 16, 10), who: 'Dave Mitchell', what: 'QC signed off' }
         ]
       });
-      if (type === 'PMI') {
-        job.inspection.header.operator = (operators.filter(function (o) { return o.id === v.operatorId; })[0] || {}).name || '';
-        if (withDefect) job.defects = [{ item: 'Indicators and repeaters', note: 'Nearside front indicator intermittent, loose connector at the lamp.', rectBy: f.name, rectAt: date, photo: '' }];
+      if (htype === 'PMI') {
+        hjob.inspection.header.operator = (operators.filter(function (o) { return o.id === hv.operatorId; })[0] || {}).name || '';
+        if (hDefect) hjob.defects = [{ item: 'Indicators and repeaters', note: 'Nearside front indicator intermittent, loose connector at the lamp.', rectBy: hf.name, rectAt: hdate, photo: '' }];
       }
-      jobs.push(job);
+      jobs.push(hjob);
     }
-  });
+  }
 
   /* invoice most of the finished work, and mark the older half as already sent to Xero */
   var done = jobs.filter(function (j) { return j.status === 'done'; });

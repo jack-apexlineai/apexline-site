@@ -120,7 +120,8 @@
       '<button class="btn alt sm" id="pPrev">‹ Day before</button>' +
       '<button class="btn alt sm" id="pToday">Today</button>' +
       '<button class="btn alt sm" id="pNext">Day after ›</button>' +
-      '<button class="btn" id="pAuto">Fill the day</button>') +
+      (totalPlanned ? '<button class="btn alt sm" id="pClearAll">Clear the day</button>' : '') +
+      '<button class="btn" id="pAuto">Suggest a plan</button>') +
 
       '<div class="grid g4" style="margin-bottom:16px">' +
       stat('Work planned', WS.hrs(totalPlanned), 'across ' + cols.length + ' fitters') +
@@ -146,6 +147,8 @@
         : '<div style="text-align:center;color:var(--muted);font-size:13px;padding:10px">Everything booked in for this day has a fitter against it.</div>') +
       '</div></div>' +
 
+      (O.suggest && O.suggest.day === d ? sugBar() : '') +
+
       '<div class="plan">' + cols.map(function (c) {
         var over = c.planned > c.f.dayHours;
         var cls = over ? 'over' : c.planned >= c.f.dayHours - 0.5 ? 'full' : 'ok';
@@ -156,13 +159,15 @@
           '<div class="av">' + esc(O.initials(c.f.name)) + '</div>' +
           '<div style="min-width:0"><div class="nm">' + esc(c.f.name) + '</div><div class="ro">' + esc(c.f.role) + '</div></div>' +
           '<div class="sp"><div class="hh ' + cls + '">' + WS.hrs(c.planned) + '</div><div class="ro">of ' + c.f.dayHours + 'h</div></div>' +
+          (c.plan.length ? '<button class="clr" data-clear="' + c.f.id + '" title="Clear this day">Clear</button>' : '') +
           '</div><div class="cap"><i class="' + barCls + '" style="width:' + Math.min(100, c.planned / c.f.dayHours * 100) + '%"></i></div></div>' +
           '<div class="fb">' +
           (c.plan.length ? c.plan.map(function (j, i) {
             var out = '';
             if (!lunched && j._planStart >= 12.5) { out += '<div class="lunch">— half hour break —</div>'; lunched = true; }
             return out + pjob(j, false, i, c.plan.length);
-          }).join('') : '<div class="fe">Nothing planned.<br>Drag a job over.</div>') +
+          }).join('') : (sugFor(c.f.id).length ? '' : '<div class="fe">Nothing planned.<br>Drag a job over.</div>')) +
+          sugFor(c.f.id).map(sugCard).join('') +
           (over ? '<div class="flagbox" style="margin:2px 0 8px">That is ' + WS.hrs(c.planned - c.f.dayHours) + ' more than ' + esc(c.f.name.split(' ')[0]) + ' has in the day.</div>' : '') +
           '</div></div>';
       }).join('') + '</div>';
@@ -191,14 +196,197 @@
       '</div>';
   }
 
+  /* ---------- suggested plan ----------
+     Reads the shop's own history: who is actually quicker at what, over how many
+     jobs. It proposes, it never just does it. */
+  function sugFor(fitterId) {
+    if (!O.suggest) return [];
+    return O.suggest.items.filter(function (x) { return x.fitterId === fitterId; });
+  }
+
+  function sugCard(x) {
+    var j = WS.job(x.jobId), v = WS.vehicle(j.vehicleId);
+    return '<div class="pjob sug" data-sug="' + j.id + '">' +
+      '<div class="t1"><span class="tm">new</span>' +
+      '<span class="rg">' + esc(v ? v.reg : j.type) + '</span>' +
+      '<span class="es">' + WS.hrs(j.estHours) + '</span></div>' +
+      '<div class="t2">' + esc(j.type) + '</div>' +
+      '<div class="why">' + esc(x.reason) + '</div></div>';
+  }
+
+  function sugBar() {
+    var n = O.suggest.items.length;
+    if (!n) return '<div class="card tight sugbar"><b>Nothing left to suggest.</b> ' +
+      '<span class="muted sm">Everything booked for this day already has a fitter.</span>' +
+      '<span class="right"><button class="btn alt sm" id="pDiscard">Close</button></span></div>';
+    return '<div class="card tight sugbar"><div class="inline">' +
+      '<b>Suggested plan</b>' +
+      '<span class="muted sm">' + n + ' job' + (n > 1 ? 's' : '') + ' placed by who is actually quickest at them. Nothing is saved until you apply it.</span>' +
+      '<span class="right inline">' +
+      '<button class="btn alt sm" id="pWhy">Why these?</button>' +
+      '<button class="btn alt sm" id="pDiscard">Discard</button>' +
+      '<button class="btn sm" id="pApply">Apply the plan</button></span></div></div>';
+  }
+
+  function buildSuggestion(day) {
+    var stats = WS.fitterStats();
+    var fitters = WS.state.settings.fitters;
+    var load = {};
+    fitters.forEach(function (f) { load[f.id] = WS.plannedHours(f.id, day); });
+    var pool = WS.unplanned(day).slice().sort(function (a, b) {
+      return (b.priority === 'high' ? 1 : 0) - (a.priority === 'high' ? 1 : 0);
+    });
+    var items = [];
+    pool.forEach(function (j) {
+      var est = j.estHours || WS.stdTime(j.type);
+      var able = fitters.filter(function (f) { return (f.skills || []).indexOf(j.type) >= 0; });
+      if (!able.length) able = fitters;
+      var scored = able.map(function (f) {
+        var rec = WS.record(f.id, j.type, stats);
+        return { f: f, rec: rec, free: Math.round((f.dayHours - load[f.id]) * 100) / 100 };
+      });
+      var bySpeed = function (a, b) {
+        if (a.rec.known !== b.rec.known) return a.rec.known ? -1 : 1;
+        if (Math.abs(a.rec.ratio - b.rec.ratio) > 0.04) return a.rec.ratio - b.rec.ratio;
+        return b.free - a.free;
+      };
+      var fits = scored.filter(function (x) { return x.free >= est; });
+      var use = (fits.length ? fits : scored).slice().sort(bySpeed)[0];
+      if (!use) return;
+      // the quickest hand at this job, whether or not he has the room
+      var ideal = scored.slice().sort(bySpeed)[0];
+      var first = use.f.name.split(' ')[0];
+      var reason;
+      if (!use.rec.known) {
+        reason = 'Not enough history on ' + j.type + ' yet, so this is on spare time: ' + first + ' has ' + WS.hrs(use.free) + ' free.';
+      } else if (use.rec.vsShop >= 5) {
+        reason = first + ' is ' + use.rec.vsShop + '% quicker than the shop on ' + j.type + ', over ' + use.rec.n + ' jobs.';
+      } else if (use.rec.vsShop <= -5) {
+        reason = first + ' runs ' + Math.abs(use.rec.vsShop) + '% over on ' + j.type + ', but he is the one with the time.';
+      } else {
+        reason = first + ' works ' + j.type + ' to time, over ' + use.rec.n + ' jobs.';
+      }
+      // say out loud when a quicker pair of hands was passed over for want of time
+      if (ideal && ideal.f.id !== use.f.id && ideal.rec.known && ideal.rec.vsShop >= 5) {
+        reason = ideal.f.name.split(' ')[0] + ' is ' + ideal.rec.vsShop + '% quicker at ' + j.type +
+          ' but has only ' + WS.hrs(Math.max(0, ideal.free)) + ' left, so ' + reason;
+      }
+      if (!fits.length) reason += ' Nobody has a clear gap, so this takes him over his ' + use.f.dayHours + ' hours.';
+      load[use.f.id] += est;
+      items.push({ jobId: j.id, fitterId: use.f.id, reason: reason, n: use.rec.n, known: use.rec.known });
+    });
+    return { day: day, items: items };
+  }
+
+  function whyModal() {
+    var stats = WS.fitterStats();
+    var types = {};
+    O.suggest.items.forEach(function (x) { types[WS.job(x.jobId).type] = 1; });
+    var body = '<div class="hint" style="margin-bottom:14px">Every finished job records the standard time against what was actually clocked. ' +
+      'This is that history, by fitter, for the kinds of work being planned. Anything under ' + WS.MIN_SAMPLES +
+      ' jobs is not treated as a pattern.</div>' +
+      Object.keys(types).map(function (t) {
+        var shop = stats.shop[t];
+        return '<h3 style="margin:16px 0 8px">' + esc(t) + '<span class="muted sm" style="font-weight:500"> · shop average ' +
+          (shop ? WS.hhmm(shop.avg) + ' over ' + shop.n + ' jobs' : 'no history') + '</span></h3>' +
+          '<div class="tablewrap"><table class="tbl"><thead><tr><th>Fitter</th><th class="num">Jobs</th>' +
+          '<th class="num">Average</th><th class="num">Against the shop</th></tr></thead><tbody>' +
+          WS.state.settings.fitters.map(function (f) {
+            var rec = WS.record(f.id, t, stats);
+            if (!rec.n) return '';
+            return '<tr><td>' + esc(f.name) + '</td><td class="num">' + rec.n + '</td>' +
+              '<td class="num">' + WS.hhmm(rec.avg) + '</td>' +
+              '<td class="num">' + (rec.known
+                ? pill((rec.vsShop > 0 ? rec.vsShop + '% quicker' : rec.vsShop < 0 ? Math.abs(rec.vsShop) + '% slower' : 'to time'),
+                       rec.vsShop >= 5 ? 'ok' : rec.vsShop <= -5 ? 'bad' : '')
+                : '<span class="muted sm">too few to call</span>') + '</td></tr>';
+          }).join('') + '</tbody></table></div>';
+      }).join('') +
+      '<div class="note" style="margin-top:16px">It places the urgent jobs first, then picks whoever is quickest at that kind of work ' +
+      'and still has room in the day. If nobody has room it says so on the card rather than quietly overbooking anyone.</div>';
+    O.modal('Why these fitters', body, null, null, 'wide');
+  }
+
   W.planner = function () {
     var d = WS.day(O.planDay);
-    $('pPrev').onclick = function () { O.planDay--; O.render(); };
-    $('pNext').onclick = function () { O.planDay++; O.render(); };
-    $('pToday').onclick = function () { O.planDay = 0; O.render(); };
-    $('pAuto').onclick = function () { autoPlan(d); };
+    $('pPrev').onclick = function () { O.planDay--; O.suggest = null; O.render(); };
+    $('pNext').onclick = function () { O.planDay++; O.suggest = null; O.render(); };
+    $('pToday').onclick = function () { O.planDay = 0; O.suggest = null; O.render(); };
+    $('pAuto').onclick = function () {
+      O.suggest = buildSuggestion(d);
+      O.render();
+      if (!O.suggest.items.length) WS.toast('Everything on this day already has a fitter.');
+    };
+    var ca = $('pClearAll');
+    if (ca) ca.onclick = function () {
+      var all = WS.jobsOn(d).filter(function (j) { return j.fitterId && j.status !== 'done'; });
+      var list = all.filter(WS.notStarted);
+      var held = all.length - list.length;
+      if (!list.length) {
+        WS.toast(held ? 'Nothing to clear. The rest have been started.' : 'Nothing to clear.');
+        return;
+      }
+      if (!confirm('Take ' + list.length + ' job' + (list.length > 1 ? 's' : '') + ' off the day? They go back to waiting to be planned.' +
+        (held ? '\n\n' + held + ' job' + (held > 1 ? 's have' : ' has') + ' already been started and will stay put.' : ''))) return;
+      list.forEach(function (j) {
+        j.fitterId = ''; j.order = 99;
+        WS.audit(j, 'Office', 'Taken off the day plan');
+      });
+      O.suggest = null;
+      WS.save(); O.render();
+      WS.toast(list.length + ' job' + (list.length > 1 ? 's' : '') + ' put back in the waiting list' +
+        (held ? ', ' + held + ' left alone because they are under way.' : '.'), 'ok');
+    };
+    document.querySelectorAll('[data-clear]').forEach(function (b) {
+      b.onclick = function (e) {
+        e.stopPropagation();
+        var f = WS.fitter(b.dataset.clear);
+        var mine = WS.dayPlan(f.id, d).filter(function (j) { return j.status !== 'done'; });
+        var list = mine.filter(WS.notStarted);
+        var held = mine.length - list.length;
+        if (!list.length) {
+          WS.toast(held ? f.name.split(' ')[0] + ' has started everything on his day.' : f.name.split(' ')[0] + ' has nothing to clear.');
+          return;
+        }
+        if (!confirm('Clear ' + f.name + "'s day? " + list.length + ' job' + (list.length > 1 ? 's go' : ' goes') + ' back to waiting to be planned.' +
+          (held ? '\n\n' + held + ' job' + (held > 1 ? 's are' : ' is') + ' already under way and will stay with him.' : ''))) return;
+        list.forEach(function (j) {
+          j.fitterId = ''; j.order = 99;
+          WS.audit(j, 'Office', 'Taken off ' + f.name + "'s day");
+        });
+        O.suggest = null;
+        WS.save(); O.render();
+        WS.toast(f.name.split(' ')[0] + "'s day cleared" + (held ? ', bar the ' + held + ' under way.' : '.'), 'ok');
+      };
+    });
+    var ap = $('pApply');
+    if (ap) ap.onclick = function () {
+      var n = 0;
+      O.suggest.items.forEach(function (x) {
+        var j = WS.job(x.jobId);
+        if (!j || j.fitterId) return;
+        j.fitterId = x.fitterId;
+        j.order = WS.dayPlan(x.fitterId, d).length;
+        if (!j.bay && j.type !== 'Roadside callout' && j.type !== 'Collection / delivery') {
+          var taken = WS.jobsOn(d).filter(function (y) { return y.bay && y.id !== j.id && y.status !== 'done'; }).map(function (y) { return y.bay; });
+          j.bay = WS.state.settings.bays.filter(function (b2) { return taken.indexOf(b2) < 0; })[0] || '';
+        }
+        WS.audit(j, 'Office', 'Planned to ' + WS.fitter(x.fitterId).name + ': ' + x.reason);
+        n++;
+      });
+      O.suggest = null;
+      WS.save(); O.render();
+      WS.toast(n + ' job' + (n > 1 ? 's' : '') + ' put on the board. The reason is on each job card.', 'ok');
+    };
+    var dc = $('pDiscard');
+    if (dc) dc.onclick = function () { O.suggest = null; O.render(); };
+    var wy = $('pWhy');
+    if (wy) wy.onclick = whyModal;
 
-    O.dragDrop('.pjob', '[data-drop]',
+    document.querySelectorAll('[data-sug]').forEach(function (el) {
+      el.onclick = function () { O.jobCard(el.dataset.sug); };
+    });
+    O.dragDrop('.pjob:not(.sug)', '[data-drop]',
       function (jobId, z) { assignFitter(jobId, z.dataset.drop === 'pool' ? '' : z.dataset.drop, d); },
       function (jobId) { O.jobCard(jobId); });
     document.querySelectorAll('[data-up]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); move(b.dataset.up, -1, d); }; });
@@ -211,6 +399,11 @@
     var j = WS.job(jobId);
     if (!j) return;
     if (j.fitterId === fitterId) return;
+    if (!fitterId && !WS.notStarted(j)) {
+      WS.toast('That one has been started, so it stays with ' + (WS.fitter(j.fitterId) || {}).name + '.', 'bad');
+      O.render();
+      return;
+    }
     var f = WS.fitter(fitterId);
     if (fitterId) {
       j.order = WS.dayPlan(fitterId, day).length;
@@ -240,37 +433,6 @@
     list.forEach(function (x, n) { x.order = n; });
     WS.save();
     O.render();
-  }
-
-  /* spread what is left over the fitters who have room, matching skills first */
-  function autoPlan(day) {
-    var pool = WS.unplanned(day);
-    if (!pool.length) { WS.toast('Everything on this day already has a fitter.'); return; }
-    var fitters = WS.state.settings.fitters.map(function (f) {
-      return { f: f, used: WS.plannedHours(f.id, day) };
-    });
-    var placed = 0;
-    pool.sort(function (a, b) { return (b.priority === 'high' ? 1 : 0) - (a.priority === 'high' ? 1 : 0); });
-    pool.forEach(function (j) {
-      var est = j.estHours || WS.stdTime(j.type);
-      var able = fitters.filter(function (x) { return (x.f.skills || []).indexOf(j.type) >= 0; });
-      var pool2 = able.length ? able : fitters;
-      pool2.sort(function (a, b) { return a.used - b.used; });
-      var best = pool2.filter(function (x) { return x.used + est <= x.f.dayHours; })[0] || pool2[0];
-      if (!best) return;
-      j.fitterId = best.f.id;
-      j.order = WS.dayPlan(best.f.id, day).length;
-      if (!j.bay && j.type !== 'Roadside callout' && j.type !== 'Collection / delivery') {
-        var taken = WS.jobsOn(day).filter(function (x) { return x.bay && x.id !== j.id && x.status !== 'done'; }).map(function (x) { return x.bay; });
-        j.bay = WS.state.settings.bays.filter(function (b) { return taken.indexOf(b) < 0; })[0] || '';
-      }
-      WS.audit(j, 'Office', 'Planned to ' + best.f.name + ' automatically');
-      best.used += est;
-      placed++;
-    });
-    WS.save();
-    O.render();
-    WS.toast(placed + ' job' + (placed > 1 ? 's' : '') + ' put on the board by skill and spare time.', 'ok');
   }
 
   /* ============================ live view ============================ */

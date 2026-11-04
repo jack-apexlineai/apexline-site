@@ -54,8 +54,14 @@ nav.side button.nv.on{background:var(--brand-l);color:var(--ink);font-weight:600
 nav.side button.nv.on i{color:var(--brand)}
 nav.side .cnt{margin-left:auto;background:var(--soft);color:var(--ink);font-size:11.5px;font-weight:700;border-radius:999px;padding:1px 8px}
 nav.side button.nv.on .cnt{background:var(--card)}
-.navgrp{font-size:10.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:14px 10px 5px}
+.navgrp{display:flex;align-items:center;gap:7px;width:100%;background:none;border:0;cursor:pointer;font-family:inherit;
+  font-size:10.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:14px 10px 5px;text-align:left}
 .navgrp:first-child{padding-top:2px}
+.navgrp:hover{color:var(--ink)}
+.navgrp .caret{font-style:normal;font-size:10px;transition:transform .15s;margin-left:auto}
+.navgrp.shut .caret{transform:rotate(-90deg)}
+.navgrp .gcnt{background:var(--brand);color:#fff;font-size:10px;font-weight:800;border-radius:999px;padding:1px 6px;letter-spacing:0}
+.navbody{display:flex;flex-direction:column;gap:2px}
 .navsep{height:1px;background:var(--line);margin:8px 6px}
 .sidefoot{margin-top:auto;padding-top:8px}
 main{flex:1;min-width:0;padding:22px 26px 60px}
@@ -346,6 +352,14 @@ body.dragging *{cursor:grabbing !important}
 .pjob .hd{position:absolute;right:7px;bottom:7px;display:flex;gap:4px}
 .pjob .hd button{width:22px;height:22px;border-radius:6px;border:1px solid var(--in-line);background:var(--in-bg);color:var(--muted);font-size:11px;line-height:1;cursor:pointer;padding:0;display:grid;place-items:center}
 .pjob .hd button:hover{color:var(--ink);border-color:var(--brand)}
+.pjob.sug{border-style:dashed;border-left-style:solid;border-left-color:var(--brand);background:var(--brand-l);cursor:pointer}
+.pjob.sug .tm{color:var(--brand);text-transform:uppercase;font-size:10px;letter-spacing:.04em}
+.pjob .why{font-size:11.5px;color:var(--muted);margin-top:7px;line-height:1.4;border-top:1px dashed var(--line);padding-top:7px}
+.sugbar{border-color:var(--brand);background:var(--brand-l)}
+.sugbar .inline{flex-wrap:wrap;gap:10px}
+.fcol .fh .clr{margin-left:8px;background:var(--in-bg);border:1px solid var(--in-line);color:var(--muted);border-radius:7px;
+  padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;flex:0 0 auto}
+.fcol .fh .clr:hover{color:var(--bad);border-color:var(--bad)}
 .pool{background:var(--card);border:1px dashed var(--line);border-radius:var(--r);padding:12px}
 .pool.over{border-color:var(--brand);background:var(--brand-l)}
 .lunch{font-size:11px;color:var(--muted);text-align:center;padding:3px 0 8px;font-weight:600}

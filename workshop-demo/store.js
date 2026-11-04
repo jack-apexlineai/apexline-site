@@ -4,7 +4,7 @@
 var WS = window.WS || {};
 WS.KEY = 'wsDemo:state';
 WS.PIN = '240411';
-WS.SEED_V = 20;
+WS.SEED_V = 21;
 
 /* ---------- state ---------- */
 WS.state = null;
@@ -99,6 +99,11 @@ WS.STATUS = {
 WS.statusLabel = function (s) { return (WS.STATUS[s] || { label: s }).label; };
 WS.statusCls = function (s) { return (WS.STATUS[s] || { cls: '' }).cls; };
 WS.OPEN_STATUSES = ['booked', 'in_bay', 'in_progress', 'waiting_parts', 'waiting_auth', 'qc'];
+
+/* a job nobody has touched yet, so it is safe to move off a fitter's day */
+WS.notStarted = function (j) {
+  return !(j.clockOns || []).length && (j.status === 'booked' || j.status === 'in_bay');
+};
 
 /* ---------- time and money ---------- */
 WS.hoursOn = function (job, upToNow) {
@@ -213,6 +218,49 @@ WS.jobProgress = function (j) {
 };
 WS.progressCls = function (st) {
   return st === 'over' ? 'bad' : st === 'close' ? 'warn' : st === 'ok' ? 'ok' : '';
+};
+
+/* ---------- how each fitter actually performs ----------
+   Worked out from finished jobs: what the standard time said against what was
+   really clocked. No guessing, just the shop's own history. */
+WS.MIN_SAMPLES = 3;
+
+WS.fitterStats = function () {
+  var byFitter = {}, shop = {};
+  WS.state.jobs.forEach(function (j) {
+    if (j.status !== 'done' || !j.fitterId || !j.estHours) return;
+    var act = WS.hoursOn(j);
+    if (act <= 0) return;
+    byFitter[j.fitterId] = byFitter[j.fitterId] || {};
+    var f = byFitter[j.fitterId][j.type] = byFitter[j.fitterId][j.type] || { n: 0, act: 0, std: 0 };
+    f.n++; f.act += act; f.std += j.estHours;
+    var sh = shop[j.type] = shop[j.type] || { n: 0, act: 0, std: 0 };
+    sh.n++; sh.act += act; sh.std += j.estHours;
+  });
+  function finish(o) {
+    Object.keys(o).forEach(function (k) {
+      var s = o[k];
+      s.ratio = s.std ? s.act / s.std : 1;
+      s.avg = s.n ? s.act / s.n : 0;
+    });
+  }
+  Object.keys(byFitter).forEach(function (id) { finish(byFitter[id]); });
+  finish(shop);
+  return { byFitter: byFitter, shop: shop };
+};
+
+/* a fitter's record on one job type, with enough detail to explain itself */
+WS.record = function (fitterId, type, stats) {
+  stats = stats || WS.fitterStats();
+  var mine = (stats.byFitter[fitterId] || {})[type];
+  var shop = stats.shop[type];
+  var known = !!(mine && mine.n >= WS.MIN_SAMPLES);
+  var ratio = known ? mine.ratio : (shop ? shop.ratio : 1);
+  var vsShop = known && shop && shop.ratio ? Math.round((shop.ratio - mine.ratio) / shop.ratio * 100) : 0;
+  return {
+    known: known, n: mine ? mine.n : 0, ratio: ratio, avg: mine ? mine.avg : 0,
+    vsShop: vsShop, shopRatio: shop ? shop.ratio : 1
+  };
 };
 
 /* ---------- rate cards ---------- */

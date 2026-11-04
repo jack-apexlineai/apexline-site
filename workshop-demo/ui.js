@@ -11,6 +11,7 @@
     planDay: 0,
     vehFilter: { q: '', type: '', op: '', vor: '' },
     stockFilter: '',
+    suggest: null,
     tab: {}
   };
 
@@ -86,22 +87,49 @@
   }
   O.paintBell = paintBell;
 
+  /* the sidebar folds away by group, and remembers what you closed */
+  function navShut() {
+    try { return JSON.parse(localStorage.getItem('wsDemo:navShut') || '{}'); } catch (e) { return {}; }
+  }
+  function saveNavShut(o) {
+    try { localStorage.setItem('wsDemo:navShut', JSON.stringify(o)); } catch (e) { }
+  }
+
   function buildNav() {
-    var wrap = $('navItems');
+    var wrap = $('navItems'), shut = navShut(), body = null;
     wrap.innerHTML = '';
     O.NAV.forEach(function (n) {
       if (n.g) {
-        var h = WS.el('div', 'navgrp', n.g);
+        var closed = !!shut[n.g];
+        var h = WS.el('button', 'navgrp' + (closed ? ' shut' : ''));
+        h.dataset.grp = n.g;
+        h.innerHTML = '<span>' + esc(n.g) + '</span><i class="caret">▾</i><span class="gcnt" hidden></span>';
         wrap.appendChild(h);
+        body = WS.el('div', 'navbody');
+        body.dataset.body = n.g;
+        if (closed) body.hidden = true;
+        wrap.appendChild(body);
         return;
       }
       var b = WS.el('button', 'nv');
       b.dataset.screen = n.id;
       b.innerHTML = '<i>' + n.icon + '</i>' + esc(n.name) + '<span class="cnt" hidden></span>';
-      wrap.appendChild(b);
+      (body || wrap).appendChild(b);
     });
     document.querySelectorAll('nav.side button.nv').forEach(function (b) {
       b.onclick = function () { O.go(b.dataset.screen); document.body.classList.remove('navopen'); };
+    });
+    document.querySelectorAll('nav.side .navgrp').forEach(function (h) {
+      h.onclick = function () {
+        var sh = navShut(), g = h.dataset.grp;
+        sh[g] = !sh[g];
+        if (!sh[g]) delete sh[g];
+        saveNavShut(sh);
+        h.classList.toggle('shut', !!sh[g]);
+        var bd = document.querySelector('[data-body="' + g + '"]');
+        if (bd) bd.hidden = !!sh[g];
+        navCounts();
+      };
     });
   }
 
@@ -122,10 +150,21 @@
       if (!el) return;
       if (v) { el.textContent = v; el.hidden = false; } else { el.hidden = true; }
     });
+    // roll the counts up onto a folded group so nothing hides
+    document.querySelectorAll('nav.side .navgrp').forEach(function (h) {
+      var bd = document.querySelector('[data-body="' + h.dataset.grp + '"]');
+      var tot = 0;
+      if (bd) bd.querySelectorAll('button.nv').forEach(function (b) { tot += c[b.dataset.screen] || 0; });
+      var el = h.querySelector('.gcnt');
+      if (!el) return;
+      if (tot && h.classList.contains('shut')) { el.textContent = tot; el.hidden = false; }
+      else el.hidden = true;
+    });
   }
 
   O.go = function (s) {
     if (!O.SCREENS[s]) s = 'home';
+    if (s !== 'planner') O.suggest = null;
     O.screen = s;
     location.hash = s;
     document.querySelectorAll('nav.side button.nv').forEach(function (b) { b.classList.toggle('on', b.dataset.screen === s); });
