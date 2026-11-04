@@ -466,11 +466,35 @@ function login(pin) {
   var role = roleForPin_(pin);
   if (!role) { cache.put('pinfails', String(fails + 1), 900); throw new Error('Wrong PIN.'); }
   cache.remove('pinfails');
+  var must = pinsNeedChange_();
+  if (must && role !== 'director') throw new Error('This system is still on the starter PINs. The director needs to log in once and set new PINs.');
   var tok = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
   var all = sessions_(); all[tok] = { exp: Date.now() + 30 * 864e5, role: role };
   PROPS.setProperty('SESSIONS', JSON.stringify(capSessions_(all, 50)));
   ROLE = role;
+  if (must) return { token: tok, mustChange: true };   // first login: set real PINs before anything else
   return { token: tok, boot: getBootData_() };
+}
+
+/* ---- starter PINs (1234 / 2345 / 3456) only get the director as far as the "set your PINs" screen ---- */
+var STARTER_PINS = ['1234', '2345', '3456'];
+function pinsNeedChange_() {
+  var s = settings_();
+  return ['Director PIN', 'Office PIN', 'Booking PIN'].some(function (k) { return STARTER_PINS.indexOf(String(s[k] || '').trim()) > -1; });
+}
+function checkPins_(d, o, b) {
+  if (!/^\d{6,8}$/.test(d)) throw new Error('The Director PIN must be 6 to 8 digits.');
+  if (!/^\d{4,8}$/.test(o) || !/^\d{4,8}$/.test(b)) throw new Error('The Office and Booking PINs must be 4 to 8 digits.');
+  if (d === o || d === b || o === b) throw new Error('Each login needs its own PIN.');
+  if ([d, o, b].some(function (p) { return STARTER_PINS.indexOf(p) > -1; })) throw new Error('Pick new PINs, not the starter ones (1234, 2345, 3456).');
+}
+function setPins_(token, d, o, b) {
+  d = String(d || '').trim(); o = String(o || '').trim(); b = String(b || '').trim();
+  checkPins_(d, o, b);
+  setSettingRow_('Director PIN', d); setSettingRow_('Office PIN', o); setSettingRow_('Booking PIN', b);
+  var keep = {}, all = sessions_(); if (all[token]) keep[token] = all[token];
+  PROPS.setProperty('SESSIONS', JSON.stringify(keep));   // anyone else logged in on the starter PINs is signed out
+  return getBootData_();
 }
 
 /* Script properties hold 9KB each. Keep only the newest logins so the list can never fill up and lock everyone out. */
@@ -491,6 +515,8 @@ function api(token, name, args) {
   var sess = token && sessions_()[token];
   if (!sess) throw new Error('AUTH: please enter your PIN.');
   ROLE = sess.role || 'director';
+  if (name === 'setPins') { if (ROLE !== 'director') throw new Error('Only the director can set PINs.'); return setPins_(token, (args || [])[0], (args || [])[1], (args || [])[2]); }
+  if (pinsNeedChange_()) throw new Error(ROLE === 'director' ? 'PINS: set your new PINs first.' : 'AUTH: please enter your PIN.');
   var map = {
     getBootData: getBootData_, createOrder: createOrder_, sendOrder: sendOrder_, emailOrder: emailOrder_, shareOrder: shareOrder_,
     markPaid: markPaid_, markPaidReceipt: markPaidReceipt_, sendCardLink: sendCardLink_, resendInvoice: resendInvoice_, checkPaymentsNow: checkPaymentsNow_,
@@ -537,7 +563,7 @@ function isSetUp_() {
 function openApp() { uiOnly_(); return openApp_(); }
 function openApp_() {
   var ui = SpreadsheetApp.getUi(), url = '';
-  try { url = ScriptApp.getService().getUrl(); } catch (e) { }
+  try { url = PROPS.getProperty('HOSTED_URL') || ScriptApp.getService().getUrl(); } catch (e) { }
   if (!url) { ui.alert('Order screen', 'Extensions > Apps Script > Deploy > New deployment > Web app (Execute as: Me, Who has access: Anyone), then open the link it gives you.', ui.ButtonSet.OK); return; }
   ui.showModalDialog(HtmlService.createHtmlOutput('<div style="font-family:Arial,sans-serif;font-size:14px">' +
     '<a href="' + url + '" target="_blank" style="display:inline-block;background:#1F6F43;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:bold">Open order screen</a>' +
@@ -1508,11 +1534,36 @@ function doPost(e) {
   var out;
   try {
     var b = JSON.parse(e && e.postData && e.postData.contents || '{}');
+    if (b && b.fn) return jsonOut_(hosted_(b));                 // the branded app on apexlineai.com/app/<yard>
     var key = PROPS.getProperty('CONNECTOR_KEY');
     if (!key || b.key !== key) out = { ok: false, error: 'unauthorised' };
     else out = connector_(b);
   } catch (err) { out = { ok: false, error: String(err && err.message || err) }; }
   return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);
+}
+
+/* ============================== hosted app ==============================
+   The yard's branded page (apexlineai.com/app/<yard>/ and /driver/) posts here instead of using google.script.run,
+   so it opens on any phone or browser without Google sign-in trouble. Same PINs, same sessions, same rules:
+   only the functions a browser could already call through the web app link are allowed. */
+var HOSTED_FNS = { login: login, api: api, pinResetStart: pinResetStart, pinResetFinish: pinResetFinish, driverLogin: driverLogin, driverApi: driverApi };
+function jsonOut_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
+function hosted_(b) {
+  try {
+    if (!isSetUp_()) return { ok: false, error: 'This system is not set up yet. Open your WasteLine link from the Google Sheet once, then try again.' };
+    if (b.fn === 'biz') return { ok: true, r: { name: setting_('Business name'), colour: setting_('Brand colour') || DEFAULT_COLOUR, logo: logo_() } };
+    var f = Object.prototype.hasOwnProperty.call(HOSTED_FNS, b.fn) ? HOSTED_FNS[b.fn] : null;
+    if (!f) return { ok: false, error: 'Unknown action' };
+    var r = f.apply(null, Array.isArray(b.args) ? b.args : []);
+    if (/^(login|pinResetFinish|driverLogin)$/.test(b.fn)) hostedUrl_(b.host);
+    return { ok: true, r: r === undefined ? null : r };
+  } catch (err) { return { ok: false, error: String(err && err.message || err) }; }
+}
+/* Remember the yard's hosted address (only ours, only after a correct PIN) so driver links point to it. */
+function hostedUrl_(host) {
+  var u = String(host || '');
+  if (!/^https:\/\/(www\.)?apexlineai\.com\/app\/[a-z0-9-]{2,60}\/$/.test(u)) return;
+  try { if (PROPS.getProperty('HOSTED_URL') !== u) PROPS.setProperty('HOSTED_URL', u); } catch (e) { }
 }
 
 function connector_(b) {
@@ -1807,7 +1858,7 @@ function setupDone_(ss, already, auto) {
   if (!c.email) off.push('Emails are off (you can still WhatsApp the paperwork). To switch on, run Set up again and tick "Send email as you".');
   if (!c.web) off.push('Postcode checker and card payments are off. To switch on, run Set up again and tick "Connect to an external service".');
   if (!auto || !c.auto) off.push('Automatic card-payment checks and the 4pm unpaid email are off. Use Order System > Check card payments instead.');
-  var msg = (already ? 'Already set up.' : 'All set up.') + '\n\nPINs: Director 1234 (everything), Office 2345 (no money totals or settings), Booking 3456 (orders only). Change them in Settings.\n\n' +
+  var msg = (already ? 'Already set up.' : 'All set up.') + '\n\nPINs: Director 1234 (everything), Office 2345 (no money totals or settings), Booking 3456 (orders only). These are starter PINs: the first Director login asks for new ones.\n\n' +
     'Next: put your business details, bank details and prices in the Settings and Zones tabs.' + (off.length ? '\n\n' + off.join('\n') : '');
   Logger.log(msg + '\nSheet: ' + ss.getUrl());
   try { SpreadsheetApp.getUi().alert('Order System', msg, SpreadsheetApp.getUi().ButtonSet.OK); } catch (e) { /* run from the web app or editor */ }
@@ -1920,7 +1971,10 @@ function jobsOn_(day) {
 
 function rowObj_(r) { var o = {}; ORD_HEAD.forEach(function (h, k) { o[h] = r[k]; }); return o; }
 
-function driverUrl_() { var u = ''; try { u = ScriptApp.getService().getUrl(); } catch (e) { } return u ? u + '?driver' : ''; }
+function driverUrl_() {
+  var h = PROPS.getProperty('HOSTED_URL'); if (h) return h + 'driver/';
+  var u = ''; try { u = ScriptApp.getService().getUrl(); } catch (e) { } return u ? u + '?driver' : '';
+}
 
 function getBoard_(day) {
   return { date: day, lorries: lorries_(), jobs: jobsOn_(day), driverUrl: driverUrl_(), log: logFor_(day), start: setting_('Lorries start at') || '07:00',
@@ -2347,7 +2401,7 @@ var SETTING_GROUPS = [
   ['Card payments and lookups', 'Stripe takes card payments. Companies House fills in company details.', [['Stripe secret key', 0, 'secret'], ['Companies House API key', 0, 'secret']]],
   ['Customer texts (ETA add-on)', 'Set up by ApexLine when you add on-the-way texts.', [['Send customer ETA messages (Yes/No)', 0, 'yesno'], ['Twilio Account SID', 0], ['Twilio Auth Token', 0, 'secret'], ['Twilio from number', 0]]],
   ['Accounts export', 'Pick who emails invoices to customers, so they never get two: WasteLine, or your accounts software (Xero or QuickBooks).', [['Invoices sent by (WasteLine/Accounts software)', 0, 'pick:WasteLine/Accounts software'], ['Accounts software (Xero/QuickBooks/Other)', 0, 'pick:Xero/QuickBooks/Other'], ['Sales account code', 0], ['Xero VAT rate name', 0], ['QuickBooks VAT code', 0]]],
-  ['Logins', 'Each login needs its own PIN, 4 to 8 digits.', [['Director PIN', 1, 'secret'], ['Office PIN', 1, 'secret'], ['Booking PIN', 1, 'secret']]]
+  ['Logins', 'Each login needs its own PIN. Director 6 to 8 digits, Office and Booking 4 to 8.', [['Director PIN', 1, 'secret'], ['Office PIN', 1, 'secret'], ['Booking PIN', 1, 'secret']]]
 ];
 var EDIT_SETTINGS = []; SETTING_GROUPS.forEach(function (g) { g[2].forEach(function (f) { EDIT_SETTINGS.push(f[0]); }); });
 var REQUIRED_SETTINGS = []; SETTING_GROUPS.forEach(function (g) { g[2].forEach(function (f) { if (f[1]) REQUIRED_SETTINGS.push(f[0]); }); });
@@ -2376,6 +2430,8 @@ function saveSettingsPage_(f) {
   if (missing.length) throw new Error('Fill in the boxes marked *: ' + missing.join(', ') + '.');
   var pins = ['Director PIN', 'Office PIN', 'Booking PIN'].map(function (k) { return String(f[k] != null ? f[k] : setting_(k)).trim(); });
   if (pins.some(function (p) { return !/^\d{4,8}$/.test(p); })) throw new Error('PINs must be 4 to 8 digits.');
+  if (f['Director PIN'] != null && String(f['Director PIN']).trim() !== String(setting_('Director PIN')).trim() && !/^\d{6,8}$/.test(pins[0])) throw new Error('The Director PIN must be 6 to 8 digits.');
+  if (pins.some(function (p) { return STARTER_PINS.indexOf(p) > -1; })) throw new Error('Pick new PINs, not the starter ones (1234, 2345, 3456).');
   if (pins[0] === pins[1] || pins[0] === pins[2] || pins[1] === pins[2]) throw new Error('Each login needs its own PIN.');
   ['Tipping price per tonne', 'Tipping price per load'].forEach(function (k) { if (f[k] != null && String(f[k]).trim()) { var m = whMoney(f[k]); f[k] = m == null ? '' : m.toFixed(2); } });
   var sh = sh_(TAB.SET), v = sh.getDataRange().getValues(), seen = {};
@@ -3866,7 +3922,8 @@ function pinResetFinish(code, newPin) {
   if (!want) throw new Error('That code has expired. Press "Forgot PIN?" again.');
   if (fails >= 5) { c.remove('pinreset'); throw new Error('Too many wrong codes. Press "Forgot PIN?" again.'); }
   if (String(code || '').trim() !== want) { c.put('pinreset_fails', String(fails + 1), 900); throw new Error('That code is not right.'); }
-  var p = String(newPin || '').trim(); if (!/^\d{4,8}$/.test(p)) throw new Error('The new PIN must be 4 to 8 digits.');
+  var p = String(newPin || '').trim(); if (!/^\d{6,8}$/.test(p)) throw new Error('The new Director PIN must be 6 to 8 digits.');
+  if (STARTER_PINS.indexOf(p) > -1) throw new Error('Pick a new PIN, not a starter one.');
   if (p === setting_('Office PIN') || p === setting_('Booking PIN')) throw new Error('Pick a PIN that is different from the Office and Booking PINs.');
   setSettingRow_('Director PIN', p); c.remove('pinreset');
   PROPS.setProperty('SESSIONS', '{}');   // every old login is signed out

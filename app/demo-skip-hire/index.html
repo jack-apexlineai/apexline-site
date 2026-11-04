@@ -935,6 +935,15 @@ a.link.drv{text-decoration:none}
     <label class="l" style="margin-top:10px">New Director PIN</label><input class="in" id="prPin" type="password" inputmode="numeric" maxlength="8">
     <button class="go" id="prGo" style="margin-top:12px">Set PIN and log in</button>
   </div>
+  <div id="pinSet" class="hide" style="text-align:left;margin-top:14px">
+    <div style="font-weight:700;margin-bottom:4px">Set your own PINs</div>
+    <div class="sub2">You're on the starter PINs. Pick new ones now and keep them private. Each login needs a different PIN.</div>
+    <label class="l" style="margin-top:10px">Director PIN · 6 to 8 digits · everything, incl. money and Settings</label><input class="in" id="psD" type="password" inputmode="numeric" maxlength="8" autocomplete="new-password">
+    <label class="l" style="margin-top:10px">Office PIN · 4 to 8 digits · day to day, no money totals</label><input class="in" id="psO" type="password" inputmode="numeric" maxlength="8" autocomplete="off">
+    <label class="l" style="margin-top:10px">Booking PIN · 4 to 8 digits · taking orders only</label><input class="in" id="psB" type="password" inputmode="numeric" maxlength="8" autocomplete="off">
+    <div id="psErr" class="note e hide"></div>
+    <button class="go" id="psGo" style="margin-top:12px">Save PINs and log in</button>
+  </div>
 </div></div>
 <div id="error" class="load hide"><b>Couldn't load.</b><div id="errmsg"></div></div>
 
@@ -1633,20 +1642,34 @@ function run(){
     return function(){ var args=Array.prototype.slice.call(arguments);
       google.script.run.withSuccessHandler(function(r){ok(r);}).withFailureHandler(function(e){
         var m=String(e&&e.message||e); if(/^AUTH|AUTH:/.test(m)){ lock(); return; }
+        if(/PINS:/.test(m)){ pinSetup(); return; }
         if(/TRIAL:/.test(m)){ D.licence=D.licence||{mod:{}}; var k=Object.keys(D.licence.names||{}).filter(function(x){ return m.indexOf(D.licence.names[x])>-1; })[0]; if(k){ D.licence.mod[k]=false; applyRole(); modOn(k); return; } }
         bad({message:m.replace(/^Error:\s*/,'').replace(/^TRIAL:\s*/,'')}); }).api(TOKEN,name,args); }; } });
   return p;
 }
 function lock(msg){ try{WLS.removeItem('yardTok'); WLS.removeItem('yardBoot');}catch(e){} TOKEN='';
   ['loading','error'].concat(['orderView','doneView','unpaidView','planView','liveView','homeView','ordersView','custView','setView','wasteView','lockedView','tipView','siteView','drvView','tixView']).forEach(function(id){show(id,false);});
-  document.body.classList.add('locked'); show('lockView',true); $('pinIn').value=''; show('pinErr',!!msg); if(msg) $('pinErr').textContent=msg; setTimeout(function(){$('pinIn').focus();},50); }
+  document.body.classList.add('locked'); show('lockView',true); ['pinIn','pinGo','pinForgot'].forEach(function(id){show(id,true);}); show('pinSet',false); $('pinIn').value=''; show('pinErr',!!msg); if(msg) $('pinErr').textContent=msg; setTimeout(function(){$('pinIn').focus();},50); }
 function unlock(){
   var pin=$('pinIn').value.trim(); if(!pin) return; $('pinGo').disabled=true; $('pinGo').textContent='Checking…';
   google.script.run.withSuccessHandler(function(r){ TOKEN=r.token; try{WLS.setItem('yardTok',TOKEN);}catch(e){}
-      $('pinGo').disabled=false; $('pinGo').textContent='Unlock'; show('lockView',false); boot(r.boot); })
+      $('pinGo').disabled=false; $('pinGo').textContent='Unlock'; if(r.mustChange){ pinSetup(); return; } show('lockView',false); boot(r.boot); })
     .withFailureHandler(function(e){ $('pinGo').disabled=false; $('pinGo').textContent='Unlock'; show('pinErr',true);
       $('pinErr').textContent=String(e&&e.message||e).replace(/^Error:\s*/,''); $('pinIn').select(); }).login(pin);
 }
+
+/* First login on the starter PINs: the director sets real ones before the app opens. */
+function pinSetup(){ try{WLS.removeItem('yardBoot');}catch(e){}
+  ['loading','error','orderView','doneView','unpaidView','planView','liveView','homeView','ordersView','custView','setView','wasteView','lockedView','tipView','siteView','drvView','tixView'].forEach(function(id){ if($(id)) show(id,false); });
+  document.body.classList.add('locked'); show('lockView',true); ['pinIn','pinGo','pinForgot','pinReset','pinErr'].forEach(function(id){show(id,false);}); show('pinSet',true); show('psErr',false);
+  $('psGo').onclick=function(){ var b=this, d=$('psD').value.trim(), o=$('psO').value.trim(), k=$('psB').value.trim();
+    var bad=!/^\d{6,8}$/.test(d)?'The Director PIN must be 6 to 8 digits.':(!/^\d{4,8}$/.test(o)||!/^\d{4,8}$/.test(k))?'The Office and Booking PINs must be 4 to 8 digits.':(d===o||d===k||o===k)?'Each login needs its own PIN.':'';
+    if(bad){ show('psErr',true); $('psErr').textContent=bad; return; }
+    b.disabled=true; b.textContent='Saving…'; show('psErr',false);
+    run().withSuccessHandler(function(r){ b.disabled=false; b.textContent='Save PINs and log in'; ['psD','psO','psB'].forEach(function(id){$(id).value='';}); show('pinSet',false); show('lockView',false); ['pinIn','pinGo','pinForgot'].forEach(function(id){show(id,true);});
+        boot(r); toast('ok','✓','<b>New PINs saved.</b> Give the Office and Booking PINs to your team.'); })
+      .withFailureHandler(function(e){ b.disabled=false; b.textContent='Save PINs and log in'; show('psErr',true); $('psErr').textContent=String(e&&e.message||e).replace(/^Error:\s*/,''); }).setPins(d,o,k); };
+  setTimeout(function(){ $('psD').focus(); },50); }
 
 function hexRgba(h,a){h=String(h||'').replace('#','');if(h.length===3)h=h.split('').map(function(c){return c+c;}).join('');
   var n=parseInt(h,16);if(isNaN(n))return null;return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')';}
@@ -3771,7 +3794,7 @@ function wire(){
         $('prTxt').innerHTML='We emailed a 6-digit code to <b>'+esc(r.sentTo)+'</b>, the Google account this system runs on. It works for 15 minutes.'; $('prCode').focus(); })
       .withFailureHandler(function(e){ b.disabled=false; b.textContent='Forgot PIN?'; show('pinErr',true); $('pinErr').textContent=String(e&&e.message||e).replace(/^Error:\s*/,''); }).pinResetStart(); };
   $('prGo').onclick=function(){ var b=this; b.disabled=true; b.textContent='Checking…';
-    google.script.run.withSuccessHandler(function(r){ TOKEN=r.token; try{WLS.setItem('yardTok',TOKEN);}catch(e){} b.disabled=false; b.textContent='Set PIN and log in'; show('pinReset',false); show('lockView',false); boot(r.boot); toast('ok','✓','<b>New Director PIN set.</b> Change the Office and Booking PINs in Settings if you need to.'); })
+    google.script.run.withSuccessHandler(function(r){ TOKEN=r.token; try{WLS.setItem('yardTok',TOKEN);}catch(e){} b.disabled=false; b.textContent='Set PIN and log in'; show('pinReset',false); if(r.mustChange){ pinSetup(); return; } show('lockView',false); boot(r.boot); toast('ok','✓','<b>New Director PIN set.</b> Change the Office and Booking PINs in Settings if you need to.'); })
       .withFailureHandler(function(e){ b.disabled=false; b.textContent='Set PIN and log in'; show('pinErr',true); $('pinErr').textContent=String(e&&e.message||e).replace(/^Error:\s*/,''); }).pinResetFinish($('prCode').value,$('prPin').value); };
   if(window.__MOCK__){ boot(window.__MOCK__); return; }
   if(!TOKEN){ lock(); return; }
