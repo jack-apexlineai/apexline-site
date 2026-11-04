@@ -34,6 +34,7 @@
     if (view === 'job' && jobId) { v.innerHTML = jobHtml(); wireJob(); }
     else if (view === 'sheet' && jobId) { v.innerHTML = sheetHtml(); wireSheet(); }
     else { v.innerHTML = jobsHtml(); wireJobs(); }
+    tick();
     window.scrollTo(0, 0);
   }
 
@@ -42,7 +43,7 @@
     var fitters = WS.state.settings.fitters;
     if (!pickFitter) {
       return '<div style="padding:26px 2px 10px;text-align:center">' +
-        '<div class="logo" style="width:52px;height:52px;border-radius:14px;margin:0 auto 14px;font-size:19px">DC</div>' +
+        '<div class="logo" style="width:52px;height:52px;border-radius:14px;margin:0 auto 14px;font-size:19px">' + esc(WS.state.settings.initials || 'NC') + '</div>' +
         '<h1 style="margin-bottom:4px">' + esc(WS.state.settings.name) + '</h1>' +
         '<div class="muted sm" style="margin-bottom:22px">Tap your name to clock on</div></div>' +
         fitters.map(function (f) {
@@ -100,11 +101,13 @@
   /* ---------------- my jobs ---------------- */
   function myJobs() {
     var T = WS.day(0);
+    WS.dayPlan(me.id, T);
     return WS.state.jobs.filter(function (j) {
       return j.date === T && (j.fitterId === me.id || !j.fitterId) && j.status !== 'done';
     }).sort(function (a, b) {
       var mine = function (j) { return j.fitterId === me.id ? 0 : 1; };
-      return mine(a) - mine(b);
+      if (mine(a) !== mine(b)) return mine(a) - mine(b);
+      return (a.order || 0) - (b.order || 0);
     });
   }
   function openJob() {
@@ -118,8 +121,20 @@
   function jobsHtml() {
     var list = myJobs(), open = openJob();
     var done = WS.state.jobs.filter(function (j) { return j.date === WS.day(0) && j.fitterId === me.id && (j.status === 'done' || j.status === 'qc'); });
-    return '<div class="phead" style="margin-bottom:14px"><div><h1>My jobs today</h1>' +
+    var plan = WS.dayPlan(me.id, WS.day(0));
+    var planned = plan.reduce(function (s2, j) { return s2 + (j.estHours || 0); }, 0);
+    var clocked = plan.reduce(function (s2, j) { return s2 + WS.hoursOn(j); }, 0);
+    var cap = me.dayHours || 8;
+    var capCls = planned > cap ? 'bad' : planned >= cap - 0.5 ? 'warn' : 'ok';
+    return '<div class="phead" style="margin-bottom:14px"><div><h1>My day</h1>' +
       '<div class="sub">' + esc(WS.dayName(WS.day(0))) + ' · ' + list.length + ' to do' + (done.length ? ', ' + done.length + ' finished' : '') + '</div></div></div>' +
+      '<div class="card tight" style="margin-bottom:14px">' +
+      '<div class="inline"><span class="b">' + WS.hrs(planned) + ' planned</span>' +
+      '<span class="muted sm">of ' + cap + 'h</span>' +
+      '<span class="right b mono">' + WS.hhmm(clocked) + ' clocked</span></div>' +
+      '<div class="cap"><i class="' + capCls + '" style="width:' + Math.min(100, planned / cap * 100) + '%"></i></div>' +
+      (planned > cap ? '<div class="muted sm" style="margin-top:7px;color:var(--bad)">That is more than your day. Tell the office if it will not fit.</div>' : '') +
+      '</div>' +
       (open ? '<div class="card tight" style="border-color:var(--brand);margin-bottom:14px">' +
         '<div class="muted sm">Clocked on to</div>' +
         '<div class="inline" style="margin-top:4px"><span class="rg" style="font-size:18px;font-weight:800">' + esc((WS.vehicle(open.vehicleId) || {}).reg) + '</span>' +
@@ -131,15 +146,23 @@
   function jobRow(j) {
     var v = WS.vehicle(j.vehicleId) || {}, o = WS.operator(j.operatorId) || {};
     var running = (j.clockOns || []).filter(function (c) { return !c.end; })[0];
-    var h = WS.hoursOn(j);
+    var h = WS.hoursOn(j), p = WS.jobProgress(j);
+    var fill = Math.min(100, p.est ? p.actual / (p.est * 1.2) * 100 : 0);
+    var barCls = p.state === 'over' ? 'bad' : p.state === 'close' ? 'warn' : running ? '' : 'ok';
     return '<div class="fjob" data-job="' + j.id + '">' +
-      '<div class="r1"><span class="rg">' + esc(v.reg) + '</span>' +
+      '<div class="r1">' +
+      (j._planStart != null ? '<span class="muted sm mono">' + WS.clockHM(j._planStart) + '</span>' : '') +
+      '<span class="rg">' + esc(v.reg || j.type) + '</span>' +
       '<span class="chip">' + esc(j.type) + '</span>' +
-      (running ? '<span class="timer right" data-start="' + running.start + '">00:00:00</span>' : (h ? '<span class="muted sm right mono">' + WS.hhmm(h) + '</span>' : '')) + '</div>' +
-      '<div class="mk">' + esc(v.make + ' ' + v.model) + ' · ' + esc(o.name || '') + '</div>' +
+      (running ? '<span class="timer right" data-start="' + running.start + '">00:00:00</span>' : (h ? '<span class="muted sm right mono">' + WS.hhmm(h) + '</span>' : '<span class="muted sm right mono">' + WS.hrs(p.est) + '</span>')) + '</div>' +
+      '<div class="mk">' + esc((v.make || '') + ' ' + (v.model || '')) + (o.name ? ' · ' + esc(o.name) : '') + '</div>' +
+      (p.actual ? '<div class="bar" style="margin-top:9px"><i class="' + barCls + '" style="width:' + fill + '%"></i><u style="left:83.3%"></u></div>' +
+        '<div class="muted sm" style="margin-top:5px">' + WS.hhmm(p.actual) + ' of ' + WS.hrs(p.est) +
+        (p.state === 'over' ? ' <b style="color:var(--bad)">over by ' + WS.hhmm(p.over) + '</b>' : '') + '</div>' : '') +
       '<div class="r2"><span class="pill ' + WS.statusCls(j.status) + '">' + esc(WS.statusLabel(j.status)) + '</span>' +
       (j.bay ? '<span class="muted sm">' + esc(j.bay) + '</span>' : '<span class="muted sm">no bay yet</span>') +
-      (j.fitterId === me.id ? '' : '<span class="pill">unassigned</span>') + '</div></div>';
+      (j.priority === 'high' ? '<span class="chip bad">urgent</span>' : '') +
+      (j.fitterId === me.id ? '' : '<span class="pill">spare job</span>') + '</div></div>';
   }
 
   function wireJobs() {
@@ -154,7 +177,8 @@
     if (!j) { view = 'jobs'; return jobsHtml(); }
     var v = WS.vehicle(j.vehicleId) || {}, o = WS.operator(j.operatorId) || {};
     var running = (j.clockOns || []).filter(function (c) { return c.fitterId === me.id && !c.end; })[0];
-    var h = WS.hoursOn(j);
+    var h = WS.hoursOn(j), prog = WS.jobProgress(j);
+    var myAppr = WS.state.approvals.filter(function (a) { return a.jobId === j.id; });
 
     var tasks = (j.tasks || []).map(function (t) {
       return '<div class="task' + (t.done ? ' on' : '') + '" data-task="' + t.id + '"><div class="bx">✓</div><div class="tx">' + esc(t.text) + '</div></div>';
@@ -184,6 +208,10 @@
       '<div class="right">' + (running
         ? '<button class="btn danger lg" id="jOff">Clock off</button>'
         : '<button class="btn lg" id="jOn">Clock on</button>') + '</div></div>' +
+      '<div class="bar" style="margin-top:12px"><i class="' + (prog.state === 'over' ? 'bad' : prog.state === 'close' ? 'warn' : 'ok') + '" ' +
+      'style="width:' + Math.min(100, prog.est ? prog.actual / (prog.est * 1.2) * 100 : 0) + '%"></i><u style="left:83.3%"></u></div>' +
+      '<div class="muted sm" style="margin-top:6px">You are allowed <b>' + WS.hrs(prog.est) + '</b> for this one' +
+      (prog.state === 'over' ? ' · <b style="color:var(--bad)">over by ' + WS.hhmm(prog.over) + '</b>' : prog.actual ? ' · ' + WS.hhmm(Math.max(0, prog.est - prog.actual)) + ' left' : '') + '</div>' +
       '</div>' +
 
       (j.type === 'PMI' || j.type === 'MOT prep' ? '<div class="card"><div class="ch"><h2>Inspection sheet</h2>' +
@@ -199,14 +227,25 @@
       '<div class="card"><h2>Photos</h2><div class="sep" style="margin:10px 0"></div>' + photos + '</div>' +
 
       '<div class="card"><h2>Notes</h2><div class="sep" style="margin:10px 0"></div>' +
-      '<textarea class="in" id="jNotes" placeholder="What you found, what you did">' + esc(j.fitterNotes || '') + '</textarea>' +
+      '<div class="inline" style="align-items:flex-start"><textarea class="in" id="jNotes" placeholder="What you found, what you did">' + esc(j.fitterNotes || '') + '</textarea>' +
+      (WS.speechOk() ? '<button class="mic" id="jMic" title="Speak the note" aria-label="Speak the note">🎤</button>' : '') + '</div>' +
       '<button class="btn alt block" id="jSaveNotes" style="margin-top:10px">Save notes</button></div>' +
+
+      '<div class="card"><h2>Found something else wrong</h2><div class="sep" style="margin:10px 0"></div>' +
+      (myAppr.length ? myAppr.map(function (a) {
+        var t = WS.approvalTotals(a);
+        return '<div class="' + (a.status === 'Approved' ? 'note' : a.status === 'Declined' ? 'flagbox' : 'flagbox') + '" style="margin-bottom:10px">' +
+          '<b>' + esc(a.title) + '</b><br>' + WS.money(t.total) + ' inc VAT · ' +
+          (a.status === 'Sent' ? 'waiting on the customer' : a.status === 'Approved' ? 'the customer said yes, crack on' : 'the customer said no, leave it') + '</div>';
+      }).join('') : '<div class="hint" style="margin-bottom:12px">Take a photo, say what you have found and roughly how long it will take. ' +
+        'The office sends it to the customer with the price. You get a yes or a no back on here.</div>') +
+      '<button class="btn block" id="jExtra">Send extra work for authorisation</button></div>' +
 
       '<div class="card"><h2>Report a problem</h2><div class="sep" style="margin:10px 0"></div>' +
       '<div class="stack">' +
       '<button class="btn alt" data-prob="waiting_parts">Waiting on parts</button>' +
-      '<button class="btn alt" data-prob="auth">Needs authorisation</button>' +
       '<button class="btn alt" data-prob="vor">Off the road (VOR)</button>' +
+      '<button class="btn alt" id="jLib">Look something up</button>' +
       '</div></div>' +
 
       (j.status === 'done' || j.status === 'qc' ? '<div class="card"><div class="inline">' +
@@ -238,6 +277,9 @@
       };
     });
     $('jAddPart').onclick = function () { addPart(j); };
+    if ($('jExtra')) $('jExtra').onclick = function () { raiseExtra(j); };
+    if ($('jLib')) $('jLib').onclick = function () { library(j); };
+    wireMic('jNotes', 'jMic');
     $('jSaveNotes').onclick = function () {
       j.fitterNotes = $('jNotes').value;
       WS.audit(j, me.name, 'Notes updated');
@@ -287,28 +329,148 @@
   }
 
   function addPart(j) {
-    var opts = WS.PARTS.map(function (p) { return '<option value="' + esc(p.name) + '" data-cost="' + p.cost + '">' + esc(p.name) + '</option>'; }).join('');
+    var opts = WS.state.stock.map(function (s) {
+      return '<option value="' + s.id + '">' + esc(s.name + ' · bin ' + s.bin + ' · ' + s.qty + ' left') + '</option>';
+    }).join('');
     sheet('Add a part',
-      '<label class="f"><span class="lb">From the stock list</span><select class="in" id="pSel"><option value="">Pick a part</option>' + opts + '</select></label>' +
+      '<label class="f"><span class="lb">Off the shelf</span><select class="in" id="pSel"><option value="">Pick a part</option>' + opts + '</select></label>' +
+      '<div id="pFlag"></div>' +
       '<label class="f"><span class="lb">Or type it</span><input class="in" id="pName" placeholder="Part name"></label>' +
       '<label class="f"><span class="lb">How many</span><input class="in" id="pQty" type="number" value="1" min="1"></label>',
       'Add', function () {
-        var sel = $('pSel'), name = $('pName').value.trim() || sel.value;
+        var sel = $('pSel'), typed = $('pName').value.trim();
+        var item = WS.stockItem(sel.value);
+        var name = typed || (item ? item.name : '');
         if (!name) { WS.toast('Pick or type a part.', 'bad'); return false; }
-        var cost = sel.value && !$('pName').value.trim() ? +sel.selectedOptions[0].dataset.cost : 0;
+        var qty = +$('pQty').value || 1;
+        var cost = !typed && item ? item.cost : 0;
+        if (!typed && item) item.qty = Math.max(0, item.qty - qty);
         j.parts = j.parts || [];
-        j.parts.push({ name: name, qty: +$('pQty').value || 1, cost: cost });
-        WS.audit(j, me.name, 'Added part: ' + name);
+        j.parts.push({ name: name, partNo: !typed && item ? item.partNo : '', qty: qty, cost: cost });
+        WS.audit(j, me.name, 'Used ' + qty + ' x ' + name);
         WS.save();
         render();
       });
+    var sel = $('pSel');
+    if (sel) sel.onchange = function () {
+      var f = $('pFlag'); f.innerHTML = '';
+      var it = WS.stockItem(sel.value);
+      if (!it) return;
+      if (it.qty <= 0) f.innerHTML = '<div class="flagbox">None on the shelf. The office will put it on order.</div>';
+      else if (it.qty <= it.min) f.innerHTML = '<div class="flagbox">Last ' + it.qty + '. The office gets told to reorder.</div>';
+      var w = WS.warrantyFlag(j.vehicleId, it.name);
+      if (w) f.innerHTML += '<div class="note" style="margin-top:8px"><b>Warranty.</b> We fitted one of these ' + w.monthsAgo +
+        ' months ago on ' + esc(w.job.no) + '. Tell the office before you charge it.</div>';
+    };
+  }
+
+  /* extra work found: the office sends it to the customer with a price */
+  function raiseExtra(j) {
+    var v = WS.vehicle(j.vehicleId) || {}, o = WS.operator(j.operatorId) || {};
+    var rc = WS.rateFor(j.operatorId);
+    sheet('Extra work on ' + (v.reg || j.no),
+      '<div class="hint" style="margin-bottom:12px">This goes to ' + esc(o.contact || 'the customer') + ' with your photos and a price. ' +
+      'The job waits until they answer, so nobody can say you did work they never asked for.</div>' +
+      '<label class="f"><span class="lb">What have you found</span><input class="in" id="xT" placeholder="Nearside front discs below limit"></label>' +
+      '<label class="f"><span class="lb">What you can see</span>' +
+      '<div class="inline" style="align-items:flex-start"><textarea class="in" id="xD" placeholder="Scored past the wear groove, pads down to 3 mm"></textarea>' +
+      (WS.speechOk() ? '<button class="mic" id="xMic" aria-label="Speak it">🎤</button>' : '') + '</div></label>' +
+      '<label class="f"><span class="lb">Photo of it</span><div class="thumbs" id="xPh">' +
+      '<label class="addph">Add<br>photo<input type="file" accept="image/*" capture="environment" id="xFile" hidden></label></div></label>' +
+      '<label class="f"><span class="lb">Extra time you need</span><input class="in" id="xH" type="number" step="0.25" min="0.25" value="2"></label>' +
+      '<label class="f"><span class="lb">Parts needed</span><select class="in" id="xP"><option value="">None</option>' +
+      WS.state.stock.map(function (s) { return '<option value="' + s.id + '">' + esc(s.name) + '</option>'; }).join('') + '</select></label>' +
+      '<label class="f"><span class="lb">How many</span><input class="in" id="xQ" type="number" min="1" value="1"></label>' +
+      '<div class="money" id="xT2"></div>',
+      'Send it to the office', function () {
+        var title = $('xT').value.trim();
+        if (!title) { WS.toast('Say what you have found.', 'bad'); return false; }
+        var parts = [];
+        var sp = WS.stockItem($('xP').value);
+        if (sp) parts.push({ name: sp.name, qty: +$('xQ').value || 1, cost: sp.cost });
+        var a = {
+          id: WS.uid('a'), jobId: j.id, operatorId: j.operatorId, vehicleId: j.vehicleId,
+          raisedBy: me.name, raisedAt: WS.nowStamp(), title: title, detail: $('xD').value,
+          estHours: parseFloat($('xH').value) || 1, parts: parts, photos: xPhotos.slice(),
+          status: 'Sent', sentAt: WS.nowStamp(), decidedAt: '', decidedBy: '', channel: WS.channels()
+        };
+        WS.state.approvals.push(a);
+        j.status = 'waiting_auth';
+        WS.audit(j, me.name, 'Found extra work and sent it for authorisation: ' + title);
+        var t = WS.approvalTotals(a);
+        WS.notify((o.contact ? o.contact + ', ' + o.name : 'the operator'), WS.channels(), 'Extra work needs your OK',
+          'We have found something on ' + (v.reg || 'your vehicle') + ': ' + title + '. ' + WS.money(t.total) +
+          ' inc VAT. Photos and the price are on your portal.', 'approval');
+        WS.save();
+        WS.toast('Sent. The office has it and the customer has been messaged.', 'ok');
+        render();
+      });
+    var xPhotos = [];
+    wireMic('xD', 'xMic');
+    var ff = $('xFile');
+    if (ff) ff.onchange = function () {
+      readPhoto(ff.files[0], function (url) {
+        if (!url) return;
+        xPhotos.push(url);
+        var img = document.createElement('img');
+        img.className = 'thumb'; img.src = url; img.alt = 'Extra work photo';
+        $('xPh').insertBefore(img, $('xPh').firstChild);
+      });
+    };
+    function calc() {
+      var sp = WS.stockItem($('xP').value);
+      var hrs = parseFloat($('xH').value) || 0, qty = +$('xQ').value || 1;
+      var lab = hrs * rc.rate, pt = sp ? sp.cost * qty * (1 + rc.markup / 100) : 0;
+      var net = lab + pt, vat = net * WS.state.settings.vat / 100;
+      $('xT2').innerHTML = '<div><span>Labour ' + WS.hrs(hrs) + '</span><b>' + WS.money(lab) + '</b></div>' +
+        '<div><span>Parts</span><b>' + WS.money(pt) + '</b></div>' +
+        '<div class="g"><span>They will be asked to approve</span><span>' + WS.money(net + vat) + '</span></div>';
+    }
+    ['xH', 'xP', 'xQ'].forEach(function (id) { var e = $(id); if (e) { e.oninput = calc; e.onchange = calc; } });
+    calc();
+  }
+
+  /* the technical library, on the phone, where the fitter actually needs it */
+  function library(j) {
+    var v = WS.vehicle(j.vehicleId) || {};
+    var mine = WS.state.library.filter(function (l) {
+      return l.applies === 'All' || l.applies === v.make || l.applies === v.type;
+    });
+    var rest = WS.state.library.filter(function (l) { return mine.indexOf(l) < 0; });
+    sheet('Technical library',
+      '<div class="hint" style="margin-bottom:12px">Torque settings, schedules and procedures. ' +
+      (v.make ? 'Showing what applies to this ' + esc(v.make) + ' first.' : '') + '</div>' +
+      mine.concat(rest).map(function (l) {
+        return '<div class="card tight" style="margin-bottom:10px"><div class="b">' + esc(l.title) + '</div>' +
+          '<div class="muted sm" style="margin:3px 0 7px">' + esc(l.kind) + ' · ' + esc(l.applies) + '</div>' +
+          '<div class="hint">' + esc(l.body) + '</div></div>';
+      }).join(''), null, null);
+  }
+
+  /* speak a note instead of typing it with oily hands */
+  function wireMic(fieldId, micId) {
+    var mic = $(micId), fld = $(fieldId);
+    if (!mic || !fld) return;
+    var rec = null;
+    mic.onclick = function () {
+      if (rec) { try { rec.stop(); } catch (e) { } rec = null; mic.classList.remove('on'); return; }
+      var base = fld.value ? fld.value.trim() + ' ' : '';
+      mic.classList.add('on');
+      rec = WS.listen(function (text) {
+        fld.value = base + text;
+      }, function (err) {
+        mic.classList.remove('on');
+        rec = null;
+        if (err) WS.toast(err, 'bad');
+      });
+    };
   }
 
   function problem(j, kind) {
-    var titles = { waiting_parts: 'Waiting on parts', auth: 'Needs authorisation', vor: 'Off the road (VOR)' };
+    var titles = { waiting_parts: 'Waiting on parts', vor: 'Off the road (VOR)' };
     sheet(titles[kind],
       '<label class="f"><span class="lb">What is the problem</span><textarea class="in" id="prNote" placeholder="' +
-      (kind === 'waiting_parts' ? 'Which part, who it is on order with' : kind === 'auth' ? 'What needs authorising and roughly what it costs' : 'Why it cannot go out') + '"></textarea></label>',
+      (kind === 'waiting_parts' ? 'Which part, who it is on order with' : 'Why it cannot go out') + '"></textarea></label>',
       'Send to the office', function () {
         var note = $('prNote').value.trim();
         if (!note) { WS.toast('Put a line in so the office knows.', 'bad'); return false; }
@@ -658,14 +820,15 @@
     var mask = WS.el('div', 'mask');
     mask.innerHTML = '<div class="modal"><div class="mh"><h2>' + esc(title) + '</h2><button class="x">&times;</button></div>' +
       '<div class="mb">' + body + '</div>' +
-      '<div class="mf"><button class="btn alt" data-close>Cancel</button><button class="btn" id="shOk">' + esc(okLabel) + '</button></div></div>';
+      '<div class="mf"><button class="btn alt" data-close>' + (okLabel ? 'Cancel' : 'Close') + '</button>' +
+      (okLabel ? '<button class="btn" id="shOk">' + esc(okLabel) + '</button>' : '') + '</div></div>';
     document.body.appendChild(mask);
     document.body.style.overflow = 'hidden';
     var close = function () { mask.remove(); document.body.style.overflow = ''; };
     mask.querySelector('.x').onclick = close;
     mask.querySelector('[data-close]').onclick = close;
     mask.onclick = function (e) { if (e.target === mask) close(); };
-    $('shOk').onclick = function () { if (onOk() !== false) close(); };
+    if ($('shOk')) $('shOk').onclick = function () { if (onOk() !== false) close(); };
   }
 
   /* ---------------- running timers ---------------- */
