@@ -4914,6 +4914,26 @@ label.l i{font-style:normal;text-transform:none;letter-spacing:0;font-weight:500
 @media(max-width:520px){.pays{grid-template-columns:1fr}}
 .pay{border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;text-align:left;cursor:pointer}
 .pay b{display:block;font-size:15px}.pay small{color:var(--muted);font-size:12.5px}
+.jfwrap{display:grid;grid-template-columns:230px 1fr;gap:26px;align-items:start}
+@media(max-width:760px){.jfwrap{grid-template-columns:1fr}.jfphone{margin:0 auto}}
+.jfphone{width:230px;height:430px;border-radius:34px;border:8px solid #1b2232;background:#0e1424;position:relative;overflow:hidden;box-shadow:0 18px 40px rgba(10,20,40,.25)}
+.jfnotch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:84px;height:18px;background:#1b2232;border-radius:0 0 12px 12px;z-index:2}
+.jfscreen{position:absolute;inset:0;padding:30px 14px 14px;color:#E8ECF0;font-size:12.5px;display:flex;flex-direction:column;gap:9px}
+.jfscreen .jh{display:flex;justify-content:space-between;align-items:center;font-weight:700}.jfscreen .jh i{font-style:normal;background:#F5C518;color:#111;border-radius:4px;padding:1px 6px;font-size:11px}
+.jfscreen .jc{background:#18203a;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px}
+.jfscreen .jc b{display:block;font-size:14px;margin:4px 0}.jfscreen .jt{display:inline-block;background:#2A5BD7;color:#fff;border-radius:6px;padding:2px 7px;font-size:11px;font-weight:700}
+.jfscreen .jbtn{margin-top:auto;background:#2A5BD7;color:#fff;text-align:center;border-radius:12px;padding:12px;font-weight:800;font-size:14px}
+.jfscreen .jbtn.ok{background:#1E9E5A}
+.jfscreen .sig{height:70px;border-radius:10px;background:#fff;position:relative}.jfscreen .sig svg{position:absolute;inset:8px}
+.jfscreen .ph2{height:90px;border-radius:10px;background:linear-gradient(135deg,#3a4660,#222b40);display:grid;place-items:center;color:#9fb0c8;font-size:22px}
+.jfscreen .pop{background:#E9F7EF;color:#14532D;border-radius:10px;padding:8px 10px;font-weight:600;animation:jfin .4s ease}
+@keyframes jfin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.jfsteps{display:flex;flex-direction:column;gap:10px}
+.jfs{border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;cursor:pointer;transition:border-color .2s,background .2s,opacity .2s;opacity:.62;background:transparent;text-align:left;color:inherit;font:inherit;width:100%}
+.jfs.on{opacity:1;border-color:var(--brand);background:var(--brand-l)}
+.jfs .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--brand);color:#fff;font-size:12px;font-weight:800;margin-right:8px}
+.jfs b{font-size:15px}.jfs .who{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin-top:8px;font-size:13px}
+.jfs .who span{font-weight:700;color:var(--muted);text-transform:uppercase;font-size:11px;letter-spacing:.05em;padding-top:2px}
 .aogrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
 .mpdrop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1.5px dashed var(--line);border-radius:12px;padding:18px;min-height:90px;cursor:pointer;text-align:center;color:var(--muted);font-weight:600}.mpdrop:hover{border-color:var(--brand)}.mpdrop.has{border-style:solid;border-color:var(--brand);color:inherit}.mpdrop img{max-width:100%;max-height:200px;border-radius:8px}
 .pay:hover{border-color:var(--brand)}
@@ -5166,16 +5186,31 @@ header.side .nav button.on .cnt{background:#fff}
   body:not(.locked){padding-left:var(--side)}
   .toasts{right:20px;top:18px;bottom:auto}
 }
+/* Phones and tablets: a top bar with a menu button; the full sidebar slides in as a drawer. */
+.burger{display:none;align-items:center;justify-content:center;width:42px;height:42px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;flex:0 0 auto}
+.burger svg{display:block}.burger .bx{display:none}
+.menuback{display:none;position:fixed;inset:0;background:rgba(5,9,18,.55);z-index:85}
 @media(max-width:900px){
   header.side{position:sticky;top:0;border-right:0;border-bottom:1px solid var(--line);z-index:40}
-  header.side .hwrap{flex-direction:row;align-items:center;padding:8px 10px;gap:8px}
-  header.side .brandrow{padding:0}
-  header.side .bname{display:none}
-  header.side .nav{flex-direction:row;overflow-x:auto;gap:2px;scrollbar-width:none}
-  header.side .nav::-webkit-scrollbar{display:none}
-  header.side .nav button{width:auto;padding:7px 10px;white-space:nowrap;font-size:13px}
-  header.side .nav button i{display:none}
-  .navsep{display:none}
+  header.side .hwrap{flex-direction:row;align-items:center;padding:8px 12px;gap:10px;height:auto}
+  header.side .brandrow{padding:0;flex:1;min-width:0}
+  header.side .bname{display:block;font-size:15px}
+  header.side .nav,header.side .navfoot,header.side .sidefoot,.navsep{display:none}
+  .burger{display:inline-flex}
+  .sidefoot .supbtn,.sidefoot .drv{display:none!important}
+  body.menuopen{overflow:hidden}
+  body.menuopen .menuback{display:block}
+  body.menuopen header.side{position:fixed;top:0;left:0;bottom:0;width:min(300px,86vw);border-right:1px solid var(--line);border-bottom:0;overflow-y:auto;z-index:90;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+  body.menuopen header.side .hwrap{flex-direction:column;align-items:stretch;padding:12px 12px 20px;gap:6px;min-height:100%}
+  body.menuopen header.side .brandrow{flex:0 0 auto;padding:2px 2px 10px}
+  body.menuopen header.side .burger{position:absolute;top:10px;right:10px}
+  body.menuopen header.side .burger .bm{display:none}body.menuopen header.side .burger .bx{display:block}
+  body.menuopen header.side .nav{display:flex;flex-direction:column;margin:0;overflow:visible;gap:2px}
+  body.menuopen header.side .nav button{width:100%;padding:11px 10px;font-size:15px}
+  body.menuopen header.side .nav button i{display:grid}
+  body.menuopen header.side .navsep{display:block}
+  body.menuopen header.side .sidefoot{display:block;margin:auto 0 0}
+  body.menuopen header.side .who2{display:block}
 }
 body.locked header.side{display:none}
 .page{max-width:1240px;margin:0 auto;padding:26px 24px 80px}
@@ -5648,8 +5683,10 @@ a.link.drv{text-decoration:none}
 </style>
 </head>
 <body>
+<div class="menuback" id="menuBack"></div>
 <header class="side"><div class="hwrap">
   <div class="brandrow"><div class="logo" id="logo">S</div><div class="bname" id="bname">Orders</div></div>
+  <button class="burger" id="burger" type="button" aria-label="Menu"><svg class="bm" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg><svg class="bx" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   <div class="nav" id="nav">
     <button id="navHome"><i data-ic="home"></i><span>Home</span></button>
     <button id="navNew" class="on"><i data-ic="plus"></i><span>New skip order</span></button>
@@ -5921,6 +5958,11 @@ a.link.drv{text-decoration:none}
   <div class="tbar"><h2>Driver app</h2><span class="sub2">Each driver's run, on their phone</span><div style="flex:1"></div><button class="howbtn" data-how="driver">&#9654; How to use</button></div>
   <div class="panel" id="dvLink"></div>
   <div class="panel"><div class="ph"><b>Driver logins</b><span class="sub2">Each driver logs in with their lorry registration and PIN</span></div><div class="tablewrap" style="border:0;box-shadow:none"><table class="tbl" id="dvTable"></table></div></div>
+  <div class="panel jf"><div class="ph"><b>What happens on every job</b><span class="sub2">Tap a step, or watch it play</span></div>
+    <div class="jfwrap">
+      <div class="jfphone"><div class="jfnotch"></div><div class="jfscreen" id="jfScreen"></div></div>
+      <div class="jfsteps" id="jfSteps"></div>
+    </div></div>
   <div class="panel"><div class="ph"><b>What drivers can do</b></div><ol class="howsteps" style="margin:0">
     <li>See today's jobs as runs: what to load before leaving the yard (up to 3 empties), and when to come back and tip.</li>
     <li>Press Start on a job: the office sees it on Live tracking, and the customer gets an "on the way" email or text if the order was ticked.</li>
@@ -6916,6 +6958,26 @@ function aoSave(){ var c=aoCustomer(), name=($('aoCust').value||'').trim(), g=$(
       toast('ok','✓','<b>Skip added</b> to Skips on site'); })
     .withFailureHandler(function(e){ g.disabled=false; g.textContent='Add skip'; toast('bad','!',esc(e&&e.message||e)); })
     .addOnSite({ref:c?c.ref:'',name:name,phone:$('aoPhone').value,email:$('aoEmail').value,address:$('aoAddr').value,size:$('aoSize').value,since:$('aoDate').value,placement:$('aoPlace').value}); }
+/* Driver app page: an animated walk-through of one job, showing what the driver, office and customer each see. */
+var JF=[
+  {t:'Driver starts the job',d:'Taps Start on the next job in their run.',o:'Live tracking shows the lorry on its way to this job.',c:'"Your skip is on the way" email or text, with the arrival time.',
+   s:'<div class="jc"><span class="jt">Exchange</span> <span style="opacity:.7">8yd</span><b>14 Oriental Road, Woking</b><span style="opacity:.7">Hartley Build Ltd · 7–9am</span></div><div class="pop">Customer told: on the way, about 08:20</div><div class="jbtn">On my way</div>'},
+  {t:'Swap and photos',d:'Drops the empty, loads the full one, snaps a photo if needed.',o:'Photos are filed in that order\'s Drive folder.',c:'Nothing to do.',
+   s:'<div class="jc"><b>14 Oriental Road</b><span style="opacity:.7">Full 8yd loaded</span></div><div class="ph2">&#128247;</div><div class="pop">Photo filed to DS1003</div><div class="jbtn">Get signature</div>'},
+  {t:'Customer signs',d:'Hands the phone over. The customer signs on the screen.',o:'The waste transfer note is made and filed against the order.',c:'Their waste transfer note arrives by email straight away.',
+   s:'<div class="jc"><b>Sign for your skip</b><span style="opacity:.7">Tom Hartley</span></div><div class="sig"><svg viewBox="0 0 200 54"><path d="M6 40c18-30 26-30 30-6s12 18 22-6 18-22 22 4 14 20 26-4 16-18 24 2 16 10 30-10" fill="none" stroke="#1b2232" stroke-width="3" stroke-linecap="round"/></svg></div><div class="pop">WTN emailed to customer</div><div class="jbtn ok">Job done</div>'},
+  {t:'Job done, on to the next',d:'Taps Done. The next job in the run comes up.',o:'Job ticked complete on Live tracking and the Day plan, no phone call needed.',c:'The next customer gets their "on the way" message.',
+   s:'<div class="jh">Mark <i>WL21 SKP</i></div><div class="jc" style="opacity:.55"><b>&#10003; 14 Oriental Road</b><span>Done 08:41</span></div><div class="jc"><span class="jt">Exchange</span><b>3 Station Approach</b><span style="opacity:.7">Kingsway Groundworks</span></div><div class="pop">Office: job 1 of 5 complete</div><div class="jbtn">Start next job</div>'}];
+var JFI=0, JFT=null;
+function jfShow(i){ JFI=i; var x=JF[i];
+  $('jfScreen').innerHTML=(i<3?'<div class="jh">Mark <i>WL21 SKP</i></div>':'')+x.s;
+  Array.prototype.forEach.call($('jfSteps').children,function(e,k){ e.classList.toggle('on',k===i); }); }
+function jfStart(){ if(!$('jfSteps')) return;
+  if(!$('jfSteps').children.length){ $('jfSteps').innerHTML=JF.map(function(x,k){ return '<button type="button" class="jfs" data-k="'+k+'"><span class="n">'+(k+1)+'</span><b>'+x.t+'</b>'+
+      '<div class="who"><span>Driver</span><div>'+x.d+'</div><span>Office</span><div>'+x.o+'</div><span>Customer</span><div>'+x.c+'</div></div></button>'; }).join('');
+    Array.prototype.forEach.call($('jfSteps').children,function(e){ e.onclick=function(){ jfShow(+e.dataset.k); clearInterval(JFT); JFT=setInterval(jfNext,6000); }; }); }
+  jfShow(0); clearInterval(JFT); JFT=setInterval(jfNext,4200); }
+function jfNext(){ if($('drvView').classList.contains('hide')){ clearInterval(JFT); return; } jfShow((JFI+1)%JF.length); }
 function bulkPaid(){ var rows=selRows(); if(!rows.length) return;
   mpOpen(rows,[],rows.length+' orders. One receipt is filed against each.',function(u){ USEL={}; setUnpaid(u); renderUnpaid(); toast('ok','✓','<b>'+rows.length+' marked paid</b>'); }); }
 /* Mark paid: how they paid + receipt photo/screenshot/PDF (required for card terminal and bank transfer). */
@@ -7479,7 +7541,7 @@ function tiInvoices(q){
 }
 
 /* ---------- driver app ---------- */
-function goDrv(){ view('drvView','navDrv'); $('dvTable').innerHTML='<tr><td class="empty"><div class="spin" style="margin:10px auto"></div></td></tr>';
+function goDrv(){ view('drvView','navDrv'); jfStart(); $('dvTable').innerHTML='<tr><td class="empty"><div class="spin" style="margin:10px auto"></div></td></tr>';
   run().withSuccessHandler(function(d){
     $('dvLink').innerHTML='<div class="ph"><b>Driver link</b></div>'+(d.url?'<div class="linkbox" style="margin:0"><div class="u">'+esc(d.url)+'</div><div class="acts"><button class="fx" id="dvCopy">Copy link</button><button class="fx alt" id="dvQr">Show QR code</button><a class="fx alt" target="_blank" href="'+esc(d.url)+'">Open it here to see what drivers see</a></div><div id="dvQrBox"></div></div>'+
       '<div class="sub2" style="margin-top:8px">Set each driver up once: they scan the QR code (or open the link) on their phone and add it to their home screen. After that, every run you send appears in it.</div>':'<div class="note w">The driver link appears once the app is deployed as a web app.</div>');
@@ -8463,6 +8525,9 @@ function wire(){
   Array.prototype.forEach.call($('pays').querySelectorAll('.pay'),function(b){ b.onclick=function(){ if(b.dataset.p==='cardpick'){ if(b.classList.contains('dis')) return; cardAsk(setPay); } else setPay(b.dataset.p); }; });
   Array.prototype.forEach.call(document.querySelectorAll('[data-cp]'),function(b){ b.onclick=function(){ show('cardOv',false); var cb=CARDCB||setPay; CARDCB=null; cb(b.dataset.cp); }; });
   mpWire();
+  (function(){ var b=document.body, close=function(){ b.classList.remove('menuopen'); };
+    $('burger').onclick=function(){ b.classList.toggle('menuopen'); }; $('menuBack').onclick=close;
+    ['nav','navFoot','sideFoot'].forEach(function(id){ $(id).addEventListener('click',function(e){ var t=e.target.closest('button'); if(t&&!t.classList.contains('grph')) setTimeout(close,0); }); }); })();
   $('aoBtn').onclick=aoOpen; $('aoX').onclick=function(){ show('aoForm',false); }; $('aoGo').onclick=aoSave; $('aoCust').oninput=aoHint;
   $('cardX').onclick=function(){ show('cardOv',false); CARDCB=null; }; $('cardOv').onclick=function(e){ if(e.target===this) show('cardOv',false); };
   $('impBtn').onclick=function(){
@@ -8524,7 +8589,7 @@ font:600 13px/1.3 'DM Sans',Helvetica,Arial,sans-serif;max-width:calc(100vw - 24
 #demoBar a{background:#4DA8FF;color:#06111f}#demoBar button{background:rgba(255,255,255,.08);color:#E8ECF0}
 #demoNote{position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:10000;background:#0B0F1A;color:#E8ECF0;border:1px solid rgba(77,168,255,.45);
 border-radius:12px;padding:12px 16px;font:500 14px/1.4 'DM Sans',Helvetica,Arial,sans-serif;max-width:420px;box-shadow:0 10px 30px rgba(0,0,0,.35);display:none}
-@media (max-width:640px){#demoBar{bottom:8px;font-size:12px}#demoBar .dx{display:none}}
+@media (max-width:640px){#demoBar:not(.strip){left:0;right:0;bottom:0;transform:none;border-radius:0;max-width:none;width:100%;flex-wrap:nowrap;justify-content:space-between;gap:6px;padding:7px 8px;font-size:12px;border-width:1px 0 0}#demoBar .dx{display:none}#demoBar:not(.strip)>span:first-child{display:none}#demoBar>*{white-space:nowrap}#demoBar a,#demoBar button,#demoBar select{padding:6px 9px}body{padding-bottom:52px}}
 #demoBar.strip{position:sticky;top:0;left:0;transform:none;border-radius:0;max-width:none;width:100%;justify-content:space-between;padding:6px 10px;box-shadow:none;border-width:0 0 1px}#demoBar.strip a,#demoBar.strip button{padding:5px 10px}
 </style>
 <div id="demoNote"></div>
