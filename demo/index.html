@@ -439,7 +439,7 @@ var BOOKING_ACTIONS = ['getBootData', 'createOrder', 'sendOrder', 'emailOrder', 
   'companies', 'company', 'payLink', 'checkOrder', 'sendCardLink'];
 var OFFICE_ACTIONS = BOOKING_ACTIONS.concat(['getUnpaid', 'markPaid', 'markPaidMany', 'markPaidReceipt', 'chaseOrders', 'resendInvoice', 'checkPaymentsNow',
   'cancelOrder', 'getBoard', 'saveBoard', 'editJob', 'getHome', 'getOrders', 'getCustomers', 'getCustomer', 'saveCustomer', 'runImport',
-  'sendDocs', 'saveWasteOut', 'getTickets', 'getTipForm', 'saveTipTicket', 'getWaste', 'saveReceipts', 'addReceipt', 'exportWaste', 'markWasteSubmitted', 'tipLookup', 'getTipIns', 'saveTipIn', 'saveTipDraft', 'voidTipDraft', 'tipMarkPaid', 'tipLink', 'tipCheck', 'openDrive', 'getOnSite', 'addOnSite', 'remindHire', 'tipInvoice', 'tipInvoicePaid', 'getDriverApp', 'saveDefraTemplate', 'sendEtaNow']);
+  'sendDocs', 'saveWasteOut', 'getTickets', 'getTipForm', 'saveTipTicket', 'getWaste', 'saveReceipts', 'addReceipt', 'exportWaste', 'markWasteSubmitted', 'tipLookup', 'getTipIns', 'saveTipIn', 'saveTipDraft', 'voidTipDraft', 'tipMarkPaid', 'tipLink', 'tipCheck', 'openDrive', 'getOnSite', 'addOnSite', 'remindHire', 'tipInvoice', 'tipInvoicePaid', 'getDriverApp', 'saveDefraTemplate', 'fetchDefraTemplate', 'sendEtaNow']);
 var ROLE = 'director';
 
 /* Older sheets had one "Office PIN" with full access: that PIN becomes the Director PIN. */
@@ -506,7 +506,7 @@ function api(token, name, args) {
     markWasteSubmitted: markWasteSubmitted_, accountsExport: accountsExport_, accountsExportNew: accountsExportNew_,
     tipLookup: tipLookup_, getTipIns: getTipIns_, saveTipDraft: saveTipDraft_, voidTipDraft: voidTipDraft_, saveTipIn: saveTipIn_, tipMarkPaid: tipMarkPaid_, tipLink: tipLink_, tipCheck: tipCheckOne_, openDrive: openDrive_,
     getOnSite: getOnSite_, addOnSite: addOnSite_, remindHire: remindHire_, tipInvoice: tipInvoice_, tipInvoicePaid: tipInvoicePaid_, getDriverApp: getDriverApp_,
-    saveDefraTemplate: saveDefraTemplate_, sendEtaNow: sendEtaNow_,
+    saveDefraTemplate: saveDefraTemplate_, fetchDefraTemplate: fetchDefraTemplate_, sendEtaNow: sendEtaNow_,
     saveLogo: saveLogo_, saveWasteOut: saveWasteOut_, getTickets: getTickets_, getTipForm: getTipForm_, saveTipTicket: saveTipTicket_, getRevenueRange: getRevenueRange_, sendReport: sendReport_, getReportSchedule: getReportSchedule_, saveReportSchedule: saveReportSchedule_, sendDocs: sendDocs_, getProfit: getProfit_, saveDisposal: saveDisposal_, addLorryCost: addLorryCost_, deleteLorryCost: deleteLorryCost_, importFuel: importFuel_, addFuel: addFuel_, deleteFuel: deleteFuel_, getReports: getReports_
   };
   if (!map[name]) throw new Error('Unknown action: ' + name);
@@ -2555,7 +2555,7 @@ var PLAN_NAMES = { free: 'Ordering', fleet: 'Fleet', core: 'Core', full: 'Full Y
 var ADDONS = ['eta', 'accounts'];
 var MODULE_OF = { createOrder: 'orders', runImport: 'orders',
   getBoard: 'plan', saveBoard: 'plan', editJob: 'plan', payLink: 'cards', sendCardLink: 'cards', checkOrder: 'cards',
-  getWaste: 'waste', saveReceipts: 'waste', addReceipt: 'waste', exportWaste: 'waste', markWasteSubmitted: 'waste', saveDefraTemplate: 'waste',
+  getWaste: 'waste', saveReceipts: 'waste', addReceipt: 'waste', exportWaste: 'waste', markWasteSubmitted: 'waste', saveDefraTemplate: 'waste', fetchDefraTemplate: 'waste',
   accountsExport: 'accounts', accountsExportNew: 'accounts', sendEtaNow: 'eta',
   tipLookup: 'tipin', getTipIns: 'tipin', saveTipIn: 'tipin', saveTipDraft: 'tipin', voidTipDraft: 'tipin', tipMarkPaid: 'tipin', tipCheck: 'tipin', tipLink: 'tipin',
   tipInvoice: 'tipin', tipInvoicePaid: 'tipin', getOnSite: 'onsite', addOnSite: 'onsite', remindHire: 'onsite', getDriverApp: 'driver',
@@ -4424,8 +4424,16 @@ function defraTemplateInfo_() {
   try { var f = Drive.Files.get(id, { fields: 'id,name,modifiedTime,trashed' }); if (f.trashed) return { ok: false };
     return { ok: true, name: f.name, date: whFmtDate(new Date(f.modifiedTime)) }; } catch (e) { return { ok: false }; }
 }
-function saveDefraTemplate_(b64, name) {
-  var blob = Utilities.newBlob(Utilities.base64Decode(String(b64 || '').replace(/^data:[^,]*,/, '')),
+var DEFRA_TEMPLATE_URL = 'https://report-receipt-of-waste.service.gov.uk/public/receipt-of-waste-template.xlsx';
+/* Fetch Defra's current template straight from gov.uk, so nobody has to download and upload it. */
+function fetchDefraTemplate_() {
+  var r = UrlFetchApp.fetch(DEFRA_TEMPLATE_URL, { muteHttpExceptions: true, followRedirects: true });
+  if (r.getResponseCode() !== 200) throw new Error('Could not get the template from gov.uk just now. Download it from the link and upload it instead.');
+  return saveDefraTemplate_(null, 'Defra receipt of waste template.xlsx', r.getBlob());
+}
+function saveDefraTemplate_(b64, name, got) {
+  var blob = got ? got.setContentType('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet').setName('Defra receipt of waste template.xlsx')
+    : Utilities.newBlob(Utilities.base64Decode(String(b64 || '').replace(/^data:[^,]*,/, '')),
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Defra receipt of waste template.xlsx');
   var parts = defraUnzip_(blob);
   if (!parts.move || !parts.item) throw new Error('That is not Defra\'s receipt of waste template. Download it from gov.uk (Report receipt of waste) and try again.');
@@ -4436,7 +4444,8 @@ function saveDefraTemplate_(b64, name) {
 }
 function defraTemplateBlob_() {
   var id = PROPS.getProperty('DEFRA_TEMPLATE_ID');
-  if (!id) throw new Error('Upload Defra\'s spreadsheet template first (Waste tracking > Defra template). You only do this once.');
+  if (!id) { try { fetchDefraTemplate_(); id = PROPS.getProperty('DEFRA_TEMPLATE_ID'); } catch (e) { } }   // first export: get it from gov.uk automatically
+  if (!id) throw new Error('Get Defra\'s spreadsheet template first (Waste tracking > Get the template). You only do this once.');
   var r = UrlFetchApp.fetch('https://www.googleapis.com/drive/v3/files/' + id + '?alt=media',
     { headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() }, muteHttpExceptions: true });
   if (r.getResponseCode() !== 200) throw new Error('Could not open the stored Defra template. Upload it again from the Waste tracking page.');
@@ -8077,8 +8086,11 @@ function renderWaste(){
   var T=WD.template||{};
   $('wTpl').className='tplbar'+(T.ok?'':' bad');
   $('wTpl').innerHTML=T.ok?'<span>✓ <b>Defra template loaded</b> <span class="sub2">('+esc(T.date)+'). Every download is a fresh copy of it.</span></span><div style="flex:1"></div><button class="link" id="wTplUp">Replace template</button>'
-    :'<span><b>One-off setup:</b> download Defra\'s spreadsheet template from <a class="link" target="_blank" href="https://www.gov.uk/guidance/report-receipt-of-waste">gov.uk</a>, then upload it here. Defra only accepts its own spreadsheet.</span><div style="flex:1"></div><button class="fx" id="wTplUp">Upload Defra template</button>';
+    :'<span><b>One-off setup:</b> WasteLine fills in Defra\'s own spreadsheet for you. Press <b>Get the template</b> and it comes straight from gov.uk. (Or <a class="link" target="_blank" href="https://report-receipt-of-waste.service.gov.uk/public/receipt-of-waste-template.xlsx">download it</a> and upload it.)</span><div style="flex:1"></div><button class="fx" id="wTplGet">Get the template</button><button class="link" id="wTplUp">Upload instead</button>';
   $('wTplUp').onclick=function(){ $('wTplFile').value=''; $('wTplFile').click(); };
+  if($('wTplGet')) $('wTplGet').onclick=function(){ var b=this; b.disabled=true; b.textContent='Getting it…';
+    run().withSuccessHandler(function(d){ WD=d; renderWaste(); toast('ok','✓','<b>Defra template ready.</b> Tick loads and download the spreadsheet.'); })
+      .withFailureHandler(function(e){ b.disabled=false; b.textContent='Get the template'; toast('bad','!',esc(e&&e.message||e)); }).fetchDefraTemplate(); };
   if(!$('wSrc').dataset.done){ renderSeg('wSrc',[['all','All loads'],['ours','Our skip jobs'],['tipin','Tipped in by others']],function(v){ WSRC=v; WSEL={}; renderWaste(); }); setSeg('wSrc','all'); $('wSrc').dataset.done=1; }
   if(!$('wFilt').dataset.done){ renderSeg('wFilt',[['todo','To submit'],['weight','Needs weight'],['ready','Ready'],['done','Submitted'],['all','All']],function(v){ WFILT=v; WSEL={}; renderWaste(); }); setSeg('wFilt','todo'); $('wFilt').dataset.done=1; }
   var todo=all.filter(function(x){return x.Status!=='Submitted';}), late=todo.filter(function(x){return wDue(x)<0;}), today=todo.filter(function(x){return wDue(x)===0;});
