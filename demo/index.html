@@ -196,7 +196,9 @@ function whCanonSupplier(s) {
 
 function whParseDate(v) {
   if (v instanceof Date) return isNaN(v) ? null : v;
-  var m = String(v || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  var iso = String(v || '').match(/^\s*(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (iso) { var di = new Date(+iso[1], +iso[2] - 1, +iso[3]); return isNaN(di) ? null : di; }
+  var m = String(v || '').match(/(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})/);
   if (!m) return null;
   var y = parseInt(m[3], 10); if (y < 100) y += 2000;
   var d = new Date(y, parseInt(m[2], 10) - 1, parseInt(m[1], 10));
@@ -396,6 +398,12 @@ function doGet(e) {
       .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }
   if (!isSetUp_()) {
+    // Already installed but a tab was renamed or deleted: say so, never rebuild over the yard's sheet.
+    if (PROPS.getProperty('SHEET_ID') && PROPS.getProperty('ROOT_ID')) {
+      var miss = [TAB.ORD, TAB.SET, TAB.CUS].filter(function (t) { try { return !ss_().getSheetByName(t); } catch (x) { return true; } });
+      if (miss.length) return HtmlService.createHtmlOutput('<p style="font-family:Arial,sans-serif;padding:24px;max-width:560px">The order system can\'t find the <b>' +
+        h_(miss.join(', ')) + '</b> tab in your Google Sheet. If it was renamed, change it back to exactly that name and reload this page. Nothing has been changed.</p>');
+    }
     try { setup_(); } catch (e) {
       return HtmlService.createHtmlOutput('<p style="font-family:Arial,sans-serif;padding:24px">Setup could not finish: ' +
         h_(e && e.message || e) + '<br><br>Open the sheet and choose <b>Order System &gt; Set up (first time)</b>.</p>');
@@ -569,7 +577,11 @@ function sh_(name) { if (name === TAB.ORD) ORD_V = null; return ss_().getSheetBy
 function ordVals_() {
   if (ORD_V) return ORD_V;
   var sh = ss_().getSheetByName(TAB.ORD), n = sh ? sh.getLastRow() : 0;
-  return (ORD_V = n > 1 ? sh.getRange(2, 1, n - 1, ORD_HEAD.length).getDisplayValues() : []);
+  ORD_V = n > 1 ? sh.getRange(2, 1, n - 1, ORD_HEAD.length).getDisplayValues() : [];
+  // Job dates typed by hand (5/11/26, 05/11/2026, 2026-11-05) are read as dd/MM/yy so they show on the day plan and driver app.
+  var jc = C['Job date'];
+  ORD_V.forEach(function (r) { var j = r[jc]; if (j && !/^\d{2}\/\d{2}\/\d{2}$/.test(j)) { var d = whParseDate(j); if (d) r[jc] = whFmtDate(d); } });
+  return ORD_V;
 }
 
 /* Which optional permissions were granted? Features switch off rather than break. */
@@ -710,6 +722,8 @@ function customerByRef_(ref) {
 
 function createOrder_(p) {
   var lock = LockService.getScriptLock(); lock.waitLock(30000);
+  var rc = CacheService.getScriptCache(), rk = p && p.reqId ? 'req_' + String(p.reqId).slice(0, 40) : '';
+  if (rk) { var seen = rc.get(rk); if (seen) { lock.releaseLock(); return JSON.parse(seen); } }
   try {
     var now = new Date(), ref = p.ref, termsLabel;
     if (p.newCustomer) { ref = addCustomer_(p); termsLabel = terms_(p.terms || setting_('Default payment terms')).label; }
@@ -776,7 +790,9 @@ function createOrder_(p) {
     sh.getRange(r, C['Price (ex VAT)'] + 1, 1, 6).setNumberFormat('£#,##0.00');
     sh.getRange(r, 1, 1, row.length).setValues([row]);
     SpreadsheetApp.flush();
-    return { row: r, no: no, total: total };
+    var out = { row: r, no: no, total: total };
+    if (rk) try { rc.put(rk, JSON.stringify(out), 900); } catch (e) { }
+    return out;
   } finally { lock.releaseLock(); }
 }
 
@@ -789,6 +805,14 @@ function fixRow_(row, no) {
   var f = sh.getRange('A:A').createTextFinder(String(no)).matchEntireCell(true).findNext();
   return f ? f.getRow() : row;
 }
+/* Row numbers from the screen can be out of date (the nightly archive moves rows, staff can sort the sheet).
+   The app sends "row|order no"; find where that order is now and refuse if it can't be found. */
+function rowRef_(r) {
+  var m = String(r).match(/^(\d+)\|(.+)$/); if (!m) return +r;
+  var row = fixRow_(+m[1], m[2]);
+  if (sh_(TAB.ORD).getRange(row, 1).getDisplayValue() !== m[2]) throw new Error('Order ' + m[2] + ' could not be found. Refresh the page and try again.');
+  return row;
+}
 function orderAt_(r) {
   var v = sh_(TAB.ORD).getRange(r, 1, 1, ORD_HEAD.length).getDisplayValues()[0], o = {};
   ORD_HEAD.forEach(function (h, i) { o[h] = v[i]; });
@@ -799,10 +823,14 @@ function setCell_(r, col, val) { sh_(TAB.ORD).getRange(r, C[col] + 1).setValue(v
 function setCells_(r, obj) {
   var keys = Object.keys(obj); if (!keys.length) return;
   if (keys.length === 1) return setCell_(r, keys[0], obj[keys[0]]);
-  var idx = keys.map(function (k) { return C[k]; }), lo = Math.min.apply(null, idx), hi = Math.max.apply(null, idx);
-  var rng = sh_(TAB.ORD).getRange(r, lo + 1, 1, hi - lo + 1), v = rng.getValues()[0];
-  keys.forEach(function (k) { v[C[k] - lo] = obj[k]; });
-  rng.setValues([v]);
+  // Write only the cells being changed (in runs of side-by-side columns). Never re-write the cells in between,
+  // or a payment saved by someone else at the same moment could be put back to how it was.
+  var sh = sh_(TAB.ORD), cols = keys.map(function (k) { return { c: C[k], v: obj[k] }; }).sort(function (a, b) { return a.c - b.c; });
+  for (var i = 0; i < cols.length;) {
+    var j = i; while (j + 1 < cols.length && cols[j + 1].c === cols[j].c + 1) j++;
+    sh.getRange(r, cols[i].c + 1, 1, j - i + 1).setValues([cols.slice(i, j + 1).map(function (x) { return x.v; })]);
+    i = j + 1;
+  }
 }
 
 function money_(v) { var n = whMoney(v) || 0; return '£' + n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -860,7 +888,7 @@ function councilFor_(addr) { return { council: council_(addr) }; }
    pay later order gets one attachment (the invoice). Card over the phone (pay = 'card') waits: the
    confirmation goes once Stripe has the money (afterCardPaid_). mode 'files': PDFs only, nothing sent.
    The email goes first and the Drive filing after, so the customer is never kept waiting on PDFs. */
-function sendOrder_(r, mode, pay) {
+function sendOrder_(r, mode, pay) { r = rowRef_(r);
   try {
     var o = orderAt_(r), s = settings_(), free = o['Status'] === 'No charge', paid = o['Status'] === 'Paid';
     var res = { ok: true, no: o['Order No'], link: '', folderUrl: '', emailed: false, sentTo: '', email: o['Email'], phone: o['Phone'], linkError: '' };
@@ -920,14 +948,14 @@ function orderPdfs_(o) {
   return out;
 }
 
-function emailOrder_(r) {
+function emailOrder_(r) { r = rowRef_(r);
   var o = orderAt_(r); if (!o['Email']) throw new Error('No email address on this order.');
   var res = sendOrder_(r, 'email');
   if (!res.emailed) throw new Error(res.emailError || 'Email not sent.');
   return { sentTo: o['Email'] };
 }
 
-function shareOrder_(r) {
+function shareOrder_(r) { r = rowRef_(r);
   var o = orderAt_(r), files = orderPdfs_(o);
   if (files.length < (o['Status'] === 'No charge' ? 1 : 2)) { sendOrder_(r, 'files'); ORD_V = null; files = orderPdfs_(orderAt_(r)); }
   return { no: o['Order No'], phone: o['Phone'], total: whMoney(o['Total']), link: o['Card link'],
@@ -972,7 +1000,9 @@ function sendMail_(to, subject, body, htmlBody, attachments, cc) {
   if (cc && String(cc).toLowerCase() !== String(to).toLowerCase()) msg.cc = cc;
   if (htmlBody) msg.htmlBody = htmlBody;
   var reply = setting_('Business email'); if (reply) msg.replyTo = reply;
-  if (copy && copy.toLowerCase() !== String(to).toLowerCase()) msg.bcc = copy;
+  // The office copy counts towards Google's daily email limit (100 on free Gmail). When the limit is close, keep it for customers.
+  var left = 100; try { left = MailApp.getRemainingDailyQuota(); } catch (e) { }
+  if (copy && copy.toLowerCase() !== String(to).toLowerCase() && left > 25) msg.bcc = copy;
   MailApp.sendEmail(msg);
 }
 
@@ -1239,6 +1269,7 @@ function markPaidReceipt_(rows, nos, d) {
   var ext = m ? (m[1] === 'application/pdf' ? '.pdf' : m[1] === 'image/png' ? '.png' : '.jpg') : '';
   rows.forEach(function (r, i) {
     r = fixRow_(+r, nos[i]); var o = orderAt_(r), url = '';
+    if (nos[i] && o['Order No'] !== String(nos[i])) throw new Error('Order ' + nos[i] + ' could not be found. Refresh the page and try again.');
     if (m) {
       var folder = orderFolder_(o), blob = Utilities.newBlob(Utilities.base64Decode(m[2]), m[1], o['Order No'] + ' receipt ' + stamp + ext);
       var file = Drive.Files.create({ name: blob.getName(), parents: [folder.id], mimeType: m[1] }, blob); url = fileUrl_(file.id);
@@ -1251,9 +1282,9 @@ function markPaidReceipt_(rows, nos, d) {
 }
 
 /* Marks the whole order paid (everything still owed). */
-function markPaid_(r, how) {
+function markPaid_(r, how) { r = rowRef_(r);
   payParts_(r, [], how);
-  links_(orderAt_(r)).forEach(function (l) { if (!l.done) stripeClose_(l.id); });
+  var lk = links_(orderAt_(r)), sh = false; lk.forEach(function (l) { if (!l.done) { stripeClose_(l.id); l.done = true; sh = true; } }); if (sh) saveLinks_(r, lk);
   return getUnpaid_();
 }
 
@@ -1274,7 +1305,7 @@ function cardLinkFor_(r, keys, phone) {
   if (!pick.length) throw new Error('Nothing left to pay on this order.');
   var ks = pick.map(function (c) { return c.k; }).sort(), g = whRound2(pick.reduce(function (a, c) { return a + c.g; }, 0));
   var list = links_(o), same = list.filter(function (l) { return !l.done && l.p && l.p.slice().sort().join() === ks.join() &&
-    (phone ? true : !/^cs_/.test(l.id)) && (!/^cs_/.test(l.id) || Date.now() - (l.t || 0) < 20 * 3600e3); })[0];
+    (phone ? true : !/^cs_/.test(l.id)) && (!/^cs_/.test(l.id) || Date.now() - (l.t || 0) < 20 * 3600e3) && (l.g == null || Math.abs(l.g - g) < 0.005); })[0];
   if (same) return { url: same.url, g: same.g, label: pick.map(function (c) { return c.l; }), o: o };
   needModule_('cards');
   var key = setting_('Stripe secret key');
@@ -1291,7 +1322,7 @@ function cardLinkFor_(r, keys, phone) {
   return { url: L.url, g: g, label: pick.map(function (c) { return c.l; }), o: o };
 }
 
-function sendCardLink_(r, keys) {
+function sendCardLink_(r, keys) { r = rowRef_(r);
   var s = settings_(), k = cardLinkFor_(r, keys), o = k.o;
   var what = k.label.join(' + ');
   var emailed = false;
@@ -1302,7 +1333,7 @@ function sendCardLink_(r, keys) {
 }
 
 /* Card over the phone: the link only, fast, no emails (the office types the card in). */
-function payLink_(r, keys) { var k = cardLinkFor_(r, keys || [], true); return { link: /checkout\.stripe\.com/.test(k.url) ? k.url : payUrl_(k.url, k.o['Email']), total: k.g }; }
+function payLink_(r, keys) { r = rowRef_(r); var k = cardLinkFor_(r, keys || [], true); return { link: /checkout\.stripe\.com/.test(k.url) ? k.url : payUrl_(k.url, k.o['Email']), total: k.g }; }
 /* Once one link is paid, switch off any other open link for the same items so nobody pays twice. */
 function closeOverlaps_(list, paid) {
   list.forEach(function (l) { if (l === paid || l.done) return;
@@ -1313,7 +1344,7 @@ function closeOverlaps_(list, paid) {
 function payUrl_(url, email) { return url && email && /@/.test(email) ? url + (url.indexOf('?') > -1 ? '&' : '?') + 'prefilled_email=' + encodeURIComponent(email) : url; }
 
 /* Is this one order paid yet? Used while the card payment page is open on the office screen. */
-function checkOrder_(r) {
+function checkOrder_(r) { r = rowRef_(r);
   var o = orderAt_(r), list = links_(o), hit = 0;
   if (o['Status'] !== 'Paid' && /^sk_|^rk_/.test(setting_('Stripe secret key'))) {
     list.forEach(function (l) {
@@ -1408,14 +1439,20 @@ function stripeLink_(o, gross, what) {
 function checkCardPayments(e) { trigOnly_(e); return checkCardPayments_(); }
 function checkCardPayments_() {
   if (!/^sk_|^rk_/.test(setting_('Stripe secret key'))) return 0;
+  var lock = LockService.getScriptLock(); if (!lock.tryLock(20000)) return 0;   // another check is already running: don't record a payment twice
+  try { return checkCardPaymentsLocked_(); } finally { lock.releaseLock(); }
+}
+function checkCardPaymentsLocked_() {
   var sh = sh_(TAB.ORD), n = sh.getLastRow(), paid = 0;
   var v = n > 1 ? sh.getRange(2, 1, n - 1, ORD_HEAD.length).getDisplayValues() : [];
   for (var i = 0; i < v.length; i++) {
     var r = v[i];
     if (!r[C['Stripe link id']] || r[C['Status']] === 'Paid') continue;
-    var o = orderAt_(i + 2), list = links_(o), changed = false;
+    var o = orderAt_(i + 2), list = links_(o), changed = false, dead = /cancel/i.test(r[C['Status']] + ' ' + r[C['Job status']]);
     list.forEach(function (l) {
       if (l.done) return;
+      // cancelled orders and card pages past Stripe's 24 hours can't be paid: stop checking them
+      if (dead || (/^cs_/.test(l.id) && l.t && Date.now() - l.t > 26 * 3600e3)) { l.done = true; changed = true; return; }
       try {
         if (stripePaid_(l.id)) {
           l.done = true; changed = true; paid++; closeOverlaps_(list, l);
@@ -1429,7 +1466,7 @@ function checkCardPayments_() {
         }
       } catch (e) { }
     });
-    if (changed) { saveLinks_(i + 2, list); afterCardPaid_(i + 2); }
+    if (changed) { saveLinks_(i + 2, list); if (!dead) afterCardPaid_(i + 2); }
   }
   try { paid += checkTipPayments_(); } catch (e) { }
   return paid;
@@ -1717,17 +1754,23 @@ function migrateOrders_() {
     if (hdr.slice(0, ORD_HEAD.length).join('|') === ORD_HEAD.join('|')) return;
     var n = sh.getLastRow(), old = n > 1 ? sh.getRange(2, 1, n - 1, lc).getValues() : [], idx = {};
     hdr.forEach(function (h, i) { idx[String(h).trim()] = i; });
+    // Columns the yard added or renamed are kept (moved to the right), never thrown away.
+    var extra = hdr.map(function (h, i) { return { h: String(h).trim(), i: i }; }).filter(function (x) { return x.h && ORD_HEAD.indexOf(x.h) < 0; });
+    var missingShow = ORD_SHOW.filter(function (h) { return idx[h] == null; });
+    if (extra.length && missingShow.length && n > 1)
+      throw new Error('The Orders tab has column "' + extra[0].h + '" where "' + missingShow[0] + '" should be. Rename it back to "' + missingShow[0] + '" in the sheet, then reload.');
     var money = ['Price (ex VAT)', 'Permit', 'Bay suspension', 'Extras', 'VAT', 'Total'];
     var rows = old.map(function (r) { return ORD_HEAD.map(function (h) {
       var v = idx[h] != null ? r[idx[h]] : '';
       if (money.indexOf(h) > -1) { var m = whMoney(v); return m == null ? '' : m; }
       if (v instanceof Date) return whFmtDate(v);
-      return v; }); });
+      return v; }).concat(extra.map(function (x) { return r[x.i]; })); });
+    var W = ORD_HEAD.length + extra.length;
     sh.showColumns(1, Math.max(lc, 1));
     sh.getRange(1, 1, Math.max(n, 1), Math.max(lc, ORD_HEAD.length)).clearContent();
     formatOrders_(sh);
-    sh.getRange(1, 1, 1, ORD_HEAD.length).setValues([ORD_HEAD]);
-    if (rows.length) sh.getRange(2, 1, rows.length, ORD_HEAD.length).setValues(rows);
+    sh.getRange(1, 1, 1, W).setValues([ORD_HEAD.concat(extra.map(function (x) { return x.h; }))]);
+    if (rows.length) sh.getRange(2, 1, rows.length, W).setValues(rows);
     SpreadsheetApp.flush();
   } finally { lock.releaseLock(); }
 }
@@ -1890,7 +1933,20 @@ function editJob_(row, no, ch) {
   var price = ch.price != null && ch.price !== '' ? whRound2(+ch.price) : null;
   if ((ch.size && ch.size !== o['Size']) || (price != null && price !== whMoney(o['Price (ex VAT)']))) {
     var size = ch.size || o['Size']; price = price != null ? price : whMoney(o['Price (ex VAT)']);
-    list.forEach(function (c) { if (c.k === 'skip') { c.n = price; c.l = size + ' ' + String(o['Service']).toLowerCase(); } });
+    var paid = paidParts_(o), oldPrice = whMoney(o['Price (ex VAT)']) || 0, diff = whRound2(price - oldPrice);
+    if (paid.indexOf('skip') > -1 && diff) {
+      // The skip is already paid for: keep what was paid, and bill the difference as its own line.
+      if (diff < 0) throw new Error('This order is already paid. Refund the difference first, then change the price.');
+      list.forEach(function (c) { if (c.k === 'skip') c.l = size + ' ' + String(o['Service']).toLowerCase(); });
+      list.push({ k: 'adj' + (list.length + 1), l: 'Price change (' + (o['Size'] === size ? size : o['Size'] + ' to ' + size) + ')', n: diff });
+      w['Paid parts'] = paid.join(', '); w['Status'] = 'Part paid';
+    } else {
+      list.forEach(function (c) { if (c.k === 'skip') { c.n = price; c.l = size + ' ' + String(o['Service']).toLowerCase(); } });
+      // card links made for the old price must not be paid any more
+      var lk = links_(o), shut = false;
+      lk.forEach(function (l) { if (!l.done && (!l.p || !l.p.length || l.p.indexOf('skip') > -1)) { try { stripeClose_(l.id); } catch (e) { } l.done = true; shut = true; } });
+      if (shut) { w['Stripe link id'] = JSON.stringify(lk); w['Card link'] = ''; }
+    }
     var net = whRound2(list.reduce(function (a, c) { return a + c.n; }, 0)), vat = whRound2(net * 0.2);
     w['Size'] = size; w['Price (ex VAT)'] = price; w['VAT'] = vat; w['Total'] = whRound2(net + vat); w['Charges'] = JSON.stringify(list);
   }
@@ -2335,10 +2391,11 @@ function saveZones_(head, rows) {
 }
 
 /* ---- unpaid: bulk actions ---- */
-function markPaidMany_(rows) { (rows || []).forEach(function (r) { payParts_(+r, [], 'marked paid'); }); return getUnpaid_(); }
+function markPaidMany_(rows) { (rows || []).forEach(function (r) { r = rowRef_(r); payParts_(r, [], 'marked paid'); links_(orderAt_(r)).forEach(function (l) { if (!l.done) stripeClose_(l.id); }); }); return getUnpaid_(); }
 
 /* Chase: a short reminder by email with the invoice attached, a card link (if Stripe is on) and bank details. */
 function chaseOrders_(rows) {
+  rows = (rows || []).map(rowRef_);
   var s = settings_(), sent = 0, skipped = [];
   (rows || []).forEach(function (r) {
     var o = orderAt_(+r);
@@ -2506,7 +2563,7 @@ function licenceFetch_(action, extra) {
     var res = UrlFetchApp.fetch(LICENCE_URL, { method: 'post', contentType: 'application/json', muteHttpExceptions: true,
       headers: { Authorization: 'Bearer ' + LICENCE_ANON, apikey: LICENCE_ANON }, payload: JSON.stringify(payload) });
     var code = res.getResponseCode(), j = null; try { j = JSON.parse(res.getContentText()); } catch (e) { }
-    if (code === 404 || code === 400) return { gone: true };          // the server doesn't know this install key
+    if (code === 404 && j && /unknown install/i.test(j.error || '')) return { gone: true };   // only when the server says it doesn't know this key
     if (code !== 200) return null;
     return j && j.ok ? j : null;
   } catch (e) { return null; }
@@ -6274,7 +6331,9 @@ function whCanonSupplier(s) {
 
 function whParseDate(v) {
   if (v instanceof Date) return isNaN(v) ? null : v;
-  var m = String(v || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  var iso = String(v || '').match(/^\s*(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (iso) { var di = new Date(+iso[1], +iso[2] - 1, +iso[3]); return isNaN(di) ? null : di; }
+  var m = String(v || '').match(/(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})/);
   if (!m) return null;
   var y = parseInt(m[3], 10); if (y < 100) y += 2000;
   var d = new Date(y, parseInt(m[2], 10) - 1, parseInt(m[1], 10));
@@ -6819,7 +6878,8 @@ function submit(){
     size:S.size, service:S.service, waste:wasteValue(), jobDate:whFmtDate(new Date($('jobDate').value+'T12:00:00')), slot:$('slot').value.trim(),
     price:t.price, permit:t.permit, council:PLACE==='Road'?$('council').value.trim():'', bays:bayInfo(), extras:extras(),
     pay:(t.total===0&&isColl())?'nocharge':(PAY==='later'?'bank':PAY), later:PAY==='later', po:$('po').value.trim(), notes:$('notes').value.trim(), etaText:!!($('etaTick')&&$('etaTick').checked&&!$('etaTick').disabled), etaEmail:!!($('etaMail')&&$('etaMail').checked) };
-  run().withSuccessHandler(function(r){ done(r,p); })
+  if(!S.reqId) S.reqId=Date.now().toString(36)+Math.random().toString(36).slice(2,10); p.reqId=S.reqId;   // a retry after a dropped reply returns the same order, not a second one
+  run().withSuccessHandler(function(r){ S.reqId=''; done(r,p); })
     .withFailureHandler(function(e){ if(PAYWIN) PAYWIN.close(); btns.forEach(function(b){b.textContent='Book & send';}); update(); toast('bad','!','<b>Not booked</b><br>'+esc(e&&e.message||e)); })
     .createOrder(p);
 }
@@ -6845,14 +6905,14 @@ function phonePay(row,no){
       '<div class="acts"><a class="fx" style="text-decoration:none" target="_blank" href="'+esc(r.link)+'">Open payment page</a><span id="payWait" style="font-size:13px;color:var(--muted)">Waiting for payment…</span></div></div>';
     pollPaid(row,no,0);
   }).withFailureHandler(function(e){ if(PAYWIN) PAYWIN.close();
-    $('dPay').innerHTML='<div class="note e"><b>Card link not made:</b> '+esc(e&&e.message||e)+'</div>'; }).payLink(row);
+    $('dPay').innerHTML='<div class="note e"><b>Card link not made:</b> '+esc(e&&e.message||e)+'</div>'; }).payLink(row+'|'+no);
 }
 function pollPaid(row,no,n){
   clearTimeout(PAYPOLL); if(n>100||$('doneView').classList.contains('hide')) return;
   PAYPOLL=setTimeout(function(){ run().withSuccessHandler(function(r){
     if(r.status==='Paid'){ $('dPay').innerHTML='<div class="note ok" style="font-size:15px"><b>✓ Paid.</b> '+esc(no)+' is marked paid and the receipt is on its way.</div>'; toast('ok','✓','<b>'+esc(no)+' paid by card</b>'); refreshData(); return; }
     if($('payWait')) $('payWait').textContent='Waiting for payment… (checks every few seconds)'; pollPaid(row,no,n+1); })
-    .withFailureHandler(function(){ pollPaid(row,no,n+1); }).checkOrder(row); }, n<20?5000:15000);
+    .withFailureHandler(function(){ pollPaid(row,no,n+1); }).checkOrder(row+'|'+no); }, n<20?5000:15000);
 }
 function sendBg(row,no,email,phone,total,mode,pay){
   run().withSuccessHandler(function(res){
@@ -6860,14 +6920,14 @@ function sendBg(row,no,email,phone,total,mode,pay){
     $('dStatus').textContent=res.emailed?'✓ Confirmation sent to '+res.sentTo:pay==='card'?'The confirmation emails as soon as the card payment goes through.':'✓ Saved, not emailed yet';
     if(res.link&&pay!=='card') $('dLink').innerHTML=linkBox(res.link,phone,no,total);
     if(res.linkError&&pay==='cardlink') $('dLink').innerHTML='<div class="note e"><b>Card link not made:</b> '+esc(res.linkError)+'</div>';
-    $('dShare').innerHTML=shareBtns(row,res.emailed,!!email);
+    $('dShare').innerHTML=shareBtns(row+'|'+no,res.emailed,!!email);
     bindShare($('dShare'));
     toast('ok','✓','<b>'+esc(no)+(res.emailed?' sent':' saved')+'</b><br>'+(res.emailed?'To '+esc(res.sentTo)+'. ':'')+
       (res.emailError?'Email failed: '+esc(res.emailError)+'. ':'')+(res.folderUrl?'<a href="'+esc(res.folderUrl)+'" target="_blank">Drive folder</a>':''));
   }).withFailureHandler(function(e){
     $('dStatus').className='status bad'; $('dStatus').textContent='Paperwork not sent: '+(e&&e.message||e);
     toast('bad','!','<b>'+esc(no)+' booked, paperwork failed</b><br>Use Resend in Unpaid.',true);
-  }).sendOrder(row,mode,pay);
+  }).sendOrder(row+'|'+no,mode,pay);
 }
 /* Email it / WhatsApp it buttons: nothing goes to the customer until one is pressed
    (when automatic emails are off). */
@@ -6879,7 +6939,7 @@ function shareBtns(row,emailed,hasEmail){
 }
 function bindShare(el){
   Array.prototype.forEach.call(el.querySelectorAll('[data-share]'),function(b){ b.onclick=function(){
-    var row=+b.dataset.row, old=b.textContent; b.disabled=true; b.textContent='…';
+    var row=b.dataset.row, old=b.textContent; b.disabled=true; b.textContent='…';
     if(b.dataset.share==='email') run().withSuccessHandler(function(r){ b.textContent='✓ Emailed'; toast('ok','✓','<b>Emailed</b> to '+esc(r.sentTo));
       if($('dStatus')&&!$('doneView').classList.contains('hide')){ $('dStatus').textContent='✓ Sent to '+r.sentTo; } })
       .withFailureHandler(function(e){ b.disabled=false; b.textContent=old; toast('bad','!',esc(e&&e.message||e)); }).emailOrder(row);
@@ -7009,7 +7069,7 @@ function mpWire(){
 function bulkChase(){ var b=$('bChase'), rows=selRows(); b.disabled=true; b.textContent='Sending…';
   run().withSuccessHandler(function(r){ b.disabled=false; b.textContent='Chase by email'; USEL={}; setUnpaid(r.unpaid); renderUnpaid();
       toast('ok','✓','<b>'+r.sent+' reminder'+(r.sent===1?'':'s')+' sent</b>'+(r.skipped.length?'<br>Not sent: '+esc(r.skipped.join(', ')):''),!!r.skipped.length); })
-    .withFailureHandler(function(e){ b.disabled=false; b.textContent='Chase by email'; toast('bad','!',esc(e&&e.message||e)); }).chaseOrders(rows); }
+    .withFailureHandler(function(e){ b.disabled=false; b.textContent='Chase by email'; toast('bad','!',esc(e&&e.message||e)); }).chaseOrders(rows.map(function(r){ var u=(D.unpaid||[]).filter(function(x){ return x.row===r; })[0]; return u?r+'|'+u.no:r; })); }
 function unpaidAction(a,x,i,b){
   b.disabled=true; var old=b.textContent; b.textContent='…';
   var fail=function(e){ b.disabled=false; b.textContent=old; toast('bad','!',esc(e&&e.message||e)); };
@@ -7021,20 +7081,20 @@ function unpaidAction(a,x,i,b){
     if(open.length>1&&!b.dataset.go){ b.disabled=false; b.textContent=old; pickParts(x,i,open); return; }
     var keys=b.dataset.keys?b.dataset.keys.split(','):[];
     run().withSuccessHandler(function(r){ b.disabled=false; b.textContent=old; $('ul'+i).innerHTML=linkBox(r.link,r.phone,r.no,r.total,r.what); x.link=r.link;
-      toast('ok','✓','<b>Card link '+(r.emailed?'emailed':'ready')+'</b> for '+esc(x.no)+' · '+gbp(r.total)); }).withFailureHandler(fail).sendCardLink(x.row,keys);
+      toast('ok','✓','<b>Card link '+(r.emailed?'emailed':'ready')+'</b> for '+esc(x.no)+' · '+gbp(r.total)); }).withFailureHandler(fail).sendCardLink(x.row+'|'+x.no,keys);
   }
-  if(a==='resend') run().withSuccessHandler(function(r){ b.disabled=false; b.textContent=old; toast('ok','✓','<b>'+esc(x.no)+' resent</b> to '+esc(r.sentTo)); }).withFailureHandler(fail).resendInvoice(x.row);
+  if(a==='resend') run().withSuccessHandler(function(r){ b.disabled=false; b.textContent=old; toast('ok','✓','<b>'+esc(x.no)+' resent</b> to '+esc(r.sentTo)); }).withFailureHandler(fail).resendInvoice(x.row+'|'+x.no);
   if(a==='chase') run().withSuccessHandler(function(r){ b.disabled=false; b.textContent=old; setUnpaid(r.unpaid);
-    toast(r.sent?'ok':'bad',r.sent?'✓':'!',r.sent?'<b>Reminder sent</b> to '+esc(x.email||x.customer):'<b>Not sent</b> '+esc(r.skipped.join(', '))); }).withFailureHandler(fail).chaseOrders([x.row]);
+    toast(r.sent?'ok':'bad',r.sent?'✓':'!',r.sent?'<b>Reminder sent</b> to '+esc(x.email||x.customer):'<b>Not sent</b> '+esc(r.skipped.join(', '))); }).withFailureHandler(fail).chaseOrders([x.row+'|'+x.no]);
   if(a==='phone'){
     var openP=(x.parts||[]).filter(function(c){return !c.paid;});
     if(openP.length>1&&!b.dataset.go){ b.disabled=false; b.textContent=old; pickParts(x,i,openP,'phone'); return; }
     var pk=b.dataset.keys?b.dataset.keys.split(','):[], w=null; try{ w=window.open('','_blank'); if(w) w.document.write('<p style="font-family:Arial;padding:30px;font-size:18px">Opening the card payment page…</p>'); }catch(e){}
     run().withSuccessHandler(function(r){ b.disabled=false; b.textContent=old; if(w&&!w.closed) w.location=r.link; else window.open(r.link,'_blank');
       $('ul'+i).innerHTML='<div class="note n">Payment page open for '+gbp(r.total)+'. Type the card in while they read it out. It marks itself paid.</div>'; watchOne(x.row,x.no,0); })
-      .withFailureHandler(function(e){ if(w) w.close(); fail(e); }).payLink(x.row,pk); }
+      .withFailureHandler(function(e){ if(w) w.close(); fail(e); }).payLink(x.row+'|'+x.no,pk); }
 }
-function watchOne(row,no,n){ if(n>60) return; setTimeout(function(){ run().withSuccessHandler(function(r){ if(r.status==='Paid'){ toast('ok','✓','<b>'+esc(no)+' paid by card</b>'); refreshData(); } else watchOne(row,no,n+1); }).withFailureHandler(function(){ watchOne(row,no,n+1); }).checkOrder(row); }, n<20?5000:15000); }
+function watchOne(row,no,n){ if(n>60) return; setTimeout(function(){ run().withSuccessHandler(function(r){ if(r.status==='Paid'){ toast('ok','✓','<b>'+esc(no)+' paid by card</b>'); refreshData(); } else watchOne(row,no,n+1); }).withFailureHandler(function(){ watchOne(row,no,n+1); }).checkOrder(row+'|'+no); }, n<20?5000:15000); }
 /* "What are they paying for now?" Everything ticked; untick the skip to take permit + bays first. */
 function pickParts(x,i,open,mode){
   var h='<div class="pick"><b>What are they paying for now?</b>'+open.map(function(c){
@@ -7191,14 +7251,14 @@ function chaseAct(a,j,b){
   if(a==='card'){ var w=null; try{ w=window.open('','_blank'); }catch(e){}
     run().withSuccessHandler(function(r){ b.disabled=false; b.textContent=old; if(w&&!w.closed) w.location=r.link; else window.open(r.link,'_blank');
       $('cl'+j.row).innerHTML='<div class="note n">Payment page open for '+gbp(r.total)+'. Type the card in while they read it out. This marks itself paid.</div>'; watchPaid(j.row,j.no,0); })
-      .withFailureHandler(function(e){ if(w) w.close(); fail(e); }).payLink(j.row); return; }
-  if(a==='link') run().withSuccessHandler(function(r){ b.disabled=false; b.textContent=old; $('cl'+j.row).innerHTML=linkBox(r.link,r.phone,r.no,r.total,r.what); toast('ok','✓','<b>Card link '+(r.emailed?'emailed':'ready')+'</b> for '+esc(j.no)); }).withFailureHandler(fail).sendCardLink(j.row,[]);
+      .withFailureHandler(function(e){ if(w) w.close(); fail(e); }).payLink(j.row+'|'+j.no); return; }
+  if(a==='link') run().withSuccessHandler(function(r){ b.disabled=false; b.textContent=old; $('cl'+j.row).innerHTML=linkBox(r.link,r.phone,r.no,r.total,r.what); toast('ok','✓','<b>Card link '+(r.emailed?'emailed':'ready')+'</b> for '+esc(j.no)); }).withFailureHandler(fail).sendCardLink(j.row+'|'+j.no,[]);
   if(a==='paid'){ b.disabled=false; b.textContent=old; mpOpen([j.row],[j.no],j.no,function(u){ setUnpaid(u); toast('ok','✓','<b>'+esc(j.no)+' marked paid</b>'); loadPlan(true); }); return; }
   if(a==='post') run().withSuccessHandler(function(bd){ P=bd; drawPlan(); toast('ok','✓','<b>'+esc(j.no)+' moved to '+esc(nextDay())+'</b>'); }).withFailureHandler(fail).editJob(j.row,j.no,{date:nextDay(),day:pDay()});
 }
 function watchPaid(row,no,n){ if(n>60||$('planView').classList.contains('hide')) return;
   setTimeout(function(){ run().withSuccessHandler(function(r){ if(r.status==='Paid'){ toast('ok','✓','<b>'+esc(no)+' paid by card</b>'); loadPlan(true); refreshData(); } else watchPaid(row,no,n+1); })
-    .withFailureHandler(function(){ watchPaid(row,no,n+1); }).checkOrder(row); }, n<20?5000:15000); }
+    .withFailureHandler(function(){ watchPaid(row,no,n+1); }).checkOrder(row+'|'+no); }, n<20?5000:15000); }
 
 function drawPlan(){
   $('pStart').textContent=hLabel(Math.floor(hm(P.start)/60))+(hm(P.start)%60?':'+('0'+hm(P.start)%60).slice(-2):'');
