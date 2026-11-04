@@ -2712,6 +2712,11 @@ function getWaste_() {
   if (n > 1) sh.getRange(2, 1, n - 1, REC_HEAD.length).getDisplayValues().forEach(function (r, i) {
     if (!r[0]) return; var o = { row: i + 2 }; REC_HEAD.forEach(function (h, k) { o[h] = r[k]; }); out.push(o);
   });
+  // Loads tipped in by other hauliers have no WTN from us: link their weighbridge ticket instead.
+  try { var wi = sh_(TAB.WIN), wv = wi && wi.getLastRow() > 1 ? wi.getDataRange().getDisplayValues() : [], tk = {};
+    if (wv.length) { var ti = wv[0].indexOf('Ticket No'), tl = wv[0].indexOf('Ticket link');
+      wv.slice(1).forEach(function (r) { if (r[ti] && r[tl]) tk[r[ti]] = r[tl]; }); }
+    out.forEach(function (o) { if (!o['WTN link'] && tk[o['Order No']]) o.ticketLink = tk[o['Order No']]; }); } catch (e) { }
   var s = settings_(), tpl = defraTemplateInfo_();
   return { list: out.reverse(), site: { name: s['Receiving site name'] || s['Business name'], address: s['Receiving site address'] || s['Business address'],
     permit: s['Environmental permit number'] || '', api: !!s['DWT API code'] }, template: tpl,
@@ -8007,7 +8012,7 @@ function renderWaste(){
           '<div class="muted2">'+(isEst?'Estimated'+(x.Weight?'':' (no size)'):esc(x['Weight basis']||'Weighed'))+'</div></td>'+
         '<td>'+esc(x.Carrier)+'<div class="muted2">'+esc(x.Vehicle)+(x['Carrier licence']?' · '+esc(x['Carrier licence']):x['Carrier reason']?' · '+esc(String(x['Carrier reason']).toLowerCase().replace('_',' ')):'')+'</div></td>'+
         '<td>'+(sub?'<span class="pill ok">Submitted</span><div class="muted2">'+esc(x['Submitted at'])+'</div>':'<span class="pill '+(x.Status==='Ready'?'':'warn')+'">'+esc(x.Status)+'</span><div class="muted2'+(dd<0?' late':'')+'">'+(dd<0?'overdue':dd===0?'due today':'due '+esc(x['Due by']))+'</div>')+'</td>'+
-        '<td class="r nowrap">'+(sub?'':'<button class="fx alt" data-wsave="'+x.row+'">Save weight</button> <button class="link" data-wed="'+x.row+'">'+(WEDIT===x.row?'Close':'Edit')+'</button>')+(x['WTN link']?'<div><a class="link" target="_blank" href="'+esc(x['WTN link'])+'">WTN</a></div>':'')+'</td></tr>'+
+        '<td class="r nowrap">'+(sub?'':'<button class="fx alt" data-wsave="'+x.row+'">Save weight</button> <button class="link" data-wed="'+x.row+'">'+(WEDIT===x.row?'Close':'Edit')+'</button>')+(x['WTN link']?'<div><a class="link" target="_blank" href="'+esc(x['WTN link'])+'">WTN</a></div>':x.ticketLink?'<div><a class="link" target="_blank" href="'+esc(x.ticketLink)+'" title="Brought in by another carrier: their weighbridge ticket">Ticket</a></div>':'')+'</td></tr>'+
         (WEDIT===x.row&&!sub?wEditRow(x):''); }).join('')+'</tbody>';
   var byRow=function(r){ return all.filter(function(x){return String(x.row)===String(r);})[0]; };
   var save=function(r,b){ var x=byRow(r), w=$('wTable').querySelector('[data-ww="'+r+'"]').value.trim(), it={row:x.row,id:x['Receipt ID']};
