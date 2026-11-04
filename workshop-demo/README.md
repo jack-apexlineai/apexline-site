@@ -9,7 +9,9 @@ real data. Everything runs in the browser and is made up.
 ## Where it is
 
 - Office app: <https://apexlineai.com/workshop-demo/>
-- Fitter app: <https://apexlineai.com/workshop-demo/fitter.html>
+- Fitter app: <https://apexlineai.com/workshop-demo/fitter>
+
+Cloudflare drops the `.html`, so `/workshop-demo/fitter.html` redirects to `/workshop-demo/fitter`.
 
 Demo PIN: **240411**
 
