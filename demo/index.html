@@ -53,7 +53,19 @@ var DEMO_MOCK = (function () {
     getSheets: function () { var s = this.sheets; return Object.keys(s).map(function (k) { return s[k]; }); }, getId: function () { return 'DEMO'; },
     rename: function () { }, setActiveSheet: function () { }, moveActiveSheet: function () { }, getName: function () { return 'Demo Skip Hire Ltd - Orders'; },
     getUrl: function () { return '#'; }, toast: function () { } };
-  var props = {}, drive = {}, did = 0, LIC = { ok: true, status: 'active', plan: (function () { try { return localStorage.getItem('wlDemoPlan') || 'full'; } catch (e) { return 'full'; } })(), days_left: 300, paid_until: '2030-01-01', addons: [], hide: [] };
+  /* Which plan this demo shows. ?plan=core|fleet|full on the URL wins, then the last one used, then Full Yard.
+     Everything off the plan is hidden rather than locked, so a Core prospect never sees a screen he cannot buy. */
+  var DEMO_PLAN = (function () {
+    var p = '';
+    try { p = (String(location.search).match(/[?&]plan=([a-z]+)/i) || [])[1] || ''; } catch (e) { }
+    p = String(p).toLowerCase();
+    if (['core', 'fleet', 'full'].indexOf(p) < 0) { try { p = String(localStorage.getItem('wlDemoPlan') || ''); } catch (e) { p = ''; } }
+    if (['core', 'fleet', 'full'].indexOf(p) < 0) p = 'full';
+    try { localStorage.setItem('wlDemoPlan', p); } catch (e) { }
+    return p;
+  })();
+  var DEMO_HIDE = { core: ['onsite', 'plan', 'live', 'driver', 'profit', 'reports'], fleet: ['tipin', 'waste'], full: [] }[DEMO_PLAN] || [];
+  var props = {}, drive = {}, did = 0, LIC = { ok: true, status: 'active', plan: DEMO_PLAN, days_left: 300, paid_until: '2030-01-01', addons: [], hide: DEMO_HIDE };
   var PROPS = { getProperty: function (k) { return props.hasOwnProperty(k) ? props[k] : null; }, setProperty: function (k, v) { props[k] = String(v); return PROPS; },
     deleteProperty: function (k) { delete props[k]; }, setProperties: function (o) { for (var k in o) props[k] = String(o[k]); }, getProperties: function () { return props; }, getKeys: function () { return Object.keys(props); } };
   var services = {
@@ -2639,9 +2651,9 @@ var MODULES = { orders: 'Ordering and invoicing', cards: 'Card payments', tipin:
   eta: 'Customer ETA texts', accounts: 'Accounts export' };
 var PLANS = {
   free: ['orders', 'cards'],
-  fleet: ['orders', 'cards', 'onsite', 'plan', 'live', 'driver', 'profit', 'reports'],
-  core: ['orders', 'cards', 'tipin', 'waste'],
-  full: ['orders', 'cards', 'tipin', 'waste', 'onsite', 'plan', 'live', 'driver', 'profit', 'reports']
+  fleet: ['orders', 'cards', 'onsite', 'plan', 'live', 'driver', 'profit', 'reports', 'accounts'],
+  core: ['orders', 'cards', 'tipin', 'waste', 'accounts'],
+  full: ['orders', 'cards', 'tipin', 'waste', 'onsite', 'plan', 'live', 'driver', 'profit', 'reports', 'accounts']
 };
 var PLAN_NAMES = { free: 'Ordering', fleet: 'Fleet', core: 'Core', full: 'Full Yard' };
 var ADDONS = ['eta', 'accounts'];
@@ -6119,8 +6131,6 @@ td.nowrap{white-space:nowrap}
 }
 
 .tryit.tried b small{font-size:12px;color:var(--ok,#166534);font-weight:600}
-.bookrow td{background:var(--brand-l)}
-.bookbox{display:flex;flex-wrap:wrap;align-items:center;gap:10px}.bookbox b{flex-basis:100%}.bookbox .in{width:auto}
 .gowhy{font-size:13px;color:var(--muted);text-align:center;margin-top:8px}
 .go.notready{background:#D9DCE3;color:#8A90A0}
 @keyframes flashmiss{0%,100%{box-shadow:0 0 0 0 rgba(217,45,32,0)}30%{box-shadow:0 0 0 4px rgba(217,45,32,.35)}}
@@ -6443,6 +6453,9 @@ a.link.drv{text-decoration:none}
 <div class="howov hide" id="dirtyOv"><div class="howbox" style="max-width:440px"><h3 style="margin:0 0 6px">Save your changes?</h3><p class="sub2" id="dirtyTxt" style="font-size:14px;margin:0 0 18px"></p>
   <div class="acts"><button class="btn1" id="dirtySave">Save and carry on</button><button class="fx alt" id="dirtyDrop">Don't save</button><button class="link" id="dirtyStay">Stay here</button></div></div></div>
 
+<div class="howov hide" id="sbOv"><div class="howbox" style="max-width:460px"><h3 style="margin:0 0 4px">Book this skip back</h3><p class="sub2" id="sbSub" style="margin:0 0 14px"></p>
+  <label style="display:block;font-weight:700;margin:0 0 6px">What date?</label><input class="in" type="date" id="sbDate">
+  <div class="acts" style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="fx" type="button" id="sbColl">Book collection</button><button class="fx alt" type="button" id="sbExch">Book exchange</button><button class="link" type="button" id="sbX">Cancel</button></div></div></div>
 <div id="loading" class="load hide"><div class="spin"></div>Loading…</div>
 <div id="lockView" class="lock hide"><div class="card" style="padding:26px 20px">
   <div class="logo" id="lockLogo" style="margin:0 auto 12px;color:#fff">S</div>
@@ -7180,8 +7193,12 @@ var D=null, S={}, PAY='bank', WASTE='', PLACE='Driveway', XN=0;
 function $(id){return document.getElementById(id);}
 /* Lists (Orders, Unpaid, Customers, Tickets, Skips on site) open as cards on a phone and as a
    table on a computer. Whatever the yard last picked with the list/card buttons wins. */
-function defVw(){ return window.innerWidth<=760?'grid':'list'; }
+function defVw(){ return 'grid'; }
 function savedVw(key){ try{ return localStorage.getItem(key)||defVw(); }catch(e){ return defVw(); } }
+/* Card view is now the default on every screen. Clear an older saved list choice once so the new default actually shows. */
+(function(){ try{ if(localStorage.getItem('wlVwReset2')) return;
+  ['wlOrdView','wlVwSite','wlVwUnpaid','wlVwTix','wlVwCust'].forEach(function(k){ localStorage.removeItem(k); });
+  localStorage.setItem('wlVwReset2','1'); }catch(e){} })();
 /* ---------- one line-icon set (no emoji) ---------- */
 var ICO={cash:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 10v4M18 10v4"/>',bank:'<path d="M3 10l9-6 9 6M5 10v8M9 10v8M15 10v8M19 10v8M3 20h18"/>',
  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',card:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>',
@@ -7281,7 +7298,7 @@ function goLive(){ view('liveView','navLive'); loadLive(); }
 function goOrder(){ view('orderView','navNew'); setTimeout(function(){ if(!S.cust&&!S.newCust) $('pcQ').focus(); },50); }
 function goUnpaid(){ view('unpaidView','navUnpaid'); renderUnpaid(); }
 function goDone(){ view('doneView',''); }
-function goPlan(){ view('planView','navPlan'); $('pDate').value=isoOf(new Date()); loadPlan(); }
+function goPlan(){ view('planView','navPlan'); $('pDate').value=tmrIso(); loadPlan(); }
 
 /* ---------- customer ---------- */
 function renderCust(q){
@@ -8249,8 +8266,12 @@ function applyRole(){
   if(HID.indexOf('tipin')>-1){ show('navTip',false); show('navWout',false); }
   if(HID.indexOf('waste')>-1) show('navWaste',false);
   [['navNew','orders'],['navTip','tipin'],['navWout','tipin'],['navWaste','waste']].forEach(function(x){ $(x[0]).classList.toggle('locked',!!(L.mod&&L.mod[x[1]]===false)); });
-  [['navSite','onsite'],['navPlan','plan'],['navLive','live'],['navDrv','driver'],['navProfit','profit'],['navRep','reports']].forEach(function(x){ var lk=L.mod&&L.mod[x[1]]===false; if(lk) nLock++; $(x[0]).classList.toggle('locked',lk); });
-  var allLocked=nLock===6; markUntried(); show('navPaid',r!=='booking');
+  var nHid=0;
+  /* Anything the licence hides comes off the nav completely instead of showing locked. Real yards only ever hide the yard pages (hide_yard), so nothing changes for them. The demo uses this to show one plan at a time. */
+  [['navSite','onsite'],['navPlan','plan'],['navLive','live'],['navDrv','driver'],['navProfit','profit'],['navRep','reports']].forEach(function(x){
+    if(HID.indexOf(x[1])>-1){ nHid++; show(x[0],false); return; }
+    var lk=L.mod&&L.mod[x[1]]===false; if(lk) nLock++; $(x[0]).classList.toggle('locked',lk); });
+  var allLocked=nLock===6; markUntried(); show('navPaid',r!=='booking'&&nHid<6);
   var grp=(L.plan==='fleet'||(L.hide||[]).indexOf('tipin')>-1)?'Fleet':'Full Yard';
   $('navPaidLbl').textContent=grp;
   $('navPaidCnt').textContent=allLocked?'Locked':L.trial?L.daysLeft+'d left':'';
@@ -8420,18 +8441,27 @@ function renderSite(){
           (x.reminded?'<div class="muted2">Reminded '+esc(x.reminded)+'</div>':'')+'</td>'+
         '<td class="r nowrap">'+(x.email?'<button class="fx alt" data-smail="'+esc(x.no)+'">Email</button> ':'')+(x.phone?'<button class="fx alt" data-scall="'+esc(x.no)+'">Call</button> ':'')+
           (open(x)?'<button class="fx" data-sbook="'+esc(x.no)+'">Book…</button>':'')+'</td></tr>'+
-        (SBOOK===x.no?'<tr class="bookrow"><td></td><td colspan="6"><div class="bookbox"><b>Book for '+esc(x.customer)+', '+esc(x.size)+' at '+esc(x.pc||x.site)+'</b>'+
-          '<label class="l" style="margin:0">Date</label><input class="in" type="date" id="sbDate" value="'+tmrIso()+'">'+
-          '<button class="fx" data-sgo="Collection">Book collection</button><button class="fx alt" data-sgo="Exchange">Book exchange</button><button class="link" id="sbX">Cancel</button></div></td></tr>':''); }).join('')+'</tbody>';
+        ''; }).join('')+'</tbody>';
   var by=function(no){ return SD.list.filter(function(x){ return x.no===no; })[0]; };
   Array.prototype.forEach.call($('sTable').querySelectorAll('[data-ssel]'),function(cb){ cb.onchange=function(){ if(cb.checked) SSEL[cb.dataset.ssel]=1; else delete SSEL[cb.dataset.ssel]; renderSite(); }; });
   $('sAll').onchange=function(){ var on=this.checked; l.forEach(function(x){ if(on) SSEL[x.no]=1; else delete SSEL[x.no]; }); renderSite(); };
   Array.prototype.forEach.call($('sTable').querySelectorAll('[data-smail]'),function(b){ b.onclick=function(){ siteRemind([b.dataset.smail],b); }; });
   Array.prototype.forEach.call($('sTable').querySelectorAll('[data-scall]'),function(b){ b.onclick=function(){ var x=by(b.dataset.scall);
     toast('','📞','<b>'+esc(x.customer)+'</b><br><a style="font-size:20px;font-weight:700" href="tel:'+esc(String(x.phone).replace(/\s/g,''))+'">'+esc(x.phone)+'</a><br><span class="muted2">'+esc(x.size)+' at '+esc(x.site)+', out '+x.days+' days</span>',true); }; });
-  Array.prototype.forEach.call($('sTable').querySelectorAll('[data-sbook]'),function(b){ b.onclick=function(){ SBOOK=SBOOK===b.dataset.sbook?'':b.dataset.sbook; renderSite(); }; });
-  Array.prototype.forEach.call($('sTable').querySelectorAll('[data-sgo]'),function(b){ b.onclick=function(){ var d=$('sbDate').value; if(!d){ toast('','i','Pick a date.'); return; } var x=by(SBOOK); SBOOK=''; bookJob(x,b.dataset.sgo,d); }; });
-  if($('sbX')) $('sbX').onclick=function(){ SBOOK=''; renderSite(); };
+  Array.prototype.forEach.call($('sTable').querySelectorAll('[data-sbook]'),function(b){ b.onclick=function(){ sbOpen(b.dataset.sbook); }; });
+}
+function sbOpen(no){
+  var x=((SD&&SD.list)||[]).filter(function(y){ return y.no===no; })[0]; if(!x) return;
+  SBOOK=no;
+  $('sbSub').innerHTML='<b>'+esc(x.customer)+'</b>, '+esc(x.size)+' at '+esc(x.pc||x.site)+'<br><span class="muted2">On site since '+esc(x.since)+', out '+x.days+' day'+(x.days===1?'':'s')+'</span>';
+  $('sbDate').value=tmrIso();
+  show('sbOv',true);
+}
+function sbClose(){ SBOOK=''; show('sbOv',false); }
+function sbGo(kind){
+  var d=$('sbDate').value; if(!d){ toast('','i','Pick a date.'); return; }
+  var x=((SD&&SD.list)||[]).filter(function(y){ return y.no===SBOOK; })[0]; if(!x){ sbClose(); return; }
+  sbClose(); bookJob(x,kind,d);
 }
 function siteRemind(nos,b){ if(!nos.length) return; var old=b.textContent; b.disabled=true; b.textContent='Sending…';
   run().withSuccessHandler(function(d){ b.disabled=false; b.textContent=old; SD=d; SSEL={}; renderSite();
@@ -9481,6 +9511,8 @@ function wire(){
   $('impBack').onclick=function(){ impStep(2,false); impStep(1,true); };
   $('impAgain').onclick=function(){ impStep(3,false); impStep(1,true); $('impMsg').textContent=''; };
   $('cardX').onclick=function(){ show('cardOv',false); CARDCB=null; }; $('cardOv').onclick=function(e){ if(e.target===this) show('cardOv',false); };
+  $('sbX').onclick=sbClose; $('sbOv').onclick=function(e){ if(e.target===this) sbClose(); };
+  $('sbColl').onclick=function(){ sbGo('Collection'); }; $('sbExch').onclick=function(){ sbGo('Exchange'); };
   $('impBtn').onclick=function(){
     var b=this; b.textContent='Importing…'; b.disabled=true;
     run().withSuccessHandler(function(r){ b.textContent='Import customer list'; b.disabled=false; var x=r.report; D=r.boot; renderCust($('custQ').value); setUnpaid(D.unpaid);
