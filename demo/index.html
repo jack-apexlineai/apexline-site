@@ -91,7 +91,19 @@ var DEMO_MOCK = (function () {
         return J({});
       }
       if (/supabase/.test(url)) return { getResponseCode: function () { return 200; }, getContentText: function () { return JSON.stringify(LIC); } };
-      if (/postcodes\.io/.test(url)) return { getResponseCode: function () { return 200; }, getContentText: function () { return JSON.stringify({ result: { admin_district: 'Woking', latitude: 51.32, longitude: -0.56 } }); } };
+      if (/postcodes\.io/.test(url)) {
+        var canned = { result: { admin_district: 'Woking', post_town: 'Woking', latitude: 51.32, longitude: -0.56 } };
+        try {
+          var x = new XMLHttpRequest(); x.open('GET', url, false); x.send(null);
+          if (x.status === 200) {
+            var j = JSON.parse(x.responseText);
+            if (j && j.result) { j.result.post_town = j.result.post_town || j.result.admin_district || j.result.admin_ward; 
+              return { getResponseCode: function () { return 200; }, getContentText: function () { return JSON.stringify(j); } }; }
+          }
+          if (x.status === 404) return { getResponseCode: function () { return 404; }, getContentText: function () { return '{}'; } };
+        } catch (e) { }
+        return { getResponseCode: function () { return 200; }, getContentText: function () { return JSON.stringify(canned); } };
+      }
       return { getResponseCode: function () { return 404; }, getContentText: function () { return ''; }, getBlob: function () { return blobOf('', 'application/octet-stream', 'x'); } }; },
       fetchAll: function (a) { return a.map(function () { return { getResponseCode: function () { return 404; }, getContentText: function () { return ''; } }; }); } },
     Utilities: {
@@ -111,7 +123,9 @@ var DEMO_MOCK = (function () {
         get: function (id) { return { id: id, name: drive[id] ? drive[id].meta.name : '', modifiedTime: new Date().toISOString(), trashed: false }; },
         update: function () { return {}; }, list: function () { return { files: [] }; }, remove: function () { } },
       Permissions: { create: function () { } } },
-    Maps: { newGeocoder: function () { return { setRegion: function () { return this; }, geocode: function () { return { results: [] }; } }; } },
+    Maps: { newGeocoder: function () { return { setRegion: function () { return this; }, setLanguage: function () { return this; },
+      setBounds: function () { return this; }, geocode: function () { return { results: [] }; },
+      reverseGeocode: function () { return { status: 'OK', results: [] }; } }; } },
     Logger: { log: function () { } }
   };
   return { services: services, SS: SS, Sheet: Sheet, props: props, drive: drive };
@@ -137,7 +151,7 @@ var DEMO_SERVER = (function () {
     out.day = t.toDateString(); return out;
   }
   var st = null; try { st = JSON.parse(localStorage.getItem('wlDemoState') || 'null'); } catch (e) { }
-  if (!st || st.day !== new Date().toDateString() || st.v !== 10) { st = shift(DEMO_STATE_SEED); st.v = 10; }
+  if (!st || st.day !== new Date().toDateString() || st.v !== 12) { st = shift(DEMO_STATE_SEED); st.v = 12; }
   Object.keys(st.sheets).forEach(function (n) { DEMO_MOCK.SS.sheets[n] = new DEMO_MOCK.Sheet(n, st.sheets[n]); });
   Object.keys(st.props).forEach(function (k) { DEMO_MOCK.props[k] = st.props[k]; });
   delete DEMO_MOCK.props.LICENCE_CACHE;
