@@ -91,6 +91,8 @@ main{flex:1;min-width:0;padding:22px 26px 60px}
 .stat .v.bad{color:var(--bad)}
 .stat .v.warn{color:var(--warn)}
 .stat .v.ok{color:var(--ok)}
+.stat .f .warn{color:var(--warn);font-weight:700}
+.stat .f .bad{color:var(--bad);font-weight:700}
 
 /* tables */
 .tablewrap{border:1px solid var(--line);border-radius:var(--r);overflow:auto;background:var(--card)}

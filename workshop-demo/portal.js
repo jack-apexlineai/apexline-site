@@ -133,7 +133,7 @@
       statBox('Waiting on you', waiting.length, waiting.length ? 'approve or decline' : 'nothing to do', waiting.length ? 'warn' : 'ok') +
       statBox('Jobs open with us', inShop.length, 'across your ' + myVehicles().length + ' vehicles') +
       statBox('Due in 14 days', due.length, 'PMI, test or LOLER', due.length ? 'warn' : 'ok') +
-      statBox('Unpaid bills', WS.money0(unpaid.reduce(function (s, i) { return s + i.total; }, 0)), unpaid.length + ' invoices') +
+      invoicedBox(unpaid) +
       '</div>' +
 
       '<div class="ptab">' +
@@ -149,6 +149,27 @@
         : tab === 'veh' ? vehHtml()
         : tab === 'docs' ? docsHtml()
         : billsHtml());
+  }
+
+  /* Invoiced work: the outstanding total, coloured by how urgent the oldest one is,
+     with the due-soon and overdue counts flagged underneath in amber and red. */
+  function invoicedBox(unpaid) {
+    var total = unpaid.reduce(function (s, i) { return s + i.total; }, 0);
+    var overdue = [], soon = [], soonest = null;
+    unpaid.forEach(function (i) {
+      var n = WS.daysBetween(WS.day(0), i.due);
+      if (n < 0) overdue.push(i);
+      else if (n <= 7) { soon.push(i); if (soonest === null || n < soonest) soonest = n; }
+    });
+    var cls = overdue.length ? 'bad' : soon.length ? 'warn' : '';
+    var foot = unpaid.length + ' invoice' + (unpaid.length === 1 ? '' : 's');
+    if (soon.length) foot += ' · <span class="warn">' + soon.length + ' due ' +
+      (soonest === 0 ? 'today' : soonest === 1 ? 'tomorrow' : 'in ' + soonest + ' days') + '</span>';
+    if (overdue.length) foot += ' · <span class="bad">' + overdue.length + ' overdue</span>';
+    if (!soon.length && !overdue.length && unpaid.length) foot += ' · nothing due this week';
+    return '<div class="stat" style="cursor:default"><div class="k">Invoiced work</div>' +
+      '<div class="v ' + cls + '">' + esc(WS.money0(total)) + '</div>' +
+      '<div class="f">' + foot + '</div></div>';
   }
 
   function statBox(k, v, f, cls) {
