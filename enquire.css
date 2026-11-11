@@ -1,0 +1,58 @@
+/* Enquire section (home and /custom): pick an option, then the calendar or the form. */
+#enquire{padding-top:40px}
+.enq-head{text-align:center;max-width:720px;margin:0 auto 36px}
+.enq-head h2{font-size:clamp(40px,5.4vw,64px);margin:12px 0 16px}
+.enq-head .lead{margin:0 auto}
+.enq-opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:900px;margin:0 auto 14px;scroll-margin-top:90px}
+.enq-opt{display:flex;align-items:center;gap:16px;text-align:left;background:var(--bg2);border:1px solid var(--line2);border-radius:18px;padding:18px 20px;color:var(--text);cursor:pointer;font:inherit;transition:border-color .2s,background .2s,box-shadow .2s}
+.enq-opt:hover{border-color:var(--accent-border)}
+.enq-opt:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.enq-opt[aria-selected="true"]{border-color:var(--accent);background:linear-gradient(160deg,rgba(77,168,255,.16),rgba(77,168,255,.04)),var(--bg2);box-shadow:0 14px 40px rgba(77,168,255,.12)}
+.enq-opt .ic{width:44px;height:44px;flex-shrink:0;border-radius:12px;display:grid;place-items:center;background:var(--accent-soft);border:1px solid var(--accent-border);color:var(--accent)}
+.enq-opt[aria-selected="true"] .ic{background:var(--accent);color:#06101F;border-color:var(--accent)}
+.enq-opt .ic svg{width:21px;height:21px}
+.enq-opt .tx b{display:block;font-family:var(--ui);font-weight:700;font-size:17px}
+.enq-opt .tx span{display:block;font-size:14px;color:var(--muted);margin-top:1px}
+.enq-box{max-width:900px;margin:0 auto;background:radial-gradient(ellipse at top,rgba(77,168,255,.14),transparent 65%),var(--bg2);border:1px solid var(--accent-border);border-radius:26px;padding:30px;box-shadow:0 40px 120px rgba(0,0,0,.4)}
+.enq-pane[hidden]{display:none}
+.enq-pane .calendly-inline-widget{min-width:280px;height:700px;border-radius:16px;overflow:hidden}
+.enq-pane .alt{font-size:14px;color:var(--muted);margin-top:14px;text-align:center}
+.enq-pane .alt a{color:var(--accent)}
+.enq-pane .enq-intro{font-family:var(--ui);font-weight:700;font-size:18px;margin-bottom:20px}
+.enq-assure{list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:12px 28px;max-width:900px;margin:24px auto 0;font-family:var(--ui);font-weight:500;font-size:14.5px;color:var(--silver)}
+.enq-assure li{display:flex;align-items:center;gap:9px}
+.enq-assure li:before{content:"";width:12px;height:6px;border-left:2px solid var(--ok);border-bottom:2px solid var(--ok);transform:rotate(-45deg);margin-top:-3px}
+.f{display:grid;gap:16px}
+.f .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.f label{display:block;font-family:var(--ui);font-weight:700;font-size:13.5px;color:var(--silver);margin-bottom:7px}
+.f label small{font-weight:500;color:var(--muted)}
+.f input,.f select,.f textarea{width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:11px;color:var(--text);font-family:var(--body);font-size:15px;padding:13px 14px;transition:border-color .2s,box-shadow .2s}
+.f textarea{min-height:150px;resize:vertical;line-height:1.5}
+.f select{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:40px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23A0B4C8' stroke-width='2.2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:15px}
+.f select option{background:var(--bg2);color:var(--text)}
+.f input::placeholder,.f textarea::placeholder{color:#5f6e82}
+.f input:focus,.f select:focus,.f textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(77,168,255,.15)}
+.f .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.f .btn{justify-content:center;border:0;width:100%;font-size:16px;padding:16px 22px}
+.f .btn:disabled{opacity:.6;cursor:wait;transform:none}
+.f .note{font-size:13px;color:var(--muted);text-align:center}
+.f .status{font-size:14px;color:var(--silver);text-align:center}
+.f .status:empty{display:none}
+.f .status.err{color:#F2736C}
+.enq-done{text-align:center;padding:60px 10px}
+.enq-done .tick{width:56px;height:56px;border-radius:50%;margin:0 auto 18px;background:rgba(0,212,170,.12);border:1px solid rgba(0,212,170,.4);position:relative}
+.enq-done .tick:after{content:"";position:absolute;left:19px;top:19px;width:18px;height:9px;border-left:2.5px solid var(--ok);border-bottom:2.5px solid var(--ok);transform:rotate(-45deg)}
+.enq-done h3{font-family:var(--display);font-weight:600;font-size:28px;margin-bottom:8px}
+.enq-done p{color:var(--silver)}
+.enq-faq{margin:96px auto 0}
+@media(max-width:600px){.enq-pane .calendly-inline-widget{height:1000px}}
+@media(max-width:520px){
+  .enq-box{padding:18px 14px;border-radius:20px}
+  .enq-opts{gap:8px}
+  .enq-opt{flex-direction:column;align-items:flex-start;gap:10px;padding:14px}
+  .enq-opt .ic{width:38px;height:38px}
+  .enq-opt .tx b{font-size:15.5px}
+  .enq-opt .tx span{font-size:12.5px}
+  .f .row{grid-template-columns:1fr}
+  .enq-assure{justify-content:flex-start;flex-direction:column;gap:10px}
+}

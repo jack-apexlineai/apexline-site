@@ -10,6 +10,7 @@
 <link href="https://api.fontshare.com/v2/css?f[]=clash-display@700,600,500&f[]=satoshi@700,500,400&display=swap" rel="stylesheet">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/nav.css?v=1">
 <style>
 :root{
   --bg:#0B0F1A; --bg2:#121829; --bg3:#161D31; --accent:#4DA8FF; --accent2:#6FB8FF; --accent-soft:rgba(77,168,255,.08); --accent-border:rgba(77,168,255,.22);
@@ -191,8 +192,13 @@ footer a:hover{color:var(--text)}
 </head>
 <body>
 <nav><div class="wrap">
-  <a class="logo" href="index.html"><img class="mark" src="img/apex-logo.webp" alt="" width="34" height="34">ApexLine</a>
-  <div class="links"><a href="index.html#features">WasteLine</a><a href="index.html#pricing">Pricing</a><a href="index.html#custom">Custom builds</a><a href="case-study.html">Case study</a><a href="index.html#faq">FAQ</a></div>
+  <a class="logo" href="/"><img class="mark" src="img/apex-logo.webp" alt="" width="34" height="34"><span class="word">ApexLine</span></a>
+  <div class="links"><a href="/wasteline/#features">Features</a><a href="/wasteline/#pricing">Pricing</a><a href="/case-study.html">Case study</a><a href="/wasteline/#faq">FAQ</a></div>
+  <div class="prod" id="prod"><button class="prod-btn" type="button" aria-expanded="false" aria-controls="prodMenu">Products<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+    <div class="prod-menu" id="prodMenu" hidden>
+      <a href="/wasteline/"><div class="tagline">For skip hire and waste firms</div><b>WasteLine</b><span>Orders, tickets, waste tracking, day plan and driver app.</span></a>
+      <a href="/custom/"><div class="tagline">For any business</div><b>Custom builds</b><span>Bespoke systems, dashboards, portals and AI agents.</span></a>
+    </div></div>
   <a class="btn btn-p" href="book.html">Book a demo</a>
 </div></nav>
 <main class="bk"><div class="wrap">
@@ -227,6 +233,7 @@ function tab(t){ document.getElementById('pWatch').classList.toggle('hide',t!=='
   document.querySelectorAll('#bkTabs button').forEach(function(b){ b.onclick=function(){ tab(b.dataset.t); }; });
 })();
 </script>
+<script src="/nav.js?v=1"></script>
 <script src="https://assets.calendly.com/assets/external/widget.js" async></script>
 </body>
 </html>

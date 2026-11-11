@@ -3,13 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WasteLine by ApexLine | The yard system for UK skip hire</title>
-<meta name="description" content="WasteLine runs your skip hire yard: orders, invoices, waste in and waste out tickets, digital waste tracking, day plan, driver app and live tracking. 14-day free trial, free install.">
+<title>ApexLine | Bespoke software, dashboards and AI automation</title>
+<meta name="description" content="ApexLine designs and builds bespoke software for ambitious businesses: operating systems, logistics platforms, live dashboards, portals and AI agents. Also WasteLine, the yard system for UK skip hire.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230B0F1A'/%3E%3Cpath d='M6 26 L16 6 L26 26 M10.5 19 L21.5 19' stroke='%234DA8FF' stroke-width='2.5' stroke-linecap='square' stroke-linejoin='miter' fill='none'/%3E%3C/svg%3E">
+<script>/* Old WasteLine links (apexlineai.com/#pricing etc.) now live on /wasteline/. */
+(function(){var h=location.hash,w={'#features':1,'#pricing':1,'#faq':1};if(w[h])location.replace('/wasteline/'+h);else if(h==='#custom')location.replace('/custom/');})();</script>
 <link rel="preconnect" href="https://api.fontshare.com">
 <link href="https://api.fontshare.com/v2/css?f[]=clash-display@700,600,500&f[]=satoshi@700,500,400&display=swap" rel="stylesheet">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/nav.css?v=1">
+<link rel="stylesheet" href="/enquire.css?v=4">
 <style>
 :root{
   --bg:#0B0F1A; --bg2:#121829; --bg3:#161D31; --accent:#4DA8FF; --accent2:#6FB8FF; --accent-soft:rgba(77,168,255,.08); --accent-border:rgba(77,168,255,.22);
@@ -174,6 +178,100 @@ footer a:hover{color:var(--text)}
 .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
 .reveal.in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}}
+/* system map visual (custom builds) */
+.sys{background:radial-gradient(circle at 85% 0%,rgba(77,168,255,.16),transparent 60%),var(--bg2);border:1px solid var(--line2);border-radius:20px;padding:24px;box-shadow:0 40px 120px rgba(0,0,0,.45)}
+.sys .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px}
+.sys .live{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--ok);display:flex;gap:7px;align-items:center;white-space:nowrap}
+.sys .live i{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px rgba(0,212,170,.15)}
+.sys .mods{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.sys .mod{background:var(--bg);border:1px solid var(--line2);border-radius:12px;padding:14px 12px}
+.sys .mod svg{width:18px;height:18px;color:var(--accent);margin-bottom:9px;display:block}
+.sys .mod b{display:block;font-family:var(--ui);font-weight:700;font-size:13.5px;line-height:1.3}
+.sys .mod span{display:block;font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4}
+.sys .base{margin-top:12px;border:1px dashed var(--accent-border);border-radius:12px;padding:10px 14px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--silver);text-align:center;text-transform:uppercase}
+.sys.mini{background:radial-gradient(circle at 85% 0%,rgba(77,168,255,.14),transparent 60%);border:0;border-radius:0;box-shadow:none;padding:20px 22px;height:100%;display:flex;flex-direction:column;justify-content:center}
+.sys.mini .mod{padding:12px 10px}
+.sys.mini .mod svg{margin-bottom:7px}
+@media(max-width:520px){.sys{padding:16px}.sys .mods{grid-template-columns:1fr 1fr}.sys .mod span{display:none}.sys.mini{padding:16px}}
+/* home */
+.hero .lead{max-width:720px}
+.hero h1{max-width:980px}
+/* what we build carousel */
+.cc-wrap{--edge:max(24px,calc((100vw - 1160px) / 2 + 24px))}
+.cc-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:34px}
+.cc-head .head{margin-bottom:0}
+.cc-ctrl{display:flex;gap:10px;flex-shrink:0}
+.cc-ctrl button{width:50px;height:50px;border-radius:50%;border:1px solid var(--line2);background:var(--bg2);color:var(--text);display:grid;place-items:center;cursor:pointer;transition:border-color .2s,color .2s,background .2s,opacity .2s}
+.cc-ctrl button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.cc-ctrl button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.cc-ctrl button:disabled{opacity:.35;cursor:default}
+.cc-ctrl svg{width:20px;height:20px}
+.cc-track{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:var(--edge);padding:6px var(--edge) 10px;scrollbar-width:none;overscroll-behavior-x:contain;cursor:grab;outline:none}
+.cc-track::-webkit-scrollbar{display:none}
+.cc-track:after{content:"";flex:0 0 1px}
+.cc-track:focus-visible{box-shadow:inset 0 0 0 2px var(--accent-border)}
+.cc-track.dragging{scroll-snap-type:none;cursor:grabbing;user-select:none}
+.cc-track.dragging .cc{pointer-events:none}
+.cc{flex:0 0 min(392px,calc(100vw - 72px));scroll-snap-align:start;background:var(--bg2);border:1px solid var(--line2);border-radius:24px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .25s,transform .25s}
+.cc:hover{border-color:var(--accent-border);transform:translateY(-3px)}
+.cc.lead{background:linear-gradient(180deg,rgba(77,168,255,.1),var(--bg2) 50%);border-color:var(--accent-border)}
+.cc-vis{height:200px;position:relative;overflow:hidden;border-bottom:1px solid var(--line);background:radial-gradient(circle at 80% 0%,rgba(77,168,255,.16),transparent 62%),var(--bg3);padding:22px;display:flex;flex-direction:column;justify-content:center}
+.cc-vis img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:left top}
+.cc-body{padding:26px 26px 28px;display:flex;flex-direction:column;flex:1}
+.cc-tag{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:flex;justify-content:space-between;gap:10px}
+.cc-tag span{color:var(--muted)}
+.cc h3{font-family:var(--display);font-weight:600;font-size:28px;letter-spacing:-.01em;line-height:1.1;margin:12px 0 10px}
+.cc p{color:var(--silver);font-size:15.5px}
+.cc ul{list-style:none;display:flex;flex-wrap:wrap;gap:7px;margin:18px 0 22px}
+.cc li{font-family:var(--ui);font-weight:500;font-size:12.5px;color:var(--silver);border:1px solid var(--line2);border-radius:999px;padding:4px 10px}
+.cc-link{margin-top:auto;font-family:var(--ui);font-weight:700;font-size:15px;color:var(--accent);display:inline-flex;align-items:center;gap:8px}
+.cc-link:hover{color:var(--accent2)}
+.cc-link:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:4px}
+.cc-progress{height:2px;background:var(--line2);border-radius:2px;margin-top:26px;overflow:hidden}
+.cc-progress i{display:block;height:100%;width:0;background:var(--accent);border-radius:2px;transition:width .2s}
+.cc-hint{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:12px}
+@media(max-width:700px){.cc-head{flex-direction:column;align-items:flex-start}.cc-ctrl button{width:44px;height:44px}}
+@media(max-width:520px){.cc-wrap{--edge:16px}.cc-vis{height:180px;padding:18px}.cc-body{padding:22px 20px 24px}.cc h3{font-size:25px}}
+/* mock UI inside card visuals (illustrative, no data) */
+.mk{background:var(--bg);border:1px solid var(--line2);border-radius:14px;padding:12px 14px;box-shadow:0 18px 40px rgba(0,0,0,.35)}
+.mk-h{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.mk-r{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:12.5px;color:var(--silver)}
+.mk-r:first-of-type{border-top:0}
+.ln{display:block;height:7px;border-radius:4px;background:rgba(160,180,200,.18)}
+.pl{font-family:var(--ui);font-weight:700;font-size:10.5px;border-radius:999px;padding:3px 9px;white-space:nowrap;background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent-border)}
+.pl.ok{background:rgba(0,212,170,.1);color:var(--ok);border-color:rgba(0,212,170,.35)}
+.pl.am{background:rgba(255,184,77,.1);color:#FFB84D;border-color:rgba(255,184,77,.35)}
+.mods6{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.mods6 div{background:var(--bg);border:1px solid var(--line2);border-radius:12px;height:62px;display:grid;place-items:center;color:var(--accent)}
+.mods6 div:nth-child(1){border-color:var(--accent-border);box-shadow:0 0 0 1px var(--accent-border)}
+.mods6 svg{width:20px;height:20px}
+.route{position:absolute;inset:0;width:100%;height:100%}
+.v-route .tagx{position:absolute;display:flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--line2);border-radius:999px;padding:6px 11px;font-family:var(--ui);font-weight:700;font-size:11.5px;box-shadow:0 10px 26px rgba(0,0,0,.35)}
+.v-route .tagx i{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(0,212,170,.18)}
+.bars{display:flex;align-items:flex-end;gap:8px;height:96px;padding-top:6px}
+.bars i{flex:1;border-radius:6px 6px 2px 2px;background:linear-gradient(180deg,var(--accent),rgba(77,168,255,.25))}
+.bars i:nth-child(odd){background:linear-gradient(180deg,rgba(160,180,200,.5),rgba(160,180,200,.12))}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.kpis div{background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:8px}
+.kpis .ln{margin-top:6px;background:rgba(77,168,255,.35)}
+.brw{background:var(--bg);border:1px solid var(--line2);border-radius:12px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.35)}
+.brw .bt{display:flex;gap:5px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--bg2)}
+.brw .bt b{width:7px;height:7px;border-radius:50%;background:rgba(160,180,200,.3)}
+.brw .bt span{margin-left:8px;flex:1;height:14px;border-radius:7px;background:rgba(160,180,200,.1)}
+.brw .bb{padding:8px 12px}
+.steps.four{grid-template-columns:repeat(4,1fr)}
+@media(max-width:1000px){.steps.four{grid-template-columns:1fr 1fr}}
+@media(max-width:800px){.steps.four{grid-template-columns:1fr}}
+.founder{display:grid;grid-template-columns:1.2fr 1fr;gap:56px;align-items:center}
+.founder p.body{color:var(--silver);font-size:18px;margin-top:16px;max-width:600px}
+.founder p.body b{color:var(--text)}
+.stat{border:1px solid var(--accent-border);background:linear-gradient(160deg,rgba(77,168,255,.12),rgba(77,168,255,.02));border-radius:20px;padding:30px;display:grid;gap:22px}
+.stat div{border-bottom:1px solid var(--line);padding-bottom:20px}
+.stat div:last-child{border-bottom:0;padding-bottom:0}
+.stat b{display:block;font-family:var(--display);font-weight:600;font-size:46px;line-height:1}
+.stat span{color:var(--silver);font-size:15px}
+@media(max-width:860px){.founder{grid-template-columns:1fr;gap:32px}}
+@media(max-width:520px){.wrap{padding:0 16px}section{padding:72px 0}.stat{padding:24px}.stat b{font-size:38px}}
 /* intro: luxury loader. Logo resolves out of blur, a comet runs once round the ring, light sweeps the A, wordmark settles, then the page is revealed. Pure CSS, ends itself. */
 .intro{display:none}
 html.has-intro .intro{display:flex;position:fixed;inset:0;z-index:9999;background:#070A12;align-items:center;justify-content:center;cursor:pointer;animation:iOut .7s cubic-bezier(.4,0,.2,1) 2.25s forwards}
@@ -181,7 +279,7 @@ html.has-intro .intro{display:flex;position:fixed;inset:0;z-index:9999;backgroun
 .ibox{position:relative;display:flex;flex-direction:column;align-items:center;animation:iBoxOut .75s cubic-bezier(.4,0,.2,1) 2.15s forwards}
 .ilogo{position:relative;width:168px;height:168px;opacity:0;animation:iIn 1s cubic-bezier(.22,1,.36,1) .05s forwards}
 .ilogo img{width:100%;height:100%;display:block}
-.isheen{position:absolute;inset:0;-webkit-mask:url(img/apex-ring-v2.webp) center/100% no-repeat;mask:url(img/apex-ring-v2.webp) center/100% no-repeat;overflow:hidden;pointer-events:none}
+.isheen{position:absolute;inset:0;-webkit-mask:url(/img/apex-ring-v2.webp) center/100% no-repeat;mask:url(/img/apex-ring-v2.webp) center/100% no-repeat;overflow:hidden;pointer-events:none}
 .isheen:after{content:"";position:absolute;top:-20%;bottom:-20%;left:0;width:45%;background:linear-gradient(100deg,transparent 0%,rgba(255,255,255,0) 20%,rgba(255,255,255,.9) 50%,rgba(255,255,255,0) 80%,transparent 100%);transform:translateX(-160%) skewX(-12deg);animation:iSheen .95s cubic-bezier(.45,0,.2,1) 1.55s forwards}
 .orbit{position:absolute;inset:0;animation:iSpin 1.3s cubic-bezier(.62,0,.28,1) .45s both}
 .itail{position:absolute;inset:0;border-radius:50%;opacity:0;background:conic-gradient(from 0deg,rgba(120,235,255,0) 0deg,rgba(120,235,255,0) 200deg,rgba(150,240,255,1) 360deg);
@@ -200,176 +298,247 @@ html.has-intro .intro{display:flex;position:fixed;inset:0;z-index:9999;backgroun
 @keyframes iBoxOut{to{opacity:0;transform:scale(1.06);filter:blur(4px)}}
 @keyframes iOut{to{opacity:0;visibility:hidden;pointer-events:none}}
 </style>
-<link rel="preload" as="image" href="img/apex-ring-v2.webp">
+<link rel="preload" as="image" href="/img/apex-ring-v2.webp">
 <script>(function(){try{var calm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;if(!calm&&!location.hash&&!sessionStorage.getItem('apexIntro')){sessionStorage.setItem('apexIntro','1');document.documentElement.classList.add('has-intro');}}catch(e){}})();</script>
 </head>
 <body>
-<div class="intro" id="intro" aria-hidden="true"><div class="ibox"><div class="ilogo"><img src="img/apex-ring-v2.webp" alt="" width="168" height="168"><div class="isheen"></div><div class="orbit"><i class="itail"></i><b></b></div></div><div class="iword">APEXLINE</div><div class="iline"></div></div></div>
+<div class="intro" id="intro" aria-hidden="true"><div class="ibox"><div class="ilogo"><img src="/img/apex-ring-v2.webp" alt="" width="168" height="168"><div class="isheen"></div><div class="orbit"><i class="itail"></i><b></b></div></div><div class="iword">APEXLINE</div><div class="iline"></div></div></div>
 
 <nav><div class="wrap">
-  <a class="logo" href="#top"><img class="mark" src="img/apex-logo.webp" alt="" width="34" height="34">ApexLine</a>
-  <div class="links"><a href="#features">WasteLine</a><a href="#pricing">Pricing</a><a href="#custom">Custom builds</a><a href="case-study.html">Case study</a><a href="#faq">FAQ</a></div>
-  <a class="btn btn-p" href="book.html">Book a demo</a>
+  <a class="logo" href="/"><img class="mark" src="/img/apex-logo.webp" alt="" width="34" height="34"><span class="word">ApexLine</span></a>
+  <div class="links"><a href="#build">What we build</a><a href="#how">How it works</a><a href="#founder">About</a><a href="#faq">FAQ</a></div>
+  <div class="prod" id="prod"><button class="prod-btn" type="button" aria-expanded="false" aria-controls="prodMenu">Products<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+    <div class="prod-menu" id="prodMenu" hidden>
+      <a href="/wasteline/"><div class="tagline">For skip hire and waste firms</div><b>WasteLine</b><span>Orders, tickets, waste tracking, day plan and driver app.</span></a>
+      <a href="/custom/"><div class="tagline">For any business</div><b>Custom builds</b><span>Bespoke systems, dashboards, portals and AI agents.</span></a>
+    </div></div>
+  <a class="btn btn-p" href="#enquire">Enquire</a>
 </div></nav>
 
 <header class="hero" id="top"><div class="wrap">
   <div class="reveal">
-    <div class="pill"><i></i>WasteLine · built for UK skip hire</div>
-    <h1><span class="nw">Run your</span> <span class="nw">whole yard</span><br>from <span class="hl nw">one screen.</span></h1>
-    <p class="lead">Orders, invoices, waste in and waste out tickets, digital waste tracking, the day plan and a driver app. No paper tickets, no chasing, no double entry.</p>
+    <div class="pill"><i></i>Bespoke software studio</div>
+    <h1>Bespoke systems that <span class="hl">run your business.</span></h1>
+    <p class="lead">We design and custom-code the software ambitious businesses run on: operating systems, logistics platforms, live dashboards, portals and AI agents. Built around how you work, never squeezed into a template.</p>
     <div class="ctas">
-      <a class="btn btn-p" href="#book">Start your 14-day free trial →</a>
-      <a class="btn btn-s" href="#features">See what it does</a>
+      <a class="btn btn-p" href="#enquire">Start your project →</a>
+      <a class="btn btn-s" href="#build">See what we build</a>
     </div>
-    <div class="trust"><span><b>✓</b>Free install, live the same day</span><span><b>✓</b>No setup fee</span><span><b>✓</b>14-day money-back guarantee</span></div>
-  </div>
-  <div class="shots reveal">
-    <div class="shot desk"><img src="img/wl-orders.webp" alt="WasteLine orders screen" width="1360" height="900"></div>
-    <div class="shot phone"><img src="img/wl-driver.webp" alt="WasteLine driver app on a phone" width="400" height="730"></div>
+    <div class="trust"><span><b>✓</b>Fully bespoke, custom-coded</span><span><b>✓</b>No long contracts</span><span><b>✓</b>Flexible payment options available</span></div>
   </div>
 </div></header>
 
-<div class="strip"><div class="wrap">
-  <div><b>2,000+</b><span>orders placed through the system in under a year · <a href="case-study.html" style="color:var(--accent)">case study</a></span></div>
-  <div><b>1 person</b><span>running the whole office, no admin staff</span></div>
-  <div><b>0</b><span>paper tickets. Every note and ticket filed in your Drive</span></div>
-  <div><b>Same day</b><span>install, on your own Google account</span></div>
-</div></div>
+<section id="build" class="cc-wrap" style="padding-top:64px" data-carousel>
+  <div class="wrap cc-head">
+    <div class="head reveal">
+      <div class="mono">What we build</div>
+      <h2>Built for the way you operate.</h2>
+      <p class="lead">Every system starts from how your business really works, never from a template. A few of the things we build.</p>
+    </div>
+    <div class="cc-ctrl reveal">
+      <button class="cc-prev" type="button" aria-label="Previous" aria-controls="ccTrack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <button class="cc-next" type="button" aria-label="Next" aria-controls="ccTrack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+    </div>
+  </div>
+  <div class="cc-track reveal" id="ccTrack" tabindex="0" role="region" aria-roledescription="carousel" aria-label="What we build. Use the arrow keys to move between cards.">
 
-<section><div class="wrap alert">
+    <article class="cc lead" role="group" aria-roledescription="slide" aria-label="1 of 7: Custom builds">
+      <div class="cc-vis"><div class="mods6" aria-hidden="true">
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h11v9H3zM14 9h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/></svg></div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 14h4"/></svg></div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7"/></svg></div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg></div>
+      </div></div>
+      <div class="cc-body">
+        <div class="cc-tag">Flagship<span>01</span></div>
+        <h3>Custom builds</h3>
+        <p>Your whole business, run on one system. A bespoke operating system custom-coded around how your company works, replacing the patchwork of tools and spreadsheets.</p>
+        <ul><li>Operations</li><li>Customers</li><li>Documents</li><li>Finance</li><li>Staff</li></ul>
+        <a class="cc-link" href="/custom/">Explore custom builds →</a>
+      </div>
+    </article>
+
+    <article class="cc" role="group" aria-roledescription="slide" aria-label="2 of 7: WasteLine">
+      <div class="cc-vis"><img src="/img/wl-orders.webp" alt="WasteLine orders screen" width="1360" height="900" loading="lazy" draggable="false"></div>
+      <div class="cc-body">
+        <div class="cc-tag">Skip hire and waste<span>02</span></div>
+        <h3>WasteLine</h3>
+        <p>The yard system for skip hire and waste firms. Orders, tickets, digital waste tracking, the day plan and a driver app, all from one screen.</p>
+        <ul><li>Orders</li><li>Tickets</li><li>Waste tracking</li><li>Day plan</li><li>Driver app</li></ul>
+        <a class="cc-link" href="/wasteline/">Explore WasteLine →</a>
+      </div>
+    </article>
+
+    <article class="cc" role="group" aria-roledescription="slide" aria-label="3 of 7: Logistics systems">
+      <div class="cc-vis v-route" aria-hidden="true">
+        <svg class="route" viewBox="0 0 392 200" preserveAspectRatio="none" fill="none"><path d="M40 160 C 110 150, 120 70, 200 90 S 300 40, 352 46" stroke="rgba(77,168,255,.55)" stroke-width="2.5" stroke-dasharray="6 7"/><circle cx="40" cy="160" r="6" fill="#0B0F1A" stroke="#00D4AA" stroke-width="2.5"/><circle cx="200" cy="90" r="6" fill="#0B0F1A" stroke="#4DA8FF" stroke-width="2.5"/><circle cx="352" cy="46" r="7" fill="#4DA8FF"/></svg>
+        <div class="tagx" style="left:22px;top:22px"><i></i>Out for delivery</div>
+        <div class="tagx" style="right:22px;bottom:22px">Proof of delivery <span class="pl ok">Signed</span></div>
+      </div>
+      <div class="cc-body">
+        <div class="cc-tag">Delivery and haulage<span>03</span></div>
+        <h3>Logistics systems</h3>
+        <p>Jobs, routes and drivers in one place. Proof of delivery captured on the driver's phone, and live tracking your customers can follow themselves.</p>
+        <ul><li>Jobs</li><li>Routes</li><li>Drivers</li><li>Proof of delivery</li><li>Live tracking</li></ul>
+        <a class="cc-link" href="#enquire">Talk to us about yours →</a>
+      </div>
+    </article>
+
+    <article class="cc" role="group" aria-roledescription="slide" aria-label="4 of 7: Workshop systems">
+      <div class="cc-vis" aria-hidden="true"><div class="mk">
+        <div class="mk-h">Job card<span class="pl">Open</span></div>
+        <div class="mk-r"><span class="ln" style="width:52%"></span><span class="pl am">In progress</span></div>
+        <div class="mk-r">Parts<span class="pl ok">Allocated</span></div>
+        <div class="mk-r">Technician time<span class="ln" style="width:38%;background:rgba(77,168,255,.45)"></span></div>
+        <div class="mk-r">Service history<span class="ln" style="width:30%"></span></div>
+      </div></div>
+      <div class="cc-body">
+        <div class="cc-tag">Engineering and vehicle workshops<span>04</span></div>
+        <h3>Workshop systems</h3>
+        <p>For engineering workshops, fabricators and vehicle workshops. Job cards, parts, technician time and full service history, from the office to the workshop floor.</p>
+        <ul><li>Job cards</li><li>Parts</li><li>Technician time</li><li>Service history</li></ul>
+        <a class="cc-link" href="#enquire">Talk to us about yours →</a>
+      </div>
+    </article>
+
+    <article class="cc" role="group" aria-roledescription="slide" aria-label="5 of 7: Live dashboards">
+      <div class="cc-vis" aria-hidden="true"><div class="mk">
+        <div class="kpis"><div><span class="ln" style="width:60%"></span><span class="ln" style="width:85%"></span></div><div><span class="ln" style="width:50%"></span><span class="ln" style="width:70%"></span></div><div><span class="ln" style="width:65%"></span><span class="ln" style="width:55%"></span></div></div>
+        <div class="bars"><i style="height:38%"></i><i style="height:55%"></i><i style="height:46%"></i><i style="height:70%"></i><i style="height:58%"></i><i style="height:86%"></i><i style="height:74%"></i><i style="height:100%"></i></div>
+      </div></div>
+      <div class="cc-body">
+        <div class="cc-tag">Every business<span>05</span></div>
+        <h3>Live dashboards</h3>
+        <p>The whole business at a glance. Live KPIs, financial dashboards, staff performance and rankings, with reports sent automatically to the people who need them.</p>
+        <ul><li>KPIs</li><li>Finance</li><li>Staff rankings</li><li>Automated reports</li></ul>
+        <a class="cc-link" href="/custom/#build">See what we build →</a>
+      </div>
+    </article>
+
+    <article class="cc" role="group" aria-roledescription="slide" aria-label="6 of 7: Customer and supplier portals">
+      <div class="cc-vis" aria-hidden="true"><div class="brw">
+        <div class="bt"><b></b><b></b><b></b><span></span></div>
+        <div class="bb">
+          <div class="mk-r">Your orders<span class="pl">Track</span></div>
+          <div class="mk-r"><span class="ln" style="width:48%"></span><span class="pl ok">Delivered</span></div>
+          <div class="mk-r"><span class="ln" style="width:40%"></span><span class="pl am">On the way</span></div>
+          <div class="mk-r"><span class="ln" style="width:55%"></span><span class="pl">Pay now</span></div>
+        </div>
+      </div></div>
+      <div class="cc-body">
+        <div class="cc-tag">Customers and suppliers<span>06</span></div>
+        <h3>Portals</h3>
+        <p>Secure portals where customers book, track and pay, and suppliers see orders and upload documents. Works on any phone, no app store needed.</p>
+        <ul><li>Bookings</li><li>Tracking</li><li>Payments</li><li>Supplier uploads</li></ul>
+        <a class="cc-link" href="/custom/#build">See what we build →</a>
+      </div>
+    </article>
+
+    <article class="cc" role="group" aria-roledescription="slide" aria-label="7 of 7: Service and warranty systems">
+      <div class="cc-vis" aria-hidden="true"><div class="mk">
+        <div class="mk-h">Machine record<span class="ln" style="width:70px"></span></div>
+        <div class="mk-r">Serial number<span class="ln" style="width:34%"></span></div>
+        <div class="mk-r">Next service<span class="pl">Booked</span></div>
+        <div class="mk-r">Warranty<span class="pl ok">Active</span></div>
+        <div class="mk-r">Engineer visit<span class="pl am">Assigned</span></div>
+      </div></div>
+      <div class="cc-body">
+        <div class="cc-tag">Equipment makers<span>07</span></div>
+        <h3>Service and warranty systems</h3>
+        <p>Every machine you sell, tracked for life. Serial numbers, service schedules, warranty claims and engineer visits, with a portal for your customers.</p>
+        <ul><li>Serial numbers</li><li>Service schedules</li><li>Warranty claims</li><li>Engineer visits</li></ul>
+        <a class="cc-link" href="#enquire">Talk to us about yours →</a>
+      </div>
+    </article>
+
+  </div>
+  <div class="wrap"><div class="cc-progress" aria-hidden="true"><i></i></div><div class="cc-hint" aria-hidden="true">Swipe or drag to see more</div></div>
+</section>
+
+<section id="how" style="padding-top:40px"><div class="wrap">
+  <div class="head reveal"><div class="mono">How it works</div><h2>A build process with no surprises.</h2></div>
+  <div class="steps four">
+    <div class="step reveal"><div class="n">01</div><h3>Discovery call</h3><p>Tell us exactly what you want, however ambitious it sounds. We'll ask the questions that shape the build.</p></div>
+    <div class="step reveal"><div class="n">02</div><h3>Quote and proposal</h3><p>We send a written proposal. Price and timeline are agreed, the deposit is paid, and the build starts.</p></div>
+    <div class="step reveal"><div class="n">03</div><h3>Built and tested</h3><p>We build it, then test it on real examples from your business before you rely on it.</p></div>
+    <div class="step reveal"><div class="n">04</div><h3>Sign off and hand over</h3><p>When it does everything in the proposal, you sign it off and it's handed over, live and ready to use.</p></div>
+  </div>
+</div></section>
+
+<section class="custom" id="founder"><div class="wrap founder">
   <div class="reveal">
-    <div class="mono">Digital waste tracking</div>
-    <h2 style="margin:12px 0 16px">Receiving waste? Your records now have to be digital.</h2>
-    <p class="lead">Digital waste tracking is now mandatory for receiving sites. WasteLine logs every load as it comes over the weighbridge and builds your Defra report for you. No retyping paper tickets at the end of the month.</p>
+    <div class="mono">Who we are</div>
+    <h2 style="margin-top:12px">About us.</h2>
+    <p class="body">Founded by Jack Simpson.</p>
+    <p class="body">Jack built the system that runs WasteHub, his London skip hire and waste business: <b>2,500 orders in 16 months, with no paid ad spend.</b> That system became WasteLine, and the same standard goes into every ApexLine build.</p>
+    <a class="btn btn-s" href="/case-study.html" style="margin-top:26px">Read the WasteHub case study →</a>
   </div>
-  <div class="box reveal">
-    <h3>What WasteLine does for you</h3>
-    <ul>
-      <li>Every load in and out logged with EWC code, weights and carrier</li>
-      <li>Your own lorries' loads logged automatically when the driver finishes</li>
-      <li>Defra spreadsheet filled in, ready to upload</li>
-      <li>Printable tickets and transfer notes, filed in your Google Drive</li>
-    </ul>
+  <div class="stat reveal">
+    <div><b>2,500</b><span>orders run through WasteHub's own system</span></div>
+    <div><b>16 months</b><span>to get there</span></div>
+    <div><b>No paid ads</b><span>every order won without paid ad spend</span></div>
   </div>
 </div></section>
 
-<section id="features" style="padding-top:20px"><div class="wrap">
-  <div class="head reveal">
-    <div class="mono">WasteLine</div>
-    <h2>Everything the office does, done in a fraction of the time.</h2>
-    <p class="lead">Built inside a working skip business and used on every job it takes. Every screen is there because a yard needed it.</p>
+<section id="enquire"><div class="wrap">
+  <div class="enq-head reveal">
+    <div class="mono">Enquire</div>
+    <h2>Let's build it.</h2>
+    <p class="lead">Tell us what your business needs to run on, however ambitious it sounds. Talk it through with Jack, or send the details and we'll come back with a proposal and a price.</p>
   </div>
-  <div class="grid">
-    <div class="card reveal"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg></div><h3>Orders in under a minute</h3><p>Type a postcode or phone number and the customer, site and price fill themselves in. Confirmation and invoice emailed on the spot.</p></div>
-    <div class="card reveal"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div><h3>Get paid, stop chasing</h3><p>Card links, cash and account customers. Unpaid jobs are flagged before the lorry leaves, with one-tap reminders.</p></div>
-    <div class="card reveal"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7"/></svg></div><h3>Tickets, numbered and filed</h3><p>Waste transfer notes, waste in and waste out tickets, each with its own numbering. Printable, and saved in your Drive automatically.</p></div>
-    <div class="card reveal"><span class="tag">FLEET</span><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div><h3>Skips on site</h3><p>Every skip out on hire, how long it has been there, and which ones are overdue a collection or exchange.</p></div>
-    <div class="card reveal"><span class="tag">FLEET</span><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7a4 4 0 0 0 0-8H9a4 4 0 0 1 0-8h7"/></svg></div><h3>Day plan and routing</h3><p>Drag jobs onto lorries or let it suggest the plan. Time windows, tip runs and empties worked out, then sent to drivers in one tap.</p></div>
-    <div class="card reveal"><span class="tag">FLEET</span><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div><h3>Driver app</h3><p>Drivers see their runs on their phone, get the customer to sign, and the transfer note is made and filed before they drive off.</p></div>
-    <div class="card reveal"><span class="tag">FLEET</span><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4"/></svg></div><h3>Live tracking</h3><p>See every lorry's progress through the day. Customers can get an "on the way" email or text automatically.</p></div>
-    <div class="card reveal"><span class="tag">FLEET</span><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h11v9H3zM14 9h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/></svg></div><h3>Lorry profit</h3><p>Revenue, fuel, driver and tip costs per lorry. Know which lorry is making you money and which one isn't.</p></div>
-    <div class="card reveal"><span class="tag">FLEET</span><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div><h3>Reports, sent for you</h3><p>Revenue, jobs, top customers and unpaid in one PDF. Emailed daily, weekly, monthly or quarterly to whoever needs it.</p></div>
+  <div class="enq-opts reveal" role="tablist" aria-label="How would you like to get in touch?">
+    <button class="enq-opt" type="button" role="tab" id="tabCall" aria-controls="book" aria-selected="true">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+      <span class="tx"><b>Book a call</b><span>Pick a time with Jack</span></span>
+    </button>
+    <button class="enq-opt" type="button" role="tab" id="tabForm" aria-controls="enquiry" aria-selected="false" tabindex="-1">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v12H5.2L4 17.2z"/><path d="M8 9h8M8 12h5"/></svg></span>
+      <span class="tx"><b>Send an enquiry</b><span>We'll come back with a price</span></span>
+    </button>
   </div>
-
-  <div class="split">
-    <div class="txt reveal"><div class="mono">Day plan</div><h2 style="margin:12px 0 14px">Tomorrow's work, planned in minutes.</h2>
-      <p class="muted">Every booked job on one board. Drag to a lorry, reorder, send. Drivers get it on their phone straight away.</p>
-      <ul><li>Suggested plan in one click</li><li>Tip runs and empties worked out for you</li><li>Unpaid jobs flagged before they go out</li></ul></div>
-    <div class="shot reveal"><img src="img/wl-plan.webp" alt="WasteLine day plan" width="1360" height="900"></div>
-  </div>
-  <div class="split rev">
-    <div class="txt reveal"><div class="mono">Reports</div><h2 style="margin:12px 0 14px">Know your numbers without opening a spreadsheet.</h2>
-      <p class="muted">A clean business report on any dates you choose, or sent automatically. Revenue, average order, jobs by service, lorry profit and who owes you.</p>
-      <ul><li>Compare against the period before</li><li>Emailed at 7am on your schedule</li><li>Saved in your Google Drive</li></ul></div>
-    <div class="shot reveal"><img src="img/wl-report.webp" alt="WasteLine business report PDF" width="820" height="1176"></div>
-  </div>
-</div></section>
-
-<section style="padding-top:40px"><div class="wrap">
-  <div class="head reveal"><div class="mono">How it works</div><h2>Live today. Paying only if it's worth it.</h2></div>
-  <div class="steps">
-    <div class="step reveal"><div class="n">01</div><h3>Free install</h3><p>A 15-minute call. We set it up on your own Google account with your prices, lorries and customers. No setup fee.</p></div>
-    <div class="step reveal"><div class="n">02</div><h3>14 days free</h3><p>Use the whole system on real jobs. Every feature switched on, so you see exactly what it saves you.</p></div>
-    <div class="step reveal"><div class="n">03</div><h3>Pick your plan</h3><p>Keep what you use, monthly or yearly. Not for you within 14 days of paying? Full refund.</p></div>
-  </div>
-</div></section>
-
-<section id="pricing"><div class="wrap">
-  <div class="head reveal"><div class="mono">Pricing</div><h2>Simple plans. No setup fee.</h2><p class="lead">Founder pricing for our first 10 yards, locked in for as long as you stay.</p></div>
-  <div class="toggle reveal" id="billing"><button class="on" data-b="m">Monthly</button><button data-b="y">Yearly <small>2 months free</small></button></div>
-  <div class="plans">
-    <div class="plan reveal">
-      <h3>Core</h3><div class="for">For yards taking waste in. Ordering plus everything for digital waste tracking.</div>
-      <div class="price" data-m="199" data-y="1,990">£199<small>/month</small></div><div class="per" data-m="" data-y="Billed yearly">&nbsp;</div>
-      <ul><li>Orders, invoices and customers</li><li>Card payments and unpaid chasing</li><li>Waste in and waste out tickets</li><li>Digital waste tracking and Defra export</li><li>Transfer notes filed in Drive</li><li class="dim">Fleet tools</li></ul>
-      <a class="btn btn-s" href="#book">Start free trial</a>
+  <div class="enq-box reveal">
+    <div class="enq-pane" id="book" role="tabpanel" aria-labelledby="tabCall">
+      <div class="calendly-inline-widget" data-url="https://calendly.com/jack-waste-hub/30min?hide_gdpr_banner=1&amp;background_color=121829&amp;text_color=e8ecf0&amp;primary_color=4da8ff"></div>
+      <p class="alt">Calendar not loading? <a href="https://calendly.com/jack-waste-hub/30min" target="_blank" rel="noopener">Book here</a> or <a href="https://wa.me/447949088642" target="_blank" rel="noopener">WhatsApp us</a>.</p>
     </div>
-    <div class="plan reveal">
-      <h3>Fleet</h3><div class="for">For skip firms running lorries. Ordering plus the full planning and driver side.</div>
-      <div class="price" data-m="349" data-y="3,490">£349<small>/month</small></div><div class="per" data-m="Up to 5 lorries" data-y="Billed yearly · up to 5 lorries">Up to 5 lorries</div>
-      <ul><li>Orders, invoices and customers</li><li>Skips on site</li><li>Day plan and routing</li><li>Driver app and live tracking</li><li>Lorry profit and reports</li><li class="dim">Waste in and tracking</li></ul>
-      <a class="btn btn-s" href="#book">Start free trial</a>
-    </div>
-    <div class="plan best reveal">
-      <h3>Full Yard</h3><div class="for">Everything WasteLine does, for yards with a permitted site and their own lorries.</div>
-      <div class="price" data-m="499" data-y="4,990">£499<small>/month</small></div><div class="per" data-m="Save £49 a month vs Core plus Fleet" data-y="Billed yearly">Save £49 a month vs Core plus Fleet</div>
-      <ul><li>Everything in Core</li><li>Everything in Fleet</li><li>Automatic business reports</li><li>Priority support on WhatsApp</li><li>New features as they ship</li></ul>
-      <a class="btn btn-p" href="#book">Start free trial</a>
+    <div class="enq-pane" id="enquiry" role="tabpanel" aria-labelledby="tabForm" hidden>
+      <p class="enq-intro">Not one for calls? Fill this in and we'll come back with a price.</p>
+      <form class="f" id="enqForm" novalidate>
+        <div class="row">
+          <div><label for="eqName">Name</label><input id="eqName" name="name" type="text" autocomplete="name" required maxlength="120"></div>
+          <div><label for="eqEmail">Email</label><input id="eqEmail" name="email" type="email" autocomplete="email" required maxlength="200"></div>
+        </div>
+        <div><label for="eqCompany">Company <small>(optional)</small></label><input id="eqCompany" name="company" type="text" autocomplete="organization" maxlength="160"></div>
+        <div><label for="eqWhat">What do you want built?</label><textarea id="eqWhat" name="what" required maxlength="5000" placeholder="What it needs to do, who will use it, and what you use today."></textarea></div>
+        <div class="row">
+          <div><label for="eqTimeline">Timeline</label><select id="eqTimeline" name="timeline"><option value="">Choose one</option><option>As soon as possible</option><option>In the next 3 months</option><option>In 3 to 6 months</option><option>No fixed date</option><option>Just exploring</option></select></div>
+          <div><label for="eqBudget">Budget range <small>(optional)</small></label><input id="eqBudget" name="budget" type="text" maxlength="120" placeholder="A rough range, if you have one"></div>
+        </div>
+        <div class="hp" aria-hidden="true"><label for="eqSite">Website</label><input id="eqSite" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+        <button class="btn btn-p" type="submit">Send enquiry →</button>
+        <div class="status" role="status" aria-live="polite"></div>
+        <p class="note">We only use your details to reply to this enquiry.</p>
+      </form>
     </div>
   </div>
-  <div class="terms">
-    <div class="reveal"><b>14-day free trial</b>Every feature on, on your real jobs.</div>
-    <div class="reveal"><b>14-day money-back</b>Full refund within 14 days of your first payment.</div>
-    <div class="reveal"><b>No setup fee</b>Free install, live the same day.</div>
-    <div class="reveal"><b>Your data, your Google</b>Everything stays in your own Google account.</div>
-  </div>
-  <div class="extras reveal"><b>Bigger fleet?</b> More than 5 lorries on Fleet or Full Yard is priced on a call. &nbsp;·&nbsp; <b>Extras:</b> customer ETA texts and accounts export, £49 a month each.</div>
-</div></section>
-
-<section class="custom" id="custom"><div class="wrap">
-  <div class="head reveal"><div class="mono">ApexLine custom builds</div><h2>Need something WasteLine doesn't do? We'll build it.</h2><p class="lead">The same team builds custom systems and AI automations for waste and trade businesses. Scoped on a call, fixed price, live in weeks.</p></div>
-  <div class="cgrid">
-    <div class="card reveal"><h3>AI chatbot</h3><p>Answers your customers' questions day and night from your own FAQs, prices and policies, and passes real orders to the office.</p></div>
-    <div class="card reveal"><h3>Website build</h3><p>A fast, professional website that wins bookings, connected to your system so enquiries land straight in your order book.</p></div>
-    <div class="card reveal"><h3>Full custom system</h3><p>Portals, integrations, automations, built around how your business actually works. Price on application.</p></div>
-  </div>
-  <div style="margin-top:28px" class="reveal"><a class="btn btn-s" href="#book">Talk about a custom build →</a></div>
-</div></section>
-
-<section><div class="wrap proof">
-  <div class="reveal">
-    <div class="mono">Proof</div>
-    <p class="quote" style="margin-top:14px">"I built WasteLine to run my own waste business. It's handled <span>2,000+ orders</span> in its first year, and I've grown without <span>hiring an office team</span>."</p>
-    <div class="who"><i>J</i><div><b style="color:var(--text)">Jack Simpson</b><br><span class="muted">Founder, ApexLine, WasteHub</span></div></div>
-    <a class="btn btn-s" href="case-study.html" style="margin-top:26px">Read the WasteHub case study →</a>
-  </div>
-  <div class="shot reveal"><img src="img/wl-tickets.webp" alt="WasteLine tickets screen" width="1360" height="900"></div>
-</div></section>
-
-<section id="faq" style="padding-top:20px"><div class="wrap faq">
-  <div class="head reveal"><div class="mono">FAQ</div><h2>Questions yards ask.</h2></div>
-  <details class="reveal"><summary>How long does it take to set up?</summary><p>About 15 minutes on a call. We install it on your Google account, add your prices, lorries and customers, and you can take your first order the same day.</p></details>
-  <details class="reveal"><summary>Where does my data live?</summary><p>In your own Google account: your orders, customers and tickets sit in your Google Sheet and Drive. You can export it any time, and you keep it if you ever leave.</p></details>
-  <details class="reveal"><summary>Do my drivers need to download an app?</summary><p>No. They open a link on their phone and log in with their lorry registration and a PIN. It works on any smartphone.</p></details>
-  <details class="reveal"><summary>What happens after the free trial?</summary><p>You pick the plan that fits and pay monthly or yearly. If you're not happy within 14 days of your first payment, you get a full refund.</p></details>
-  <details class="reveal"><summary>Can I mix and match features?</summary><p>Yes. The plans cover most yards, but any feature can be switched on on its own. Tell us what you need on the call.</p></details>
-  <details class="reveal"><summary>Does it help with digital waste tracking?</summary><p>Yes. Every load received is logged with its EWC code, weights and carrier, and WasteLine fills in the Defra spreadsheet ready for you to upload.</p></details>
-</div></section>
-
-<section id="book" style="padding-top:20px"><div class="wrap final">
-  <div class="box reveal">
-    <div class="mono">Book your demo</div>
-    <h2 style="margin-top:12px">Ditch the paper. Get your evenings back.</h2>
-    <p class="lead">Pick a time below. We'll show you WasteLine on real jobs, set you up the same day and start your 14-day free trial.</p>
-    <div class="calendly-inline-widget" data-url="https://calendly.com/jack-waste-hub/30min?hide_gdpr_banner=1&amp;background_color=121829&amp;text_color=e8ecf0&amp;primary_color=4da8ff" style="min-width:300px;height:700px;margin-top:10px;border-radius:16px;overflow:hidden"></div>
-    <p class="muted" style="font-size:14px;margin:18px auto 0">Calendar not loading? <a href="https://calendly.com/jack-waste-hub/30min" target="_blank" rel="noopener" style="color:var(--accent)">Book here</a> or <a href="https://wa.me/447949088642" target="_blank" rel="noopener" style="color:var(--accent)">WhatsApp us</a>.</p>
+  <ul class="enq-assure reveal"><li>You speak directly to the founder</li><li>No obligation, no hard sell</li><li>Price agreed before any work starts</li><li>No long contracts</li></ul>
+  <div class="faq enq-faq" id="faq">
+    <div class="head reveal"><div class="mono">FAQ</div><h2>Questions people ask.</h2></div>
+    <details class="reveal"><summary>How much does a build cost?</summary><p>Every build is bespoke, so every price is too. Tell us what you want on a call or through the form and we'll send a proposal, with the price agreed before any work starts. Flexible payment options available.</p></details>
+    <details class="reveal"><summary>What size of project do you take on?</summary><p>Anything from a single internal tool to a full operating system for the business. On the discovery call we'll tell you straight what's realistic, and if something can't be done properly, we'll say so.</p></details>
+    <details class="reveal"><summary>Can it connect to the tools we already use?</summary><p>Usually, if the tool has a way in, such as an API, an export or a shared spreadsheet. We check every connection on the discovery call before it goes into a proposal.</p></details>
+    <details class="reveal"><summary>What if it doesn't do what we agreed?</summary><p>The proposal sets out exactly what the system has to do. You sign off only when it does all of it.</p></details>
+    <details class="reveal"><summary>Who owns it?</summary><p>Once it's paid for, the build is yours, and your data stays yours.</p></details>
+    <details class="reveal"><summary>Do you look after it after launch?</summary><p>Yes. We can host and maintain it for you with no long contract, or hand it over to your own team.</p></details>
   </div>
 </div></section>
 
 <footer><div class="wrap">
-  <span class="logo" style="font-size:16px"><img class="mark" src="img/apex-logo.webp" alt="" width="26" height="26" style="width:26px;height:26px">ApexLine</span>
-  <span>WasteLine is a product of ApexLine. © 2026</span>
-  <div class="r"><a href="mailto:apexlineai@gmail.com">apexlineai@gmail.com</a><a href="https://wa.me/447949088642" target="_blank" rel="noopener">+44 7949 088642</a></div>
+  <a class="logo" href="/" style="font-size:16px"><img class="mark" src="/img/apex-logo.webp" alt="" width="26" height="26" style="width:26px;height:26px">ApexLine</a>
+  <span>Bespoke software, dashboards and AI automation. © 2026</span>
+  <div class="r"><a href="/wasteline/">WasteLine</a><a href="/custom/">Custom builds</a><a href="mailto:apexlineai@gmail.com">apexlineai@gmail.com</a><a href="https://wa.me/447949088642" target="_blank" rel="noopener">+44 7949 088642</a></div>
 </div></footer>
 
 <script>
@@ -384,14 +553,11 @@ html.has-intro .intro{display:flex;position:fixed;inset:0;z-index:9999;backgroun
     setTimeout(startReveal,2350); setTimeout(end,3000);
     ov.addEventListener('click',function(){ end(); startReveal(); });
   })();
-  var bt=document.querySelectorAll('#billing button');
-  bt.forEach(function(b){ b.onclick=function(){ var y=b.dataset.b==='y';
-    bt.forEach(function(x){x.classList.toggle('on',x===b);});
-    document.querySelectorAll('.price').forEach(function(p){ p.innerHTML='£'+(y?p.dataset.y:p.dataset.m)+'<small>/'+(y?'year':'month')+'</small>'; });
-    document.querySelectorAll('.per').forEach(function(p){ p.innerHTML=(y?p.dataset.y:p.dataset.m)||'&nbsp;'; });
-  }; });
 })();
 </script>
+<script src="/nav.js?v=1"></script>
+<script src="/carousel.js?v=2"></script>
+<script src="/enquire.js?v=2"></script>
 <script src="https://assets.calendly.com/assets/external/widget.js" async></script>
 </body>
 </html>
