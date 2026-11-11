@@ -1,0 +1,9 @@
+{
+  "name": "HQ",
+  "short_name": "HQ",
+  "start_url": "./#today",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0A101C",
+  "theme_color": "#0A101C"
+}
