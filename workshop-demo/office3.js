@@ -1,5 +1,5 @@
 /* Office screens, part 3: the inspection sheet, invoices and Xero, stock and
-   purchase orders, compliance, Earned Recognition, timesheets, payroll,
+   purchase orders, compliance, Earned Recognition, timesheets,
    reports and settings. Boots the app at the bottom. */
 (function () {
   var $ = WS.$, esc = WS.esc, O = WS.O;
@@ -88,7 +88,7 @@
     var owed = unpaid.reduce(function (s2, i) { return s2 + i.total; }, 0);
     var x = st.settings.xero;
 
-    return head('Invoices', list.length + ' invoices · ' + ready.length + ' jobs ready to bill',
+    return head('Invoices out', list.length + ' invoices · ' + ready.length + ' jobs ready to bill',
       (WS.xeroOk()
         ? '<button class="btn" id="iXero">Send ' + pend.length + ' to Xero</button>'
         : '<button class="btn alt" id="iCsv">Export CSV for Xero</button><button class="btn" data-go="settings">Connect Xero</button>')) +
@@ -110,25 +110,26 @@
       '</div>' +
 
       (ready.length ? '<div class="card"><div class="ch"><h2>Finished jobs waiting to be billed</h2></div>' +
-        '<div class="tablewrap"><table class="tbl"><thead><tr><th>Job</th><th>Vehicle</th><th class="hide-sm">Customer</th><th class="num">Value</th><th></th></tr></thead><tbody>' +
+        '<div class="tablewrap"><table class="tbl fitsm"><thead><tr><th>Job</th><th class="hide-sm">Vehicle</th><th class="hide-sm">Customer</th><th class="num">Value</th><th></th></tr></thead><tbody>' +
         ready.map(function (j) {
           var v = WS.vehicle(j.vehicleId), o = WS.operator(j.operatorId), q = WS.quoteJob(j);
-          return '<tr><td>' + esc(j.no) + '<div class="muted sm">' + esc(j.type) + '</div></td>' +
-            '<td><span class="reg">' + esc(v ? v.reg : '') + '</span></td>' +
+          return '<tr><td>' + esc(j.no) + '<div class="muted sm">' + esc(j.type) + '</div>' +
+            '<div class="only-sm"><span class="reg">' + esc(v ? v.reg : '') + '</span></div></td>' +
+            '<td class="hide-sm"><span class="reg">' + esc(v ? v.reg : '') + '</span></td>' +
             '<td class="hide-sm">' + esc(o ? o.name : '') + '</td>' +
             '<td class="num">' + WS.money(q.total) + '</td>' +
             '<td class="num"><button class="btn sm" data-bill="' + j.id + '">Invoice it</button></td></tr>';
         }).join('') + '</tbody></table></div></div>' : '') +
 
       '<div class="tablewrap"><table class="tbl"><thead><tr><th>Invoice</th><th class="hide-sm">Customer</th>' +
-      '<th class="hide-sm">Vehicle</th><th class="num">Net</th><th class="num">Total</th><th>Xero</th><th>Paid</th></tr></thead><tbody>' +
+      '<th class="hide-sm">Vehicle</th><th class="num hide-sm">Net</th><th class="num">Total</th><th class="hide-sm">Xero</th><th>Paid</th></tr></thead><tbody>' +
       (list.length ? list.slice(0, 60).map(function (i) {
         var o = WS.operator(i.operatorId), v = WS.vehicle(i.vehicleId);
         return '<tr class="click" data-inv="' + i.id + '"><td>' + esc(i.no) + '<div class="muted sm">' + WS.dateShort(i.date) + '</div></td>' +
           '<td class="hide-sm">' + esc(o ? o.name : '') + '</td>' +
           '<td class="hide-sm"><span class="reg">' + esc(v ? v.reg : '') + '</span></td>' +
-          '<td class="num">' + WS.money(i.net) + '</td><td class="num b">' + WS.money(i.total) + '</td>' +
-          '<td>' + (i.xeroExported ? pill('sent', 'ok') : pill('waiting', 'warn')) + '</td>' +
+          '<td class="num hide-sm">' + WS.money(i.net) + '</td><td class="num b">' + WS.money(i.total) + '</td>' +
+          '<td class="hide-sm">' + (i.xeroExported ? pill('sent', 'ok') : pill('waiting', 'warn')) + '</td>' +
           '<td>' + (i.paid ? pill('paid', 'ok') : WS.daysBetween(i.due, WS.day(0)) > 0 ? pill('overdue', 'bad') : pill('due ' + WS.dateShort(i.due), '')) + '</td></tr>';
       }).join('') : '<tr><td colspan="7">' + empty('No invoices yet.') + '</td></tr>') +
       '</tbody></table></div>';
@@ -535,70 +536,6 @@
     };
   };
 
-  /* ============================ hours for payroll ============================ */
-  S.payroll = function () {
-    var p = WS.payroll(O.prWeek), st = WS.state.settings;
-    var totN = p.rows.reduce(function (s, r) { return s + r.normal; }, 0);
-    var totO = p.rows.reduce(function (s, r) { return s + r.over; }, 0);
-    var totC = p.rows.reduce(function (s, r) { return s + r.cost; }, 0);
-    return head('Hours for payroll', 'One file for the accountant. Normal hours, overtime and what it costs.',
-      '<button class="btn alt sm" id="pPrev2">‹</button><button class="btn alt sm" id="pThis">This week</button>' +
-      '<button class="btn alt sm" id="pNext2">›</button>' +
-      '<button class="btn" id="pExp">Send to the accountant</button>') +
-      '<div class="card tight" style="margin-bottom:14px"><b>Week beginning ' + WS.dateUK(p.start) + '</b>' +
-      '<span class="muted sm"> · overtime counted after ' + p.ot + ' hours a day at ' + p.otx + ' times</span></div>' +
-      '<div class="grid g4" style="margin-bottom:16px">' +
-      stat('Normal hours', WS.hrs(totN), 'across ' + p.rows.length + ' fitters') +
-      stat('Overtime', WS.hrs(totO), totO ? 'at ' + p.otx + ' times' : 'none this week', totO ? 'warn' : 'ok') +
-      stat('Wage cost', WS.money0(totC), 'before employer costs') +
-      stat('Labour sold', WS.money0(p.rows.reduce(function (s, r) { return s + r.value; }, 0)), 'charged out', 'ok') +
-      '</div>' +
-      '<div class="tablewrap"><table class="tbl"><thead><tr><th>Fitter</th><th class="hide-sm">Role</th>' +
-      '<th class="num">Normal</th><th class="num">Overtime</th><th class="num">Total</th>' +
-      '<th class="num hide-sm">Rate</th><th class="num">Wage cost</th></tr></thead><tbody>' +
-      p.rows.map(function (r) {
-        return '<tr><td>' + esc(r.fitter.name) + '</td>' +
-          '<td class="hide-sm muted sm">' + esc(r.fitter.role) + '</td>' +
-          '<td class="num">' + WS.hrs(r.normal) + '</td>' +
-          '<td class="num">' + (r.over ? '<b style="color:var(--warn)">' + WS.hrs(r.over) + '</b>' : '<span class="muted">-</span>') + '</td>' +
-          '<td class="num b">' + WS.hrs(r.total) + '</td>' +
-          '<td class="num hide-sm">' + WS.money(r.fitter.costRate) + '</td>' +
-          '<td class="num b">' + WS.money(r.cost) + '</td></tr>';
-      }).join('') +
-      '<tr style="background:var(--th)"><td class="b" colspan="2">Everyone</td>' +
-      '<td class="num b">' + WS.hrs(totN) + '</td><td class="num b">' + WS.hrs(totO) + '</td>' +
-      '<td class="num b">' + WS.hrs(totN + totO) + '</td><td class="hide-sm"></td>' +
-      '<td class="num b">' + WS.money(totC) + '</td></tr>' +
-      '</tbody></table></div>' +
-      '<div class="note" style="margin-top:14px"><b>What the accountant gets.</b> A CSV with every fitter, their normal hours, ' +
-      'their overtime and the cost, broken down by day. No paper sheets, no adding up on a Friday afternoon.</div>';
-  };
-
-  W.payroll = function () {
-    $('pPrev2').onclick = function () { O.prWeek--; O.render(); };
-    $('pNext2').onclick = function () { O.prWeek++; O.render(); };
-    $('pThis').onclick = function () { O.prWeek = 0; O.render(); };
-    $('pExp').onclick = function () {
-      var p = WS.payroll(O.prWeek);
-      var rows = [['Payroll hours', 'Week beginning', WS.dateUK(p.start)],
-        ['Overtime after', p.ot + ' hours a day', 'at ' + p.otx + ' times'], [],
-        ['Fitter', 'Role'].concat(p.days.map(function (d) { return WS.dow3(d) + ' ' + WS.dateShort(d); }))
-          .concat(['Normal hours', 'Overtime hours', 'Total hours', 'Hourly rate', 'Wage cost'])];
-      p.rows.forEach(function (r) {
-        rows.push([r.fitter.name, r.fitter.role].concat(r.days)
-          .concat([r.normal, r.over, r.total, r.fitter.costRate, r.cost]));
-      });
-      rows.push([]);
-      rows.push(['Total', '', '', '', '', '', '', '', '',
-        p.rows.reduce(function (s, r) { return s + r.normal; }, 0),
-        p.rows.reduce(function (s, r) { return s + r.over; }, 0),
-        p.rows.reduce(function (s, r) { return s + r.total; }, 0), '',
-        p.rows.reduce(function (s, r) { return s + r.cost; }, 0)]);
-      WS.download('payroll-hours-' + p.start + '.csv', WS.csv(rows));
-      WS.toast('Payroll file downloaded, ready to send on.', 'ok');
-    };
-  };
-
   /* ============================ reports ============================ */
   S.reports = function () {
     var st = WS.state, T = WS.day(0);
@@ -752,11 +689,12 @@
 
       '<div class="card"><div class="ch"><h2>Fitters</h2><div class="sp"><button class="btn alt sm" id="fAdd">Add a fitter</button></div></div>' +
       '<div class="tablewrap"><table class="tbl"><thead><tr><th>Name</th><th class="hide-sm">Role</th><th>PIN</th>' +
-      '<th class="num hide-sm">Cost per hour</th><th class="num">Day</th><th></th></tr></thead><tbody>' +
+      '<th class="num hide-sm">Cost per hour</th><th class="num">Pay</th><th class="num">Day</th><th></th></tr></thead><tbody>' +
       st.fitters.map(function (f) {
         return '<tr><td>' + esc(f.name) + '</td><td class="hide-sm muted sm">' + esc(f.role) + '</td>' +
           '<td class="mono">' + esc(f.pin) + '</td>' +
           '<td class="num hide-sm">' + WS.money(f.costRate) + '</td>' +
+          '<td class="num">' + esc(WS.payLabel(f)) + '</td>' +
           '<td class="num">' + f.dayHours + 'h</td>' +
           '<td class="num"><button class="btn alt sm" data-fed="' + f.id + '">Edit</button></td></tr>';
       }).join('') + '</tbody></table></div></div>' +
@@ -890,12 +828,14 @@
           '<label class="f"><span class="lb">Role</span><input class="in" id="fR" value="' + esc(f.role) + '"></label></div>' +
           '<div class="row"><label class="f"><span class="lb">4 digit PIN</span><input class="in" id="fP" maxlength="4" value="' + esc(f.pin) + '"></label>' +
           '<label class="f"><span class="lb">Cost per hour</span><input class="in" id="fC" type="number" value="' + f.costRate + '"></label>' +
-          '<label class="f"><span class="lb">Hours in a day</span><input class="in" id="fH" type="number" step="0.5" value="' + f.dayHours + '"></label></div>',
+          '<label class="f"><span class="lb">Hours in a day</span><input class="in" id="fH" type="number" step="0.5" value="' + f.dayHours + '"></label></div>' +
+          O.payFields(f),
           'Save', function () {
             f.name = $('fN').value || f.name; f.role = $('fR').value;
             f.pin = ($('fP').value || f.pin).replace(/\D/g, '').slice(0, 4) || f.pin;
             f.costRate = parseFloat($('fC').value) || f.costRate;
             f.dayHours = parseFloat($('fH').value) || f.dayHours;
+            O.payRead(f);
             WS.save(); O.closeModal(); O.render();
             WS.toast('Saved.', 'ok');
           });
@@ -906,7 +846,8 @@
         '<div class="row"><label class="f"><span class="lb">Name</span><input class="in" id="fN"></label>' +
         '<label class="f"><span class="lb">Role</span><input class="in" id="fR" value="HGV technician"></label></div>' +
         '<div class="row"><label class="f"><span class="lb">4 digit PIN</span><input class="in" id="fP" maxlength="4"></label>' +
-        '<label class="f"><span class="lb">Cost per hour</span><input class="in" id="fC" type="number" value="22"></label></div>',
+        '<label class="f"><span class="lb">Cost per hour</span><input class="in" id="fC" type="number" value="22"></label></div>' +
+        O.payFields({ payType: 'hour', payRate: 18 }),
         'Add them', function () {
           var nm = $('fN').value.trim();
           if (!nm) { WS.toast('Give them a name.', 'bad'); return; }
@@ -914,6 +855,7 @@
             id: WS.uid('f'), name: nm, role: $('fR').value, pin: ($('fP').value || '9999').replace(/\D/g, '').slice(0, 4),
             costRate: parseFloat($('fC').value) || 22, dayHours: st.dayHours, skills: Object.keys(st.standardTimes)
           });
+          O.payRead(st.fitters[st.fitters.length - 1]);
           WS.save(); O.closeModal(); O.render();
           WS.toast(nm + ' added. They can sign into the fitter app now.', 'ok');
         });

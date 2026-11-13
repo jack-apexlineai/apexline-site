@@ -408,6 +408,21 @@ body.locked header.side{display:none}
 .page{max-width:1240px;margin:0 auto;padding:26px 24px 80px}
 @media(max-width:600px){.page{padding:18px 14px 60px}}
 #planView,#liveView{padding-top:26px!important}
+.impwrap{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+.impcols,.impfields{flex:1 1 260px;min-width:0}
+.impchip{display:inline-block;background:var(--card,#fff);border:1px solid var(--line,#dde1e7);border-radius:8px;padding:6px 10px;margin:0 6px 6px 0;font-size:13px;cursor:grab;user-select:none}
+.impchip.used{opacity:.4}
+.impchip:active{cursor:grabbing}
+.imptarget{display:flex;align-items:center;gap:8px;border:1px dashed var(--line,#dde1e7);border-radius:8px;padding:7px 9px;margin-bottom:7px;background:var(--card,#fff)}
+.imptarget.over{border-color:#2E6BE6;background:rgba(46,107,230,.08)}
+.imptarget.need{border-color:#c0352a}
+.imptarget.filled{border-style:solid}
+.imptarget .tl{flex:0 0 130px;font-size:13px;font-weight:600}
+.imptarget .need-tag{font-size:10.5px;font-weight:700;color:#c0352a;text-transform:uppercase}
+.imptarget select{flex:1;min-width:0}
+.imptab{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+.imptab th,.imptab td{border:1px solid var(--line,#dde1e7);padding:5px 7px;text-align:left}
+.imptab th{background:var(--soft,#f4f6f9);font-weight:600}
 main{padding-top:26px}
 .tbar{margin-bottom:18px;gap:12px}
 .tbar h2{font-family:Inter,sans-serif;font-size:24px;font-weight:700;letter-spacing:-.02em}
@@ -598,8 +613,6 @@ td.nowrap{white-space:nowrap}
 }
 
 .tryit.tried b small{font-size:12px;color:var(--ok,#166534);font-weight:600}
-.bookrow td{background:var(--brand-l)}
-.bookbox{display:flex;flex-wrap:wrap;align-items:center;gap:10px}.bookbox b{flex-basis:100%}.bookbox .in{width:auto}
 .gowhy{font-size:13px;color:var(--muted);text-align:center;margin-top:8px}
 .go.notready{background:#D9DCE3;color:#8A90A0}
 @keyframes flashmiss{0%,100%{box-shadow:0 0 0 0 rgba(217,45,32,0)}30%{box-shadow:0 0 0 4px rgba(217,45,32,.35)}}
@@ -836,7 +849,8 @@ b.bad{color:var(--bad)}
 .olinks{display:flex;gap:12px;margin-top:6px;font-size:13px;min-height:18px}
 .navfoot{margin-top:auto;padding-top:8px}
 .navfoot+.sidefoot{margin-top:0}
-#tixView .ufilters .seg{flex:none}
+#tixView .ufilters .seg{flex:none;max-width:100%}
+@media(max-width:700px){#tixView .ufilters .seg{flex:1 1 100%}}
 
 
 /* ---------- card view for any list table (Unpaid, Tickets, Customers) ---------- */
@@ -874,6 +888,18 @@ html[data-theme="dark"] .pill.warn{background:rgba(232,182,74,.2);color:#F2C94C}
 html[data-theme="dark"] .pill.ok{background:rgba(70,192,131,.2);color:#5FD99B}
 html[data-theme="dark"] .jc .t2,html[data-theme="dark"] .muted2,html[data-theme="dark"] .sub2{color:#A7B1C4}
 a.link.drv{text-decoration:none}
+/* Phone fixes 13 Nov 2026: Settings tables scroll inside their panel instead of widening the page; Day plan and Live
+   cards fit the screen so Edit stays in reach; forms that scroll into view are not hidden under the sticky header. */
+.setgrid>*{min-width:0}
+@media(max-width:700px){.plan{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:900px){#impForm,#tiForm,#toForm,#tpForm{scroll-margin-top:76px}}
+/* code-next: booking checks, edit mode, change a booking, daily capacity settings */
+#chkNote .note{margin-top:12px}#chkNote .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.seg.locked{pointer-events:none;opacity:.55}
+.editbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.fgrid>*{min-width:0}.capset input.in{min-width:84px;max-width:120px}.capset td:first-child{white-space:nowrap}
+#cbOv label.l2{display:block;font-weight:700;margin:14px 0 6px}
+@media(max-width:900px){#chkNote{scroll-margin-top:90px}}
 </style>
 </head>
 <body>
@@ -921,6 +947,16 @@ a.link.drv{text-decoration:none}
 <div class="howov hide" id="dirtyOv"><div class="howbox" style="max-width:440px"><h3 style="margin:0 0 6px">Save your changes?</h3><p class="sub2" id="dirtyTxt" style="font-size:14px;margin:0 0 18px"></p>
   <div class="acts"><button class="btn1" id="dirtySave">Save and carry on</button><button class="fx alt" id="dirtyDrop">Don't save</button><button class="link" id="dirtyStay">Stay here</button></div></div></div>
 
+<div class="howov hide" id="cbOv"><div class="howbox" style="max-width:470px"><h3 style="margin:0 0 4px">Change the booking</h3><p class="sub2" id="cbSub" style="margin:0 0 6px"></p>
+  <label class="l2">Type</label><div class="seg" id="cbType"><button type="button" data-v="Collection">Collection</button><button type="button" data-v="Exchange">Exchange</button></div>
+  <label class="l2" for="cbDate">Date</label><input class="in" type="date" id="cbDate">
+  <label class="l2" for="cbPrice">Price <span class="muted" style="font-weight:500">(ex VAT<span id="cbPriceHint"></span>)</span></label><div class="money"><span>£</span><input class="in" id="cbPrice" inputmode="decimal"></div>
+  <label class="l2" for="cbNotes">Notes</label><input class="in" id="cbNotes" placeholder="Gate code, access, etc.">
+  <div id="cbChk"></div>
+  <div class="acts" style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="fx" type="button" id="cbSave">Save changes</button><button class="fx alt danger" type="button" id="cbCancel">Cancel booking</button><button class="link" type="button" id="cbX">Close</button></div></div></div>
+<div class="howov hide" id="sbOv"><div class="howbox" style="max-width:460px"><h3 style="margin:0 0 4px">Book this skip back</h3><p class="sub2" id="sbSub" style="margin:0 0 14px"></p>
+  <label style="display:block;font-weight:700;margin:0 0 6px">What date?</label><input class="in" type="date" id="sbDate">
+  <div class="acts" style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="fx" type="button" id="sbColl">Book collection</button><button class="fx alt" type="button" id="sbExch">Book exchange</button><button class="link" type="button" id="sbX">Cancel</button></div></div></div>
 <div id="loading" class="load hide"><div class="spin"></div>Loading…</div>
 <div id="lockView" class="lock hide"><div class="card" style="padding:26px 20px">
   <div class="logo" id="lockLogo" style="margin:0 auto 12px;color:#fff">S</div>
@@ -1010,6 +1046,7 @@ a.link.drv{text-decoration:none}
       <div><label class="l">Date</label><input class="in" id="jobDate" type="date"></div>
       <div><label class="l">Time slot <i>(optional)</i></label><input class="in" id="slot" placeholder="AM, 7-9, after 12"></div>
     </div>
+    <div id="chkNote"></div>
     <div class="mt"><label class="l">Waste type</label><div class="seg" id="wasteSeg"></div>
       <input class="in hide mt" id="wasteOther" placeholder="Type the waste, e.g. Green waste"></div>
     <div class="grid g2 mt">
@@ -1025,6 +1062,7 @@ a.link.drv{text-decoration:none}
 
   <section class="card off" id="c4">
     <div class="step"><div class="n">4</div><h2>Price</h2><span class="hint" id="h4"></span></div>
+    <div id="editNote"></div>
     <div class="grid g2">
       <div><label class="l">Price <i>(ex VAT)</i></label><div class="money"><span>£</span><input class="in" id="price" inputmode="decimal"></div></div>
     </div>
@@ -1077,7 +1115,7 @@ a.link.drv{text-decoration:none}
     <div class="tot"><div class="c">Total</div><div class="v" id="sTot">–</div></div>
     <button class="go" id="goBtn" disabled>Book &amp; send</button>
     <div class="gowhy" id="goWhy"></div>
-    <div class="fine">Confirmation and invoice are emailed to the customer and saved in Drive.</div>
+    <div class="fine" id="goFine">Confirmation and invoice are emailed to the customer and saved in Drive.</div>
   </div>
 </div></aside>
 <div class="mbar"><div class="tm"><small>Total</small><span id="mTot">–</span></div><button class="go" id="goBtnM" disabled>Book &amp; send</button></div>
@@ -1093,7 +1131,7 @@ a.link.drv{text-decoration:none}
   <div id="dLink"></div>
   <div id="dShare"></div>
   <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px">
-    <button class="btn1" id="dNew">New order</button><button class="btn2" id="dUnpaid">Unpaid jobs</button>
+    <button class="btn1" id="dNew">New order</button><button class="btn2" id="dEdit">Edit order</button><button class="btn2" id="dUnpaid">Unpaid jobs</button>
   </div>
 </div></div>
 
@@ -1177,7 +1215,7 @@ a.link.drv{text-decoration:none}
 
 <!-- ============ SKIPS ON SITE ============ -->
 <div id="siteView" class="page hide">
-  <div class="tbar"><h2>Skips on site</h2><span class="sub2" id="sHire"></span><div style="flex:1"></div><button class="fx alt" id="aoBtn" type="button">+ Skip already out</button><button class="howbtn" data-how="onsite">&#9654; How to use</button></div>
+  <div class="tbar"><h2>Skips on site</h2><span class="sub2" id="sHire"></span><div style="flex:1"></div><button class="fx alt" id="aoBtn" type="button">+ Skip already out</button><button class="fx alt" id="impSheetBtn" type="button">&#8681; Import from a spreadsheet</button><button class="howbtn" data-how="onsite">&#9654; How to use</button></div>
   <div class="panel hide" id="aoForm" style="margin-bottom:14px"><div class="ph"><b>Add a skip that's already out on hire</b><button class="link" id="aoX" type="button">Close</button></div>
     <div class="sub2" style="margin:-4px 0 12px">For skips that were out before you started using WasteLine. Nothing is emailed or invoiced. It shows here with the right days out, and you can book the exchange or collection as normal.</div>
     <div class="aogrid">
@@ -1190,6 +1228,40 @@ a.link.drv{text-decoration:none}
       <div><label class="l">Placement</label><select class="in" id="aoPlace"><option>Driveway</option><option>Road</option><option>On site</option></select></div>
     </div>
     <div class="acts" style="margin-top:14px;display:flex;gap:10px;align-items:center"><button class="fx" id="aoGo" type="button">Add skip</button><span class="muted2" id="aoDone"></span></div>
+  </div>
+  <div class="panel hide" id="impForm" style="margin-bottom:14px"><div class="ph"><b>Import from a spreadsheet</b><button class="link" id="impX" type="button">Close</button></div>
+
+    <div id="impStep1">
+      <div class="sub2" style="margin:-4px 0 12px">Bring your existing data across in one go. Nothing is emailed and nothing is charged.</div>
+      <div class="aogrid">
+        <div><label class="l">What are you importing</label><select class="in" id="impKind">
+          <option value="skipsOnSite">Skips already out on site</option>
+          <option value="orders">Past orders (works out what is still on site for you)</option>
+          <option value="customers">Customers</option>
+          <option value="sites">Sites</option>
+          <option value="lorries">Lorries and drivers</option>
+          <option value="wasteTypes">Waste types and tip costs</option>
+        </select></div>
+      </div>
+      <div class="sub2" id="impHint" style="margin:10px 0 0"></div>
+      <div class="note n" style="margin-top:12px">Open your Google Sheet, go to the <b>Import</b> tab, and paste your spreadsheet in including the header row. Then press Read my spreadsheet.</div>
+      <div class="acts" style="margin-top:14px;display:flex;gap:10px;align-items:center"><button class="fx" id="impRead" type="button">Read my spreadsheet</button><span class="muted2" id="impMsg"></span></div>
+    </div>
+
+    <div id="impStep2" class="hide">
+      <div class="sub2" style="margin:-4px 0 10px" id="impFound"></div>
+      <div class="sub2" style="margin:0 0 12px">Drag a column from the left onto the box it should fill, or use the dropdown. Anything marked <b>needed</b> has to be filled in.</div>
+      <div class="impwrap">
+        <div class="impcols"><div class="l" style="margin-bottom:6px">Your columns</div><div id="impChips"></div></div>
+        <div class="impfields"><div class="l" style="margin-bottom:6px">Goes into</div><div id="impTargets"></div></div>
+      </div>
+      <div id="impPreview" style="margin-top:14px"></div>
+      <div class="acts" style="margin-top:14px;display:flex;gap:10px;align-items:center"><button class="fx" id="impGo" type="button">Import</button><button class="link" id="impBack" type="button">Back</button><span class="muted2" id="impMsg2"></span></div>
+    </div>
+
+    <div id="impStep3" class="hide"><div id="impReport"></div>
+      <div class="acts" style="margin-top:14px"><button class="fx alt" id="impAgain" type="button">Import something else</button></div>
+    </div>
   </div>
   <input class="in bigsearch" id="sQ" placeholder="Search customer, postcode or road" autocomplete="off">
   <div id="sAlert"></div>
@@ -1373,7 +1445,7 @@ a.link.drv{text-decoration:none}
 </div>
 <!-- ============ ORDERS ============ -->
 <div id="ordersView" class="page hide">
-  <div class="tbar"><h2>Orders</h2><span id="oSum" class="sub2"></span><div style="flex:1"></div><button class="btn2" id="oAccBtn" style="padding:9px 14px">Export for accounts</button></div>
+  <div class="tbar"><h2>Orders</h2><span id="oSum" class="sub2"></span><div style="flex:1"></div><button class="fx alt" id="impOrdBtn" type="button">&#8681; Import from a spreadsheet</button><button class="btn2" id="oAccBtn" style="padding:9px 14px">Export for accounts</button></div>
   <div class="panel hide" id="oAcc"><div class="ph"><b>Export invoices for your accounts</b></div>
     <div class="ufilters" style="margin:0"><span class="pill" id="aFmtLbl"></span>
       <button class="fx" id="aNew">New invoices only</button><span class="sub2">or pick dates:</span><input class="in" type="date" id="aFrom"><input class="in" type="date" id="aTo"><button class="fx alt" id="aGo">Create file</button></div>
@@ -1622,6 +1694,14 @@ var BIZ = window.WL_BIZ;
 var D=null, S={}, PAY='bank', WASTE='', PLACE='Driveway', XN=0;
 
 function $(id){return document.getElementById(id);}
+/* Lists (Orders, Unpaid, Customers, Tickets, Skips on site) open as cards on a phone and as a
+   table on a computer. Whatever the yard last picked with the list/card buttons wins. */
+function defVw(){ return 'grid'; }
+function savedVw(key){ try{ return WLS.getItem(key)||defVw(); }catch(e){ return defVw(); } }
+/* Card view is now the default on every screen. Clear an older saved list choice once so the new default actually shows. */
+(function(){ try{ if(WLS.getItem('wlVwReset2')) return;
+  ['wlOrdView','wlVwSite','wlVwUnpaid','wlVwTix','wlVwCust'].forEach(function(k){ WLS.removeItem(k); });
+  WLS.setItem('wlVwReset2','1'); }catch(e){} })();
 /* ---------- one line-icon set (no emoji) ---------- */
 var ICO={cash:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 10v4M18 10v4"/>',bank:'<path d="M3 10l9-6 9 6M5 10v8M9 10v8M15 10v8M19 10v8M3 20h18"/>',
  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',card:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>',
@@ -1652,9 +1732,10 @@ function lock(msg){ try{WLS.removeItem('yardTok'); WLS.removeItem('yardBoot');}c
   document.body.classList.add('locked'); show('lockView',true); ['pinIn','pinGo','pinForgot'].forEach(function(id){show(id,true);}); show('pinSet',false); $('pinIn').value=''; show('pinErr',!!msg); if(msg) $('pinErr').textContent=msg; setTimeout(function(){$('pinIn').focus();},50); }
 function unlock(){
   var pin=$('pinIn').value.trim(); if(!pin) return; $('pinGo').disabled=true; $('pinGo').textContent='Checking…';
-  google.script.run.withSuccessHandler(function(r){ TOKEN=r.token; try{WLS.setItem('yardTok',TOKEN);}catch(e){}
+  var demoT=setTimeout(function(){ if($('pinGo').disabled) $('pinGo').textContent='Getting your demo yard ready…'; },1500);   /* DEMO YARD ONLY */
+  google.script.run.withSuccessHandler(function(r){ clearTimeout(demoT); TOKEN=r.token; try{WLS.setItem('yardTok',TOKEN);}catch(e){}
       $('pinGo').disabled=false; $('pinGo').textContent='Unlock'; if(r.mustChange){ pinSetup(); return; } show('lockView',false); boot(r.boot); })
-    .withFailureHandler(function(e){ $('pinGo').disabled=false; $('pinGo').textContent='Unlock'; show('pinErr',true);
+    .withFailureHandler(function(e){ clearTimeout(demoT); $('pinGo').disabled=false; $('pinGo').textContent='Unlock'; show('pinErr',true);
       $('pinErr').textContent=String(e&&e.message||e).replace(/^Error:\s*/,''); $('pinIn').select(); }).login(pin);
 }
 
@@ -1721,7 +1802,7 @@ function goLive(){ view('liveView','navLive'); loadLive(); }
 function goOrder(){ view('orderView','navNew'); setTimeout(function(){ if(!S.cust&&!S.newCust) $('pcQ').focus(); },50); }
 function goUnpaid(){ view('unpaidView','navUnpaid'); renderUnpaid(); }
 function goDone(){ view('doneView',''); }
-function goPlan(){ view('planView','navPlan'); $('pDate').value=isoOf(new Date()); loadPlan(); }
+function goPlan(){ view('planView','navPlan'); $('pDate').value=tmrIso(); loadPlan(); }
 
 /* ---------- customer ---------- */
 function renderCust(q){
@@ -1747,7 +1828,7 @@ function resetAll(){
   var t=new Date(); t.setDate(t.getDate()+1); $('jobDate').value=t.toISOString().slice(0,10);
   ['c2','c3','c4','c5'].forEach(function(id){$(id).classList.add('off');});
   addrCheckClear(); applyTerms(); etaBoxState(true);
-  $('sNo').textContent=D.nextNo; update();
+  $('sNo').textContent=D.nextNo; editUi(false); update();
 }
 /* "Text customer when on route": an add-on. Off = the tick is shown but locked, with the way to get it. */
 function etaBoxState(reset){ if(!$('etaBox')||!D) return; var on=!!(D.licence&&D.licence.mod&&D.licence.mod.eta!==false);
@@ -1812,7 +1893,7 @@ function newSite(pc){
 }
 function composeAddr(){
   var a=[[$('nsNo').value.trim(),$('nsStreet').value.trim()].filter(Boolean).join(' '),$('nsTown').value.trim(),S.newPc||''].filter(Boolean).join(', ');
-  $('nsAddr').value=a; if(S.cust||S.newCust){ S.priceEdited=false; reprice(); if($('nsNo').value.trim()) addrCheckSoon(1200); }
+  $('nsAddr').value=a; if(S.cust||S.newCust){ if(!S.edit) S.priceEdited=false; reprice(); if($('nsNo').value.trim()) addrCheckSoon(1200); }
 }
 function onWho(v){
   S.who=v;
@@ -1911,7 +1992,7 @@ function onSite(){
   autoService();
   var ok=!!(S.site||S.newSite);
   ['c3','c4','c5'].forEach(function(id){$(id).classList.toggle('off',!ok);});
-  S.priceEdited=false; reprice();
+  if(!S.edit) S.priceEdited=false; reprice();   // editing: a new address keeps the price you have
 }
 function siteAddr(){ return S.site?S.site.address:$('nsAddr').value.trim(); }
 function onPlace(v){ PLACE=v; reprice(); }
@@ -1948,9 +2029,10 @@ function reprice(){
   else if(isColl()&&S.chargeColl&&$('price').value==='0') $('price').value='';
   show('collNote',isColl()&&!S.chargeColl); show('c4',!isColl()||!!S.chargeColl);
   if(S.size&&/^deliv|^exch|^wait/i.test(S.service||'')&&$('jobDate').value){ var fr=stockFree(S.size,$('jobDate').value);
-    if(fr!=null&&fr<=1) note+='<div class="note '+(fr<=0?'e':'w')+'">'+(fr<=0?'<b>No '+esc(S.size)+' skips free</b> on that date by your stock count.':'<b>Only 1 × '+esc(S.size)+' free</b> on that date.')+' Check the yard before you confirm.</div>'; }
+    if(fr!=null&&fr<=1&&!(fr<=0&&/^deliv/i.test(S.service||''))) note+='<div class="note '+(fr<=0?'e':'w')+'">'+(fr<=0?'<b>No '+esc(S.size)+' skips free</b> on that date by your stock count.':'<b>Only 1 × '+esc(S.size)+' free</b> on that date.')+' Check the yard before you confirm.</div>'; }
   $('zoneNote').innerHTML=note;
-  var road=PLACE==='Road'; show('permitWrap',road); show('permitNote',false);
+  drawChecks();
+  var road=PLACE==='Road'; show('permitWrap',road&&!S.edit); show('permitNote',false);
   if(road) lookupCouncil();
   update();
 }
@@ -1966,6 +2048,7 @@ function extras(){
     return {label:x.querySelector('.xl').value.trim()||'Additional fee',cost:whMoney(x.querySelector('.xc').value)||0}; }).filter(function(x){return x.cost;});
 }
 function totals(){
+  if(S.edit){ var ep=num('price'); if(ep==null) return null; var en=r2(ep+S.edit.fixed), ev=r2(en*0.2); return {price:ep,permit:0,bays:0,extras:S.edit.fixed,vat:ev,total:r2(en+ev)}; }
   var price=num('price'), road=PLACE==='Road', permit=road?(num('permit')||0):0, b=bayInfo(), bays=b?b.total:0;
   var ex=r2(extras().reduce(function(a,x){return a+x.cost;},0));
   if(price==null) return null;
@@ -2004,7 +2087,7 @@ function update(){
   var email=S.newCust?$('ncEmail').value.trim():(S.cust?S.cust.email:'');
   var custOk=S.newCust?(!!name&&(!!$('ncEmail').value.trim()||!!$('ncPhone').value.trim())&&(S.type!=='Business'||!!$('ncName').value.trim())):!!S.cust;
   var siteOk=!!S.site||(S.newSite&&!!whOutward($('nsAddr').value));
-  var free=!!t&&t.total===0&&isColl(); show('c5',!free);
+  var free=!!t&&t.total===0&&isColl(); show('c5',!free&&!S.edit);
   var ready=custOk&&siteOk&&!!S.size&&!!S.service&&!!$('jobDate').value&&!!t&&(t.price>0||free);
   READY=ready; $('goBtn').disabled=false; $('goBtnM').disabled=false; $('goBtn').classList.toggle('notready',!ready); $('goBtnM').classList.toggle('notready',!ready);
   var miss=[]; MISS=[]; var m=function(l,el){ miss.push(l); MISS.push(el); };
@@ -2024,6 +2107,10 @@ function jumpMissing(){ var id=MISS[0]; if(!id) return; var el=$(id); if(!el) re
   if(el.tagName==='INPUT') setTimeout(function(){ el.focus(); },350); }
 function submit(){
   if(!READY){ jumpMissing(); return; }
+  drawChecks();
+  if(S.block){ var ck=$('chkNote'); ck.scrollIntoView({behavior:'smooth',block:'center'}); ck.classList.remove('flashmiss'); void ck.offsetWidth; ck.classList.add('flashmiss');
+    toast('bad','!',S.block==='cap'?'That day is full. Pick the next day with room, or press Book anyway.':'No skips of that size in the yard on that date. Pick another date or size, or press Book anyway.'); return; }
+  if(S.edit){ saveEdit(); return; }
   var btns=[$('goBtn'),$('goBtnM')]; btns.forEach(function(b){b.disabled=true;b.textContent='Booking…';});
   PAYWIN=null; var t0=totals(); if(PAY==='card'&&D.stripe&&!(t0&&t0.total===0&&isColl())){ try{ PAYWIN=window.open('','_blank'); if(PAYWIN) PAYWIN.document.write('<p style="font-family:Arial;padding:30px;font-size:18px">Opening the card payment page…</p>'); }catch(e){ PAYWIN=null; } }
   var t=totals(), c=S.cust||{};
@@ -2035,16 +2122,28 @@ function submit(){
     siteRow:S.site?S.site.row:0, address:siteAddr(), placement:PLACE, siteContact:$('sContact').value.trim(), sitePhone:$('sPhone').value.trim(),
     size:S.size, service:S.service, waste:wasteValue(), jobDate:whFmtDate(new Date($('jobDate').value+'T12:00:00')), slot:$('slot').value.trim(),
     price:t.price, permit:t.permit, council:PLACE==='Road'?$('council').value.trim():'', bays:bayInfo(), extras:extras(),
-    pay:(t.total===0&&isColl())?'nocharge':(PAY==='later'?'bank':PAY), later:PAY==='later', po:$('po').value.trim(), notes:$('notes').value.trim(), etaText:!!($('etaTick')&&$('etaTick').checked&&!$('etaTick').disabled), etaEmail:!!($('etaMail')&&$('etaMail').checked) };
+    pay:(t.total===0&&isColl())?'nocharge':(PAY==='later'?'bank':PAY), later:PAY==='later', po:$('po').value.trim(), notes:$('notes').value.trim(), capOk:!!S.capOk, etaText:!!($('etaTick')&&$('etaTick').checked&&!$('etaTick').disabled), etaEmail:!!($('etaMail')&&$('etaMail').checked) };
   if(!S.reqId) S.reqId=Date.now().toString(36)+Math.random().toString(36).slice(2,10); p.reqId=S.reqId;   // a retry after a dropped reply returns the same order, not a second one
   run().withSuccessHandler(function(r){ S.reqId=''; done(r,p); })
-    .withFailureHandler(function(e){ if(PAYWIN) PAYWIN.close(); btns.forEach(function(b){b.textContent='Book & send';}); update(); toast('bad','!','<b>Not booked</b><br>'+esc(e&&e.message||e)); })
+    .withFailureHandler(function(e){ if(PAYWIN) PAYWIN.close(); btns.forEach(function(b){b.textContent='Book & send';}); update(); var m=String(e&&e.message||e);
+      if(/FULL:/.test(m)){ m=m.replace(/^.*FULL:\s*/,''); refreshData(drawChecks); }
+      toast('bad','!','<b>Not booked</b><br>'+esc(m)); })
     .createOrder(p);
+}
+function saveEdit(){
+  var e=S.edit, t=totals(), btns=[$('goBtn'),$('goBtnM')];
+  if(e.paidSkip&&t.price<e.price){ toast('bad','!','<b>'+esc(e.no)+' is already paid.</b> The price can\'t go down. Refund the difference first.'); return; }
+  btns.forEach(function(b){ b.disabled=true; b.textContent='Saving…'; });
+  var ch={ size:S.size, price:t.price, jobDate:whFmtDate(new Date($('jobDate').value+'T12:00:00')), slot:$('slot').value.trim(), address:siteAddr(),
+    siteRow:S.site?S.site.row:0, notes:$('notes').value.trim(), po:$('po').value.trim(), capOk:!!S.capOk };
+  run().withSuccessHandler(editDone).withFailureHandler(function(x){ btns.forEach(function(b){ b.disabled=false; b.textContent='Save changes'; }); var m=String(x&&x.message||x);
+      if(/FULL:/.test(m)){ m=m.replace(/^.*FULL:\s*/,''); refreshData(drawChecks); }
+      toast('bad','!','<b>Not saved</b><br>'+esc(m)); }).editOrder(e.no,ch);
 }
 function sendMode(){ return (D.autoEmail&&D.caps&&D.caps.email)?'email':'files'; }
 function done(r,p){
   [$('goBtn'),$('goBtnM')].forEach(function(b){b.textContent='Book & send';});
-  $('dNo').textContent=r.no+' booked';
+  LASTNO=r.no; $('dNo').textContent=r.no+' booked';
   $('dSum').innerHTML=esc(p.name)+'<br>'+esc(p.size+' '+p.service.toLowerCase()+', '+p.jobDate)+'<br>'+esc(p.address)+'<br><b style="color:var(--ink)">'+gbp(r.total)+'</b> · '+esc(p.later?'Pay later':{card:'Card over the phone',cardlink:'Card link',bank:'Bank transfer',account:'On account',cash:'Cash on delivery',nocharge:'No charge, closes the skip on site'}[p.pay]);
   var m=sendMode();
   $('dStatus').className='status'; $('dStatus').innerHTML='<span class="mini"></span>'+(m==='email'?'Sending paperwork':'Making paperwork')+(p.pay==='cardlink'&&D.stripe&&D.caps.web?' and card link':'')+'…';
@@ -2118,9 +2217,26 @@ function linkBox(url,phone,no,total,what){
     '<button class="cp" onclick="copyTxt(\''+esc(url)+'\',this)">Copy</button></div>'+
     '<div style="font-size:12.5px;color:var(--muted);margin-top:8px">'+(D.caps.auto?'It marks itself paid once they pay.':'Press "Check card payments" in Unpaid once they\'ve paid.')+'</div></div>';
 }
-function copyTxt(t,b){ try{navigator.clipboard.writeText(t);}catch(e){} b.textContent='Copied'; setTimeout(function(){b.textContent='Copy';},1500); }
+/* Copying to the clipboard can be refused by the browser, and it fails quietly, so the old code
+   said "copied" when nothing had been. Try the modern way, fall back to the old select-and-copy,
+   and if neither works put the text on screen so it can be copied by hand. */
+function wlCopy(text, done){
+  var fallback=function(){
+    try{ var ta=document.createElement('textarea'); ta.value=text;
+      ta.setAttribute('readonly',''); ta.style.cssText='position:fixed;top:0;left:0;width:1px;height:1px;opacity:0';
+      document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0,text.length);
+      var good=document.execCommand('copy'); document.body.removeChild(ta); done(!!good);
+    }catch(e){ done(false); } };
+  try{ var p=navigator.clipboard&&navigator.clipboard.writeText(text);
+    if(p&&p.then) p.then(function(){done(true);},fallback); else fallback();
+  }catch(e){ fallback(); }
+}
+function wlCopyToast(text,label){ wlCopy(text,function(ok){
+  if(ok) toast('ok','\u2713',esc(label)+' copied');
+  else toast('','i','<b>Your browser blocked the copy.</b><br>Select this and copy it:<br><span style="user-select:all;word-break:break-all">'+esc(text)+'</span>',true); }); }
+function copyTxt(t,b){ wlCopy(t,function(ok){ b.textContent=ok?'Copied':'Copy failed'; if(!ok) wlCopyToast(t,'Link'); setTimeout(function(){b.textContent='Copy';},1800); }); }
 
-function refreshData(){ run().withSuccessHandler(function(d){ saveBoot(d); d.home=null; D=d; setUnpaid(d.unpaid); }).getBootData(); }
+function refreshData(cb){ run().withSuccessHandler(function(d){ saveBoot(d); d.home=null; D=d; setUnpaid(d.unpaid); if(cb) cb(); }).getBootData(); }
 
 /* ---------- unpaid ---------- */
 function setUnpaid(u){ D.unpaid=u||[]; $('ucnt').textContent=D.unpaid.length; show('ucnt',D.unpaid.length>0); if(!$('unpaidView').classList.contains('hide')) renderUnpaid(); }
@@ -2473,7 +2589,7 @@ function bindPlan(){
       if(!ch.size&&ch.price==null&&!ch.date){ PEDIT=null; if(lorryChanged) moveTo(j.row,lz); else drawPlan(); return; }
       b.disabled=true; b.textContent='Saving…';
       run().withSuccessHandler(function(bd){ PEDIT=null; P=bd; if(lorryChanged&&!ch.date){ var jj=jobByRow(j.row); if(jj){ jj.lorry=lz; jj.run=999; renumber(lz); PDIRTY=true; } }
-          drawPlan(); toast('ok','✓','<b>'+esc(j.no)+' updated.</b> Paperwork rebuilt'+(ch.date?'; moved to '+esc(ch.date):'')+'.'); })
+          drawPlan(); if(ch.price!=null||ch.size) refreshData(); toast('ok','✓','<b>'+esc(j.no)+' updated.</b> Paperwork rebuilt'+(ch.date?'; moved to '+esc(ch.date):'')+'.'); })
         .withFailureHandler(function(e){ b.disabled=false; b.textContent='Save changes'; toast('bad','!',esc(e&&e.message||e)); }).editJob(j.row,j.no,ch); };
     ep.querySelector('[data-epost]').onclick=function(){ PEDIT=null; chaseAct('post',j,this); };
     ep.querySelector('[data-ecan]').onclick=function(){ var b=this; if(!confirmCancel(b,j)) return; PEDIT=null; b.dataset.arm='1'; chaseAct('cancel',j,b); };
@@ -2580,7 +2696,7 @@ function driverLinks(){
   var who=P.lorries.filter(function(l){ return laneJobs(l.reg).length; }).map(function(l){ return l.driver||l.reg; });
   $('pLinks').innerHTML='<div class="linkbox"><b>'+(who.length?'Sent to '+esc(who.join(', '))+'.':'Driver app')+'</b> <span class="sub2">The run shows in their driver app now. Nothing for you to send.</span>'+
     '<div class="acts"><button class="fx alt" type="button" id="plCopy">Copy driver link</button><button class="fx alt" type="button" id="plQr">QR code for a new phone</button></div><div id="plQrBox"></div></div>';
-  $('plCopy').onclick=function(){ try{ navigator.clipboard.writeText(P.driverUrl); }catch(e){} toast('ok','✓','Driver link copied'); };
+  $('plCopy').onclick=function(){ wlCopyToast(P.driverUrl,'Driver link'); };
   $('plQr').onclick=function(){ qrInto($('plQrBox'),P.driverUrl); };
 }
 /* A QR code of the driver link: the driver scans it with their phone camera, then adds it to their home screen. */
@@ -2672,8 +2788,12 @@ function applyRole(){
   if(HID.indexOf('tipin')>-1){ show('navTip',false); show('navWout',false); }
   if(HID.indexOf('waste')>-1) show('navWaste',false);
   [['navNew','orders'],['navTip','tipin'],['navWout','tipin'],['navWaste','waste']].forEach(function(x){ $(x[0]).classList.toggle('locked',!!(L.mod&&L.mod[x[1]]===false)); });
-  [['navSite','onsite'],['navPlan','plan'],['navLive','live'],['navDrv','driver'],['navProfit','profit'],['navRep','reports']].forEach(function(x){ var lk=L.mod&&L.mod[x[1]]===false; if(lk) nLock++; $(x[0]).classList.toggle('locked',lk); });
-  var allLocked=nLock===6; markUntried(); show('navPaid',r!=='booking');
+  var nHid=0;
+  /* Anything the licence hides comes off the nav completely instead of showing locked. Real yards only ever hide the yard pages (hide_yard), so nothing changes for them. The demo uses this to show one plan at a time. */
+  [['navSite','onsite'],['navPlan','plan'],['navLive','live'],['navDrv','driver'],['navProfit','profit'],['navRep','reports']].forEach(function(x){
+    if(HID.indexOf(x[1])>-1){ nHid++; show(x[0],false); return; }
+    var lk=L.mod&&L.mod[x[1]]===false; if(lk) nLock++; $(x[0]).classList.toggle('locked',lk); });
+  var allLocked=nLock===6; markUntried(); show('navPaid',r!=='booking'&&nHid<6);
   var grp=(L.plan==='fleet'||(L.hide||[]).indexOf('tipin')>-1)?'Fleet':'Full Yard';
   $('navPaidLbl').textContent=grp;
   $('navPaidCnt').textContent=allLocked?'Locked':L.trial?L.daysLeft+'d left':'';
@@ -2683,6 +2803,7 @@ function applyRole(){
   show('oAccBtn',r==='director');
   Array.prototype.forEach.call(document.querySelectorAll('.navsep'),function(x){ show(x,r!=='booking'); });
   show('dUnpaid',r!=='booking'); show('impBtn',r!=='booking');
+  show('impSheetBtn',r==='director'); show('impOrdBtn',r==='director');
   $('sideFoot').innerHTML=(r==='director'&&L.trial?'<div class="trialchip">Free trial · '+L.daysLeft+' day'+(L.daysLeft===1?'':'s')+' left</div>':'')+
     (r==='director'&&L.plan?'<div class="trialchip">'+esc(L.planName)+' plan</div>':'')+
     '<button class="supbtn" id="supBtn">'+ico('chat')+' Contact ApexLine</button>'+
@@ -2757,7 +2878,7 @@ function tiInvoices(q){
       '<td>'+(paid?'<span class="pill ok">Paid</span><div class="muted2">'+esc(v['Paid date'])+'</div>':'<span class="pill '+(late?'bad':'warn')+'">'+(late?'Overdue':'Unpaid')+'</span><div class="muted2'+(late?' late':'')+'">due '+esc(v['Due date'])+'</div>')+'</td>'+
       '<td class="r nowrap">'+(v['PDF link']?'<a class="link" target="_blank" href="'+esc(v['PDF link'])+'">PDF</a> ':'')+(v['Card link']&&!paid?'<button class="link" data-icopy="'+esc(v['Card link'])+'">Card link</button> ':'')+
         (paid?'':'<button class="fx alt" data-ipaid="'+v.row+'">Mark paid</button>')+'</td></tr>'; }).join('')+'</tbody>';
-  Array.prototype.forEach.call($('tiTable').querySelectorAll('[data-icopy]'),function(b){ b.onclick=function(){ try{ navigator.clipboard.writeText(b.dataset.icopy); }catch(e){} toast('ok','✓','Card link copied'); }; });
+  Array.prototype.forEach.call($('tiTable').querySelectorAll('[data-icopy]'),function(b){ b.onclick=function(){ wlCopyToast(b.dataset.icopy,'Card link'); }; });
   Array.prototype.forEach.call($('tiTable').querySelectorAll('[data-ipaid]'),function(b){ b.onclick=function(){ b.disabled=true;
     run().withSuccessHandler(function(d){ TI=d; tiRender(); toast('ok','✓','<b>Invoice marked paid</b>, and its tickets with it.'); }).withFailureHandler(function(e){ b.disabled=false; toast('bad','!',esc(e&&e.message||e)); }).tipInvoicePaid(+b.dataset.ipaid); }; });
 }
@@ -2767,7 +2888,7 @@ function goDrv(){ view('drvView','navDrv'); jfStart(); $('dvTable').innerHTML='<
   run().withSuccessHandler(function(d){
     $('dvLink').innerHTML='<div class="ph"><b>Driver link</b></div>'+(d.url?'<div class="linkbox" style="margin:0"><div class="u">'+esc(d.url)+'</div><div class="acts"><button class="fx" id="dvCopy">Copy link</button><button class="fx alt" id="dvQr">Show QR code</button><a class="fx alt" target="_blank" href="'+esc(d.url)+'">Open it here to see what drivers see</a></div><div id="dvQrBox"></div></div>'+
       '<div class="sub2" style="margin-top:8px">Set each driver up once: they scan the QR code (or open the link) on their phone and add it to their home screen. After that, every run you send appears in it.</div>':'<div class="note w">The driver link appears once the app is deployed as a web app.</div>');
-    if($('dvCopy')) $('dvCopy').onclick=function(){ try{ navigator.clipboard.writeText(d.url); }catch(e){} toast('ok','✓','Driver link copied'); };
+    if($('dvCopy')) $('dvCopy').onclick=function(){ wlCopyToast(d.url,'Driver link'); };
     if($('dvQr')) $('dvQr').onclick=function(){ qrInto($('dvQrBox'),d.url); };
     $('dvTable').innerHTML=d.lorries.length?'<thead><tr><th>Lorry</th><th>Driver</th><th>Phone</th><th>PIN</th></tr></thead><tbody>'+d.lorries.map(function(l){ return '<tr><td><span class="plate sm">'+esc(l.reg)+'</span><div class="muted2">'+esc(l.type)+'</div></td><td>'+esc(l.driver||'–')+'</td><td>'+(l.phone?'<a class="link" href="tel:'+esc(String(l.phone).replace(/\s/g,''))+'">'+esc(l.phone)+'</a>':'–')+'</td><td><b>'+esc(l.pin||'not set')+'</b></td></tr>'; }).join('')+'</tbody>':
       '<tr><td class="empty">No lorries yet. Add them in Settings, each with a driver PIN.</td></tr>';
@@ -2808,6 +2929,118 @@ function stockHtml(st,link){
 function stockFree(size,iso){ var st=D.stock; if(!st) return null; var x=st.sizes.filter(function(y){ return y.size===size; })[0]; if(!x) return null;
   var d=new Date(iso+'T12:00:00'), n=x.yard; (st.moves||[]).forEach(function(m){ if(m.size!==size) return; var md=whParseDate(m.date); if(md&&md<=d) n+=m.n; }); return n; }
 
+/* ---------- booking checks: daily capacity and skips in stock ----------
+   Nothing is said while there is room. The last space gets a calm note. A full day, or a size with none in the
+   yard, offers the next date that works with one tap; the office can still book anyway. */
+var CAPW={wl:['wait and load','wait and loads'],coll:['collection','collections'],ed:['exchange or delivery','exchanges and deliveries']};
+function capKindOf(svc){ var v=String(svc||''); return /wait/i.test(v)?'wl':/coll/i.test(v)?'coll':/^deliv|exch/i.test(v)?'ed':''; }
+function dayName(iso){ var d=new Date(iso+'T12:00:00'); return isNaN(d)?iso:d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}).replace(',',''); }
+function capLimit(k){ var l=(D.cap&&D.cap.limits)||{}; return l[k]!=null?l[k]:null; }
+/* Booked that day for that kind of job. ex: an order being changed, already counted on its own day. */
+function capUsed(k,iso,ex){ var day=whFmtDate(new Date(iso+'T12:00:00')), n=(((D.cap&&D.cap.counts)||{})[day]||{})[k]||0;
+  if(ex&&capKindOf(ex.service)===k&&ex.jobDate===day) n--; return Math.max(0,n); }
+function capNext(k,iso,ex){ var lim=capLimit(k), d=new Date(iso+'T12:00:00');
+  for(var i=0;i<90;i++){ d.setDate(d.getDate()+1); if(d.getDay()===0) continue; var x=isoOf(d); if(capUsed(k,x,ex)<lim) return x; } return ''; }
+/* Capacity note for a kind of job on a date. ok: the office already chose to go over. -> {html, full} */
+function capHtml(svc,iso,ex,ok,pre){
+  var k=capKindOf(svc), lim=k?capLimit(k):null; if(lim==null||!iso) return {html:'',full:false};
+  var n=capUsed(k,iso,ex), w=CAPW[k], day=dayName(iso);
+  if(n>=lim){ if(ok) return {html:'<div class="note w">Booking over the limit on '+esc(day)+': '+n+' '+w[1]+' already booked, room for '+lim+'.</div>',full:false};
+    var nx=capNext(k,iso,ex);
+    return {full:true,html:'<div class="note w"><b>Full on '+esc(day)+'.</b> '+(nx?'Next space is '+esc(dayName(nx))+'. Book '+esc(dayName(nx))+'?':'No space in the next 90 days.')+
+      '<div class="acts" style="margin-top:8px">'+(nx?'<button class="fx" type="button" data-'+pre+'go="'+nx+'">Book '+esc(dayName(nx))+'</button>':'')+
+      '<button class="fx alt" type="button" data-'+pre+'ok="1">Book '+esc(day)+' anyway</button></div></div>'}; }
+  if(n+1===lim) return {html:'<div class="note n">This is the last '+w[0]+' we have room for on '+esc(day)+'.</div>',full:false};
+  return {html:'',full:false};
+}
+function sizeWords(sz){ var m=String(sz||'').match(/^\s*(\d+)\s*(yd|yard)s?\s*$/i); return m?m[1]+' yards':String(sz||'')+' skips'; }
+/* None of this size free on that date: when is one back? Booked returns first (collections, exchanges to another
+   size), then skips whose hire runs out with nothing booked. -> null (fine), {iso, hire} or {iso:''} (none due back). */
+function stockNext(size,iso){
+  var st=D.stock; if(!st||!st.sizes||!st.sizes.filter(function(y){ return y.size===size; }).length) return null;
+  var t0=new Date(); t0.setHours(0,0,0,0);
+  var free=function(x){ var n=stockFree(size,x); if(n==null) return 1; var e=S.edit;
+    if(e&&/^deliv/i.test(e.service)&&e.size===size){ var od=whParseDate(e.jobDate); if(od&&od>=t0&&od<=new Date(x+'T12:00:00')) n++; } return n; };
+  if(free(iso)>0) return null;
+  var d0=new Date(iso+'T12:00:00'), back=(st.moves||[]).filter(function(m){ return m.size===size&&m.n>0; }).map(function(m){ return whParseDate(m.date); })
+    .filter(function(d){ return d&&d>d0; }).sort(function(a,b){ return a-b; });
+  for(var i=0;i<back.length;i++){ var bi=isoOf(back[i]); if(free(bi)>0) return {iso:bi,hire:false}; }
+  var hires=(st.due||[]).filter(function(u){ return u.size===size; }).map(function(u){ return whParseDate(u.date); }).filter(Boolean).sort(function(a,b){ return a-b; });
+  for(var j=0;j<hires.length;j++){ if(hires[j]<=d0) continue; var hj=isoOf(hires[j]), extra=hires.filter(function(h){ return h<=hires[j]; }).length;
+    if(free(hj)+extra>0) return {iso:hj,hire:true}; }
+  return {iso:'',hire:false};
+}
+function bookChecks(){
+  var iso=$('jobDate').value, out={html:'',block:''}; if(!iso||!S.service) return out;
+  var c=capHtml(S.service,iso,S.edit,S.capOk===capKindOf(S.service)+'|'+iso,'cap'); out.html+=c.html; if(c.full) out.block='cap';
+  if(S.size&&/^deliv/i.test(S.service)){
+    var unchanged=S.edit&&S.edit.size===S.size&&whFmtDate(new Date(iso+'T12:00:00'))===S.edit.jobDate, sn=unchanged?null:stockNext(S.size,iso), yw=sizeWords(S.size);
+    if(sn&&S.stockOk===S.size+'|'+iso) out.html+='<div class="note w">Booking with no '+esc(yw)+' in stock on '+esc(dayName(iso))+'. Check the yard.</div>';
+    else if(sn){ out.block=out.block||'stock';
+      out.html+='<div class="note w"><b>No '+esc(yw)+' in stock.</b> '+(sn.iso?'One due back '+esc(dayName(sn.iso))+(sn.hire?' when its hire ends (nothing booked to fetch it yet)':'')+'. Book from '+esc(dayName(sn.iso))+'?':'None due back yet.')+
+        '<div class="acts" style="margin-top:8px">'+(sn.iso?'<button class="fx" type="button" data-stkgo="'+sn.iso+'">Book from '+esc(dayName(sn.iso))+'</button>':'')+
+        '<button class="fx alt" type="button" data-stkok="1">Book anyway</button><button class="link" type="button" data-stksize="1">Pick another size</button></div></div>'; }
+  }
+  return out;
+}
+function drawChecks(){
+  if(!$('chkNote')) return; var c=bookChecks(), el=$('chkNote'); S.block=c.block; el.innerHTML=c.html;
+  var iso=$('jobDate').value;
+  Array.prototype.forEach.call(el.querySelectorAll('[data-capgo],[data-stkgo]'),function(b){ b.onclick=function(){ setJobDate(b.dataset.capgo||b.dataset.stkgo); }; });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-capok]'),function(b){ b.onclick=function(){ S.capOk=capKindOf(S.service)+'|'+iso; drawChecks(); }; });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-stkok]'),function(b){ b.onclick=function(){ S.stockOk=S.size+'|'+iso; drawChecks(); }; });
+  Array.prototype.forEach.call(el.querySelectorAll('[data-stksize]'),function(b){ b.onclick=function(){ var z=$('sizeSeg'); z.scrollIntoView({behavior:'smooth',block:'center'}); z.classList.remove('flashmiss'); void z.offsetWidth; z.classList.add('flashmiss'); }; });
+}
+function setJobDate(iso){ $('jobDate').value=iso; reprice(); update(); toast('ok','✓','Date changed to <b>'+esc(dayName(iso))+'</b>'); }
+
+/* ---------- edit an order (from Order placed, Orders and the customer page) ---------- */
+var LASTNO='';
+function openEdit(no,b){ if(!no) return; var old=b&&b.textContent; if(b){ b.disabled=true; b.textContent='Opening…'; }
+  run().withSuccessHandler(function(o){ if(b){ b.disabled=false; b.textContent=old; } startEdit(o); })
+    .withFailureHandler(function(e){ if(b){ b.disabled=false; b.textContent=old; } toast('bad','!',esc(e&&e.message||e)); }).getOrderEdit(no); }
+function startEdit(o){
+  if(o.status==='Cancelled'){ toast('bad','!',esc(o.no)+' is cancelled.'); return; }
+  if(o.job==='Completed'){ toast('bad','!',esc(o.no)+' is done. Finished jobs can\'t be changed.'); return; }
+  var c=custByRef(o.ref); if(!c){ toast('bad','!','That order\'s customer is missing from the Customers tab.'); return; }
+  goOrder(); resetAll(); S.edit=o; pickCustomer(c);
+  var st=(D.sites||[]).filter(function(y){ return y.ref===o.ref&&whNormAddr(y.address)===whNormAddr(o.site); })[0];
+  $('siteSel').value=st?String(st.row):'new'; onSite(); if(!st){ $('nsAddr').value=o.site; }
+  PLACE=o.placement==='Road'?'Road':'Driveway'; setSeg('placeSeg',PLACE);
+  S.size=o.size; setSeg('sizeSeg',o.size); S.service=o.service; setSeg('svcSeg',o.service);
+  var d=whParseDate(o.jobDate); if(d) $('jobDate').value=isoOf(d);
+  $('slot').value=o.slot||''; $('notes').value=o.notes||''; $('po').value=o.po||'';
+  $('price').value=o.price; S.priceEdited=true; $('repeatNote').innerHTML='';
+  ['c2','c3','c4'].forEach(function(id){ $(id).classList.remove('off'); });
+  editUi(true); reprice(); update(); window.scrollTo(0,0);
+}
+function editUi(on){
+  var e=on?S.edit:null;
+  ['svcSeg','placeSeg'].forEach(function(id){ $(id).classList.toggle('locked',!!e); });
+  show('c5',!e); show('permitWrap',false); if(e) show('etaWrap',false); else etaBoxState(false);
+  ['goBtn','goBtnM'].forEach(function(id){ $(id).textContent=e?'Save changes':'Book & send'; });
+  $('goFine').textContent=e?'Your paperwork in Drive is updated. Nothing is emailed unless you send it.':'Confirmation and invoice are emailed to the customer and saved in Drive.';
+  $('sNo').textContent=e?'Editing '+e.no:D.nextNo;
+  if(!e){ $('editNote').innerHTML=''; return; }
+  $('c1h').textContent='Editing '+e.no;
+  var ch=$('custChange'); if(ch){ ch.textContent='Stop editing'; ch.onclick=function(){ resetAll(); goOrders(); }; }
+  $('editNote').innerHTML='<div class="note '+(e.paidSkip?'w':'n')+'" style="margin:0 0 12px">'+
+    (e.paidSkip?'<b>'+esc(e.no)+' is '+(e.status==='Paid'?'paid':'part paid')+'.</b> The price can\'t go down. If it goes up, the difference is added as its own line to pay and the order shows as part paid.'
+      :'<b>'+esc(e.no)+'</b> · '+esc(e.status)+' · '+esc(e.method||'')+'.')+
+    (e.others.length?'<br>'+e.others.map(function(x){ return esc(x.l)+' '+gbp(x.n); }).join(', ')+' stay as booked.':'')+
+    (e.lorry?'<br>It is on '+esc(e.lorry)+' in the day plan. A new date takes it off the lorry so it can be planned again.':'')+'</div>';
+}
+function editDone(r){
+  [$('goBtn'),$('goBtnM')].forEach(function(b){ b.disabled=false; });
+  LASTNO=r.no; resetAll();
+  $('dNo').textContent=r.changed.length?r.no+' updated':'No changes to '+r.no;
+  $('dSum').innerHTML=esc(r.customer)+'<br>'+esc(r.size+' '+String(r.service).toLowerCase()+', '+r.jobDate)+'<br>'+esc(r.address)+'<br><b style="color:var(--ink)">'+gbp(r.total)+'</b> · '+esc(r.status)+(r.due&&r.status==='Part paid'?' · '+gbp(r.due)+' still to pay':'');
+  $('dStatus').className='status ok'; $('dStatus').innerHTML=r.changed.length?'✓ Saved and logged: '+esc(r.changed.join('; ')):'Nothing was changed.';
+  $('dPay').innerHTML=''; $('dLink').innerHTML='';
+  $('dShare').innerHTML=r.changed.length?shareBtns(r.row+'|'+r.no,false,!!r.email):''; bindShare($('dShare'));
+  goDone(); setUnpaid(r.unpaid); refreshData();
+  if(r.changed.length) toast('ok','✓','<b>'+esc(r.no)+' updated</b>');
+}
+
 /* ---------- skips on site ---------- */
 var SD=null, SSEL={}, SF='all', SBOOK='';
 function tmrIso(){ var t=new Date(); t.setDate(t.getDate()+1); return t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2); }
@@ -2825,7 +3058,7 @@ function renderSite(){
   Array.prototype.forEach.call($('sStats').querySelectorAll('[data-sf]'),function(b){ b.onclick=function(){ SF=b.dataset.sf; setSeg('sFilt',SF); SSEL={}; renderSite(); }; });
   var open=function(x){ return !x.collection&&!x.exchange; };
   var overNot=SD.list.filter(function(x){ return x.state==='over'&&open(x)&&x.email&&x.reminded!==whFmtDate(new Date()); });
-  $('sAlert').innerHTML=c.over?'<div class="sitebar red static"><b>These '+c.over+' skip'+(c.over>1?'s have':' has')+' been out for '+SD.hire+' days or more</b> and nothing is booked to bring '+(c.over>1?'them':'it')+' back.'+
+  $('sAlert').innerHTML=c.over?'<div class="sitebar red static"><b>'+(c.over>1?'These '+c.over+' skips have':'This skip has')+' been out for '+SD.hire+' days or more</b> and nothing is booked to bring '+(c.over>1?'them':'it')+' back.'+
     (overNot.length?' <button class="fx" id="sMailAll">'+(overNot.length===1?'Email them a reminder':'Email all '+overNot.length+' a reminder')+'</button>'+(overNot.length<c.over?' <span class="muted2">('+(c.over-overNot.length)+' with no email or already reminded today)</span>':''):'')+'</div>':'';
   if($('sMailAll')) $('sMailAll').onclick=function(){ siteRemind(overNot.map(function(x){ return x.no; }),$('sMailAll')); };
   var f={all:function(){return true;},over:function(x){return x.state==='over'&&open(x);},due:function(x){return x.state==='due'&&open(x);},booked:function(x){return !open(x);}}[SF];
@@ -2841,19 +3074,69 @@ function renderSite(){
         '<td>'+(x.collection?'<span class="pill ok">Collection '+esc(x.collection)+'</span>':x.exchange?'<span class="pill ok">Exchange '+esc(x.exchange)+'</span>':x.state==='over'?'<span class="muted2 late">Over by '+(x.days-SD.hire)+' day'+(x.days-SD.hire===1?'':'s')+'</span>':'<span class="muted2">'+(SD.hire-x.days)+' days left</span>')+
           (x.reminded?'<div class="muted2">Reminded '+esc(x.reminded)+'</div>':'')+'</td>'+
         '<td class="r nowrap">'+(x.email?'<button class="fx alt" data-smail="'+esc(x.no)+'">Email</button> ':'')+(x.phone?'<button class="fx alt" data-scall="'+esc(x.no)+'">Call</button> ':'')+
-          (open(x)?'<button class="fx" data-sbook="'+esc(x.no)+'">Book…</button>':'')+'</td></tr>'+
-        (SBOOK===x.no?'<tr class="bookrow"><td></td><td colspan="6"><div class="bookbox"><b>Book for '+esc(x.customer)+', '+esc(x.size)+' at '+esc(x.pc||x.site)+'</b>'+
-          '<label class="l" style="margin:0">Date</label><input class="in" type="date" id="sbDate" value="'+tmrIso()+'">'+
-          '<button class="fx" data-sgo="Collection">Book collection</button><button class="fx alt" data-sgo="Exchange">Book exchange</button><button class="link" id="sbX">Cancel</button></div></td></tr>':''); }).join('')+'</tbody>';
+          (open(x)?'<button class="fx" data-sbook="'+esc(x.no)+'">Book…</button>':x.back?'<button class="fx alt" data-schg="'+esc(x.no)+'">Change</button>':'')+'</td></tr>'+
+        ''; }).join('')+'</tbody>';
   var by=function(no){ return SD.list.filter(function(x){ return x.no===no; })[0]; };
   Array.prototype.forEach.call($('sTable').querySelectorAll('[data-ssel]'),function(cb){ cb.onchange=function(){ if(cb.checked) SSEL[cb.dataset.ssel]=1; else delete SSEL[cb.dataset.ssel]; renderSite(); }; });
   $('sAll').onchange=function(){ var on=this.checked; l.forEach(function(x){ if(on) SSEL[x.no]=1; else delete SSEL[x.no]; }); renderSite(); };
   Array.prototype.forEach.call($('sTable').querySelectorAll('[data-smail]'),function(b){ b.onclick=function(){ siteRemind([b.dataset.smail],b); }; });
   Array.prototype.forEach.call($('sTable').querySelectorAll('[data-scall]'),function(b){ b.onclick=function(){ var x=by(b.dataset.scall);
     toast('','📞','<b>'+esc(x.customer)+'</b><br><a style="font-size:20px;font-weight:700" href="tel:'+esc(String(x.phone).replace(/\s/g,''))+'">'+esc(x.phone)+'</a><br><span class="muted2">'+esc(x.size)+' at '+esc(x.site)+', out '+x.days+' days</span>',true); }; });
-  Array.prototype.forEach.call($('sTable').querySelectorAll('[data-sbook]'),function(b){ b.onclick=function(){ SBOOK=SBOOK===b.dataset.sbook?'':b.dataset.sbook; renderSite(); }; });
-  Array.prototype.forEach.call($('sTable').querySelectorAll('[data-sgo]'),function(b){ b.onclick=function(){ var d=$('sbDate').value; if(!d){ toast('','i','Pick a date.'); return; } var x=by(SBOOK); SBOOK=''; bookJob(x,b.dataset.sgo,d); }; });
-  if($('sbX')) $('sbX').onclick=function(){ SBOOK=''; renderSite(); };
+  Array.prototype.forEach.call($('sTable').querySelectorAll('[data-sbook]'),function(b){ b.onclick=function(){ sbOpen(b.dataset.sbook); }; });
+  Array.prototype.forEach.call($('sTable').querySelectorAll('[data-schg]'),function(b){ b.onclick=function(){ cbOpen(b.dataset.schg); }; });
+}
+/* Change a booked collection or exchange: date, type, price, notes, or cancel it so the skip is back on hire. */
+var CB=null;
+function cbOpen(no){
+  var x=((SD&&SD.list)||[]).filter(function(y){ return y.no===no; })[0]; if(!x||!x.back) return;
+  var bk=x.back, paid=bk.status==='Paid'||bk.status==='Part paid';
+  CB={x:x,b:bk,type:/exch/i.test(bk.service)?'Exchange':'Collection',ok:'',full:false,paid:paid};
+  $('cbSub').innerHTML='<b>'+esc(x.customer)+'</b>, '+esc(x.size)+' at '+esc(x.pc||x.site)+'<br><span class="muted2">'+esc(bk.service)+' booked for '+esc(bk.date)+' · order '+esc(bk.no)+(bk.lorry?' · on '+esc(bk.lorry):'')+'</span>'+
+    (paid?'<div class="note w" style="margin:8px 0 0">This booking has been paid. The price can\'t go down, and cancelling means refunding the customer.</div>':'');
+  setSeg('cbType',CB.type); var d=whParseDate(bk.date); $('cbDate').value=d?isoOf(d):''; $('cbPrice').value=bk.price||0; $('cbNotes').value=bk.notes||'';
+  var cc=$('cbCancel'); cc.dataset.arm=''; cc.disabled=false; cc.textContent='Cancel booking'; $('cbSave').disabled=false; $('cbSave').textContent='Save changes';
+  cbCheck(); show('cbOv',true);
+}
+function cbClose(){ show('cbOv',false); }
+function cbSetType(v){ if(!CB) return; CB.type=v; setSeg('cbType',v);
+  if(!CB.paid){ if(v==='Collection') $('cbPrice').value=0;
+    else if(!(whMoney($('cbPrice').value)>0)){ var z=zoneFor(CB.x.site), pr=z&&z.zone?z.zone.prices[CB.x.size]:null; $('cbPrice').value=pr!=null?pr:''; } }
+  cbCheck(); }
+function cbCheck(){
+  if(!CB) return; var iso=$('cbDate').value, c=capHtml(CB.type,iso,{service:CB.b.service,jobDate:CB.b.date},CB.ok===capKindOf(CB.type)+'|'+iso,'cb');
+  CB.full=c.full; $('cbChk').innerHTML=c.html; $('cbPriceHint').textContent=CB.type==='Collection'?', 0 for no charge':'';
+  Array.prototype.forEach.call($('cbChk').querySelectorAll('[data-cbgo]'),function(b){ b.onclick=function(){ $('cbDate').value=b.dataset.cbgo; cbCheck(); }; });
+  Array.prototype.forEach.call($('cbChk').querySelectorAll('[data-cbok]'),function(b){ b.onclick=function(){ CB.ok=capKindOf(CB.type)+'|'+iso; cbCheck(); }; });
+}
+function cbFail(b,label){ return function(e){ b.disabled=false; b.textContent=label; var m=String(e&&e.message||e);
+  if(/FULL:/.test(m)){ m=m.replace(/^.*FULL:\s*/,''); refreshData(cbCheck); } toast('bad','!',esc(m)); }; }
+function cbSave(){
+  if(!CB) return; if(!$('cbDate').value){ toast('bad','!','Pick a date.'); return; }
+  if(CB.full){ toast('bad','!','That day is full. Pick the next day with room, or press Book anyway.'); return; }
+  var b=$('cbSave'); b.disabled=true; b.textContent='Saving…';
+  run().withSuccessHandler(function(d){ b.disabled=false; b.textContent='Save changes'; cbClose(); cbDone(d); }).withFailureHandler(cbFail(b,'Save changes'))
+    .changeBooking(CB.b.no,{jobDate:whFmtDate(new Date($('cbDate').value+'T12:00:00')),service:CB.type,price:$('cbPrice').value,notes:$('cbNotes').value.trim(),capOk:!!CB.ok});
+}
+function cbCancel(){
+  if(!CB) return; var b=$('cbCancel');
+  if(b.dataset.arm!=='1'){ b.dataset.arm='1'; b.textContent='Tap again to cancel the '+CB.b.service.toLowerCase(); setTimeout(function(){ if(b.dataset.arm==='1'){ b.dataset.arm=''; b.textContent='Cancel booking'; } },4000); return; }
+  b.dataset.arm=''; b.disabled=true; b.textContent='Cancelling…';
+  run().withSuccessHandler(function(d){ b.disabled=false; b.textContent='Cancel booking'; cbClose(); cbDone(d); }).withFailureHandler(cbFail(b,'Cancel booking')).changeBooking(CB.b.no,{cancel:true});
+}
+function cbDone(d){ SD=d; setSiteCount(d.counts); renderSite(); if(d.unpaid) setUnpaid(d.unpaid); refreshData();
+  toast('ok','✓',d.changed&&d.changed.length?'<b>'+esc(CB.b.no)+' changed</b><br>'+esc(d.changed.join('; ')):'Nothing was changed.'); }
+function sbOpen(no){
+  var x=((SD&&SD.list)||[]).filter(function(y){ return y.no===no; })[0]; if(!x) return;
+  SBOOK=no;
+  $('sbSub').innerHTML='<b>'+esc(x.customer)+'</b>, '+esc(x.size)+' at '+esc(x.pc||x.site)+'<br><span class="muted2">On site since '+esc(x.since)+', out '+x.days+' day'+(x.days===1?'':'s')+'</span>';
+  $('sbDate').value=tmrIso();
+  show('sbOv',true);
+}
+function sbClose(){ SBOOK=''; show('sbOv',false); }
+function sbGo(kind){
+  var d=$('sbDate').value; if(!d){ toast('','i','Pick a date.'); return; }
+  var x=((SD&&SD.list)||[]).filter(function(y){ return y.no===SBOOK; })[0]; if(!x){ sbClose(); return; }
+  sbClose(); bookJob(x,kind,d);
 }
 function siteRemind(nos,b){ if(!nos.length) return; var old=b.textContent; b.disabled=true; b.textContent='Sending…';
   run().withSuccessHandler(function(d){ b.disabled=false; b.textContent=old; SD=d; SSEL={}; renderSite();
@@ -2983,7 +3266,7 @@ function tiDone(r,p){
     (r.link&&p.pay!=='card'?'<button class="fx alt" id="tiCopy">Copy card link</button>':'')+(r.link&&p.pay==='card'?'<a class="fx alt" target="_blank" href="'+esc(r.link)+'">Open card payment</a>':'')+
     '<button class="link" id="tiNew">Next lorry</button></div>'+
     '<div class="sub2" style="margin-top:8px" id="tiDoneNote">'+(r.emailed&&p.email?'Ticket emailed to '+esc(p.email)+'. ':'')+(r.receipt?'Added to Waste tracking, ready to submit. ':'')+'Filed in Drive under Waste in.</div>';
-  if($('tiCopy')) $('tiCopy').onclick=function(){ try{ navigator.clipboard.writeText(r.link); toast('ok','✓','Card link copied'); }catch(e){} };
+  if($('tiCopy')) $('tiCopy').onclick=function(){ wlCopyToast(r.link,'Card link'); };
   $('tiNew').onclick=tiReset; toast('ok','✓','<b>'+esc(r.no)+' saved</b>');
   if(p.pay==='card'&&r.link){ if(TIWIN&&!TIWIN.closed) TIWIN.location=r.link; else window.open(r.link,'_blank'); tiWatch(r.row,r.no,0); } else if(TIWIN) TIWIN.close();
   tiReset(true); }
@@ -3055,7 +3338,7 @@ function tiRender(){
   Array.prototype.forEach.call($('tiTable').querySelectorAll('[data-tpaid]'),function(b){ b.onclick=function(){ b.disabled=true;
     run().withSuccessHandler(function(d){ TI=d; tiRender(); toast('ok','✓','<b>Marked paid</b>'); }).withFailureHandler(function(e){ b.disabled=false; toast('bad','!',esc(e&&e.message||e)); }).tipMarkPaid(+b.dataset.tpaid); }; });
   Array.prototype.forEach.call($('tiTable').querySelectorAll('[data-tlink]'),function(b){ b.onclick=function(){ b.disabled=true;
-    run().withSuccessHandler(function(x){ b.disabled=false; try{ navigator.clipboard.writeText(x.link); }catch(e){} toast('ok','✓','<b>Card link copied</b> ('+gbp(x.total)+'). Paste it to the customer.<br><a target="_blank" href="'+esc(x.link)+'">Open it here</a>',true); tiWatch(+b.dataset.tlink,'Ticket',0); })
+    run().withSuccessHandler(function(x){ b.disabled=false; wlCopy(x.link,function(ok){ toast(ok?'ok':'','✓',(ok?'<b>Card link copied</b>':'<b>Card link ready</b> (copy it below)')+' ('+gbp(x.total)+'). Paste it to the customer.<br><span style="user-select:all;word-break:break-all">'+esc(x.link)+'</span>',true); }); tiWatch(+b.dataset.tlink,'Ticket',0); })
       .withFailureHandler(function(e){ b.disabled=false; toast('bad','!',esc(e&&e.message||e)); }).tipLink(+b.dataset.tlink); }; });
 }
 
@@ -3379,7 +3662,7 @@ function statusPill(s){ return '<span class="pill '+({Paid:'ok','Part paid':'war
 
 /* ---------- orders ---------- */
 var OL=null;
-var ORANGE=null, OVW=(function(){ try{ return WLS.getItem('wlOrdView')||'list'; }catch(e){ return 'list'; } })();
+var ORANGE=null, OVW=savedVw('wlOrdView');
 function setOVw(v){ OVW=v; try{ WLS.setItem('wlOrdView',v); }catch(e){} Array.prototype.forEach.call($('oVw').querySelectorAll('button'),function(b){ b.classList.toggle('on',b.dataset.vw===v); }); show('oListWrap',v==='list'); show('oGrid',v==='grid'); renderOrders(); }
 function goOrders(){ if(!ORANGE){ ORANGE=rangePicker($('oRange'),['today','yesterday','thisweek','lastweek','thismonth','lastmonth','last30','all'],'all',function(r){ ORANGE=r; renderOrders(); });
     Array.prototype.forEach.call($('oVw').querySelectorAll('button'),function(b){ b.onclick=function(){ setOVw(b.dataset.vw); }; }); setOVw(OVW); }
@@ -3396,7 +3679,7 @@ function renderOrders(){
   $('oTable').innerHTML='<thead><tr><th>Order</th><th>Job date</th><th>Customer</th><th>Site</th><th>Job</th><th class="r">Total</th><th>Status</th><th></th></tr></thead><tbody>'+
     l.slice(0,300).map(function(o){ return '<tr><td><b>'+esc(o.no)+'</b><div class="muted2">booked '+esc(o.created)+'</div></td><td>'+esc(o.jobDate)+(o.slot?'<div class="muted2">'+esc(o.slot)+'</div>':'')+'</td>'+
       '<td><button class="link" data-cref="'+esc(o.ref)+'">'+esc(o.customer)+'</button></td><td class="clip">'+esc(o.site)+'</td><td>'+esc(o.size+' '+String(o.service).toLowerCase())+'<div class="muted2">'+esc(o.job)+'</div></td>'+
-      '<td class="r"><b>'+gbp(o.total)+'</b></td><td>'+statusPill(o.status)+'</td><td class="r">'+(o.folder?'<a class="link" target="_blank" href="'+esc(o.folder)+'">Paperwork</a>':'')+(o.wtn?' · <a class="link" target="_blank" href="'+esc(o.wtn)+'">WTN</a>':'')+
+      '<td class="r"><b>'+gbp(o.total)+'</b></td><td>'+statusPill(o.status)+'</td><td class="r">'+(canEdit(o)?'<button class="link" data-oedit="'+esc(o.no)+'">Edit</button>'+(o.folder?' · ':''):'')+(o.folder?'<a class="link" target="_blank" href="'+esc(o.folder)+'">Paperwork</a>':'')+(o.wtn?' · <a class="link" target="_blank" href="'+esc(o.wtn)+'">WTN</a>':'')+
       (etaBtnOk(o)?'<div><button class="link" data-eta="'+o.row+'" data-no="'+esc(o.no)+'">Text: on the way</button></div>':'')+'</td></tr>'; }).join('')+'</tbody>'+
     (l.length>300?'<tfoot><tr><td colspan="8" class="muted2">Showing the latest 300. Search or pick dates to narrow it down.</td></tr></tfoot>':'')+(l.length?'':'<tfoot><tr><td colspan="8" class="empty">No orders in this range.</td></tr></tfoot>');
   if(OVW==='grid') $('oGrid').innerHTML=l.length?l.slice(0,300).map(function(o){
@@ -3404,14 +3687,17 @@ function renderOrders(){
     return '<div class="otile'+(o.status==='Cancelled'?' cx':'')+'"><div class="othumb t-'+(ic||'x')+'"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M2 8h20l-3 11H5z"/><path d="M6 8l2-3h8l2 3"/></svg><span class="osz">'+esc(o.size||'')+'</span></div>'+
       '<div class="obody"><div class="otop"><b>'+esc(o.no)+'</b>'+statusPill(o.status)+'</div><button class="link oc" data-cref="'+esc(o.ref)+'">'+esc(o.customer)+'</button>'+
       '<div class="muted2 clip">'+esc(o.site)+'</div><div class="obot"><span>'+esc(o.jobDate)+'</span><b>'+gbp(o.total)+'</b></div>'+
-      '<div class="olinks">'+(o.folder?'<a class="link" target="_blank" href="'+esc(o.folder)+'">Paperwork</a>':'')+(o.wtn?'<a class="link" target="_blank" href="'+esc(o.wtn)+'">WTN</a>':'')+'</div></div></div>'; }).join('')
+      '<div class="olinks">'+(canEdit(o)?'<button class="link" data-oedit="'+esc(o.no)+'">Edit</button>':'')+(o.folder?'<a class="link" target="_blank" href="'+esc(o.folder)+'">Paperwork</a>':'')+(o.wtn?'<a class="link" target="_blank" href="'+esc(o.wtn)+'">WTN</a>':'')+'</div></div></div>'; }).join('')
     :'<div class="empty" style="grid-column:1/-1">No orders in this range.</div>';
   Array.prototype.forEach.call($('oGrid').querySelectorAll('[data-cref]'),function(b){ b.onclick=function(){ goCust(b.dataset.cref); }; });
   Array.prototype.forEach.call($('oTable').querySelectorAll('[data-cref]'),function(b){ b.onclick=function(){ goCust(b.dataset.cref); }; });
+  Array.prototype.forEach.call(document.querySelectorAll('#oTable [data-oedit],#oGrid [data-oedit]'),function(b){ b.onclick=function(){ openEdit(b.dataset.oedit,b); }; });
   Array.prototype.forEach.call($('oTable').querySelectorAll('[data-eta]'),function(b){ b.onclick=function(){ b.disabled=true; b.textContent='Sending…';
     run().withSuccessHandler(function(r){ b.textContent='✓ Texted'; toast('ok','✓','<b>Text sent</b> to '+esc(r.sentTo)); })
       .withFailureHandler(function(e){ b.disabled=false; b.textContent='Text: on the way'; toast('bad','!',esc(e&&e.message||e)); }).sendEtaNow(+b.dataset.eta,b.dataset.no); }; });
 }
+/* Orders that can still be changed: not archived, cancelled or done. */
+function canEdit(o){ return !o.archived&&o.status!=='Cancelled'&&o.job!=='Completed'&&o.job!=='Cancelled'&&o.job!=='On the way'; }
 function etaBtnOk(o){ var L=D.licence||{mod:{}}; if(!L.mod||L.mod.eta===false||!D.twilio) return false;
   return o.status!=='Cancelled'&&o.job!=='Completed'&&o.jobDate===whFmtDate(new Date())&&/^(\+?44|0)7/.test(String(o.phone||'').replace(/\s/g,'')); }
 
@@ -3536,13 +3822,14 @@ function drawCust(c){
       '<div class="full">'+f('billing','Billing address',c.billing).replace(/^<div>|<\/div>$/g,'')+'</div><div class="full">'+f('notes','Notes',c.notes).replace(/^<div>|<\/div>$/g,'')+'</div></div><div class="acts" style="margin-top:12px"><button class="fx" id="cSave">Save changes</button></div></div>'+
     '<div class="panel"><div class="ph"><b>Sites</b></div>'+(c.siteList.map(function(s){ return '<div class="rrow"><div><b>'+esc(s.address)+'</b><div class="muted2">'+esc([s.placement,s.size&&('last '+s.size+' '+String(s.service||'').toLowerCase()),s.lastJob].filter(Boolean).join(' · '))+'</div>'+(s.notes?'<div class="muted2">'+esc(s.notes)+'</div>':'')+'</div></div>'; }).join('')||'<div class="muted2">No sites yet.</div>')+'</div></div>'+
     '<div class="panel"><div class="ph"><b>Orders</b><span class="sub2">Tick orders to send their invoices or waste transfer notes in one email</span></div><div class="bulk hide" id="cBulk"><b id="cBulkN"></b><button class="fx alt" id="cSendInv">Send invoices</button><button class="fx alt" id="cSendWtn">Send waste transfer notes</button><button class="link" id="cBulkNone">Clear</button></div>'+
-      '<div class="tablewrap"><table class="tbl"><thead><tr><th class="cb"><input type="checkbox" id="cAll"></th><th>Order</th><th>Job date</th><th>Site</th><th>Job</th><th class="r">Total</th><th>Status</th><th>Paperwork</th></tr></thead><tbody>'+
+      '<div class="tablewrap"><table class="tbl"><thead><tr><th class="cb"><input type="checkbox" id="cAll"></th><th>Order</th><th>Job date</th><th>Site</th><th>Job</th><th class="r">Total</th><th>Status</th><th></th></tr></thead><tbody>'+
       (c.orderList.filter(function(o){ return o.status!=='Cancelled'; }).map(function(o){ return '<tr><td class="cb">'+(o.archived?'':'<input type="checkbox" data-co="'+o.row+'">')+'</td><td><b>'+esc(o.no)+'</b>'+(o.archived?'<div class="muted2">archived</div>':'')+'</td><td>'+esc(o.jobDate)+'</td><td class="clip">'+esc(o.site)+'</td><td>'+esc(o.size+' '+String(o.service).toLowerCase())+'</td><td class="r">'+gbp(o.total)+'</td><td>'+statusPill(o.status)+'</td>'+
-        '<td class="nowrap">'+[o.folder?'<a class="link" target="_blank" href="'+esc(o.folder)+'">Folder</a>':'',o.wtn?'<a class="link" target="_blank" href="'+esc(o.wtn)+'">WTN</a>':''].filter(Boolean).join(' · ')+'</td></tr>'; }).join('')||'<tr><td class="empty" colspan="8">No orders yet.</td></tr>')+'</tbody></table></div></div>';
+        '<td class="nowrap">'+[canEdit(o)?'<button class="link" data-oedit="'+esc(o.no)+'">Edit</button>':'',o.folder?'<a class="link" target="_blank" href="'+esc(o.folder)+'">Folder</a>':'',o.wtn?'<a class="link" target="_blank" href="'+esc(o.wtn)+'">WTN</a>':''].filter(Boolean).join(' · ')+'</td></tr>'; }).join('')||'<tr><td class="empty" colspan="8">No orders yet.</td></tr>')+'</tbody></table></div></div>';
   $('cBack').onclick=function(){ goCust(); };
   var csel=function(){ return Array.prototype.filter.call($('cDetail').querySelectorAll('[data-co]'),function(x){ return x.checked; }).map(function(x){ return +x.dataset.co; }); };
   var cupd=function(){ var n=csel().length; show('cBulk',n>0); $('cBulkN').textContent=n+' selected'; };
   Array.prototype.forEach.call($('cDetail').querySelectorAll('[data-co]'),function(x){ x.onchange=cupd; });
+  Array.prototype.forEach.call($('cDetail').querySelectorAll('[data-oedit]'),function(b){ b.onclick=function(){ openEdit(b.dataset.oedit,b); }; });
   if($('cAll')) $('cAll').onchange=function(){ var on=this.checked; Array.prototype.forEach.call($('cDetail').querySelectorAll('[data-co]'),function(x){ x.checked=on; }); cupd(); };
   $('cBulkNone').onclick=function(){ Array.prototype.forEach.call($('cDetail').querySelectorAll('[data-co]'),function(x){ x.checked=false; }); if($('cAll')) $('cAll').checked=false; cupd(); };
   var csend=function(kind,b){ var rows=csel(); if(!rows.length) return; if(!c.email){ toast('bad','!','Add an email address for '+esc(c.name)+' first.'); return; }
@@ -3567,17 +3854,36 @@ function drawSet(){ drawLorries(); drawZones();
         if(f.kind==='yesno') inp='<select class="in" '+id+'><option'+(/^n/i.test(f.v)?'':' selected')+'>Yes</option><option'+(/^n/i.test(f.v)?' selected':'')+'>No</option></select>';
         else if(/^pick:/.test(f.kind)) inp='<select class="in" '+id+'>'+f.kind.slice(5).split('/').map(function(o){ return '<option'+(o===f.v?' selected':'')+'>'+o+'</option>'; }).join('')+'</select>';
         else if(f.kind==='stock') inp='<div class="stockset">'+(SETD.sizes||[]).map(function(sz){ var m=String(f.v||'').match(new RegExp('(?:^|,)\\s*'+sz.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*:\\s*(\\d+)')); return '<div><label class="l">'+esc(sz)+'</label><input class="in" inputmode="numeric" data-stock="'+esc(sz)+'" value="'+(m?m[1]:'')+'" placeholder="0"></div>'; }).join('')+'</div><input type="hidden" '+id+' value="'+esc(f.v)+'">';
+        else if(f.kind==='capacity') inp=capSetHtml(f.v)+'<input type="hidden" '+id+' value="'+esc(f.v)+'">';
         else if(f.kind==='lines') inp='<textarea class="in" rows="4" '+id+' placeholder="One per line">'+esc(f.v)+'</textarea>';
         else if(f.kind==='money') inp='<div class="money"><span>£</span><input class="in" inputmode="decimal" '+id+' value="'+esc(f.v)+'"></div>';
         else if(f.kind==='secret'&&!/PIN/.test(f.k)) inp='<input class="in" type="password" autocomplete="off" '+id+' placeholder="'+(f.has?'Saved. Type a new one to replace it':'Not set')+'">';
         else inp='<input class="in"'+(/PIN/.test(f.k)?' inputmode="numeric"':'')+' '+id+' value="'+esc(f.v)+'"'+(f.req&&!f.v?' data-miss="1"':'')+'>';
-        return '<div'+(f.kind==='lines'||f.kind==='stock'?' class="full"':'')+'>'+(f.kind==='stock'?'':'<label class="l">'+lab+'</label>')+inp+'<div class="ferr" data-ferr="'+esc(f.k)+'"></div></div>'; }).join('')+'</div></div>'; }).join('');
+        return '<div'+(f.kind==='lines'||f.kind==='stock'||f.kind==='capacity'?' class="full"':'')+'>'+(f.kind==='stock'||f.kind==='capacity'?'':'<label class="l">'+lab+'</label>')+inp+'<div class="ferr" data-ferr="'+esc(f.k)+'"></div></div>'; }).join('')+'</div></div>'; }).join('');
   Array.prototype.forEach.call($('sFields').querySelectorAll('[data-stock]'),function(i){ i.addEventListener('input',function(){ markDirty('details');
     var h=$('sFields').querySelector('[data-sk="Skip stock"]'); h.value=Array.prototype.map.call($('sFields').querySelectorAll('[data-stock]'),function(x){ return x.value.trim()?x.dataset.stock+': '+(+x.value||0):''; }).filter(Boolean).join(', '); }); });
+  Array.prototype.forEach.call($('sFields').querySelectorAll('[data-capw]'),function(i){ i.addEventListener('input',function(){ markDirty('details');
+    $('sFields').querySelector('[data-sk="Daily capacity"]').value=capSetValue(); }); });
   drawLogo();
   Array.prototype.forEach.call($('sFields').querySelectorAll('[data-sk]'),function(i){ i.addEventListener('input',function(){ markDirty('details'); i.removeAttribute('data-miss'); }); i.addEventListener('change',function(){ markDirty('details'); }); });
   $('sStripe').innerHTML='Card payments: '+(SETD.stripe?'<b style="color:var(--ok)">connected ('+SETD.stripeMode+' mode)</b>':'<b>not connected</b>. Add your Stripe secret key above.');
   $('drvUrl').innerHTML=''; clearDirty(); }
+/* Settings > Daily capacity: a row for the whole team and one per active lorry. Saved as one line in the Settings tab. */
+var CAPK=[['wl','Wait & load','Wait and loads'],['coll','Collections','Collections'],['ed','Exchanges and deliveries','Exchanges and deliveries']];
+function regK(x){ return String(x||'').toUpperCase().replace(/\s/g,''); }
+function capParseC(txt){ var out={}; String(txt||'').split(';').forEach(function(seg){ var m=seg.match(/^\s*([^:]+?)\s*:\s*(.*)$/); if(!m) return; var v={};
+  m[2].split(',').forEach(function(p){ var q=p.match(/^\s*(.+?)\s+(\d+)\s*$/); if(!q) return; CAPK.forEach(function(k){ if(q[1].toLowerCase()===k[1].toLowerCase()) v[k[0]]=+q[2]; }); });
+  out[/^team$/i.test(m[1])?'team':regK(m[1])]=v; }); return out; }
+function capSetHtml(v){ var p=capParseC(v), who=[['Team','Whole team']].concat((SETD.lorries||[]).filter(function(l){ return l.reg&&l.active!=='No'; }).map(function(l){ return [l.reg,l.reg]; }));
+  return '<div class="tablewrap"><table class="tbl edit capset"><thead><tr><th></th>'+CAPK.map(function(k){ return '<th>'+k[2]+'</th>'; }).join('')+'</tr></thead><tbody>'+
+    who.map(function(w){ var cur=p[w[0]==='Team'?'team':regK(w[0])]||{};
+      return '<tr><td>'+(w[0]==='Team'?'<b>Whole team</b>':'<span class="plate sm">'+esc(w[1])+'</span>')+'</td>'+CAPK.map(function(k){
+        return '<td><input class="in" inputmode="numeric" data-capw="'+esc(w[0])+'" data-capk="'+k[0]+'" value="'+(cur[k[0]]!=null?cur[k[0]]:'')+'" placeholder="No limit"></td>'; }).join('')+'</tr>'; }).join('')+
+    '</tbody></table></div><div class="sub2" style="margin-top:8px">Per lorry numbers are added up across your active lorries. If you fill in both, the lower one counts.</div>'; }
+function capSetValue(){ var rows={}, order=[];
+  Array.prototype.forEach.call($('sFields').querySelectorAll('[data-capw]'),function(i){ var w=i.dataset.capw, n=String(i.value).replace(/\D/g,'');
+    if(order.indexOf(w)<0) order.push(w); if(n!=='') (rows[w]=rows[w]||[]).push(CAPK.filter(function(k){ return k[0]===i.dataset.capk; })[0][1]+' '+(+n)); });
+  return order.filter(function(w){ return rows[w]; }).map(function(w){ return w+': '+rows[w].join(', '); }).join('; '); }
 function drawLorries(){
   $('lTable').innerHTML='<thead><tr><th>Registration</th><th>Type</th><th>Jobs a day</th><th>Driver</th><th>Driver phone</th><th>PIN</th><th>Driver day rate</th><th>Weekly fuel <i class="muted2" style="font-style:normal">(if no fuel card)</i></th><th>Active</th><th></th></tr></thead><tbody>'+
     SETD.lorries.map(function(l,i){ var c=function(k,w){ return '<td><input class="in" data-li="'+i+'" data-lk="'+k+'" value="'+esc(l[k]||'')+'" style="min-width:'+w+'px"></td>'; };
@@ -3665,6 +3971,137 @@ function applyBrand(){ var c=(D&&D.biz&&D.biz.colour)||(BIZ&&BIZ.colour)||'#3B82
   var dark=document.documentElement.getAttribute('data-theme')!=='light', ui=dark?lift(c,.35):c, r=document.documentElement.style;
   r.setProperty('--brand',ui); r.setProperty('--brand-l',hexRgba(ui,dark?.14:.09)); r.setProperty('--brand-m',hexRgba(ui,dark?.32:.25)); r.setProperty('--wl',ui); }
 
+/* ============ Import from a spreadsheet ============
+   Reads the Import tab, shows what it guessed, lets them drag or pick the right
+   column, then imports. Nothing is written until they press Import.            */
+var IMP = null;
+
+var IMP_HINTS = {
+  skipsOnSite:'Every skip you have out right now. Each one goes in as a delivery on the day it actually went out, at no charge, and nobody is emailed.',
+  orders:'Your order history. It then works out which skips are still on site from the deliveries, exchanges and collections, so you do not have to enter those separately.',
+  customers:'Your customer list. A name or company is enough, but a phone or email makes it far more useful.',
+  sites:'Addresses you deliver to regularly, so they come up as you type next time.',
+  lorries:'Your lorries, who drives them, and how many jobs each does in a day.',
+  wasteTypes:'What you take and what it costs you to tip it. Drives the weight estimates and the profit figures.'
+};
+
+function impStep(n,on){ show('impStep'+n,on!==false); }
+/* One import panel, opened from Orders or from Skips on site. It moves into whichever page
+   opened it and starts on the right thing: past orders from Orders, skips from Skips on site.
+   Importing past orders is the one that matters: skips on site works itself out from the order
+   history, because a delivery with no collection after it is still out. */
+function impOpen(kind, hostId){
+  var f=$('impForm'), host=$(hostId||'siteView');
+  if(host && f.parentNode!==host) host.insertBefore(f, host.children[1]||null);
+  if(kind) $('impKind').value=kind;
+  show('aoForm',false); show('impForm',true); impStep(1,true); impStep(2,false); impStep(3,false); impHint();
+  try{ f.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
+}
+function impHint(){ $('impHint').textContent = IMP_HINTS[$('impKind').value] || ''; }
+
+function impRead(){
+  var b=$('impRead'), old=b.textContent; b.disabled=true; b.textContent='Reading...'; $('impMsg').textContent='';
+  run().withSuccessHandler(function(d){
+    b.disabled=false; b.textContent=old; IMP=d; impDraw(); impStep(1,false); impStep(2,true);
+  }).withFailureHandler(function(e){
+    b.disabled=false; b.textContent=old; $('impMsg').textContent=(e&&e.message)||e;
+  }).importScan($('impKind').value);
+}
+
+function impDraw(){
+  $('impFound').innerHTML='Found <b>'+IMP.rowCount+'</b> row'+(IMP.rowCount===1?'':'s')+' and <b>'+IMP.headers.length+'</b> columns.';
+  var chips=IMP.headers.map(function(h,i){
+    return '<span class="impchip" draggable="true" data-col="'+i+'">'+esc(h||('Column '+(i+1)))+'</span>';
+  }).join('');
+  $('impChips').innerHTML=chips;
+
+  $('impTargets').innerHTML=IMP.fields.map(function(f){
+    var opts='<option value="">not used</option>'+IMP.headers.map(function(h,i){
+      return '<option value="'+i+'"'+(IMP.map[f.k]===i?' selected':'')+'>'+esc(h||('Column '+(i+1)))+'</option>';
+    }).join('');
+    return '<div class="imptarget" data-field="'+f.k+'"><span class="tl">'+esc(f.l)+'</span>'+
+      (f.req?'<span class="need-tag">needed</span>':'')+
+      '<select class="in" data-fsel="'+f.k+'">'+opts+'</select></div>';
+  }).join('');
+
+  var chipEls=$('impChips').querySelectorAll('.impchip');
+  Array.prototype.forEach.call(chipEls,function(c){
+    c.ondragstart=function(e){ e.dataTransfer.setData('text/plain',c.dataset.col); };
+  });
+  Array.prototype.forEach.call($('impTargets').querySelectorAll('.imptarget'),function(t){
+    t.ondragover=function(e){ e.preventDefault(); t.classList.add('over'); };
+    t.ondragleave=function(){ t.classList.remove('over'); };
+    t.ondrop=function(e){ e.preventDefault(); t.classList.remove('over');
+      var col=e.dataTransfer.getData('text/plain'); if(col==='') return;
+      IMP.map[t.dataset.field]=+col;
+      t.querySelector('select').value=col; impPaint(); };
+  });
+  Array.prototype.forEach.call($('impTargets').querySelectorAll('[data-fsel]'),function(sel){
+    sel.onchange=function(){ var k=sel.dataset.fsel;
+      if(sel.value==='') delete IMP.map[k]; else IMP.map[k]=+sel.value; impPaint(); };
+  });
+  impPaint();
+}
+
+function impPaint(){
+  var used={}; Object.keys(IMP.map).forEach(function(k){ used[IMP.map[k]]=1; });
+  Array.prototype.forEach.call($('impChips').querySelectorAll('.impchip'),function(c){
+    c.classList.toggle('used', !!used[c.dataset.col]);
+  });
+  Array.prototype.forEach.call($('impTargets').querySelectorAll('.imptarget'),function(t){
+    var k=t.dataset.field, has=IMP.map[k]!=null;
+    t.classList.toggle('filled',has);
+    t.classList.toggle('need', IMP.required.indexOf(k)>-1 && !has);
+  });
+  var miss=IMP.required.filter(function(k){ return IMP.map[k]==null; });
+  $('impGo').disabled=miss.length>0;
+  $('impMsg2').textContent=miss.length? 'Still need: '+IMP.fields.filter(function(f){return miss.indexOf(f.k)>-1;}).map(function(f){return f.l;}).join(', ') : '';
+  impPreview();
+}
+
+function impPreview(){
+  if(!IMP.sample||!IMP.sample.length){ $('impPreview').innerHTML=''; return; }
+  var cols=IMP.fields.filter(function(f){ return IMP.map[f.k]!=null; });
+  if(!cols.length){ $('impPreview').innerHTML=''; return; }
+  var h='<div class="l">What the first rows will look like</div><table class="imptab"><tr>'+
+    cols.map(function(f){ return '<th>'+esc(f.l)+'</th>'; }).join('')+'</tr>';
+  IMP.sample.forEach(function(r){
+    h+='<tr>'+cols.map(function(f){ return '<td>'+esc(String(r[IMP.map[f.k]]||''))+'</td>'; }).join('')+'</tr>';
+  });
+  $('impPreview').innerHTML=h+'</table>';
+}
+
+function impGo(){
+  var b=$('impGo'), old=b.textContent; b.disabled=true; b.textContent='Importing...'; $('impMsg2').textContent='';
+  run().withSuccessHandler(function(d){
+    b.disabled=false; b.textContent=old;
+    var r=d.report;
+    if(r.partial){
+      if(d.boot){ saveBoot(d.boot); d.boot.home=null; D=d.boot; setUnpaid(D.unpaid); if($('sNo')) $('sNo').textContent=D.nextNo; }
+      $('impMsg2').textContent='That is a big file, so Google stopped this run partway. '+r.added+' added so far. Press Import again to carry on. Nothing already in will be doubled.';
+      return;
+    }
+    var h='<div class="note '+(r.skipped?'w':'n')+'"><b>Imported '+r.added+'</b> of '+r.read+' row'+(r.read===1?'':'s')+'.';
+    if(r.merged) h+=' '+r.merged+' already existed and were left alone.';
+    if(r.skipped) h+=' <b>'+r.skipped+' could not be read</b> and are listed in the Import Check tab of your sheet.';
+    h+='</div>';
+    if(r.problems&&r.problems.length){
+      h+='<table class="imptab" style="margin-top:10px"><tr><th>Row</th><th>Why it was skipped</th></tr>'+
+        r.problems.map(function(p){ return '<tr><td>'+p.line+'</td><td>'+esc(p.why)+'</td></tr>'; }).join('')+'</table>';
+    }
+    $('impReport').innerHTML=h;
+    impStep(2,false); impStep(3,true);
+    if(d.boot) { saveBoot(d.boot); d.boot.home=null; D=d.boot; setUnpaid(D.unpaid); if($('sNo')) $('sNo').textContent=D.nextNo; }
+    toast('ok','\u2713','<b>Imported '+r.added+' row'+(r.added===1?'':'s')+'</b>');
+    // refresh the skips on site list so they see what just landed
+    var k=$('impKind').value, host=$('impForm').parentNode;
+    if(host && host.id==='ordersView'){ try{ run().withSuccessHandler(function(l){ OL=l; renderOrders(); }).getOrders(); }catch(x){} }
+    else if(k==='orders'||k==='skipsOnSite'){ SD=null; try{ goSite(); }catch(x){} }
+  }).withFailureHandler(function(e){
+    b.disabled=false; b.textContent=old; $('impMsg2').textContent=(e&&e.message)||e;
+  }).importApply($('impKind').value, IMP.map);
+}
+
 function toast(cls,icon,html,sticky){
   var t=document.createElement('div'); t.className='toast '+cls;
   t.innerHTML='<div style="font-weight:900">'+icon+'</div><div style="flex:1">'+html+'</div><button class="x">&times;</button>';
@@ -3703,12 +4140,13 @@ function renderAddrChk(r,dupHtml){
   if(r.map) h+='<a href="'+esc(r.map)+'" target="_blank" rel="noopener">View on map</a>'; h+='</div></div>';
   $('addrChk').innerHTML=dupHtml+h;
   Array.prototype.forEach.call($('addrChk').querySelectorAll('.fx[data-i]'),function(b){ b.onclick=function(){
-    var f=r.fixes[+b.dataset.i]; $('nsAddr').value=f.addr; S.priceEdited=false; reprice(); toast('ok','✓','Address updated to <b>'+esc(f.addr)+'</b>'); runAddrCheck(f.addr.trim()); }; });
+    var f=r.fixes[+b.dataset.i]; $('nsAddr').value=f.addr; if(!S.edit) S.priceEdited=false; reprice(); toast('ok','✓','Address updated to <b>'+esc(f.addr)+'</b>'); runAddrCheck(f.addr.trim()); }; });
 }
 
 /* ---------- wiring ---------- */
 function wire(){
-  $('navNew').onclick=function(){ if(modOn('orders')) goOrder(); }; $('navUnpaid').onclick=goUnpaid; $('dUnpaid').onclick=goUnpaid;
+  $('navNew').onclick=function(){ if(modOn('orders')){ if(S.edit) resetAll(); goOrder(); } };
+  $('dEdit').onclick=function(){ openEdit(LASTNO,this); }; $('navUnpaid').onclick=goUnpaid; $('dUnpaid').onclick=goUnpaid;
   $('navHome').onclick=goHome; $('navOrders').onclick=goOrders; $('navCust').onclick=function(){ goCust(); }; $('navSet').onclick=goSet;
   $('hNew').onclick=goOrder; $('hPlan').onclick=goPlan; $('hAll').onclick=goOrders;
   $('uQ').oninput=renderUnpaid; $('bNone').onclick=function(){ USEL={}; renderUnpaid(); };
@@ -3752,7 +4190,7 @@ function wire(){
   ['sContact','sPhone'].forEach(function(id){ $(id).oninput=function(){ this.dataset.t=1; update(); }; });
   $('billSame').onchange=function(){ show('billWrap',!this.checked); update(); };
   $('siteSel').onchange=onSite;
-  $('nsAddr').oninput=function(){ S.priceEdited=false; reprice(); addrCheckSoon(1100); };
+  $('nsAddr').oninput=function(){ if(!S.edit) S.priceEdited=false; reprice(); addrCheckSoon(1100); };
   $('nsAddr').onblur=function(){ addrCheckSoon(0); };
   $('price').oninput=function(){ S.priceEdited=true; update(); };
   $('permit').oninput=update;
@@ -3770,7 +4208,17 @@ function wire(){
     $('burger').onclick=function(){ b.classList.toggle('menuopen'); }; $('menuBack').onclick=close;
     ['nav','navFoot','sideFoot'].forEach(function(id){ $(id).addEventListener('click',function(e){ var t=e.target.closest('button'); if(t&&!t.classList.contains('grph')) setTimeout(close,0); }); }); })();
   $('aoBtn').onclick=aoOpen; $('aoX').onclick=function(){ show('aoForm',false); }; $('aoGo').onclick=aoSave; $('aoCust').oninput=aoHint;
+  $('impSheetBtn').onclick=function(){ impOpen('skipsOnSite','siteView'); };
+  $('impOrdBtn').onclick=function(){ impOpen('orders','ordersView'); };
+  $('impX').onclick=function(){ show('impForm',false); };
+  $('impKind').onchange=impHint; $('impRead').onclick=impRead; $('impGo').onclick=impGo;
+  $('impBack').onclick=function(){ impStep(2,false); impStep(1,true); };
+  $('impAgain').onclick=function(){ impStep(3,false); impStep(1,true); $('impMsg').textContent=''; };
   $('cardX').onclick=function(){ show('cardOv',false); CARDCB=null; }; $('cardOv').onclick=function(e){ if(e.target===this) show('cardOv',false); };
+  $('sbX').onclick=sbClose; $('sbOv').onclick=function(e){ if(e.target===this) sbClose(); };
+  $('cbX').onclick=cbClose; $('cbOv').onclick=function(e){ if(e.target===this) cbClose(); }; $('cbSave').onclick=cbSave; $('cbCancel').onclick=cbCancel;
+  $('cbDate').onchange=$('cbDate').oninput=cbCheck; Array.prototype.forEach.call($('cbType').querySelectorAll('button'),function(b){ b.onclick=function(){ cbSetType(b.dataset.v); }; });
+  $('sbColl').onclick=function(){ sbGo('Collection'); }; $('sbExch').onclick=function(){ sbGo('Exchange'); };
   $('impBtn').onclick=function(){
     var b=this; b.textContent='Importing…'; b.disabled=true;
     run().withSuccessHandler(function(r){ b.textContent='Import customer list'; b.disabled=false; var x=r.report; D=r.boot; renderCust($('custQ').value); setUnpaid(D.unpaid);
@@ -3813,7 +4261,7 @@ function wire(){
       Array.prototype.forEach.call(r.children,function(td,i){ if(td.classList.contains('cb')||td.querySelector('input[type=checkbox]')&&!td.textContent.trim()){ td.classList.add('cb'); return; }
         if(first){ td.classList.add('ct'); first=false; } else if(!td.hasAttribute('data-l')) td.setAttribute('data-l',heads[i]||''); }); }); }
   PAGES.forEach(function(p){ var box=document.getElementById(p[0]), t=document.getElementById(p[1]); if(!box||!t) return;
-    var v='list'; try{ v=WLS.getItem(p[2])||'list'; }catch(e){}
+    var v=savedVw(p[2]);
     function set(x){ v=x; try{ WLS.setItem(p[2],x); }catch(e){}
       Array.prototype.forEach.call(box.querySelectorAll('button'),function(b){ b.classList.toggle('on',b.dataset.vw===x); });
       t.classList.toggle('gridmode',x==='grid'); t.parentNode.classList.toggle('gridwrap',x==='grid'); label(t); }

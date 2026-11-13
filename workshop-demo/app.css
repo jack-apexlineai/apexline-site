@@ -532,3 +532,10 @@ body.dragging *{cursor:grabbing !important}
   .modal .mh,.modal .mf{display:none}
   .inv{box-shadow:none;padding:0}
 }
+
+/* Money: one section, a View dropdown on top */
+.mbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.mbar .mpick{display:flex;align-items:center;gap:8px;margin-left:auto;flex:0 1 300px;min-width:0}
+.mbar .mpick .lb{font-size:13px;font-weight:650;color:var(--muted);white-space:nowrap}
+.mbar select.in{min-width:0;font-weight:600}
+@media(max-width:560px){.mbar .mpick{margin-left:0;flex:1 1 100%}.grid.m1{grid-template-columns:1fr}.tbl.fitsm th:first-child,.tbl.fitsm td:first-child{min-width:0}}

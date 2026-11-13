@@ -164,7 +164,7 @@
           '<div class="fb">' +
           (c.plan.length ? c.plan.map(function (j, i) {
             var out = '';
-            if (!lunched && j._planStart >= 12.5) { out += '<div class="lunch">— half hour break —</div>'; lunched = true; }
+            if (!lunched && j._planStart >= 12.5) { out += '<div class="lunch">Half hour break</div>'; lunched = true; }
             return out + pjob(j, false, i, c.plan.length);
           }).join('') : (sugFor(c.f.id).length ? '' : '<div class="fe">Nothing planned.<br>Drag a job over.</div>')) +
           sugFor(c.f.id).map(sugCard).join('') +

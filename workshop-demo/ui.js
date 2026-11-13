@@ -32,10 +32,9 @@
     { id: 'er', name: 'Earned Recognition', icon: '★' },
     { id: 'campaigns', name: 'Campaigns and recalls', icon: '⟳' },
     { g: 'Money and people' },
-    { id: 'invoices', name: 'Invoices', icon: '£' },
+    { id: 'money', name: 'Money', icon: '£' },
     { id: 'stock', name: 'Parts and stock', icon: '⬚' },
     { id: 'timesheets', name: 'Timesheets', icon: '◷' },
-    { id: 'payroll', name: 'Hours for payroll', icon: '◴' },
     { id: 'reports', name: 'Reports', icon: '◈' }
   ];
 
@@ -142,7 +141,7 @@
       approvals: openApprovals(),
       checks: newChecks(),
       stock: WS.lowStock().length,
-      invoices: WS.state.jobs.filter(function (j) { return j.status === 'done' && !j.invoiceId; }).length,
+      money: WS.state.jobs.filter(function (j) { return j.status === 'done' && !j.invoiceId; }).length,
       quotes: WS.state.quotes.filter(function (q) { return q.status === 'Sent' || q.status === 'Draft'; }).length
     };
     document.querySelectorAll('nav.side button.nv').forEach(function (b) {
@@ -162,7 +161,10 @@
     });
   }
 
+  /* the old money screens all open inside Money now, on the right view */
+  var MONEY_VIEWS = { invoices: 'invoices', bills: 'bills', fitterpay: 'pay', payroll: 'pay' };
   O.go = function (s) {
+    if (MONEY_VIEWS[s] && O.setMoneyView) { O.setMoneyView(MONEY_VIEWS[s]); s = 'money'; }
     if (!O.SCREENS[s]) s = 'home';
     if (s !== 'planner') O.suggest = null;
     O.screen = s;

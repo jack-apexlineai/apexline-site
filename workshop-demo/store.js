@@ -4,7 +4,7 @@
 var WS = window.WS || {};
 WS.KEY = 'wsDemo:state';
 WS.PIN = '240411';
-WS.SEED_V = 21;
+WS.SEED_V = 23;
 
 /* ---------- state ---------- */
 WS.state = null;

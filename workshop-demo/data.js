@@ -146,11 +146,11 @@ WS.seed = function () {
     dayHours: 8,
     bays: ['Bay 1', 'Bay 2', 'Bay 3', 'Bay 4', 'Bay 5 MOT', 'Mobile van'],
     fitters: [
-      { id: 'f1', name: 'Dave Mitchell', pin: '1111', role: 'Workshop foreman', costRate: 26, dayHours: 8, skills: ['PMI', 'LOLER', 'MOT prep', 'Repair', 'Service'] },
-      { id: 'f2', name: 'Marek Nowak', pin: '2222', role: 'HGV technician', costRate: 23, dayHours: 8, skills: ['PMI', 'Repair', 'Service', 'Tyres'] },
-      { id: 'f3', name: 'Lee Barnard', pin: '3333', role: 'HGV technician', costRate: 23, dayHours: 8, skills: ['PMI', 'Repair', 'Roadside callout', 'Service'] },
-      { id: 'f4', name: 'Sam Okafor', pin: '4444', role: 'Apprentice technician', costRate: 14, dayHours: 8, skills: ['Service', 'Tyres', 'Defect'] },
-      { id: 'f5', name: 'Ryan Cole', pin: '5555', role: 'Mobile technician', costRate: 25, dayHours: 8, skills: ['Roadside callout', 'Repair', 'Defect', 'Collection / delivery'] }
+      { id: 'f1', name: 'Dave Mitchell', pin: '1111', role: 'Workshop foreman', costRate: 26, payType: 'day', payRate: 180, dayHours: 8, skills: ['PMI', 'LOLER', 'MOT prep', 'Repair', 'Service'] },
+      { id: 'f2', name: 'Marek Nowak', pin: '2222', role: 'HGV technician', costRate: 23, payType: 'hour', payRate: 20.5, dayHours: 8, skills: ['PMI', 'Repair', 'Service', 'Tyres'] },
+      { id: 'f3', name: 'Lee Barnard', pin: '3333', role: 'HGV technician', costRate: 23, payType: 'hour', payRate: 19.75, dayHours: 8, skills: ['PMI', 'Repair', 'Roadside callout', 'Service'] },
+      { id: 'f4', name: 'Sam Okafor', pin: '4444', role: 'Apprentice technician', costRate: 14, payType: 'hour', payRate: 16, dayHours: 8, skills: ['Service', 'Tyres', 'Defect'] },
+      { id: 'f5', name: 'Ryan Cole', pin: '5555', role: 'Mobile technician', costRate: 25, payType: 'day', payRate: 165, dayHours: 8, skills: ['Roadside callout', 'Repair', 'Defect', 'Collection / delivery'] }
     ],
     /* standard operational times in hours, used to load the day planner */
     standardTimes: {
@@ -661,6 +661,36 @@ WS.seed = function () {
   stock.filter(function (s) { return s.id === 'p6'; })[0].onOrder = 2;
   stock.filter(function (s) { return s.id === 'p21'; })[0].onOrder = 2;
 
+  /* ---------------- supplier bills, money out ----------------
+     What the workshop owes its own suppliers: parts, tyres, oil, test fees and
+     subcontract work. A fixed list dated off today, so nothing above changes.
+     supplier, their ref, type, what for, raised (days from today), terms (days), net, paid (days from today) */
+  var bills = [
+    [suppliers[0].name, 'INV-208841', 'Parts', 'Brake chambers, air bags and filters', -41, 30, 1284.60, -13],
+    ['Fleet Lubricants Ltd', 'FL-10398', 'Oil and fluids', 'Gear oil, grease and screen wash', -48, 14, 392.10, -36],
+    ['Truck & Trailer Parts Ltd', 'TTP-55812', 'Parts', 'Clutch kit and slave cylinder for a hook loader', -34, 30, 942.18, -6],
+    ['Liftsafe Examinations', 'LS-5520', 'Subcontract', 'LOLER thorough examinations, 5 skip loaders', -45, 30, 725.00, null],
+    [suppliers[3].name, 'T-77120', 'Tyres', '6 drive tyres fitted, 2 casings credited', -27, 30, 2316.00, null],
+    ['Fleet Lubricants Ltd', 'FL-10442', 'Oil and fluids', '205 litre drum of 10W-40 and an AdBlue IBC', -22, 14, 868.50, null],
+    ['County Test Centre', 'ATF-3391', 'Test fees', 'Annual tests on 4 vehicles, DVSA fee and lane hire', -19, 7, 612.00, -15],
+    [suppliers[1].name, 'TF-91873', 'Parts', 'Bulbs, wiper blades, fuses and cable ties', -16, 30, 214.37, null],
+    ['Hydraulic Hose Services', 'HHS-4410', 'Subcontract', 'Hook loader ram hoses made up on site', -12, 30, 486.00, null],
+    [suppliers[2].name, 'DP-660914', 'Parts', 'EBS modulator and ECU, warranty claim to follow', -9, 30, 1792.40, null],
+    ['Tacho Calibration Centre', 'TC-1187', 'Subcontract', 'Two tachograph calibrations, 2 year checks', -7, 14, 340.00, null],
+    ['Truck & Trailer Parts Ltd', 'TTP-56107', 'Parts', 'Brake discs and pads, 3 axle sets', -5, 30, 1138.92, null],
+    ['Greenway Oil Recovery', 'GOR-2208', 'Waste and disposal', 'Waste oil and used filter collection', -3, 30, 145.00, null],
+    [suppliers[3].name, 'T-77341', 'Tyres', 'Puncture call out and 2 steer tyres', -2, 30, 1064.00, null],
+    ['County Test Centre', 'ATF-3420', 'Test fees', 'Annual tests on 3 vehicles', -1, 7, 459.00, null]
+  ].map(function (b, i) {
+    var bvat = Math.round(b[6] * settings.vat) / 100;
+    return {
+      id: 'b' + (i + 1), supplier: b[0], ref: b[1], type: b[2], detail: b[3],
+      date: WS.day(b[4]), due: WS.day(b[4] + b[5]),
+      net: b[6], vat: bvat, total: Math.round((b[6] + bvat) * 100) / 100,
+      paid: b[7] == null ? '' : WS.at(WS.day(b[7]), 10, 0)
+    };
+  });
+
   /* ---------------- notifications sent out ---------------- */
   var notifications = [
     { id: 'n1', at: ago(150), to: 'Lisa Hammond, Boroughs Waste Services', channel: 'WhatsApp and email',
@@ -670,6 +700,52 @@ WS.seed = function () {
     { id: 'n3', at: WS.at(WS.day(-1), 16, 40), to: 'Priya Shah, Hanworth Haulage', channel: 'Email',
       subject: 'PMI due in 14 days', body: 'Three of your vehicles have a safety inspection due in the next two weeks. Reply to book them in.', kind: 'reminder' }
   ];
+
+  /* ---------------- day clocks, for fitter pay ----------------
+     Clock in and clock out at the start and end of each day, for the last ten weeks,
+     so every pay period has hours in it. On their own random sequence, so nothing
+     above changes. A normal day is about 8 hours after a half hour for lunch, some
+     days run late, the odd day is off, and Saturdays are mornings. */
+  var rc = WS.rng(20261113);
+  var cint = function (lo, hi) { return lo + Math.floor(rc() * (hi - lo + 1)); };
+  var dayClocks = [];
+  var nowMs = Date.now();
+  function stampAdd(dayStr, h, m, addMins) {
+    return WS.stampOf(new Date(new Date(WS.at(dayStr, h, m)).getTime() + addMins * 60000));
+  }
+  for (var cd = -70; cd <= 0; cd++) {
+    var cday = WS.day(cd), cdow = WS.parse(cday).getDay();
+    if (cdow === 0) continue;
+    settings.fitters.forEach(function (f) {
+      var mine = [];
+      jobs.forEach(function (j) {
+        (j.clockOns || []).forEach(function (c) { if (c.fitterId === f.id && c.start.slice(0, 10) === cday) mine.push(c); });
+      });
+      var roll = rc(), sm = 5 * cint(3, 8), start, end;
+      if (cdow === 6) {
+        // Saturday mornings: the mobile fitter most weeks, the foreman every other week
+        var sat = (f.id === 'f5' && roll < 0.75) || (f.id === 'f1' && Math.floor(-cd / 7) % 2 === 0) || mine.length;
+        if (!sat) return;
+        start = WS.at(cday, 7, sm);
+        end = stampAdd(cday, 7, sm, 60 * 4 + 5 * cint(0, 8));
+      } else {
+        if (!mine.length && roll < 0.04) return;      // a day off
+        var late = rc() < (f.id === 'f4' ? 0.08 : 0.22);
+        start = WS.at(cday, 7, sm);
+        end = stampAdd(cday, 7, sm, late ? 510 + 15 * cint(4, 10) : 510 - 5 * cint(0, 3));
+      }
+      // the gate clock always covers the job clock ons
+      mine.forEach(function (c) {
+        if (c.start < start) start = WS.stampOf(new Date(new Date(c.start).getTime() - 10 * 60000));
+        if (c.end && c.end > end) end = WS.stampOf(new Date(new Date(c.end).getTime() + 10 * 60000));
+      });
+      if (cd === 0) {
+        if (new Date(start).getTime() > nowMs) return;  // not in yet
+        end = '';                                         // still on site
+      }
+      dayClocks.push({ fitterId: f.id, date: cday, start: start, end: end });
+    });
+  }
 
   return {
     v: 1,
@@ -684,10 +760,14 @@ WS.seed = function () {
     approvals: approvals,
     stock: stock,
     pos: pos,
+    bills: bills,
     checks: checks,
     campaigns: campaigns,
     library: library,
     notifications: notifications,
+    dayClocks: dayClocks,
+    payExtras: {},
+    paySent: [],
     template: WS.INSPECTION_TEMPLATE,
     walkaround: WS.WALKAROUND,
     seededAt: new Date().toISOString(),

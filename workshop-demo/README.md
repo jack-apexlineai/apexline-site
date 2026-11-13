@@ -45,12 +45,19 @@ Changing them updates the sidebar, both phone apps, the portal and the invoices.
 3. **Workshop board.** Drag a vehicle into a bay.
 4. **Authorisations.** Extra work the fitters have found, waiting on the customer.
 5. **Driver checks.** This morning's walkarounds. A defect becomes a job card in one press.
-6. **Invoices.** Labour from the clock ons, parts plus the customer's own markup, VAT.
-   Connect Xero in Settings and new invoices post themselves.
+6. **Money.** One section for everything in and out. The **View** dropdown at the top switches between
+   **Overview** (money in and out this month, owed to us, owed by us, fitter pay), **Invoices out**
+   (labour from the clock ons, parts plus the customer's own markup, VAT; connect Xero in Settings and
+   new invoices post themselves), **Bills in** (supplier bills for parts, tyres, oil, test fees and
+   subcontract work, mark them paid) and **Fitter and staff pay**. It remembers the last view.
 7. **Parts and stock.** Bin locations, minimum levels, purchase orders, booking stock back in.
 8. **Compliance planner** and **Earned Recognition** for the DVSA side.
-9. **Hours for payroll.** Normal hours, overtime and wage cost, one file for the accountant.
+9. **Timesheets.** Hours off the job clock ons, week by week, with labour recovery.
 10. **Reports.** Revenue by customer, margin, labour recovery and what each fitter contributed.
+11. **Money, Fitter and staff pay.** Each fitter's day rate or hourly rate, hours off the clock for this week, last week,
+    this month, last month or any dates. **Send to the accountant** asks "Any overtime or extras?" for
+    each fitter (No, No, Yes, put in the amount), then who to send it to (up to three addresses,
+    remembered), then sends the spreadsheet. **Download spreadsheet** gives the same CSV.
 
 **Fitter, on a phone**
 
@@ -114,7 +121,9 @@ Plain HTML, CSS and JavaScript. No build step, no framework, no backend.
 | `ui.js` | Office shell: navigation, screen registry, modals, pointer drag and drop |
 | `office.js` | Home, day planner, live view, board, book in, vehicles |
 | `office2.js` | Job card, inspection sheet, authorisations, driver checks, quotes, campaigns |
-| `office3.js` | Invoices and Xero, stock, compliance, Earned Recognition, timesheets, payroll, reports, settings |
+| `office3.js` | Invoices and Xero, stock, compliance, Earned Recognition, timesheets, reports, settings |
+| `money.js` | Money section: the View dropdown, overview, supplier bills, and the invoices and fitter pay views |
+| `fitterpay.js` | Fitter pay: pay rates, hours per period, overtime and extras, recipients, the CSV, the Sent list |
 | `fitter.js` | Fitter app, PMI sheet, signatures, extra work |
 | `driver.js` | Driver walkaround |
 | `portal.js` | Customer portal |
@@ -126,3 +135,19 @@ seconds. Nothing leaves the browser.
 Dragging uses pointer events rather than HTML5 drag and drop, so a mouse drags and a finger taps.
 
 `_screens/` holds test screenshots and is not committed.
+
+## Fitter pay: what is real and what is simulated
+
+- **Sending to the accountant is simulated in this demo.** Nothing leaves the browser. The screen shows
+  "Sent to ... with fitter-pay-<period>.csv attached" and logs it in the Sent list. In the real system
+  it goes through the email service, from the workshop's own address, with the spreadsheet attached.
+- The CSV download is real: one row per fitter (paid by, rate, days, hours, basic pay, overtime hours,
+  rate and pay, extras and what for, total) plus a totals row.
+- Hours come from the clock. The sample data has a gate clock in and out for each fitter for the
+  last ten weeks (`dayClocks` in `data.js`), less half an hour for lunch. Job clock ons count instead
+  on a day they add up to more. Hourly fitters are paid up to the overtime threshold (8 hours) a day;
+  day rate fitters get a day per day worked, half a day under 6 hours. Time past 8 hours a day is only
+  paid once it is added as overtime.
+- Pay rates are set on the Fitter pay screen (**Pay rates**) or in **Settings > Fitters > Edit**.
+- The addresses are remembered in this browser under `wsDemo:payTo`. Overtime, extras and the Sent
+  list live in the demo data, so **Reset demo** clears them.
