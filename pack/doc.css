@@ -1,0 +1,112 @@
+/* The candidate pack document. Four templates: classic, executive, modern, minimal.
+   Brand colour and font come from CSS variables set per agency (--pb, --pf). */
+.pd{--ink:#0F1115;--ink2:#3C414A;--mut:#6F7480;--ln:#E7E7EB;--soft:#F6F6F8;
+  font-family:var(--pf,'Inter',system-ui,sans-serif);color:var(--ink);background:#fff;line-height:1.55;font-size:15.5px;max-width:880px;margin:0 auto;position:relative;overflow:hidden;letter-spacing:-.005em}
+.pd *{box-sizing:border-box}
+.pd h1,.pd h2,.pd h3{margin:0;letter-spacing:-.025em}
+.pd p{margin:0}
+.pd-head{background:var(--pb);color:#fff;padding:22px 28px 64px;position:relative}
+.pd-head::after{content:"";position:absolute;inset:0;background:radial-gradient(70% 120% at 100% 0%,rgba(255,255,255,.18),rgba(255,255,255,0) 60%);pointer-events:none}
+.pd-head-in{display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;z-index:1}
+.pd-logo{height:38px;max-width:180px;object-fit:contain;background:#fff;border-radius:8px;padding:4px 8px}
+.pd-word{font-weight:800;font-size:18px;letter-spacing:-.02em}
+.pd-tag{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;opacity:.85;white-space:nowrap}
+.pd-hero{margin:-40px 20px 0;background:#fff;border-radius:20px;box-shadow:0 18px 50px -18px rgba(15,17,21,.28),0 0 0 1px rgba(15,17,21,.04);padding:22px;display:flex;gap:16px;align-items:center;position:relative;z-index:2}
+.pd-av{width:64px;height:64px;border-radius:18px;background:var(--pb-l);color:var(--pb-d);display:grid;place-items:center;font-weight:800;font-size:22px;flex:0 0 auto}
+.pd-hero-t{min-width:0;flex:1}
+.pd-for{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--pb);font-weight:750}
+.pd-name{font-size:30px;font-weight:850;line-height:1.08;margin-top:3px;overflow-wrap:anywhere}
+.pd-headline{font-size:15.5px;color:var(--ink2);margin-top:4px}
+.pd-sec{padding:26px 28px 8px}
+.pd-sh{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.pd-sh h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);font-weight:750}
+.pd-quote{font-size:22px;line-height:1.3;font-weight:750;letter-spacing:-.02em;color:var(--ink);border-left:4px solid var(--pb);padding:2px 0 2px 16px;margin-bottom:14px}
+.pd-summary{font-size:16px;color:var(--ink2);white-space:pre-line}
+.pd-points{display:grid;gap:10px;margin-top:18px}
+.pd-point{border:1px solid var(--ln);border-radius:14px;padding:13px 14px;background:#fff}
+.pd-pt-top{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.pd-req{font-weight:700;font-size:14.5px;flex:1;min-width:0}
+.pd-ev{font-size:14px;color:var(--ink2);margin-top:5px}
+.pd-v{font-size:11.5px;font-weight:750;padding:4px 9px;border-radius:999px;white-space:nowrap;flex:0 0 auto}
+.pd-v-strong{background:#E5F4EC;color:#13693F}
+.pd-v-partial{background:#FDF1DC;color:#8F5600}
+.pd-v-gap{background:#F3F3F5;color:#4A4F58}
+.pd-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pd-fact{background:var(--soft);border-radius:14px;padding:12px 14px;min-width:0}
+.pd-fact b{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:3px}
+.pd-fact span{font-weight:700;font-size:15px;overflow-wrap:anywhere}
+.pd-fact:last-child:nth-child(odd){grid-column:1 / -1}
+.pd-profile{font-size:15.5px;color:var(--ink2);margin-bottom:16px}
+.pd-job{position:relative;padding:0 0 18px 18px;border-left:2px solid var(--ln);margin-left:6px}
+.pd-job::before{content:"";position:absolute;left:-7px;top:4px;width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid var(--pb)}
+.pd-job:last-of-type{border-left-color:transparent}
+.pd-job-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.pd-role{font-weight:750;font-size:16px}
+.pd-co{color:var(--ink2);font-size:14.5px}
+.pd-dates{font-size:12.5px;color:var(--mut);white-space:nowrap;font-weight:600;padding-top:3px}
+.pd-ctx{font-size:13.5px;color:var(--mut);margin-top:3px}
+.pd-job ul{margin:8px 0 0;padding-left:18px}
+.pd-job li{font-size:14.5px;color:var(--ink2);margin-bottom:4px}
+.pd-h3{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin:10px 0 8px;font-weight:750}
+.pd-edu{margin:0 0 12px;padding-left:18px}
+.pd-edu li{font-size:14.5px;margin-bottom:3px}
+.pd-skills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.pd-skills span{background:var(--pb-l);color:var(--pb-d);font-size:13px;font-weight:650;padding:5px 10px;border-radius:999px}
+.pd-qs ol{margin:0;padding:0;list-style:none;counter-reset:q}
+.pd-qs li{counter-increment:q;position:relative;padding:12px 0 12px 42px;border-top:1px solid var(--ln)}
+.pd-qs li:first-child{border-top:0}
+.pd-qs li::before{content:counter(q);position:absolute;left:0;top:12px;width:28px;height:28px;border-radius:9px;background:var(--pb);color:#fff;font-weight:800;font-size:13px;display:grid;place-items:center}
+.pd-q{font-weight:700;font-size:15px}
+.pd-why{font-size:13.5px;color:var(--mut);margin-top:3px}
+.pd-foot{margin:22px 28px 0;padding:18px 0;border-top:1px solid var(--ln);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+.pd-fn{font-weight:750}
+.pd-fs{font-size:13px;color:var(--mut)}
+.pd-fc{display:flex;flex-direction:column;gap:2px;text-align:right}
+.pd-fc a{color:var(--pb);font-weight:650;font-size:14px;text-decoration:none}
+.pd-legal{padding:0 28px 26px;font-size:11.5px;color:var(--mut)}
+@media (max-width:560px){
+  .pd{font-size:15px}
+  .pd-head{padding:18px 18px 56px}
+  .pd-hero{margin:-36px 12px 0;padding:16px;gap:12px;border-radius:18px}
+  .pd-av{width:52px;height:52px;border-radius:15px;font-size:18px}
+  .pd-name{font-size:25px}
+  .pd-sec{padding:22px 16px 6px}
+  .pd-quote{font-size:19px;padding-left:12px}
+  .pd-foot{margin:18px 16px 0}
+  .pd-legal{padding:0 16px 22px}
+  .pd-fc{text-align:left}
+  .pd-job-top{flex-direction:column;gap:2px}
+  .pd-dates{padding-top:0}
+}
+
+/* executive: dark, serif display, brand as accent only */
+.pd-executive .pd-head{background:#0B0C0F}
+.pd-executive .pd-head::after{background:radial-gradient(60% 140% at 100% 0%,color-mix(in srgb,var(--pb) 55%,transparent),transparent 65%)}
+.pd-executive .pd-name,.pd-executive .pd-quote{font-family:'Playfair Display',Georgia,serif;font-weight:700;letter-spacing:-.01em}
+.pd-executive .pd-name{font-size:34px}
+.pd-executive .pd-av{background:#0B0C0F;color:#fff}
+.pd-executive .pd-quote{border-left-color:#0B0C0F}
+@media (max-width:560px){.pd-executive .pd-name{font-size:28px}}
+
+/* modern: soft brand wash, rounded and airy */
+.pd-modern .pd-head{background:linear-gradient(135deg,var(--pb),var(--pb-d))}
+.pd-modern{background:linear-gradient(180deg,#fff 0,#fff 260px,var(--soft) 260px)}
+.pd-modern .pd-sec{background:#fff;margin:14px 20px 0;border-radius:18px;padding:20px 20px 12px;box-shadow:0 0 0 1px rgba(15,17,21,.05)}
+.pd-modern .pd-foot{margin:18px 20px 0;border-top:0}
+@media (max-width:560px){.pd-modern .pd-sec{margin:12px 10px 0;padding:18px 14px 8px}}
+
+/* minimal: white, thin brand rule */
+.pd-minimal .pd-head{background:#fff;color:var(--ink);padding-bottom:18px;border-top:6px solid var(--pb);border-bottom:1px solid var(--ln)}
+.pd-minimal .pd-head::after{display:none}
+.pd-minimal .pd-logo{padding:0;border-radius:0}
+.pd-minimal .pd-tag{color:var(--pb)}
+.pd-minimal .pd-hero{margin:0;box-shadow:none;border-radius:0;padding:26px 28px 6px}
+@media (max-width:560px){.pd-minimal .pd-hero{padding:20px 16px 4px}}
+
+@media print{
+  @page{size:A4;margin:12mm}
+  .pd{max-width:none;font-size:11pt;box-shadow:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pd-sec,.pd-point,.pd-job,.pd-qs li{break-inside:avoid}
+  .pd .regen{display:none}
+  .pd-modern{background:#fff}
+}
