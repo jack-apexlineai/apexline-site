@@ -43,8 +43,8 @@
     draw();
   }
   async function draw() {
-    var r = await Promise.all([fn('admin_overview'), fn('admin_secrets')]);
-    A.list = r[0].agencies; var sec = r[1].secrets;
+    var r = await Promise.all([fn('admin_overview'), fn('admin_secrets'), fn('admin_replay').catch(function () { return null; })]);
+    A.list = r[0].agencies; var sec = r[1].secrets; var rp = r[2];
     var live = A.list.filter(function (a) { return a.plan !== 'internal'; });
     var h = '<div class="sec"><h2>Agencies</h2><span class="muted">' + live.length + ' total, ' + live.filter(function (a) { return a.ok; }).length + ' switched on</span></div><div class="agrid">';
     h += A.list.map(function (a) {
@@ -57,6 +57,7 @@
     h += '<div class="two" style="margin-top:20px"><div class="card pad"><h2 style="margin-bottom:10px">Onboard a new agency (under 30 minutes)</h2><ol class="steps"><li>New agency: name, short name, colour, layout, seats, plan, status.</li><li>Upload their logo and paste two past write-ups as voice samples.</li><li>Paste their chaser wording if they have their own.</li><li>Logins: add the owner and recruiters. Copy each temporary password.</li><li>Send them the link and logins, then do the 20 minute walkthrough.</li></ol><p class="small muted" style="margin:10px 0 0">Switch off sets status to locked: every page, write and AI call is blocked, and client links stop working. Switch on reverses it.</p></div>';
     h += '<div class="card pad"><h2 style="margin-bottom:10px">Service keys</h2>' + keyRow('ANTHROPIC_API_KEY', 'Claude API key', sec) + keyRow('RESEND_API_KEY', 'Resend API key (email)', sec) +
       '<div class="member"><div class="sp"><div class="b">Real emails</div><div class="small muted">' + (sec.EMAIL_LIVE.value === 'yes' ? 'LIVE: emails go to the real client and recruiter addresses' : 'Test mode: every email goes to delivered@resend.dev') + '</div></div><button class="btn sm ' + (sec.EMAIL_LIVE.value === 'yes' ? '' : 'pri') + '" id="live">' + (sec.EMAIL_LIVE.value === 'yes' ? 'Back to test mode' : 'Go live') + '</button></div>' +
+      replayRow(rp) +
       '<div class="member"><div class="sp"><div class="b">Chasers</div><div class="small muted">Run every 30 minutes by pg_cron, UK working hours only</div></div><button class="btn sm" id="runch">Run now</button></div></div></div>';
     $('#body').innerHTML = h;
     $$('[data-edit]').forEach(function (b) { b.onclick = function () { editAgency(A.list.find(function (a) { return a.id === b.getAttribute('data-edit'); })); }; });
@@ -70,7 +71,24 @@
       if (goLive && !confirm('Go live? From now on emails go to real clients and recruiters.')) return;
       await fn('admin_secrets', { name: 'EMAIL_LIVE', value: goLive ? 'yes' : '' }); draw();
     };
+    if ($('#rpmode')) $('#rpmode').onclick = async function () {
+      var all = rp.mode !== 'all';
+      if (all && !confirm('Replay all demo AI? Nothing in the demo agency will call Claude: samples replay and anything else shows a friendly samples only message.')) return;
+      try { await fn('admin_replay', { mode: all ? 'all' : 'samples' }); toast(all ? 'All demo AI now replays.' : 'Back to replay for samples only.'); draw(); } catch (e) { toast(e.message, true); }
+    };
+    if ($('#rpclear')) $('#rpclear').onclick = async function () {
+      var demo = A.list.find(function (a) { return a.plan === 'demo'; });
+      if (!demo || !confirm('Remove the sample briefs and CVs added on calls in ' + demo.name + '? Their packs go too. The seeded demo data is not touched.')) return;
+      try { var x = await fn('admin_clear_samples', { agency_id: demo.id }); toast('Removed ' + x.jobs + ' briefs and ' + x.candidates + ' CVs.'); draw(); } catch (e) { toast(e.message, true); }
+    };
     $('#runch').onclick = async function () { try { var r = await fn('admin_run_chasers'); toast(r.skipped ? 'Not run: ' + r.skipped : r.sent + ' chasers sent.'); } catch (e) { toast(e.message, true); } };
+  }
+  // Demo replay: saved real Claude results for the sample briefs and CVs. No Anthropic call, no usage counted.
+  function replayRow(rp) {
+    if (!rp) return '<div class="member"><div class="sp"><div class="b">Demo replay</div><div class="small muted">Status not available</div></div></div>';
+    var on = rp.total > 0;
+    var line = (on ? 'On' : 'Off') + ', ' + (rp.mode === 'all' ? 'all demo AI replays' : 'for samples only') + '. ' + rp.total + ' cached: ' + rp.briefs + ' briefs, ' + rp.cvs + ' CVs, ' + rp.packs + ' packs.' + (rp.on_calls.briefs || rp.on_calls.cvs ? ' Added on calls: ' + rp.on_calls.briefs + ' briefs, ' + rp.on_calls.cvs + ' CVs.' : '');
+    return '<div class="member" id="rprow"><div class="sp"><div class="b">Demo replay</div><div class="small muted" id="rpline">' + esc(line) + '</div></div><div class="row flexwrap" style="gap:6px"><button class="btn sm' + (rp.mode === 'all' ? ' pri' : '') + '" id="rpmode" aria-pressed="' + (rp.mode === 'all') + '">' + (rp.mode === 'all' ? 'Replay all: on' : 'Replay all: off') + '</button>' + (rp.on_calls.briefs || rp.on_calls.cvs ? '<button class="btn sm" id="rpclear">Clear call samples</button>' : '') + '</div></div>';
   }
   function keyRow(k, label, sec) { return '<div class="member"><div class="sp"><div class="b">' + label + '</div><div class="small muted">' + (sec[k].set ? 'Set ' + ago(sec[k].updated_at) : 'Not set') + '</div></div><button class="btn sm" data-key="' + k + '">' + (sec[k].set ? 'Replace' : 'Add') + '</button></div>'; }
   async function setStatus(id, status) { try { await fn('admin_save_agency', { id: id, agency: { status: status } }); toast(status === 'locked' ? 'Switched off.' : 'Switched on.'); draw(); } catch (e) { toast(e.message, true); } }
@@ -101,7 +119,7 @@
         var f = $('#al').files[0];
         if (f) {
           var path = r.agency.id + '/logo-' + Date.now() + '.' + (f.name.split('.').pop() || 'png').toLowerCase();
-          var up = await sb.storage.from('logos').upload(path, f, { contentType: f.type, upsert: true });
+          var up = await sb.storage.from('logos').upload(path, f, { contentType: f.type, upsert: false });
           if (up.error) throw new Error('Logo: ' + up.error.message);
           await fn('admin_save_agency', { id: r.agency.id, agency: { logo_url: sb.storage.from('logos').getPublicUrl(path).data.publicUrl } });
         }
@@ -117,6 +135,7 @@
     $('#tc').onclick = function () { close(); draw(); };
     $$('[data-rm]', el).forEach(function (b) { b.onclick = async function () { if (!confirm('Remove this login?')) return; try { await fn('remove_member', { user_id: b.getAttribute('data-rm') }); b.closest('.member').remove(); toast('Removed.'); } catch (e) { toast(e.message, true); } }; });
     $('#ta').onclick = async function () {
+      $('#tres').innerHTML = '';
       try {
         var r = await fn('invite', { agency_id: a.id, name: $('#tn').value.trim(), email: $('#te').value.trim(), phone: $('#tp').value.trim(), role: $('#tr').value });
         $('#tres').innerHTML = '<div class="okbox" style="margin-top:12px"><div><b>Login created.</b> Send this to them (shown once):<br>Email: ' + esc(r.email) + '<br>Temporary password: <code>' + esc(r.password) + '</code><br>Link: https://apexlineai.com/pack/</div></div>';
