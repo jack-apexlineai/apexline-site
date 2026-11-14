@@ -74,6 +74,7 @@
   function dShort(d) { return new Date(String(d).slice(0, 10) + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); }
   function when(t) { return t ? new Date(t).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''; }
   function telHref(n) { return 'tel:' + String(n || '').replace(/[^\d+]/g, ''); }
+  function mailHref(to, subject, body) { return 'mailto:' + String(to || '').trim() + '?subject=' + encodeURIComponent(subject || '') + (body ? '&body=' + encodeURIComponent(body) : ''); }
   function waHref(n, text) {
     var d = String(n || '').replace(/\D/g, '');
     if (d.indexOf('0') === 0) d = '44' + d.slice(1);
@@ -588,7 +589,7 @@
     if (callNow.length) h += sec('Opened, no answer yet', 'Call the client now', callNow.map(function (p) {
       var j = p.jobs || {};
       var who = j.client_contact_name ? first(j.client_contact_name) : 'The client';
-      return '<div class="item" role="link" tabindex="0" data-go="#/pack/' + p.id + '/card"><div class="av red">' + esc(initials(p.candidates && p.candidates.name)) + '</div><div class="bd"><div class="t1 ell">' + esc(p.candidates && p.candidates.name) + '</div><div class="t2">' + esc(who) + ' at ' + esc(j.client_company || 'the client') + ' opened it ' + (p.open_count > 1 ? p.open_count + ' times' : 'once') + ', last ' + ago(p.last_opened_at) + '</div></div>' + (j.client_phone ? '<a class="btn sm callsm" href="' + telHref(j.client_phone) + '">' + I.phone + '<span>Call</span></a>' : '') + '</div>';
+      return '<div class="item" role="link" tabindex="0" data-go="#/pack/' + p.id + '/card"><div class="av red">' + esc(initials(p.candidates && p.candidates.name)) + '</div><div class="bd"><div class="t1 ell">' + esc(p.candidates && p.candidates.name) + '</div><div class="t2">' + esc(who) + ' at ' + esc(j.client_company || 'the client') + ' opened it ' + (p.open_count > 1 ? p.open_count + ' times' : 'once') + ', last ' + ago(p.last_opened_at) + '</div></div>' + '<div class="todaybtns">' + (j.client_phone ? '<a class="btn sm callsm" href="' + telHref(j.client_phone) + '" onclick="event.stopPropagation()">' + I.phone + '<span>Call</span></a>' : '') + (j.client_email ? '<a class="btn sm mailsm desk-only" href="' + mailHref(j.client_email, (first(p.candidates && p.candidates.name) || 'Candidate') + ' for the ' + (j.title || 'role'), 'Hi ' + (first(j.client_contact_name) || '') + ',\n\n') + '" onclick="event.stopPropagation()">' + I.mail + '<span>Email</span></a>' : '') + '</div></div>';
     }).join(''));
     if (fb.length) h += sec('Feedback in', 'The chasers have stopped', fb.map(function (p) {
       return packItem(p, '<div class="tiny muted" style="white-space:nowrap">' + ago(p.feedback_at) + '</div>').replace('href="#/pack/' + p.id + '"', 'href="#/pack/' + p.id + '/timeline"');
@@ -827,7 +828,7 @@
     var link = packLink(p.public_token);
     var waText = 'Hi ' + (first(j.client_contact_name) || '') + ', here is ' + first(c.name) + '\'s profile for the ' + j.title + ' role: ' + link;
     var btns = '<div class="callbar">' +
-      (j.client_phone ? '<a class="btn call" href="' + telHref(j.client_phone) + '">' + I.phone + 'Call ' + esc(first(j.client_contact_name) || 'client') + '</a><a class="btn wa" href="' + waHref(j.client_phone, waText) + '" target="_blank" rel="noopener">' + I.wa + 'WhatsApp link</a>' : '<a class="btn" href="#/job/' + j.id + '">Add client number</a><button class="btn" data-x="link">' + I.link + 'Copy link</button>') +
+      (j.client_phone ? '<a class="btn call" href="' + telHref(j.client_phone) + '">' + I.phone + 'Call ' + esc(first(j.client_contact_name) || 'client') + '</a><a class="btn wa" href="' + waHref(j.client_phone, waText) + '" target="_blank" rel="noopener">' + I.wa + 'WhatsApp link</a>' + (j.client_email ? '<a class="btn desk-only" href="' + mailHref(j.client_email, first(c.name) + ' for the ' + j.title + ' role', 'Hi ' + (first(j.client_contact_name) || '') + ',\n\nHere is ' + first(c.name) + '\'s profile for the ' + j.title + ' role: ' + link + '\n\n') + '">' + I.mail + 'Email ' + esc(first(j.client_contact_name) || 'client') + '</a>' : '') : '<a class="btn" href="#/job/' + j.id + '">Add client number</a><button class="btn" data-x="link">' + I.link + 'Copy link</button>') +
       (c.phone ? '<a class="btn" href="' + telHref(c.phone) + '">' + I.phone + 'Call ' + esc(first(c.name)) + '</a><a class="btn" href="' + waHref(c.phone, 'Hi ' + first(c.name) + ', quick update on ' + j.client_company + '.') + '" target="_blank" rel="noopener">' + I.wa + 'WhatsApp ' + esc(first(c.name)) + '</a>' : '') +
       '</div>' + placedCardBlock(p);
     view('<div class="wrap narrow">' + seg + briefingCard({ name: c.name, sub: j.title + ' · ' + j.client_company, chips: chips(p).replace(/chip /g, 'chip line '), briefing: p.content.briefing, salary: pr.salary, notice: pr.notice, availability: pr.availability, fit: p.content.fit && p.content.fit.headline, missing: p.content.missing, buttons: btns }) + '</div>');
