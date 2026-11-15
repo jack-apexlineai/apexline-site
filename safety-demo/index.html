@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#080B0A">
+<title>Coastal Recycling · Site safety demo</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%2310976F'/><text x='32' y='44' font-family='Arial' font-size='28' font-weight='700' fill='white' text-anchor='middle'>CR</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css?v=1">
+</head>
+<body class="landing">
+<div class="lwrap">
+  <div class="lhead"><img class="logo-img" src="coastal-logo.svg" alt="Coastal Recycling"><span class="badge-demo">Demo, sample data</span></div>
+  <section class="hero">
+    <h1>Plant checks and isolations.<br><em>Read out loud. Signed with a tap.</em></h1>
+    <p>Every operative does their pre-shift, running and post-shift checks on a phone, hears each SWP step by step, and signs with one tap. The office sees every machine, every defect and every lock across Kenbury Wood and Deep Moor, live.</p>
+  </section>
+  <div class="lbtns">
+    <a class="lbtn pri" href="phone.html" id="opBtn"><span id="i1"></span><span><b>Operative (phone)</b><small>Big buttons, audio first. Checks, SWPs, lock on and lock off.</small></span></a>
+    <a class="lbtn" href="office.html" id="ofBtn"><span id="i2"></span><span><b>Office</b><small>Live plant board, isolation board, sign-offs and printable records.</small></span></a>
+  </div>
+  <div class="both"><span id="i3"></span><span>Screen sharing? Open both side by side, then tick a defect or put a lock on in the phone and watch the office update.</span><button id="bothBtn">Open side by side</button></div>
+  <div class="feats">
+    <div class="feat"><span id="f1"></span><b>Audio first</b><small>Every check and every SWP step is read out, with a big replay button.</small></div>
+    <div class="feat"><span id="f2"></span><b>Tap to sign</b><small>One big box to sign. A finger signature if you want one.</small></div>
+    <div class="feat"><span id="f3"></span><b>Isolation board</b><small>Who has a lock on which machine, and since when.</small></div>
+    <div class="feat"><span id="f4"></span><b>Do not use, everywhere</b><small>A serious defect stops that machine on every phone and the board.</small></div>
+  </div>
+</div>
+<div class="foot">Built by <b>ApexLine</b> · Sample data only, stored in this browser</div>
+<script src="icons.js?v=1"></script>
+<script>
+document.getElementById('i1').innerHTML = ic('device-mobile');
+document.getElementById('i2').innerHTML = ic('layout-dashboard');
+document.getElementById('i3').innerHTML = ic('activity');
+document.getElementById('f1').innerHTML = ic('volume-2');
+document.getElementById('f2').innerHTML = ic('hand-finger');
+document.getElementById('f3').innerHTML = ic('lock');
+document.getElementById('f4').innerHTML = ic('hand-stop');
+document.getElementById('bothBtn').addEventListener('click', function(){
+  var w = window.open('phone.html', 'coastal-phone', 'width=430,height=900,left=40,top=40');
+  location.href = 'office.html';
+});
+</script>
+</body>
+</html>
