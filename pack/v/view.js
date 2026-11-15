@@ -73,6 +73,12 @@
     try { data = await call('view'); }
     catch (e) { return err(e.message.replace(/\.$/, '')); }
     render();
+    // Sales demo dressed up as a prospect: a small Preview badge makes it clear this is a demo.
+    try {
+      var pr = await fetch(CFG.url + '/functions/v1/prepare-demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'badge', t: token }) });
+      var pj = await pr.json();
+      if (pj && pj.preview) { var bd = document.createElement('div'); bd.className = 'vprev'; bd.innerHTML = '<span>Preview</span>Powered by Candidate Pack'; var pre = document.querySelector('.vpre'); if (pre) { bd.className = 'vprev inl'; pre.insertBefore(bd, pre.firstChild); } else document.body.appendChild(bd); }
+    } catch (e) {}
     if (q.get('print') === '1') setTimeout(function () { window.print(); }, 700);
   })();
 })();

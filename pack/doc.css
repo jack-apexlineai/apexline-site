@@ -110,3 +110,63 @@
   .pd .regen{display:none}
   .pd-modern{background:#fff}
 }
+
+/* ---------- Design pass v8 (15 Nov): a richer, more expensive pack. Brand comes from --pb. ---------- */
+.pd{font-feature-settings:"cv11","ss03";-webkit-font-smoothing:antialiased}
+.pd-head{padding:26px 32px 74px;background:radial-gradient(70% 160% at 100% 0%,rgba(255,255,255,.2),rgba(255,255,255,0) 55%),linear-gradient(135deg,var(--pb),var(--pb-d))}
+.pd-head::after{background:repeating-linear-gradient(115deg,rgba(255,255,255,0) 0 22px,rgba(255,255,255,.045) 22px 23px);-webkit-mask:linear-gradient(90deg,transparent 30%,#000);mask:linear-gradient(90deg,transparent 30%,#000)}
+.pd-word{font-size:19px;letter-spacing:-.025em}
+.pd-tag{display:inline-flex;align-items:center;gap:8px;opacity:.92}
+.pd-tag::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px rgba(255,255,255,.22)}
+.pd-logo{box-shadow:0 4px 14px -6px rgba(0,0,0,.35)}
+.pd-hero{margin:-48px 24px 0;padding:24px 26px;border-radius:22px;box-shadow:0 1px 2px rgba(15,17,21,.05),0 24px 60px -24px rgba(15,17,21,.34),0 0 0 1px rgba(15,17,21,.05)}
+.pd-av{width:70px;height:70px;border-radius:20px;background:linear-gradient(145deg,var(--pb-l),#fff);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pb) 22%,transparent),0 8px 18px -10px color-mix(in srgb,var(--pb) 70%,transparent);font-size:23px;letter-spacing:.01em}
+.pd-name{font-size:32px;letter-spacing:-.035em}
+.pd-headline{font-size:16px;line-height:1.45}
+.pd-sec{padding:30px 32px 8px}
+.pd-sh h2{display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:.14em;color:var(--ink2)}
+.pd-sh h2::before{content:"";width:18px;height:3px;border-radius:3px;background:var(--pb)}
+.pd-quote{position:relative;font-size:23px;line-height:1.28;letter-spacing:-.025em;border-left:0;padding:4px 0 4px 22px;margin-bottom:16px}
+.pd-quote::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:4px;border-radius:4px;background:linear-gradient(180deg,var(--pb),var(--pb-m))}
+.pd-summary{line-height:1.65}
+.pd-points{gap:12px;margin-top:22px}
+.pd-point{position:relative;border-radius:16px;padding:15px 16px 15px 20px;box-shadow:0 1px 2px rgba(15,17,21,.04);overflow:hidden}
+.pd-point::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#C9CBD1}
+.pd-point:has(.pd-v-strong)::before{background:#1E9A5E}
+.pd-point:has(.pd-v-partial)::before{background:#D69220}
+.pd-req{font-size:15px;letter-spacing:-.01em}
+.pd-ev{line-height:1.55}
+.pd-v{display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 8px;box-shadow:inset 0 0 0 1px rgba(15,17,21,.06)}
+.pd-v::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.pd-v-strong{background:linear-gradient(180deg,#EEF8F2,#DFF2E7);box-shadow:inset 0 0 0 1px rgba(22,121,74,.2)}
+.pd-v-partial{background:linear-gradient(180deg,#FEF6E7,#FBEBCC);box-shadow:inset 0 0 0 1px rgba(168,101,0,.2)}
+.pd-fact{background:linear-gradient(180deg,#F8F8FA,#F3F3F6);box-shadow:inset 0 0 0 1px rgba(15,17,21,.04);border-radius:16px;padding:14px 16px}
+.pd-fact span{font-size:15.5px;letter-spacing:-.01em}
+.pd-job{padding:0 0 22px 22px}
+.pd-job::before{left:-8px;width:14px;height:14px;box-shadow:0 0 0 4px #fff}
+.pd-role{font-size:16.5px;letter-spacing:-.015em}
+.pd-dates{background:var(--soft);border-radius:999px;padding:3px 10px;height:fit-content}
+.pd-skills span{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pb) 16%,transparent);padding:6px 11px}
+.pd-qs li::before{border-radius:10px;background:linear-gradient(145deg,var(--pb),var(--pb-d));box-shadow:0 6px 12px -6px color-mix(in srgb,var(--pb) 80%,transparent)}
+.pd-q{font-size:15.5px;letter-spacing:-.01em}
+.pd-foot{margin:28px 32px 0;padding:20px 0}
+.pd-fn{font-size:16px;letter-spacing:-.015em}
+.pd-legal{padding:0 32px 28px}
+.pd-modern .pd-sec{box-shadow:0 0 0 1px rgba(15,17,21,.05),0 10px 30px -22px rgba(15,17,21,.3)}
+.pd-minimal .pd-head{background:#fff}
+.pd-minimal .pd-head::after{display:none}
+.pd-executive .pd-head{background:radial-gradient(60% 140% at 100% 0%,color-mix(in srgb,var(--pb) 50%,transparent),transparent 65%),#0B0C0F}
+.pd-executive .pd-quote::before{background:#0B0C0F}
+.pd-executive .pd-av{background:#0B0C0F;box-shadow:none}
+@media (max-width:560px){
+  .pd-head{padding:20px 18px 60px}
+  .pd-hero{margin:-40px 12px 0;padding:18px 16px;gap:14px}
+  .pd-av{width:54px;height:54px;border-radius:16px;font-size:18px}
+  .pd-name{font-size:26px}
+  .pd-sec{padding:24px 16px 6px}
+  .pd-quote{font-size:19.5px;padding-left:16px}
+  .pd-foot{margin:22px 16px 0}
+  .pd-legal{padding:0 16px 22px}
+  .pd-dates{padding:2px 8px;margin-top:4px}
+}
+@media print{.pd-head::after{display:none}.pd-point::before{display:none}}

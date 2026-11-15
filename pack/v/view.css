@@ -42,3 +42,36 @@ body{background:#ECECEF;font-family:Inter,system-ui,-apple-system,sans-serif;col
   .vwrap{padding:0;max-width:none}
   .vwrap .pd{box-shadow:none;border-radius:0}
 }
+.vprev{position:fixed;left:12px;top:12px;z-index:60;display:flex;align-items:center;gap:8px;background:rgba(14,16,20,.88);color:#fff;font:600 12px/1 Inter,system-ui,sans-serif;padding:6px 10px 6px 6px;border-radius:999px}
+.vprev span{background:#FFD24A;color:#0E1014;font-weight:800;letter-spacing:.06em;text-transform:uppercase;font-size:10.5px;padding:4px 8px;border-radius:999px}
+.vprev.inl{position:static;display:inline-flex;margin:0 10px 6px 0;background:rgba(255,255,255,.12)}
+@media print{.vprev{display:none}}
+
+/* ---------- Design pass v8 (15 Nov): the client view should feel like a top-tier firm. ---------- */
+body{background:radial-gradient(1000px 420px at 50% -160px,color-mix(in srgb,var(--pb,#C8102E) 22%,transparent),transparent 72%) no-repeat,linear-gradient(180deg,#F1F1F4,#E9E9EE);-webkit-font-smoothing:antialiased;font-feature-settings:"cv11","ss03"}
+.vwrap{padding:40px 20px 180px}
+.vwrap .pd{border-radius:28px;box-shadow:0 2px 6px rgba(15,17,21,.05),0 40px 100px -36px rgba(15,17,21,.4),0 0 0 1px rgba(15,17,21,.05);animation:vIn .55s cubic-bezier(.2,.8,.2,1) both}
+@keyframes vIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.vpre{border-radius:16px;box-shadow:0 12px 30px -18px rgba(0,0,0,.6)}
+.vbar{background:rgba(255,255,255,.86);backdrop-filter:saturate(1.6) blur(18px);-webkit-backdrop-filter:saturate(1.6) blur(18px);border-top-color:rgba(15,17,21,.08);box-shadow:0 -16px 40px -24px rgba(0,0,0,.3)}
+.vbar .q{font-size:15.5px;font-weight:800;letter-spacing:-.02em}
+.vb{border-radius:15px;transition:transform .12s cubic-bezier(.2,.8,.2,1),box-shadow .2s,border-color .2s,filter .2s;box-shadow:0 1px 2px rgba(15,17,21,.05)}
+.vb:active{transform:scale(.97)}
+.vb.pri{background:linear-gradient(180deg,var(--pb,#C8102E),color-mix(in srgb,var(--pb,#C8102E) 82%,#000));border-color:color-mix(in srgb,var(--pb,#C8102E) 82%,#000);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 12px 28px -12px var(--pb,#C8102E)}
+@media (hover:hover){.vb:not(.pri):hover{border-color:#BDBDC7;box-shadow:0 6px 16px -8px rgba(15,17,21,.25)}.vb.pri:hover{filter:brightness(1.07)}}
+.vb:focus-visible,.vpre button:focus-visible{outline:2px solid var(--pb,#C8102E);outline-offset:2px}
+.vdone{animation:vIn .4s cubic-bezier(.2,.8,.2,1) both}
+.vdone .tick{width:44px;height:44px;background:linear-gradient(180deg,#1A8A55,#13693F);box-shadow:0 0 0 5px rgba(22,121,74,.14),0 10px 20px -10px rgba(19,105,63,.8)}
+.vdone .t{font-size:16px;letter-spacing:-.015em}
+.vmodal-bg{background:rgba(15,17,21,.4);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);animation:vFade .2s ease both}
+.vmodal{padding:24px 22px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 -24px 70px rgba(0,0,0,.28);animation:vUp .32s cubic-bezier(.2,.8,.2,1) both}
+.vmodal h2{font-size:22px;font-weight:800;letter-spacing:-.025em}
+.vmodal textarea{border-radius:14px;background:#FBFBFC;transition:border-color .15s,box-shadow .15s}
+.vmodal textarea:focus{background:#fff;box-shadow:0 0 0 4px color-mix(in srgb,var(--pb,#C8102E) 16%,transparent)}
+@keyframes vFade{from{opacity:0}}
+@keyframes vUp{from{opacity:0;transform:translateY(30px)}}
+@media (min-width:720px){.vmodal{border-radius:24px}}
+.vspin{border-top-color:var(--pb,#0F1115)}
+.verr{border-radius:24px}
+@media (max-width:560px){.vwrap{padding:0 0 160px}.vwrap .pd{border-radius:0;box-shadow:none}}
+@media (prefers-reduced-motion:reduce){.vwrap .pd,.vdone,.vmodal,.vmodal-bg{animation:none !important}.vb{transition:none}}

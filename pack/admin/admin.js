@@ -45,14 +45,15 @@
   async function draw() {
     var r = await Promise.all([fn('admin_overview'), fn('admin_secrets'), fn('admin_replay').catch(function () { return null; })]);
     A.list = r[0].agencies; var sec = r[1].secrets; var rp = r[2];
+    await Promise.all(A.list.filter(function (a) { return a.plan === 'demo'; }).map(async function (a) { try { PREP[a.id] = await prep('status', { agency_id: a.id }); } catch (e) { PREP[a.id] = null; } }));
     var live = A.list.filter(function (a) { return a.plan !== 'internal'; });
     var h = '<div class="sec"><h2>Agencies</h2><span class="muted">' + live.length + ' total, ' + live.filter(function (a) { return a.ok; }).length + ' switched on</span></div><div class="agrid">';
     h += A.list.map(function (a) {
       var st = a.status === 'locked' ? '<span class="chip red">Locked</span>' : !a.ok ? '<span class="chip red">Paid until passed</span>' : a.status === 'trial' ? '<span class="chip opened">Trial</span>' : '<span class="chip feedback">Active</span>';
       return '<div class="acard"><div class="row"><div class="mark" style="background:' + esc(a.brand_colour) + '">' + (a.logo_url ? '<img src="' + esc(a.logo_url) + '" alt="">' : esc(a.name.split(/\s+/).map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase())) + '</div><div class="sp" style="min-width:0"><div class="nm ell">' + esc(a.name) + '</div><div class="small muted ell">' + esc(a.slug) + ' · ' + esc(a.plan) + (a.paid_until ? ' · paid until ' + esc(a.paid_until) : '') + '</div></div>' + st + '</div>' +
         '<div class="stats"><div><b>' + a.members.length + '/' + a.recruiter_seats + '</b><span>logins</span></div><div><b>' + a.packs_30d + '</b><span>packs 30d</span></div><div><b>' + a.candidates + '</b><span>candidates</span></div><div><b>$' + a.ai_cost_30d.toFixed(2) + '</b><span>AI 30d</span></div></div>' +
-        '<div class="small muted" style="margin-bottom:10px">Last activity ' + ago(a.last_activity) + '</div>' +
-        '<div class="row flexwrap"><button class="btn sm" data-edit="' + a.id + '">Edit</button><button class="btn sm" data-team="' + a.id + '">Logins</button>' + (a.status === 'locked' ? '<button class="btn sm pri" data-unlock="' + a.id + '">Switch on</button>' : '<button class="btn sm danger" data-lock="' + a.id + '">Switch off</button>') + (a.plan === 'demo' ? '<button class="btn sm" data-shift="' + a.id + '">Refresh demo dates</button>' : '') + '</div></div>';
+        (PREP[a.id] && PREP[a.id].active ? '<div class="warnbox" style="margin-bottom:10px"><div><b>Preview on.</b> Dressed up as ' + esc(PREP[a.id].prospect.name) + ' (' + esc(PREP[a.id].prospect.specialism_label) + '). Reset demo puts it back.</div></div>' : '') + '<div class="small muted" style="margin-bottom:10px">Last activity ' + ago(a.last_activity) + '</div>' +
+        '<div class="row flexwrap"><button class="btn sm" data-edit="' + a.id + '">Edit</button><button class="btn sm" data-team="' + a.id + '">Logins</button>' + (a.status === 'locked' ? '<button class="btn sm pri" data-unlock="' + a.id + '">Switch on</button>' : '<button class="btn sm danger" data-lock="' + a.id + '">Switch off</button>') + (a.plan === 'demo' ? '<button class="btn sm" data-shift="' + a.id + '">Refresh demo dates</button><button class="btn sm pri" data-prep="' + a.id + '">Prepare demo for...</button>' + (PREP[a.id] && PREP[a.id].active ? '<button class="btn sm" data-preset="' + a.id + '">Reset demo</button>' : '') : '') + '</div></div>';
     }).join('') + '</div>';
     h += '<div class="two" style="margin-top:20px"><div class="card pad"><h2 style="margin-bottom:10px">Onboard a new agency (under 30 minutes)</h2><ol class="steps"><li>New agency: name, short name, colour, layout, seats, plan, status.</li><li>Upload their logo and paste two past write-ups as voice samples.</li><li>Paste their chaser wording if they have their own.</li><li>Logins: add the owner and recruiters. Copy each temporary password.</li><li>Send them the link and logins, then do the 20 minute walkthrough.</li></ol><p class="small muted" style="margin:10px 0 0">Switch off sets status to locked: every page, write and AI call is blocked, and client links stop working. Switch on reverses it.</p></div>';
     h += '<div class="card pad"><h2 style="margin-bottom:10px">Service keys</h2>' + keyRow('ANTHROPIC_API_KEY', 'Claude API key', sec) + keyRow('RESEND_API_KEY', 'Resend API key (email)', sec) +
@@ -65,6 +66,8 @@
     $$('[data-lock]').forEach(function (b) { b.onclick = function () { if (confirm('Switch this agency off? Every login and client link stops working until you switch it back on.')) setStatus(b.getAttribute('data-lock'), 'locked'); }; });
     $$('[data-unlock]').forEach(function (b) { b.onclick = function () { setStatus(b.getAttribute('data-unlock'), 'active'); }; });
     $$('[data-shift]').forEach(function (b) { b.onclick = async function () { try { var r = await fn('admin_shift_demo', { agency_id: b.getAttribute('data-shift') }); toast('Demo dates moved forward ' + r.shifted + '.'); draw(); } catch (e) { toast(e.message, true); } }; });
+    $$('[data-prep]').forEach(function (b) { b.onclick = function () { prepModal(b.getAttribute('data-prep')); }; });
+    $$('[data-preset]').forEach(function (b) { b.onclick = async function () { b.disabled = true; b.textContent = 'Resetting...'; try { var r = await prep('reset', { agency_id: b.getAttribute('data-preset') }); toast('Back to ' + (r.name || 'the demo agency') + '.'); draw(); } catch (e) { b.disabled = false; b.textContent = 'Reset demo'; toast(e.message, true); } }; });
     $$('[data-key]').forEach(function (b) { b.onclick = async function () { var k = b.getAttribute('data-key'); var v = prompt('Paste the ' + k + ' (leave blank to remove). It is stored server side and never shown again.'); if (v === null) return; try { await fn('admin_secrets', { name: k, value: v }); toast('Saved.'); draw(); } catch (e) { toast(e.message, true); } }; });
     $('#live').onclick = async function () {
       var goLive = sec.EMAIL_LIVE.value !== 'yes';
@@ -89,6 +92,29 @@
     var on = rp.total > 0;
     var line = (on ? 'On' : 'Off') + ', ' + (rp.mode === 'all' ? 'all demo AI replays' : 'for samples only') + '. ' + rp.total + ' cached: ' + rp.briefs + ' briefs, ' + rp.cvs + ' CVs, ' + rp.packs + ' packs.' + (rp.emails ? ' Plus ' + rp.emails + ' hand-written demo emails.' : '') + (rp.on_calls.briefs || rp.on_calls.cvs ? ' Added on calls: ' + rp.on_calls.briefs + ' briefs, ' + rp.on_calls.cvs + ' CVs.' : '');
     return '<div class="member" id="rprow"><div class="sp"><div class="b">Demo replay</div><div class="small muted" id="rpline">' + esc(line) + '</div></div><div class="row flexwrap" style="gap:6px"><button class="btn sm' + (rp.mode === 'all' ? ' pri' : '') + '" id="rpmode" aria-pressed="' + (rp.mode === 'all') + '">' + (rp.mode === 'all' ? 'Replay all: on' : 'Replay all: off') + '</button>' + (rp.on_calls.briefs || rp.on_calls.cvs ? '<button class="btn sm" id="rpclear">Clear call samples</button>' : '') + '</div></div>';
+  }
+  // "Prepare demo for...": the separate prepare-demo function. Demo agency only; Reset demo puts it back exactly.
+  var PREP = {};
+  async function prep(action, body) {
+    var s = (await sb.auth.getSession()).data.session;
+    var r = await fetch(CFG.url + '/functions/v1/prepare-demo', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (s ? s.access_token : '') }, body: JSON.stringify(Object.assign({ action: action }, body || {})) });
+    var j = {}; try { j = await r.json(); } catch (e) {}
+    if (!r.ok) throw new Error(j.error || 'Failed');
+    return j;
+  }
+  function prepModal(id) {
+    var specs = (PREP[id] && PREP[id].specialisms) || [];
+    modal('Prepare demo for...', '<p class="small muted" style="margin:0 0 12px">Type the prospect\'s website. The demo agency takes their name, logo and colour, and the sample briefs and CVs switch to their specialism. Public information from their own site only.</p><div class="field"><label class="f">Their website</label><input class="in" id="pu" inputmode="url" autocomplete="off" placeholder="yolkrecruitment.com"></div><div class="field"><label class="f">Specialism</label><select class="in" id="ps"><option value="">Work it out from their site</option>' + specs.map(function (x) { return '<option value="' + esc(x.key) + '">' + esc(x.label) + '</option>'; }).join('') + '</select></div>',
+      '<button class="btn" id="pc">Cancel</button><button class="btn pri" id="pg">Prepare demo</button>');
+    $('#pc').onclick = close;
+    $('#pu').focus();
+    $('#pu').onkeydown = function (e) { if (e.key === 'Enter') $('#pg').click(); };
+    $('#pg').onclick = async function () {
+      var b = this, u = $('#pu').value.trim(); if (!u) return toast('Type their website first.', true);
+      b.disabled = true; b.textContent = 'Reading their site...';
+      try { var r = await prep('prepare', { agency_id: id, url: u, specialism: $('#ps').value }); close(); toast('Ready: ' + r.prospect.name + ', ' + r.prospect.specialism_label + '.' + (r.prospect.notes.length ? ' ' + r.prospect.notes.join(' ') : '')); draw(); }
+      catch (e) { b.disabled = false; b.textContent = 'Prepare demo'; toast(e.message, true); }
+    };
   }
   function keyRow(k, label, sec) { return '<div class="member"><div class="sp"><div class="b">' + label + '</div><div class="small muted">' + (sec[k].set ? 'Set ' + ago(sec[k].updated_at) : 'Not set') + '</div></div><button class="btn sm" data-key="' + k + '">' + (sec[k].set ? 'Replace' : 'Add') + '</button></div>'; }
   async function setStatus(id, status) { try { await fn('admin_save_agency', { id: id, agency: { status: status } }); toast(status === 'locked' ? 'Switched off.' : 'Switched on.'); draw(); } catch (e) { toast(e.message, true); } }

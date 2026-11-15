@@ -372,6 +372,62 @@
   }
   async function signOut() { await sb.auth.signOut(); S.me = null; S.agency = null; location.hash = ''; renderLogin(); }
 
+  // ---------- "Prepare demo for..." (demo agency only) ----------
+  // Dresses the demo agency up as a prospect from their public website: name, logo, colour and samples for their
+  // specialism. Runs in the separate prepare-demo function. A Preview bar shows while it is on; Reset demo undoes it.
+  var PREP_FN = CFG.url + '/functions/v1/prepare-demo';
+  async function prepFn(action, body) {
+    var s = (await sb.auth.getSession()).data.session;
+    var r = await fetch(PREP_FN, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (s ? s.access_token : '') }, body: JSON.stringify(Object.assign({ action: action }, body || {})) });
+    var j = {}; try { j = await r.json(); } catch (e) {}
+    if (!r.ok) throw new Error(j.error || 'That did not work. Try again.');
+    return j;
+  }
+  async function prepStatus() {
+    if (!isDemo()) return;
+    try { S.prep = await prepFn('status'); } catch (e) { S.prep = null; }
+    drawPrevBar();
+  }
+  function drawPrevBar() {
+    var old = $('#prevbar'); if (old) old.remove();
+    if (!isDemo() || !S.prep || !S.prep.active) return;
+    var bar = document.createElement('div'); bar.id = 'prevbar'; bar.className = 'prevbar';
+    bar.innerHTML = '<span class="pv-badge">Preview</span><span class="pv-t ell">This is what ' + esc(S.agency.name) + ' would look like</span><button class="btn sm" id="pvreset">Reset demo</button>';
+    root.insertBefore(bar, root.firstChild);
+    $('#pvreset').onclick = resetDemo;
+  }
+  async function reloadAgency() {
+    S.agency = (await sb.from('agencies').select('*').eq('id', S.me.agency_id).maybeSingle()).data;
+    applyBrand(); document.title = S.agency.name + ' · Packs';
+    renderShell(); route();
+  }
+  async function resetDemo() {
+    var b = $('#pvreset'); if (b) { b.disabled = true; b.textContent = 'Resetting...'; }
+    try { var r = await prepFn('reset'); S.prep = { active: false }; await reloadAgency(); toast('Back to ' + (r.name || S.agency.name) + '.'); }
+    catch (e) { if (b) { b.disabled = false; b.textContent = 'Reset demo'; } toast(e.message, true); }
+  }
+  function prepareSheet() {
+    var specs = (S.prep && S.prep.specialisms) || [];
+    var el = sheet('Prepare demo for...', '<p class="muted" style="margin:0 0 14px">Type the prospect\'s website. The demo takes their name, logo and colour from it, and the sample briefs and CVs switch to their specialism. Only public information from their own site is used.</p>' +
+      '<label class="f" for="pdurl">Their website</label><input class="in" id="pdurl" inputmode="url" autocomplete="off" placeholder="yolkrecruitment.com" style="margin-bottom:12px">' +
+      '<label class="f" for="pdspec">Specialism</label><select class="in" id="pdspec"><option value="">Work it out from their site</option>' + specs.filter(function (x) { return x.key !== 'general'; }).map(function (x) { return '<option value="' + esc(x.key) + '">' + esc(x.label) + '</option>'; }).join('') + '<option value="general">General and executive search</option></select><div id="pdres"></div>',
+      '<button class="btn" data-close2>Cancel</button><button class="btn pri" id="pdgo">Prepare demo</button>');
+    $('[data-close2]', el).onclick = closeSheet;
+    setTimeout(function () { var i = $('#pdurl'); if (i) i.focus(); }, 60);
+    $('#pdurl').onkeydown = function (e) { if (e.key === 'Enter') $('#pdgo').click(); };
+    $('#pdgo').onclick = async function () {
+      var u = $('#pdurl').value.trim(); if (!u) { toast('Type their website first.', true); return; }
+      var b = this; b.disabled = true; b.textContent = 'Reading their site...';
+      try {
+        var r = await prepFn('prepare', { url: u, specialism: $('#pdspec').value });
+        S.prep = Object.assign({}, S.prep, r);
+        closeSheet(); await reloadAgency();
+        var n = (r.prospect && r.prospect.notes) || [];
+        toast('Ready: ' + S.agency.name + ', ' + (r.prospect.specialism_label || 'samples') + '.' + (n.length ? ' ' + n.join(' ') : ''));
+      } catch (e) { b.disabled = false; b.textContent = 'Prepare demo'; toast(e.message, true); }
+    };
+  }
+
   // ---------- boot ----------
   async function start() {
     var s = (await sb.auth.getSession()).data.session;
@@ -392,6 +448,7 @@
     if (!location.hash || location.hash === '#' || location.hash === '#/') location.hash = '#/today'; else route();
     if (!meta().welcome_done && !isDemo()) showWelcome();
     if (isDemo()) samples().catch(function () {});
+    if (isDemo()) prepStatus();
   }
 
   // ---------- first run ----------
@@ -491,6 +548,7 @@
       '<nav class="bnav" aria-label="Main">' + NAV.map(function (n) { return '<a href="#/' + n[0] + '" data-nav="' + n[0] + '">' + n[2] + '<span>' + n[1] + '</span><span class="dot" data-cnt="' + n[0] + '" hidden></span></a>'; }).join('') + '</nav>';
     $$('[data-act="brief"]').forEach(function (b) { b.onclick = addBriefSheet; });
     window.addEventListener('scroll', function () { var t = $('#top'); if (t) t.classList.toggle('scrolled', window.scrollY > 4); }, { passive: true });
+    drawPrevBar();
   }
   function setTop(title, backHash, extra) {
     $('#ttl').textContent = title;
@@ -1333,7 +1391,7 @@
     if (due) h += '<div class="warnbox" style="margin-top:10px">' + I.warn + '<div><b>Due for review.</b> No contact in over ' + ((S.agency.retention_months) || 24) + ' months. Get in touch, or delete them under UK GDPR.</div></div>';
     if ((c.skills || []).length) h += '<div class="sec"><h2>Skills</h2></div><div class="chips">' + c.skills.map(function (s) { return '<span class="chip line">' + esc(s) + '</span>'; }).join('') + '</div>';
     h += '<div class="sec"><h2>Open briefs they fit</h2></div><div class="list">' + (matches.length ? matches.map(function (m) {
-      return '<div class="item" style="cursor:default"><div class="score' + (m.score < 70 ? ' mid' : '') + '">' + m.score + '</div><div class="bd"><div class="t1 ell">' + esc(m.jobs.title) + '</div><div class="t2 ell">' + esc(m.jobs.client_company) + '</div><div class="why">' + esc(m.reason) + '</div></div>' + (packed[m.job_id] ? '<a class="btn sm" href="#/packs?job=' + m.job_id + '">Packs</a>' : '<button class="btn pri sm" data-build="' + m.job_id + '">Build pack</button>') + '</div>';
+      return '<div class="item" style="cursor:default"><div class="score' + (m.score < 70 ? ' mid' : '') + '" style="--s:' + (Number(m.score) || 0) + '">' + m.score + '</div><div class="bd"><div class="t1 ell">' + esc(m.jobs.title) + '</div><div class="t2 ell">' + esc(m.jobs.client_company) + '</div><div class="why">' + esc(m.reason) + '</div></div>' + (packed[m.job_id] ? '<a class="btn sm" href="#/packs?job=' + m.job_id + '">Packs</a>' : '<button class="btn pri sm" data-build="' + m.job_id + '">Build pack</button>') + '</div>';
     }).join('') : emptyBox('No open briefs fit yet. Every new brief is checked against them by itself.', '<button class="btn" data-act3="brief">' + I.plus + 'Add a brief</button>')) + '</div>';
     h += '<div class="sec"><h2>Packs</h2></div><div class="list">' + (packs.length ? packs.map(function (p) { return packItem(p); }).join('') : '<div class="empty">Not put forward to a client yet.</div>') + '</div>';
     h += '<div class="sec"><h2>Notes</h2><span class="muted">Personal details are taken out when you save</span></div><textarea class="in" id="cnotes" style="min-height:120px">' + esc(c.notes) + '</textarea><div class="row" style="margin-top:8px"><button class="btn rec" id="crec" type="button"><span class="pulse"></span>' + I.mic + '<span class="lbl">Record notes</span></button><span class="sp"></span><button class="btn" id="savenotes">Save notes</button></div>';
@@ -1409,7 +1467,7 @@
     h += '<div style="margin-top:18px" id="mhead">' + (fresh.length ? '<div class="banner"><div class="n">' + fresh.length + '</div><div><div class="t">You already have ' + (fresh.length === 1 ? '1 person' : fresh.length + ' people') + ' who fit this</div><div class="s">Ranked on skills and experience only. Tick who to put forward, then tap Build. ' + qhint('The number is a match score out of 100: how well their experience meets the must haves.') + '</div></div></div>' : packs.length ? '' : emptyBox('No one in your candidates fits this yet. Add a CV and it is checked against this brief straight away.', '<button class="btn pri" data-act3="cvjob">' + I.upload + 'Add a CV</button>')) + '</div>';
     h += '<div class="list" style="margin-top:12px" id="mlist">' + fresh.map(function (m) {
       var c = m.candidates;
-      return '<div class="match' + (sel[c.id] ? ' on' : '') + '" data-m="' + c.id + '" role="checkbox" aria-checked="' + (!!sel[c.id]) + '" tabindex="0"><div class="tick">' + I.check + '</div><div class="bd" style="flex:1;min-width:0"><div class="row"><div class="t1 ell sp" style="font-weight:750">' + esc(c.name) + '</div><div class="score' + (m.score < 70 ? ' mid' : '') + '">' + m.score + '</div></div><div class="t2 small muted ell">' + esc(c.current_title) + (c.location ? ' · ' + esc(c.location) : '') + '</div><div class="why">' + esc(m.reason) + '</div>' + (m.gaps && !/^none/i.test(m.gaps) ? '<div class="gap">Gap: ' + esc(m.gaps) + '</div>' : '') + '<a class="tiny" href="#/c/' + c.id + '" onclick="event.stopPropagation()">View profile</a></div></div>';
+      return '<div class="match' + (sel[c.id] ? ' on' : '') + '" data-m="' + c.id + '" role="checkbox" aria-checked="' + (!!sel[c.id]) + '" tabindex="0"><div class="tick">' + I.check + '</div><div class="bd" style="flex:1;min-width:0"><div class="row"><div class="t1 ell sp" style="font-weight:750">' + esc(c.name) + '</div><div class="score' + (m.score < 70 ? ' mid' : '') + '" style="--s:' + (Number(m.score) || 0) + '">' + m.score + '</div></div><div class="t2 small muted ell">' + esc(c.current_title) + (c.location ? ' · ' + esc(c.location) : '') + '</div><div class="why">' + esc(m.reason) + '</div>' + (m.gaps && !/^none/i.test(m.gaps) ? '<div class="gap">Gap: ' + esc(m.gaps) + '</div>' : '') + '<a class="tiny" href="#/c/' + c.id + '" onclick="event.stopPropagation()">View profile</a></div></div>';
     }).join('') + '</div>';
     if (packs.length) h += '<div class="sec"><h2>Packs for this brief</h2></div><div class="list">' + packs.map(function (p) { return packItem(p); }).join('') + '</div>';
     h += '<details style="margin-top:18px"><summary class="small muted" style="cursor:pointer">Original brief</summary><pre style="white-space:pre-wrap;font-family:inherit;font-size:13.5px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;overflow-wrap:anywhere">' + esc(j.brief_text) + '</pre></details></div>';
@@ -1578,7 +1636,7 @@
       '<p style="margin:12px 0 0;color:var(--ink-2)">' + esc(c.summary) + '</p></div>' +
       '<div class="okbox" style="margin-top:12px">' + I.shield + '<div><b>Taken out before the AI saw it:</b> ' + (red.length ? esc(red.map(function (x) { return x.label.toLowerCase() + (x.count > 1 ? ' (' + x.count + ')' : ''); }).join(', ')) : 'nothing sensitive found') + '.</div></div>';
     body += '<div class="sec"><h2>' + (r.matches.length ? 'Fits ' + r.matches.length + ' open brief' + (r.matches.length > 1 ? 's' : '') : 'No open briefs fit yet') + '</h2></div><div class="list">' + r.matches.map(function (m) {
-      return '<div class="item" style="cursor:default"><div class="score' + (m.score < 70 ? ' mid' : '') + '">' + m.score + '</div><div class="bd"><div class="t1 ell">' + esc(m.job ? m.job.title : '') + '</div><div class="t2 ell">' + esc(m.job ? m.job.client_company : '') + '</div><div class="why">' + esc(m.reason) + '</div></div><button class="btn pri sm" data-bp="' + m.id + '">Build pack</button></div>';
+      return '<div class="item" style="cursor:default"><div class="score' + (m.score < 70 ? ' mid' : '') + '" style="--s:' + (Number(m.score) || 0) + '">' + m.score + '</div><div class="bd"><div class="t1 ell">' + esc(m.job ? m.job.title : '') + '</div><div class="t2 ell">' + esc(m.job ? m.job.client_company : '') + '</div><div class="why">' + esc(m.reason) + '</div></div><button class="btn pri sm" data-bp="' + m.id + '">Build pack</button></div>';
     }).join('') + '</div>';
     if (!r.matches.length) body += '<p class="muted small" style="margin-top:8px">They are saved with your candidates. Every new brief is checked against them by itself.</p>';
     var el = sheet('Added to your candidates', body, '<a class="btn" href="#/c/' + c.id + '" id="vprof">View profile</a>' + (job ? '<a class="btn pri" href="#/job/' + job.id + '" id="vjob">Back to the brief</a>' : '<button class="btn pri" id="another">Add another</button>'));
@@ -1595,6 +1653,7 @@
     setTop('Settings');
     var a = S.agency, owner = S.me.role === 'owner';
     var h = '<div class="wrap narrow">';
+    if (isDemo()) h += '<div class="sec"><h2>Sales demo</h2></div><div class="card pad"><p style="margin:0 0 12px">' + (S.prep && S.prep.active ? 'Showing a preview for <b>' + esc(S.agency.name) + '</b>. Reset puts ' + 'Northbridge Search' + ' back exactly as it was.' : 'Before a call, dress this demo up as the prospect: their name, logo, colour and samples for their specialism.') + '</p><div class="row flexwrap"><button class="btn pri" id="pdopen">Prepare demo for...</button>' + (S.prep && S.prep.active ? '<button class="btn" id="pdreset">Reset demo</button>' : '') + '</div></div>';
     h += '<div class="sec"><h2>You</h2></div><div class="card pad"><div class="grid2"><div><label class="f" for="mn">Name</label><input class="in" id="mn" value="' + esc(S.me.name) + '"></div><div><label class="f" for="mp">Mobile (shown to clients)</label><input class="in" id="mp" inputmode="tel" value="' + esc(S.me.phone || '') + '"></div></div><div class="row flexwrap" style="margin-top:12px"><span class="small muted sp">' + esc(S.me.email) + '</span><button class="btn" id="chpw">Change password</button><button class="btn" id="saveme">Save</button></div></div>';
     h += '<div class="sec"><h2>On your phone</h2></div><div class="card pad"><p style="margin:0 0 10px">Install Candidate Pack on your home screen and it opens full screen like an app.</p><p class="small muted" style="margin:0">iPhone: tap Share, then <b>Add to Home Screen</b>. Android: tap the menu, then <b>Install app</b>.</p>' + (S.deferredInstall ? '<button class="btn pri" id="inst" style="margin-top:12px">Install now</button>' : '') + '</div>';
     if (owner) {
@@ -1614,6 +1673,8 @@
     $('#chpw').onclick = changePassword;
     $('#saveme').onclick = async function () { must(await sb.from('members').update({ name: $('#mn').value.trim(), phone: $('#mp').value.trim() }).eq('user_id', S.me.user_id)); S.me.name = $('#mn').value.trim(); S.me.phone = $('#mp').value.trim(); toast('Saved.'); };
     $('#signout').onclick = signOut;
+    if ($('#pdopen')) $('#pdopen').onclick = async function () { if (!S.prep || !S.prep.specialisms) { try { S.prep = await prepFn('status'); } catch (e) { return toast(e.message, true); } } prepareSheet(); };
+    if ($('#pdreset')) $('#pdreset').onclick = resetDemo;
     if ($('#inst')) $('#inst').onclick = function () { S.deferredInstall.prompt(); };
     if (!owner) return;
     // Branding saves the moment you tap it. Long text saves with its own button or when you leave the box.
@@ -1664,6 +1725,7 @@
     if (q && q.s && $('#s-' + q.s)) setTimeout(function () { var e = $('#s-' + q.s); e.scrollIntoView({ block: 'start' }); window.scrollBy(0, -70); if (focusOn[q.s]) $(focusOn[q.s]).focus({ preventScroll: true }); }, 60);
     async function team() {
       var m = must(await sb.from('members').select('user_id,name,email,role,phone').eq('agency_id', a.id).order('created_at'));
+      if (!$('#seats')) return; // left Settings before the list loaded
       $('#seats').textContent = m.length + ' of ' + a.recruiter_seats + ' logins used';
       $('#team').innerHTML = m.map(function (x) { return '<div class="member"><div class="av">' + esc(initials(x.name)) + '</div><div class="sp" style="min-width:0"><div class="b ell">' + esc(x.name) + '</div><div class="small muted ell">' + esc(x.email) + ' · ' + esc(x.role) + '</div></div>' + (x.user_id !== S.me.user_id ? '<button class="btn sm danger" data-rm="' + x.user_id + '">Remove</button>' : '<span class="chip line">You</span>') + '</div>'; }).join('');
       $$('[data-rm]').forEach(function (b) { b.onclick = async function () { if (!(await confirmBox('Remove this login?', 'They will not be able to log in any more. Their packs stay.', 'Remove', true))) return; try { await fn('remove_member', { user_id: b.getAttribute('data-rm') }); toast('Removed.'); team(); } catch (e) { toast(e.message, true); } }; });
