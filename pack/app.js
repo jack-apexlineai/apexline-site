@@ -43,6 +43,8 @@
     dl: svg('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>'),
     chart: svg('<path d="M3 20h18"/><rect x="5" y="11" width="3.2" height="6.5" rx="1"/><rect x="10.4" y="6" width="3.2" height="11.5" rx="1"/><rect x="15.8" y="9" width="3.2" height="8.5" rx="1"/>'),
     pound: svg('<path d="M17 19H7c1.6-1 2.4-2.6 2.4-4.6V8.8A3.8 3.8 0 0 1 13.2 5c1.6 0 2.9.8 3.5 2"/><path d="M6.5 12.5h7.5"/>'),
+    undo: svg('<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>'),
+    copy: svg('<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>'),
     trophy: svg('<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>'),
   };
 
@@ -297,7 +299,7 @@
     closeSheet();
     var tt = $('#toast'); if (tt) tt.className = 'toast';
     var bg = document.createElement('div'); bg.className = 'sheet-bg'; bg.id = 'sheetbg';
-    var el = document.createElement('div'); el.className = 'sheet' + (opts.wide ? ' wide' : ''); el.id = 'sheet';
+    var el = document.createElement('div'); el.className = 'sheet' + (opts.wide ? ' wide' : '') + (opts.cls ? ' ' + opts.cls : ''); el.id = 'sheet';
     el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', title);
     el.innerHTML = '<div class="sh-top"><h2 class="sp ell">' + esc(title) + '</h2><button class="ibtn" data-close aria-label="Close" style="border:0">' + I.close + '</button></div><div class="sh-body">' + body + '</div>' + (foot ? '<div class="sh-foot">' + foot + '</div>' : '');
     document.body.appendChild(bg); document.body.appendChild(el);
@@ -309,6 +311,7 @@
   }
   function closeSheet() {
     var a = $('#sheet'), b = $('#sheetbg');
+    if (a && a._off) a._off();
     if (a) a.parentNode.removeChild(a);
     if (b) b.parentNode.removeChild(b);
     document.body.style.overflow = '';
@@ -524,7 +527,7 @@
   window.addEventListener('hashchange', route);
 
   // ---------- data ----------
-  var PACK_LIST = 'id,status,open_count,chase_stage,next_chase_at,sent_at,first_opened_at,last_opened_at,feedback_outcome,feedback_text,feedback_at,feedback_seen,created_at,updated_at,job_id,candidate_id,public_token,created_by,jobs(title,client_company,client_contact_name,client_phone,client_email,status),candidates(name,phone),placements(id,fee_gbp,start_date,placed_at)';
+  var PACK_LIST = 'id,status,sent_to,open_count,chase_stage,next_chase_at,sent_at,first_opened_at,last_opened_at,feedback_outcome,feedback_text,feedback_at,feedback_seen,created_at,updated_at,job_id,candidate_id,public_token,created_by,jobs(title,client_company,client_contact_name,client_phone,client_email,status),candidates(name,phone),placements(id,fee_gbp,start_date,placed_at)';
   // A pack has at most one placement. PostgREST returns it as an object or a one-item list.
   function plc(p) { var x = p && p.placements; return Array.isArray(x) ? (x[0] || null) : (x || null); }
   async function getPacks(filter) {
@@ -586,13 +589,21 @@
     setBadge('today', callNow.length + fb.filter(function (p) { return !p.feedback_seen; }).length);
     var h = '';
     function sec(t, sub, items) { return '<div class="sec"><h2>' + t + '</h2><span class="muted">' + sub + '</span></div><div class="list">' + items + '</div>'; }
-    if (callNow.length) h += sec('Opened, no answer yet', 'Call the client now', callNow.map(function (p) {
+    // Call stays a tel: link (on a laptop it rings through Teams, Zoom Phone or FaceTime). Email opens the composer.
+    function todayActs(p) {
+      var j = p.jobs || {};
+      return '<div class="todayact"><div class="todaybtns">' + (j.client_phone ? '<a class="btn sm callsm" href="' + telHref(j.client_phone) + '" onclick="event.stopPropagation()">' + I.phone + '<span>Call</span></a>' : '') + mailBtn(p.id) + '</div>' +
+        (j.client_phone ? '<div class="callhint desk-hint">Calls through your computer\'s phone app, or use your mobile</div>' : '') + '</div>';
+    }
+    if (callNow.length) h += sec('Opened, no answer yet', 'Call or email the client now', callNow.map(function (p) {
       var j = p.jobs || {};
       var who = j.client_contact_name ? first(j.client_contact_name) : 'The client';
-      return '<div class="item" role="link" tabindex="0" data-go="#/pack/' + p.id + '/card"><div class="av red">' + esc(initials(p.candidates && p.candidates.name)) + '</div><div class="bd"><div class="t1 ell">' + esc(p.candidates && p.candidates.name) + '</div><div class="t2">' + esc(who) + ' at ' + esc(j.client_company || 'the client') + ' opened it ' + (p.open_count > 1 ? p.open_count + ' times' : 'once') + ', last ' + ago(p.last_opened_at) + '</div></div>' + '<div class="todaybtns">' + (j.client_phone ? '<a class="btn sm callsm" href="' + telHref(j.client_phone) + '" onclick="event.stopPropagation()">' + I.phone + '<span>Call</span></a>' : '') + (j.client_email ? '<a class="btn sm mailsm desk-only" href="' + mailHref(j.client_email, (first(p.candidates && p.candidates.name) || 'Candidate') + ' for the ' + (j.title || 'role'), 'Hi ' + (first(j.client_contact_name) || '') + ',\n\n') + '" onclick="event.stopPropagation()">' + I.mail + '<span>Email</span></a>' : '') + '</div></div>';
+      return '<div class="item" role="link" tabindex="0" data-go="#/pack/' + p.id + '/card"><div class="av red">' + esc(initials(p.candidates && p.candidates.name)) + '</div><div class="bd"><div class="t1 ell">' + esc(p.candidates && p.candidates.name) + '</div><div class="t2">' + esc(who) + ' at ' + esc(j.client_company || 'the client') + ' opened it ' + (p.open_count > 1 ? p.open_count + ' times' : 'once') + ', last ' + ago(p.last_opened_at) + '</div></div>' + todayActs(p) + '</div>';
     }).join(''));
     if (fb.length) h += sec('Feedback in', 'The chasers have stopped', fb.map(function (p) {
-      return packItem(p, '<div class="tiny muted" style="white-space:nowrap">' + ago(p.feedback_at) + '</div>').replace('href="#/pack/' + p.id + '"', 'href="#/pack/' + p.id + '/timeline"');
+      var j = p.jobs || {}, c = p.candidates || {};
+      var who = j.client_contact_name ? first(j.client_contact_name) : 'The client';
+      return '<div class="item" role="link" tabindex="0" data-go="#/pack/' + p.id + '/timeline"><div class="av red">' + esc(initials(c.name)) + '</div><div class="bd"><div class="t1 ell">' + esc(c.name || 'Candidate') + '</div><div class="t2">' + esc(who) + ' at ' + esc(j.client_company || 'the client') + ', ' + ago(p.feedback_at) + '</div><div style="margin-top:6px">' + chips(p) + '</div></div>' + todayActs(p) + '</div>';
     }).join(''));
     if (chase.length) h += sec('Chasers going out today', 'Automatic, in your wording', chase.map(function (p) {
       var st = p.chase_stage === 0 ? '48 hour chaser' : '5 day chaser';
@@ -605,7 +616,7 @@
       var mc = (j.matches && j.matches[0] && j.matches[0].count) || 0, pc = (j.packs && j.packs[0] && j.packs[0].count) || 0;
       return '<a class="item" href="#/job/' + j.id + '"><div class="av">' + I.briefs.replace('<svg', '<svg width="20" height="20"') + '</div><div class="bd"><div class="t1 ell">' + esc(j.title) + '</div><div class="t2 ell">' + esc(j.client_company) + '</div></div><div class="tiny muted" style="text-align:right;white-space:nowrap"><b style="color:var(--ink)">' + mc + '</b> ' + (mc === 1 ? 'match' : 'matches') + '<br>' + pc + ' pack' + (pc === 1 ? '' : 's') + '</div></a>';
     }).join(''));
-    var tb = $('#todaybody'); if (tb) tb.innerHTML = h;
+    var tb = $('#todaybody'); if (tb) { tb.innerHTML = h; bindMail(tb); }
   }
 
   function setupItems(nTeam) {
@@ -769,7 +780,9 @@
     brief_added: function (m) { return 'Brief added, ' + (m.matches || 0) + ' matches from your candidates'; },
     placed: function (m) { return 'Placed' + (m.fee != null ? ', ' + gbp(m.fee) + ' fee' : '') + (m.start_date ? ', starts ' + dShort(m.start_date) : ''); },
     placement_updated: function (m) { return 'Placement updated' + (m.fee != null ? ', ' + gbp(m.fee) + ' fee' : ''); },
-    placement_removed: function () { return 'Placement removed'; }
+    placement_removed: function () { return 'Placement removed'; },
+    emailed: function (m) { return 'Emailed ' + (m.to_name ? first(m.to_name) : (m.to || 'the client')) + (m.email === 'simulated' ? (isDemo() ? ' (demo, not delivered)' : ' (email not switched on yet, not delivered)') : m.sent_to && m.to && m.sent_to !== m.to ? ' (test inbox)' : ''); },
+    email_app: function (m) { return 'Email opened in your email app' + (m.to ? ' for ' + m.to : '') + ', not tracked here'; }
   };
   async function packTimeline(p, seg, head) {
     var ev = must(await sb.from('events').select('*').eq('pack_id', p.id).order('at', { ascending: false }));
@@ -778,7 +791,7 @@
     var stats = '<div class="kv" style="margin-bottom:16px"><div><b>Sent</b><span>' + (p.sent_at ? esc(when(p.sent_at)) : 'Not yet') + '</span></div><div><b>Opens</b><span>' + p.open_count + (p.last_opened_at ? ', last ' + esc(ago(p.last_opened_at)) : '') + '</span></div></div>';
     var tl = '<div class="tl">' + ev.map(function (e) {
       var f = EV[e.type] || function () { return e.type; };
-      var q = e.type === 'feedback' && e.meta && e.meta.text ? '<div class="q">"' + esc(e.meta.text) + '"</div>' : '';
+      var q = e.type === 'feedback' && e.meta && e.meta.text ? '<div class="q">"' + esc(e.meta.text) + '"</div>' : e.type === 'emailed' && e.meta ? '<div class="q"><b>' + esc(e.meta.subject || '') + '</b>' + (e.meta.preview ? '<br>' + esc(String(e.meta.preview).replace(/\s+/g, ' ')) : '') + '</div>' : '';
       return '<div class="ev ' + esc(e.type) + '"><div class="t">' + esc(f(e.meta || {})) + '</div><div class="w">' + esc(when(e.at)) + '</div>' + q + '</div>';
     }).join('') + '</div>';
     var canChase = p.sent_at && !p.feedback_outcome && p.chase_stage < 2 && p.status !== 'closed';
@@ -827,13 +840,171 @@
     var c = p.candidates, j = p.jobs, pr = p.content.practical || {};
     var link = packLink(p.public_token);
     var waText = 'Hi ' + (first(j.client_contact_name) || '') + ', here is ' + first(c.name) + '\'s profile for the ' + j.title + ' role: ' + link;
+    var who = esc(first(j.client_contact_name) || 'client');
     var btns = '<div class="callbar">' +
-      (j.client_phone ? '<a class="btn call" href="' + telHref(j.client_phone) + '">' + I.phone + 'Call ' + esc(first(j.client_contact_name) || 'client') + '</a><a class="btn wa" href="' + waHref(j.client_phone, waText) + '" target="_blank" rel="noopener">' + I.wa + 'WhatsApp link</a>' + (j.client_email ? '<a class="btn desk-only" href="' + mailHref(j.client_email, first(c.name) + ' for the ' + j.title + ' role', 'Hi ' + (first(j.client_contact_name) || '') + ',\n\nHere is ' + first(c.name) + '\'s profile for the ' + j.title + ' role: ' + link + '\n\n') + '">' + I.mail + 'Email ' + esc(first(j.client_contact_name) || 'client') + '</a>' : '') : '<a class="btn" href="#/job/' + j.id + '">Add client number</a><button class="btn" data-x="link">' + I.link + 'Copy link</button>') +
+      (j.client_phone ? '<a class="btn call" href="' + telHref(j.client_phone) + '">' + I.phone + 'Call ' + who + '</a>' : '<a class="btn" href="#/job/' + j.id + '">Add client number</a>') +
+      '<button type="button" class="btn mailbig" data-mail="' + p.id + '">' + I.mail + 'Email ' + who + '</button>' +
+      (j.client_phone ? '<div class="callhint desk-hint wide">Calls through your computer\'s phone app, or use your mobile</div><a class="btn wa wide" href="' + waHref(j.client_phone, waText) + '" target="_blank" rel="noopener">' + I.wa + 'WhatsApp link</a>' : '<button class="btn wide" data-x="link">' + I.link + 'Copy link</button>') +
       (c.phone ? '<a class="btn" href="' + telHref(c.phone) + '">' + I.phone + 'Call ' + esc(first(c.name)) + '</a><a class="btn" href="' + waHref(c.phone, 'Hi ' + first(c.name) + ', quick update on ' + j.client_company + '.') + '" target="_blank" rel="noopener">' + I.wa + 'WhatsApp ' + esc(first(c.name)) + '</a>' : '') +
       '</div>' + placedCardBlock(p);
     view('<div class="wrap narrow">' + seg + briefingCard({ name: c.name, sub: j.title + ' · ' + j.client_company, chips: chips(p).replace(/chip /g, 'chip line '), briefing: p.content.briefing, salary: pr.salary, notice: pr.notice, availability: pr.availability, fit: p.content.fit && p.content.fit.headline, missing: p.content.missing, buttons: btns }) + '</div>');
     bindTabs(p.id);
+    bindMail($('#view'));
     if ($('[data-x="link"]')) $('[data-x="link"]').onclick = function () { copy(link); };
+  }
+
+  // ---------- Email composer (Jack, 14 Nov) ----------
+  // A pre-written email from the pack, its timeline and the agency voice. Centred pop-up on laptop, bottom sheet on phone.
+  // Subject and body edit in place. Tone chips swap the draft, with Undo back to the previous version.
+  // Send asks first, goes through the app and lands on the timeline. Until email is switched on for a real agency,
+  // Send opens the recruiter's own email app instead, and nothing is logged as sent.
+  var TONE_CHIPS = [['friendlier', 'Friendlier'], ['punchier', 'Punchier'], ['direct', 'More direct'], ['firmer', 'Firmer']];
+  // Keeps the bottom sheet above the phone keyboard (iOS shrinks the visual viewport, not the page).
+  function fitViewport(el) {
+    var vv = window.visualViewport;
+    if (!vv) return function () {};
+    function f() {
+      el.style.setProperty('--kb', Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) + 'px');
+      el.style.setProperty('--vvh', Math.round(vv.height) + 'px');
+      el.classList.toggle('tight', vv.height < 600 && window.innerWidth < 760);
+    }
+    vv.addEventListener('resize', f); vv.addEventListener('scroll', f); f();
+    return function () { vv.removeEventListener('resize', f); vv.removeEventListener('scroll', f); };
+  }
+  function mailBtn(packId, label) { return '<button type="button" class="btn sm mailsm" data-mail="' + packId + '">' + I.mail + '<span>' + esc(label || 'Email') + '</span></button>'; }
+  function bindMail(scope) {
+    $$('[data-mail]', scope).forEach(function (b) { b.onclick = function (e) { e.preventDefault(); e.stopPropagation(); composer(b.getAttribute('data-mail')); }; });
+  }
+  async function composer(packId) {
+    var el = sheet('Email the client', '<div id="cmp" aria-live="polite"><div class="skel" style="height:40px;margin-bottom:12px"></div><div class="skel" style="height:44px;margin-bottom:12px"></div><div class="skel" style="height:240px"></div></div>', '<div class="cmp-foot" id="cmpfoot"></div>', { cls: 'compose' });
+    el._off = fitViewport(el);
+    el.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
+    var p, r;
+    try {
+      var got = await Promise.all([loadPack(packId), fn('compose', { pack_id: packId })]);
+      p = got[0]; r = got[1];
+    } catch (e) {
+      if (!document.body.contains(el)) return;
+      $('#cmp', el).innerHTML = '<div class="empty">' + esc(e.message) + '<div style="margin-top:12px"><button class="btn" id="cmpretry">Try again</button></div></div>';
+      $('#cmpretry', el).onclick = function () { composer(packId); };
+      return;
+    }
+    if (!document.body.contains(el) || !p) return;
+    var j = p.jobs || {}, c = p.candidates || {};
+    var st = { hist: [], tone: r.tone || 'default', busy: false, variants: r.variants || null };
+    var who = r.client_first || first(j.client_contact_name) || 'the client';
+    $('.sh-top h2', el).textContent = 'Email ' + (r.client_first || 'the client');
+    var note = (r.source === 'ai' ? 'Written from this pack, its timeline and your voice. Check it, then send.' : 'Built from this pack and its timeline only. Change anything you like.') +
+      (r.link ? ' A View the profile button goes under your message.' : '') + ' Replies go to ' + (r.reply_to || S.me.email) + '.';
+    $('#cmp', el).innerHTML =
+      '<div class="cmp-ctx"><span class="chip line ell">' + esc(c.name || 'Candidate') + (j.title ? ' · ' + esc(j.title) : '') + '</span><span class="cmp-sit">' + esc(r.situation || '') + '</span></div>' +
+      (r.busy ? '<div class="warnbox cmp-busy" id="cmpbusy">' + I.warn + '<div><b>' + esc(r.busy) + '</b> Here is a simple draft to start from. <button type="button" class="linkbtn" id="cmpagain">Try again</button></div></div>' : '') +
+      '<div class="cmp-to"><label for="cto">To</label><input class="in" id="cto" type="email" inputmode="email" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="client@company.co.uk" value="' + esc(r.to || '') + '"></div>' +
+      '<div class="tones" role="group" aria-label="Change the tone">' + TONE_CHIPS.map(function (t) { return '<button type="button" class="tone" data-tone="' + t[0] + '" aria-pressed="false">' + esc(t[1]) + '</button>'; }).join('') +
+      '<button type="button" class="tone undo" id="cundo" hidden>' + I.undo + '<span>Undo</span></button></div>' +
+      '<div class="cmp-mail" id="cmail"><label class="sr" for="csub">Subject</label><input class="cmp-subj" id="csub" autocomplete="off"><label class="sr" for="cbody">Message</label><textarea class="cmp-body" id="cbody" rows="9"></textarea></div>' +
+      '<div class="hint cmp-note">' + esc(note) + '</div>';
+    var to = $('#cto', el), sub = $('#csub', el), bod = $('#cbody', el);
+    function grow() { bod.style.height = 'auto'; bod.style.height = Math.max(bod.scrollHeight + 2, 180) + 'px'; }
+    function full() { return bod.value.replace(/\s+$/, '') + (r.link ? '\n\n' + r.link : ''); }
+    function mail() { return mailHref(to.value.trim(), sub.value.trim(), full()); }
+    function sync() { var a = $('#cmpapp', el); if (a) a.href = mail(); }
+    function cur() { return { subject: sub.value, body: bod.value, tone: st.tone }; }
+    function setDraft(d, tone) {
+      st.tone = tone || 'default';
+      sub.value = d.subject || ''; bod.value = d.body || '';
+      grow(); sync();
+      $$('[data-tone]', el).forEach(function (b) { var on = b.getAttribute('data-tone') === st.tone; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+      $('#cundo', el).hidden = !st.hist.length;
+      var m = $('#cmail', el); m.classList.remove('swap'); void m.offsetWidth; m.classList.add('swap');
+    }
+    setDraft(r, st.tone);
+    $('#cmail', el).classList.remove('swap');
+    bod.oninput = function () { grow(); sync(); };
+    sub.oninput = sync; to.oninput = sync;
+    $$('[data-tone]', el).forEach(function (b) {
+      b.onclick = async function () {
+        var t = b.getAttribute('data-tone');
+        if (st.busy || t === st.tone) return;
+        var before = cur();
+        if (st.variants && st.variants[t]) { st.hist.push(before); setDraft(st.variants[t], t); return; }
+        st.busy = true; el.classList.add('rewriting'); b.classList.add('busy'); $('#cmail', el).setAttribute('aria-busy', 'true');
+        try {
+          var x = await fn('compose', { pack_id: packId, tone: t, current: { subject: before.subject, body: before.body } });
+          if (!document.body.contains(el)) return;
+          st.hist.push(before); setDraft(x, t);
+        } catch (e) { toast(e.message, true); }
+        finally { st.busy = false; el.classList.remove('rewriting'); b.classList.remove('busy'); $('#cmail', el).removeAttribute('aria-busy'); }
+      };
+    });
+    $('#cundo', el).onclick = function () { var prev = st.hist.pop(); if (prev) setDraft(prev, prev.tone); };
+    if ($('#cmpagain', el)) $('#cmpagain', el).onclick = async function () {
+      var b = this; b.disabled = true; b.textContent = 'Trying...';
+      try {
+        var x = await fn('compose', { pack_id: packId });
+        if (x.source === 'ai') { st.hist.push(cur()); st.variants = null; r.source = 'ai'; setDraft(x, 'default'); var bx = $('#cmpbusy', el); if (bx) bx.remove(); }
+        else { b.disabled = false; b.textContent = 'Try again'; toast(x.busy || 'Busy right now, try again in a minute.', true); }
+      } catch (e) { b.disabled = false; b.textContent = 'Try again'; toast(e.message, true); }
+    };
+    function logApp() {
+      sb.from('events').insert({ agency_id: S.agency.id, pack_id: p.id, candidate_id: p.candidate_id, job_id: p.job_id, type: 'email_app', meta: { to: to.value.trim(), subject: sub.value.trim() } }).then(function () {});
+    }
+    function check() {
+      var t = to.value.trim();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(t)) { toast('Add the client\'s email address, for example name@company.co.uk.', true); to.focus(); return null; }
+      if (!sub.value.trim() || bod.value.trim().length < 5) { toast('Add a subject and a message.', true); (sub.value.trim() ? bod : sub).focus(); return null; }
+      return t;
+    }
+    function openApp() {
+      var a = document.createElement('a'); a.href = mail(); a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
+      logApp();
+    }
+    function foot() {
+      var fb = r.send_mode !== 'app';
+      $('#cmpfoot', el).innerHTML = '<button type="button" class="btn" id="cmpcopy" aria-label="Copy">' + I.copy + '<span>Copy</span></button>' +
+        (fb ? '' : '<a class="btn" id="cmpapp" href="#" aria-label="Open in my email app">' + I.mail + '<span>Open in my email app</span></a>') +
+        '<button type="button" class="btn pri cmpsend" id="cmpsend">' + I.send + '<span class="cs"><span>' + (fb ? 'Send' : 'Send to ' + esc(who)) + '</span>' + (fb ? '<small>Opens in your email app for now</small>' : '') + '</span></button>';
+      sync();
+      $('#cmpcopy', el).onclick = function () {
+        var t = full();
+        function done() { toast('Copied. Paste it into any email.'); }
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, function () { prompt('Copy this email', t); });
+        else prompt('Copy this email', t);
+      };
+      if ($('#cmpapp', el)) $('#cmpapp', el).onclick = function () { if (!to.value.trim()) { toast('Add the client\'s email address first.', true); to.focus(); return false; } sync(); logApp(); };
+      $('#cmpsend', el).onclick = function () {
+        var t = check(); if (!t) return;
+        if (r.send_mode !== 'app') { openApp(); closeSheet(); toast('Opened in your email app. Send it from there.'); return; }
+        ask(t);
+      };
+    }
+    function ask(t) {
+      var isClient = r.to && t.toLowerCase() === String(r.to).toLowerCase();
+      var co = String(r.client_company || '').replace(/,?\s+(ltd|limited|plc|llp)\.?$/i, '');
+      var q = isClient && r.client_first ? 'Send this to ' + r.client_first + (co ? ' at ' + co : '') + '?' : 'Send this to ' + t + '?';
+      $('#cmpfoot', el).innerHTML = '<div class="cmp-confirm"><div class="q" id="cmpq">' + esc(q) + '</div><div class="row"><button type="button" class="btn" id="cmpno">Cancel</button><button type="button" class="btn pri" id="cmpyes">' + I.send + '<span>Yes, send</span></button></div></div>';
+      $('#cmpno', el).onclick = foot;
+      $('#cmpyes', el).focus();
+      $('#cmpyes', el).onclick = async function () {
+        var y = this; y.disabled = true; y.innerHTML = 'Sending...';
+        try {
+          var x = await fn('send_email', { pack_id: packId, to: t, subject: sub.value.trim(), body: bod.value, tone: st.tone, source: r.source });
+          closeSheet();
+          var es = x.email && x.email.status;
+          tickPop('Sent');
+          var msg = isDemo() ? 'Sent and logged on the timeline. This is the demo account, so nothing was delivered.'
+            : es === 'simulated' ? 'Logged on the timeline. Email is not switched on for your account yet, so ' + who + ' has not had it.'
+            : x.email && x.email.to && x.email.to !== t ? 'Sent to the test inbox and logged on the timeline. Email is in test mode.'
+            : 'Sent to ' + t + '. It is on the timeline.';
+          toast(msg, false, /\/timeline$/.test(location.hash) ? null : { label: 'Timeline', run: function () { location.hash = '#/pack/' + packId + '/timeline'; } });
+          if (location.hash === '#/pack/' + packId + '/timeline') scPack(packId, 'timeline');
+        } catch (e) {
+          if (/opens in your email app/i.test(e.message)) { r.send_mode = 'fallback'; foot(); toast(e.message); return; }
+          foot(); toast(e.message, true);
+        }
+      };
+    }
+    foot();
   }
 
   // ---------- Placements ----------
@@ -883,12 +1054,12 @@
         closeSheet();
         if (pl) toast('Placement saved.');
         else { confetti(); toast('Nice one! ' + gbp(fee) + ' is on your Reports.'); }
-        if (tab === 'list') route(); else scPack(p.id, tab);
+        if (tab === 'list') route(); else if (location.hash.indexOf('#/pack/' + p.id) === 0) scPack(p.id, tab);
       } catch (e) { b.disabled = false; toast(e.message, true); }
     };
     if ($('#punplace')) $('#punplace').onclick = async function () {
       if (!(await confirmBox('Remove this placement?', 'The ' + gbp(pl.fee_gbp) + ' fee comes off your Reports. The pack stays.', 'Remove', true))) return;
-      try { must(await sb.from('placements').delete().eq('id', pl.id).select('id')); toast('Placement removed.'); if (tab === 'list') route(); else scPack(p.id, tab); } catch (e) { toast(e.message, true); }
+      try { must(await sb.from('placements').delete().eq('id', pl.id).select('id')); toast('Placement removed.'); if (tab === 'list') route(); else if (location.hash.indexOf('#/pack/' + p.id) === 0) scPack(p.id, tab); } catch (e) { toast(e.message, true); }
     };
   }
 

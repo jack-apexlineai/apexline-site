@@ -552,3 +552,80 @@ textarea.in{min-height:140px;resize:vertical;line-height:1.5}
 .desk-only{display:none !important}
 @media (min-width:900px) and (hover:hover){.desk-only{display:inline-flex !important}}
 .todaybtns{display:flex;gap:8px;align-items:center;flex-shrink:0}
+
+/* Call and Email on laptop and phone (Jack, 14 Nov). Call stays tel:, Email opens the composer. */
+.todayact{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.callhint{font-size:11.5px;line-height:1.35;color:var(--muted);max-width:190px;text-align:right}
+.desk-hint{display:none}
+@media (min-width:900px) and (hover:hover){.desk-hint{display:block}}
+.btn.mailsm{background:#fff}
+.callbar .wide{grid-column:1/-1}
+.callbar .callhint{max-width:none;text-align:left;margin:-4px 2px 0}
+@media (max-width:899px){
+  .todaybtns{flex-direction:column;align-items:stretch;gap:6px}
+  .todaybtns .btn{padding:0 12px}
+}
+
+/* Email composer: bottom sheet on phone, centred pop-up on laptop */
+.sheet.compose{top:auto;bottom:var(--kb,0px);max-height:calc(var(--vvh,100dvh) - 12px);height:auto;border-radius:20px 20px 0 0;background:#fff}
+.sheet.compose .sh-top{border-radius:20px 20px 0 0;min-height:54px}
+.sheet.compose .sh-top::before{content:"";position:absolute;left:50%;top:6px;width:38px;height:4px;margin-left:-19px;border-radius:4px;background:var(--line-2)}
+.sheet.compose .sh-top{position:relative}
+.sheet.compose .sh-body{padding:12px 16px 8px;flex:1 1 auto;min-height:0}
+.sheet.compose .sh-foot{display:block;padding:10px 16px calc(10px + var(--safe-b))}
+.cmp-ctx{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-bottom:10px;min-width:0}
+.cmp-ctx .chip{max-width:100%}
+.cmp-sit{font-size:13px;color:var(--ink-2);font-weight:600}
+.cmp-busy{margin-bottom:10px}
+.linkbtn{background:none;border:0;padding:0;color:var(--brand);font:inherit;font-weight:700;cursor:pointer;text-decoration:underline;min-height:0}
+.cmp-to{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding:0 0 8px;margin-bottom:10px}
+.cmp-to label{font-size:13px;font-weight:650;color:var(--muted);flex:0 0 auto}
+.cmp-to .in{border:0;box-shadow:none;padding:6px 0;min-height:40px;font-size:16px}
+.cmp-to .in:focus{box-shadow:none}
+.tones{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.tone{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line-2);background:#fff;font:inherit;font-weight:650;font-size:14px;color:var(--ink);cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.tone:hover{border-color:var(--ink-2)}
+.tone.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.tone.undo{border-style:dashed;color:var(--ink-2)}
+.tone.undo svg{width:16px;height:16px}
+.tone.busy{animation:tonepulse 1s ease-in-out infinite}
+@keyframes tonepulse{50%{opacity:.45}}
+.cmp-mail{border:1px solid var(--line-2);border-radius:14px;background:#fff;overflow:hidden;transition:box-shadow .15s,border-color .15s}
+.cmp-mail:focus-within{border-color:var(--brand);box-shadow:0 0 0 4px var(--brand-m)}
+.cmp-mail.swap{animation:swapin .32s ease}
+@keyframes swapin{from{opacity:.35}to{opacity:1}}
+.rewriting .cmp-mail{opacity:.55}
+.cmp-subj{display:block;width:100%;border:0;border-bottom:1px solid var(--line);padding:12px 14px;font:inherit;font-size:16px;font-weight:700;outline:none;background:transparent;color:var(--ink)}
+.cmp-body{display:block;width:100%;border:0;padding:12px 14px 14px;font:inherit;font-size:16px;line-height:1.55;resize:none;outline:none;min-height:180px;background:transparent;color:var(--ink);overflow:hidden}
+.cmp-note{margin:8px 2px 4px;display:block}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.cmp-foot{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sheet.compose .cmp-foot .btn{min-width:0;white-space:normal;line-height:1.2;text-align:center;flex:initial}
+.cmp-foot .cmpsend{grid-column:1/-1;order:-1;min-height:50px;font-size:15.5px}
+.cmp-foot .cs{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}
+.cmp-foot .cs small{font-size:12px;font-weight:600;opacity:.85}
+.cmp-confirm{grid-column:1/-1}
+.cmp-confirm .q{font-weight:750;font-size:16px;margin:2px 0 10px}
+.cmp-confirm .row{display:flex;gap:8px}
+.cmp-confirm .btn{flex:1}
+@media (min-width:760px){
+  .sheet.compose{left:50%;top:6vh;bottom:auto;width:660px;margin-left:-330px;max-height:88vh;border-radius:22px}
+  .sheet.compose .sh-top::before{display:none}
+  .sheet.compose .sh-body{padding:16px 22px 8px}
+  .sheet.compose .sh-foot{padding:12px 22px 16px}
+  .cmp-foot{display:flex;justify-content:flex-end}
+  .sheet.compose .cmp-foot .btn{flex:0 0 auto}
+  .cmp-foot .cmpsend{order:0;min-height:46px}
+  .cmp-body{min-height:220px}
+}
+.tl .ev.emailed::before{border-color:var(--info);background:var(--info)}
+.tl .ev.email_app::before{border-color:var(--info)}
+@media (prefers-reduced-motion:reduce){.cmp-mail.swap,.tone.busy{animation:none}}
+/* Phone with the keyboard open: one compact row so the draft keeps the room */
+.sheet.compose.tight .sh-top{min-height:46px}
+.sheet.compose.tight .sh-foot{padding:8px 12px calc(8px + var(--safe-b))}
+.sheet.compose.tight .cmp-foot{grid-template-columns:auto auto 1fr}
+.sheet.compose.tight .cmp-foot .cmpsend{grid-column:auto;order:0;min-height:46px}
+.sheet.compose.tight .cmp-foot .btn:not(.cmpsend){padding:0 12px;min-width:46px}
+.sheet.compose.tight .cmp-foot .btn:not(.cmpsend) span{display:none}
+.sheet.compose.tight .cmp-foot .cs small{display:none}
