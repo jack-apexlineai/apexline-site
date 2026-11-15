@@ -8,3 +8,11 @@ Object.assign(window.ICONS,{
 "m-trommel":'<ellipse cx="5" cy="11" rx="2" ry="4"/><path d="M5 7h13M5 15h13"/><path d="M18 7a2 4 0 0 1 0 8"/><circle cx="9" cy="11" r=".6"/><circle cx="12" cy="9.5" r=".6"/><circle cx="12" cy="12.5" r=".6"/><circle cx="15" cy="11" r=".6"/><path d="M7 15l-1 5M16 15l1 5M4 20h15"/>'
 });
 function ic(n,c){return '<svg class="ic '+(c||'')+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(window.ICONS[n]||'')+'</svg>';}
+Object.assign(window.ICONS, {
+"microphone":'<path d="M9 5a3 3 0 0 1 3 -3a3 3 0 0 1 3 3v5a3 3 0 0 1 -3 3a3 3 0 0 1 -3 -3z"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M8 21h8"/><path d="M12 17v4"/>',
+"id-badge":'<path d="M5 6a3 3 0 0 1 3 -3h8a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-8a3 3 0 0 1 -3 -3z"/><path d="M10 13a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M10 6h4"/><path d="M9 18h6"/>',
+"school":'<path d="M22 9l-10 -4l-10 4l10 4l10 -4v6"/><path d="M6 10.6v5.4a6 3 0 0 0 12 0v-5.4"/>',
+"calendar":'<path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/>',
+"file-search":'<path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M12 21h-5a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v4.5"/><path d="M14 17.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0"/><path d="M18.5 19.5l2.5 2.5"/>',
+"certificate":'<path d="M12 15a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/><path d="M13 17.5v4.5l2 -1.5l2 1.5v-4.5"/><path d="M10 19h-5a2 2 0 0 1 -2 -2v-10c0 -1.1 .9 -2 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -1 1.73"/><path d="M6 9h12"/><path d="M6 12h3"/><path d="M6 15h2"/>'
+});

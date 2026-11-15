@@ -16,21 +16,22 @@ function machines(){ return CS.MACHINES.filter(function(m){ return siteF === 'al
 function snapshot(){ var o = {}; CS.MACHINES.forEach(function(m){ var s = CS.status(m.id); o[m.id] = s.c + '|' + s.locks.length + '|' + CS.checksToday(m.id).length + '|' + CS.openDefects(m.id).length; }); return o; }
 
 /* ---------- top bar ---------- */
-document.getElementById('openPhone').innerHTML = ic('device-mobile') + 'Phone view';
-document.getElementById('resetBtn').innerHTML = ic('refresh') + 'Reset demo';
+document.getElementById('openPhone').innerHTML = ic('device-mobile') + '<span class="btxt">Phone view</span>';
+document.getElementById('resetBtn').innerHTML = ic('refresh') + '<span class="btxt">Reset demo</span>';
 document.getElementById('openPhone').addEventListener('click', function(){ window.open('phone.html', 'coastal-phone', 'width=430,height=900'); });
 document.getElementById('resetBtn').addEventListener('click', function(){
   if (!confirm('Reset the demo back to the sample data?')) return;
   CS.reset(); prevStatus = snapshot(); seenEvents = {}; CS.state.events.forEach(function(e){ seenEvents[e.id] = 1; });
   closeLayer(); render(); toast('Demo reset to the sample data', 'green', 'refresh');
 });
-function tick(){ var d = new Date(); document.getElementById('clock').textContent = CS.hm(d); }
+function tick(){ document.getElementById('clock').innerHTML = CS.hm(CS.now()) + '<small>UK</small>'; }
 tick(); setInterval(tick, 10000);
 
 function tabs(){
   var locks = CS.activeLocks().length;
   var lotoMissing = CS.OPS.filter(function(o){ return !CS.hasSigned('lototo', o.id); }).length;
-  var t = [['board', 'layout-dashboard', 'Live board', ''], ['iso', 'lock', 'Isolations', locks ? '<span class="cnt">' + locks + '</span>' : ''], ['sign', 'signature', 'Sign-offs', lotoMissing ? '<span class="cnt">' + lotoMissing + '</span>' : ''], ['rec', 'printer', 'Records', '']];
+  var insp = CS.MACHINES.filter(function(m){ return CS.inspWorst(m.id) === 'red'; }).length;
+  var t = [['board', 'layout-dashboard', 'Live board', ''], ['iso', 'lock', 'Isolations', locks ? '<span class="cnt">' + locks + '</span>' : ''], ['sign', 'signature', 'Sign-offs', lotoMissing ? '<span class="cnt">' + lotoMissing + '</span>' : ''], ['insp', 'calendar', 'Inspections', insp ? '<span class="cnt red">' + insp + '</span>' : ''], ['people', 'id-badge', 'People', ''], ['rec', 'printer', 'Records', '']];
   document.getElementById('tabs').innerHTML = t.map(function(x){ return '<button class="' + (tab === x[0] ? 'on' : '') + '" data-tab="' + x[0] + '">' + ic(x[1]) + x[2] + x[3] + '</button>'; }).join('');
   $$('[data-tab]').forEach(function(b){ b.addEventListener('click', function(){ tab = b.dataset.tab; render(); }); });
 }
@@ -38,7 +39,7 @@ function tabs(){
 function filters(){
   return '<div class="filters">' + [['all', 'Both sites']].concat(CS.SITES.map(function(s){ return [s.id, s.name]; })).map(function(f){
     return '<button class="chip' + (siteF === f[0] ? ' on' : '') + '" data-site="' + f[0] + '">' + esc(f[1]) + '</button>';
-  }).join('') + '<span class="date">' + CS.dayLabel(Date.now()) + ' · Shift started 07:00</span></div>';
+  }).join('') + '<span class="date">' + CS.dayLabel(CS.now()) + ' · Shift started 07:00</span></div>';
 }
 
 /* ---------- KPIs ---------- */
@@ -58,6 +59,8 @@ function kpis(){
     k(dnu ? 'red' : '', 'hand-stop', 'Do not use', dnu, dnu ? 'Serious defect reported' : 'All plant usable') +
     k('lock', 'lock', 'Locks on now', locks.length, locks.length ? locks.length + ' machine' + (locks.length > 1 ? 's' : '') + ' isolated' : 'Nothing isolated') +
     k(loto < ops.length ? 'amber' : 'green', 'file-text', 'New LOTOTO signed', loto + '<small> / ' + ops.length + '</small>', (ops.length - loto) + ' still to sign', Math.round(loto / ops.length * 100)) +
+    (function(){ var red = 0, amb = 0; ms.forEach(function(m){ CS.inspections(m.id).forEach(function(x){ if (x.c === 'red') red++; else if (x.c === 'amber') amb++; }); }); return k(red ? 'red' : amb ? 'amber' : 'green', 'calendar', 'Inspections', red ? red + '<small> overdue</small>' : amb, red ? amb + ' more due in 30 days' : 'Due in the next 30 days'); })() +
+    (function(){ var nm = CS.state.nearmisses.filter(function(n){ return CS.now() - n.at < 7 * 864e5 && (siteF === 'all' || n.site === siteF); }); return k(nm.some(function(n){ return n.open; }) ? 'amber' : '', 'alert-octagon', 'Near misses', nm.length, 'Last 7 days, ' + nm.filter(function(n){ return n.how === 'voice'; }).length + ' by voice'); })() +
     '</div>';
 }
 
@@ -74,7 +77,11 @@ function mcard(m){
     (s.locks.length ? '<span class="lk">' + ic('lock') + s.locks.length + '</span>' : '') +
     '<div class="top"><span class="mi">' + ic(CS.KIND_ICON[m.kind]) + '</span><div style="min-width:0"><div class="nm">' + esc(m.name) + '</div><div class="rf">' + esc(m.model) + ' · ' + esc(m.ref.replace('Asset ', '')) + '</div></div></div>' +
     '<div class="st"><i></i>' + s.label + (s.locks.length && !s.dnu ? ' · ' + s.locks.map(function(l){ return esc(CS.op(l.op).first); }).join(', ') : '') + '</div>' +
-    '<div class="cks">' + cks + '</div></button>';
+    '<div class="cks">' + cks + '</div>' + inspLine(m.id) + '</button>';
+}
+function inspLine(mid){
+  var l = CS.inspections(mid).filter(function(x){ return x.kind !== 'SERVICE'; });
+  return '<div class="insl">' + l.map(function(x){ return '<span class="ip ' + x.c + '">' + x.kind + ' · ' + x.label.replace('Due ', '') + '</span>'; }).join('') + '</div>';
 }
 
 function board(){
@@ -94,7 +101,7 @@ function lockRows(list, big){
   return list.sort(function(a, b){ return a.on - b.on; }).map(function(l){
     var o = CS.op(l.op), m = CS.machine(l.machine);
     return '<div class="lockrow" data-lock="' + l.id + '" data-mrow="' + m.id + '"><span class="pl">' + ic('lock') + '<b>' + o.lock + '</b></span>' +
-      '<div class="info"><b>' + esc(m.name) + ' <span style="color:var(--muted);font-weight:600">· ' + esc(CS.site(m.site).name) + '</span></b><small>' + CS.avatar(o, 'xs') + ' ' + esc(o.first + ' ' + o.last) + ', ' + esc(o.role) + (big && l.reason ? ' · ' + esc(l.reason) : '') + '</small></div>' +
+      '<div class="info"><b>' + esc(m.name) + ' <span style="color:var(--muted);font-weight:600">· ' + esc(CS.site(m.site).name) + '</span></b><small>' + CS.avatar(o, 'xs') + ' ' + esc(o.first + ' ' + o.last) + ', ' + esc(o.role) + (big && l.reason ? ' · ' + esc(l.reason) : '') + '</small>' + (l.permit ? '<span class="ptag">' + ic('shield-lock') + esc(l.permit) + ' · group box</span>' : '') + '</div>' +
       '<div class="tm"><b>' + CS.since(l.on) + '</b><small>since ' + CS.hm(l.on) + '</small></div></div>';
   }).join('');
 }
@@ -110,13 +117,21 @@ function attention(){
   CS.openDefects().forEach(function(d){
     var m = CS.machine(d.machine); if (machines().indexOf(m) < 0) return; var o = CS.op(d.op);
     items.push({ w: d.severity === 'serious' ? 0 : 1, h: '<div class="att" data-mrow="' + m.id + '"><span class="ai ' + (d.severity === 'serious' ? 'red' : 'amber') + '">' + ic(d.severity === 'serious' ? 'hand-stop' : 'alert-triangle') + '</span>' +
-      '<div class="tx"><b>' + esc(m.name) + (d.severity === 'serious' ? ', do not use' : ', minor defect') + '</b><br>' + esc(d.note) + '<small>' + esc(o.first + ' ' + o.last) + ' · ' + CS.hm(d.at) + ' · ' + esc(CS.site(m.site).name) + '</small></div>' +
+      '<div class="tx"><b>' + esc(m.name) + (d.severity === 'serious' ? ', do not use' : ', minor defect') + '</b><br>' + esc(d.note) + (d.raw ? '<i class="raw">' + ic('microphone') + '"' + esc(d.raw) + '"</i>' : '') + '<small>' + esc(o.first + ' ' + o.last) + ' · ' + CS.hm(d.at) + ' · ' + esc(CS.site(m.site).name) + (d.how === 'voice' ? ' · by voice' : '') + (d.assigned ? ' · with ' + esc(CS.op(d.assigned).first) + ' (fitter)' : '') + '</small></div>' +
       (d.photo ? '<img src="' + d.photo + '" alt="Defect photo" data-zoom>' : '') +
       '<button class="smallbtn act" data-fix="' + d.id + '">' + ic('check') + 'Fixed</button></div>' });
   });
   machines().forEach(function(m){
     if (CS.checksToday(m.id, 'pre').length || CS.activeLocks(m.id).length || CS.doNotUse(m.id)) return;
     items.push({ w: 2, h: '<div class="att" data-mrow="' + m.id + '"><span class="ai amber">' + ic('clock') + '</span><div class="tx"><b>' + esc(m.name) + ' has no pre-shift check</b><br>Shift started 07:00 at ' + esc(CS.site(m.site).name) + '<small>' + esc(m.model) + ' · ' + esc(m.ref.replace('Asset ', '')) + '</small></div></div>' });
+  });
+  CS.state.nearmisses.forEach(function(n){
+    if (!n.open || (siteF !== 'all' && n.site !== siteF)) return; var o = CS.op(n.op);
+    items.push({ w: 0.5, h: '<div class="att"><span class="ai ' + (n.severity === 'high' ? 'red' : 'amber') + '">' + ic('alert-octagon') + '</span><div class="tx"><b>' + esc(n.title) + '</b><br>' + esc(n.text) + (n.raw ? '<i class="raw">' + ic('microphone') + '"' + esc(n.raw) + '"</i>' : '') + '<small>' + esc(o.first + ' ' + o.last) + ' · ' + CS.hm(n.at) + ' · ' + (n.severity === 'high' ? 'High potential' : 'Low potential') + ' · ' + esc(n.action) + '</small></div><button class="smallbtn act" data-nm="' + n.id + '">' + ic('check') + 'Reviewed</button></div>' });
+  });
+  machines().forEach(function(m){
+    CS.inspections(m.id).forEach(function(x){ if (x.c !== 'red') return;
+      items.push({ w: 0.8, h: '<div class="att" data-mrow="' + m.id + '"><span class="ai red">' + ic('calendar') + '</span><div class="tx"><b>' + esc(m.name) + ': ' + esc(x.name) + ' overdue</b><br>' + esc(x.label) + '. Do not use it for lifting until it has been examined.<small>' + esc(x.every) + ' · last report ' + esc(x.ref) + ' · ' + esc(CS.site(m.site).name) + '</small></div></div>' }); });
   });
   items.sort(function(a, b){ return a.w - b.w; });
   return '<section class="panel"><div class="ph"><h2>' + ic('alert-triangle') + 'Needs attention</h2><span class="sp"></span><span class="note">' + items.length + ' items</span></div>' +
@@ -142,9 +157,20 @@ function pageIso(){
     '<section class="panel"><div class="ph"><h2>' + ic('history') + 'Lock on, lock off today</h2></div><div class="tw"><table class="t"><thead><tr><th>Machine</th><th>Who</th><th>Lock</th><th>On</th><th>Off</th><th>Time locked</th></tr></thead><tbody>' +
     hist.map(function(l){ var o = CS.op(l.op), m = CS.machine(l.machine); return '<tr><td><b>' + esc(m.name) + '</b><br><small style="color:var(--muted)">' + esc(CS.site(m.site).name) + '</small></td><td><span class="who">' + CS.avatar(o, 'sm') + esc(o.first + ' ' + o.last) + '</span></td><td>' + o.lock + '</td><td>' + CS.hm(l.on) + '</td><td>' + (l.off ? CS.hm(l.off) : '<span class="pill lock">' + ic('lock') + 'Still on</span>') + '</td><td>' + (l.off ? durText(l.off - l.on) : CS.since(l.on)) + '</td></tr>'; }).join('') +
     '</tbody></table></div></section></div>' +
-    '<div><section class="panel"><div class="ph"><h2>' + ic('building-factory-2') + 'Fixed plant isolation status</h2></div>' +
+    '<div>' + permitsPanel() + '<section class="panel"><div class="ph"><h2>' + ic('building-factory-2') + 'Fixed plant isolation status</h2></div>' +
     fixed.map(function(m){ var l = CS.activeLocks(m.id); return '<div class="drow" data-mrow="' + m.id + '"><span class="mi" style="font-size:24px;color:var(--ink2)">' + ic(CS.KIND_ICON[m.kind]) + '</span><span class="sp"><b>' + esc(m.name) + '</b> <small style="color:var(--muted)">· ' + esc(CS.site(m.site).name) + '</small></span>' + (l.length ? '<span class="pill lock">' + ic('lock') + l.length + ' lock' + (l.length > 1 ? 's' : '') + ' on</span>' : '<span class="pill ok">Not isolated</span>') + '</div>'; }).join('') +
     '</section>' + lotoCard() + '</div></div>';
+}
+function permitsPanel(){
+  var ps = CS.state.permits.filter(function(p){ return machines().indexOf(CS.machine(p.machine)) >= 0 && (p.open || CS.isToday(p.closed || 0)); }).sort(function(a, b){ return b.at - a.at; });
+  return '<section class="panel"><div class="ph"><h2>' + ic('shield-lock') + 'Permits to work</h2><span class="sp"></span><span class="note">Group lock box, one person one lock</span></div>' +
+    (ps.length ? ps.map(function(p){
+      var m = CS.machine(p.machine), on = CS.activeLocks(p.machine).filter(function(l){ return l.permit === p.id; });
+      return '<div class="ptw' + (p.open ? '' : ' closed') + '"><div class="pt1"><b>' + esc(p.id) + '</b><span>' + esc(m.name) + ' · ' + esc(CS.site(m.site).name) + '</span>' + (p.open ? '<span class="pill lock">' + ic('lock') + on.length + ' on the box</span>' : '<span class="pill ok">Closed ' + CS.hm(p.closed) + '</span>') + '</div>' +
+        '<div class="pt2">' + esc(p.job) + ' · issued by ' + esc(CS.op(p.by).first + ' ' + CS.op(p.by).last) + ' at ' + CS.hm(p.at) + '</div>' +
+        '<div class="pt3">' + p.points.map(function(x){ return '<span>' + ic('circle-check') + esc(x.t.split('.')[0]) + '</span>'; }).join('') + '<span>' + ic('circle-check') + 'Tried, nothing moved</span></div>' +
+        (p.open ? '<div class="avs">' + on.map(function(l){ var o = CS.op(l.op); return '<span class="p">' + CS.avatar(o, 'xs') + esc(o.first) + ' · lock ' + o.lock + '</span>'; }).join('') + '</div>' : (p.note ? '<div class="pt2">Hand back: ' + esc(p.note) + '</div>' : '')) + '</div>';
+    }).join('') : '<div class="empty">No permits today</div>') + '</section>';
 }
 function durText(ms){ var m = Math.round(ms / 60000); return m < 60 ? m + ' min' : Math.floor(m / 60) + 'h ' + ('0' + (m % 60)).slice(-2) + 'm'; }
 function lotoCard(){
@@ -164,17 +190,22 @@ function pageSign(){
       (miss.length ? '<div class="miss">Not signed yet (' + miss.length + ')</div><div class="avs">' + miss.map(function(o){ return '<span class="p">' + CS.avatar(o, 'xs') + esc(o.first + ' ' + o.last.charAt(0)) + '</span>'; }).join('') + '</div>' : '<div class="miss" style="color:var(--ok)">Everyone has signed</div>') + '</div>';
   }).join('');
   var log = CS.state.signoffs.filter(function(s){ return s.swp === swpF && ops.indexOf(CS.op(s.op)) >= 0; }).sort(function(a, b){ return b.at - a.at; });
-  return filters() + '<div class="swpcards">' + cards + '</div>' +
+  var T = CS.TBT, tops = CS.OPS.filter(function(o){ return o.site === T.site && (siteF === 'all' || siteF === T.site); });
+  var tbt = tops.length ? '<section class="panel"><div class="ph"><h2>' + ic('users-group') + 'Toolbox talk today: ' + esc(T.title) + '</h2><span class="sp"></span><span class="note">' + esc(T.by) + ' · ' + esc(CS.site(T.site).name) + ' · tap to sign attendance</span></div><div class="tbtg">' +
+    tops.map(function(o){ var a = CS.state.tbt.filter(function(x){ return x.op === o.id && x.tbt === T.id; })[0]; return '<div class="tb' + (a ? ' ok' : '') + '">' + CS.avatar(o, 'sm') + '<span><b>' + esc(o.first + ' ' + o.last) + '</b><small>' + (a ? 'Signed ' + CS.hm(a.at) : 'Not signed yet') + '</small></span>' + ic(a ? 'circle-check' : 'clock') + '</div>'; }).join('') + '</div></section>' : '';
+  return filters() + '<div class="swpcards">' + cards + '</div>' + tbt +
     '<section class="panel"><div class="ph"><h2>' + ic('signature') + 'Sign-off log</h2><span class="sp"></span>' +
     CS.SWPS.map(function(p){ return '<button class="chip' + (swpF === p.id ? ' on' : '') + '" data-swpf="' + p.id + '" style="margin-left:6px">' + esc(p.title) + '</button>'; }).join('') + '</div>' +
-    '<div class="tw"><table class="t"><thead><tr><th>Who</th><th>Site</th><th>Procedure</th><th>Signed</th><th>How</th></tr></thead><tbody>' +
-    (log.length ? log.map(function(s){ var o = CS.op(s.op), p = CS.byId(CS.SWPS, s.swp); return '<tr data-new-sign="' + s.id + '"><td><span class="who">' + CS.avatar(o, 'sm') + esc(o.first + ' ' + o.last) + '</span></td><td>' + esc(CS.site(o.site).name) + '</td><td>' + esc(p.title) + ' <small style="color:var(--muted)">' + esc(s.ver || p.ver) + '</small></td><td>' + CS.hm(s.at) + ' · ' + CS.dayLabel(s.at) + '</td><td>' + (s.sig ? '<img src="' + s.sig + '" alt="Signature" style="height:30px;background:#fff;border-radius:6px;padding:2px 6px">' : '<span class="pill ok">' + ic('hand-finger') + 'Tap to sign, after listening</span>') + '</td></tr>'; }).join('') : '<tr><td colspan="5" class="empty">No sign-offs yet</td></tr>') +
+    '<div class="tw"><table class="t"><thead><tr><th>Who</th><th>Site</th><th>Procedure</th><th>Signed</th><th>Understood</th><th>How</th></tr></thead><tbody>' +
+    (log.length ? log.map(function(s){ var o = CS.op(s.op), p = CS.byId(CS.SWPS, s.swp); return '<tr data-new-sign="' + s.id + '"><td><span class="who">' + CS.avatar(o, 'sm') + esc(o.first + ' ' + o.last) + '</span></td><td>' + esc(CS.site(o.site).name) + '</td><td>' + esc(p.title) + ' <small style="color:var(--muted)">' + esc(s.ver || p.ver) + '</small></td><td>' + CS.hm(s.at) + ' · ' + CS.dayLabel(s.at) + '</td><td>' + (s.quiz ? '<span class="pill ' + (s.quiz.tries > 1 ? 'amber' : 'ok') + '">' + ic('circle-check') + s.quiz.right + ' of ' + s.quiz.of + (s.quiz.tries > 1 ? ', 2nd listen' : ', first time') + '</span>' : '<span style="color:var(--muted)">Before picture checks</span>') + '</td><td>' + (s.sig ? '<img src="' + s.sig + '" alt="Signature" style="height:30px;background:#fff;border-radius:6px;padding:2px 6px">' : '<span class="pill ok">' + ic('hand-finger') + 'Tap to sign, after listening</span>') + '</td></tr>'; }).join('') : '<tr><td colspan="6" class="empty">No sign-offs yet</td></tr>') +
     '</tbody></table></div></section>';
 }
 function pageRec(){
   var ms = machines();
   var list = CS.state.checks.filter(function(c){ return ms.indexOf(CS.machine(c.machine)) >= 0; }).sort(function(a, b){ return b.at - a.at; });
-  return filters() + '<section class="panel"><div class="ph"><h2>' + ic('printer') + 'Check records</h2><span class="sp"></span><span class="linknote">' + ic('link') + 'Can link to your current system</span></div>' +
+  var picker = '<section class="panel auditp"><div class="ph"><h2>' + ic('file-search') + 'Audit pack</h2><span class="sp"></span><span class="note">For an inspector, an insurer or your director</span></div><div class="aud">' +
+    '<span>Show everything for</span><select id="auditSel" aria-label="Machine">' + ms.map(function(m){ return '<option value="' + m.id + '"' + (m.id === 'm2' ? ' selected' : '') + '>' + esc(m.name + ' · ' + CS.site(m.site).name) + '</option>'; }).join('') + '</select><span>in the last 30 days</span><button class="smallbtn pri" data-auditgo>' + ic('file-search') + 'Build the pack</button></div></section>';
+  return filters() + picker + '<section class="panel"><div class="ph"><h2>' + ic('printer') + 'Check records</h2><span class="sp"></span><span class="linknote">' + ic('link') + 'Can link to your current system</span></div>' +
     '<div class="tw"><table class="t"><thead><tr><th>Time</th><th>Machine</th><th>Check</th><th>Who</th><th>Result</th><th></th></tr></thead><tbody>' +
     list.map(function(c){ var m = CS.machine(c.machine), o = CS.op(c.op), t = CS.byId(CS.CHECK_TYPES, c.type), f = c.items.filter(function(i){ return !i.ok; }).length;
       return '<tr><td>' + CS.hm(c.at) + '</td><td><b>' + esc(m.name) + '</b> <small style="color:var(--muted)">' + esc(CS.site(m.site).name) + '</small></td><td>' + t.name + '</td><td><span class="who">' + CS.avatar(o, 'sm') + esc(o.first + ' ' + o.last) + '</span></td><td>' + (f ? '<span class="pill bad">' + f + ' defect' + (f > 1 ? 's' : '') + '</span>' : '<span class="pill ok">All OK</span>') + '</td><td><button class="smallbtn" data-rec="' + c.id + '">' + ic('printer') + 'View and print</button></td></tr>'; }).join('') +
@@ -185,7 +216,7 @@ function pageRec(){
 function render(changed){
   tabs();
   var y = window.scrollY;
-  view.innerHTML = tab === 'board' ? pageBoard() : tab === 'iso' ? pageIso() : tab === 'sign' ? pageSign() : pageRec();
+  view.innerHTML = tab === 'board' ? pageBoard() : tab === 'iso' ? pageIso() : tab === 'sign' ? pageSign() : tab === 'insp' ? pageInsp() : tab === 'people' ? pagePeople() : pageRec();
   window.scrollTo(0, y);
   $$('[data-site]', view).forEach(function(b){ b.addEventListener('click', function(){ siteF = b.dataset.site; render(); }); });
   $$('[data-swpf]', view).forEach(function(b){ b.addEventListener('click', function(){ swpF = b.dataset.swpf; render(); }); });
@@ -194,6 +225,9 @@ function render(changed){
   $$('[data-fix]', view).forEach(function(b){ b.addEventListener('click', function(){ CS.fixDefect(b.dataset.fix); prevStatus = snapshot(); render(); toast('Defect marked fixed', 'green', 'check'); }); });
   $$('[data-zoom]', view).forEach(function(i){ i.addEventListener('click', function(){ zoom(i.src); }); });
   $$('[data-rec]', view).forEach(function(b){ b.addEventListener('click', function(){ record(b.dataset.rec); }); });
+  $$('[data-nm]', view).forEach(function(b){ b.addEventListener('click', function(){ var n = CS.byId(CS.state.nearmisses, b.dataset.nm); if (n) { n.open = false; CS.persist({ type: 'nm' }); } render(); toast('Near miss marked reviewed', 'green', 'check'); }); });
+  $$('[data-audit]', view).forEach(function(b){ b.addEventListener('click', function(){ audit(b.dataset.audit); }); });
+  var asel = view.querySelector('#auditSel'); if (asel) view.querySelector('[data-auditgo]').addEventListener('click', function(){ audit(asel.value); });
   (changed || []).forEach(function(c){
     $$('[data-m="' + c.id + '"],[data-mrow="' + c.id + '"]', view).forEach(function(el){ el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); if (c.tone) el.classList.add(c.tone); setTimeout(function(){ el.classList.remove('flash', 'red', 'green'); }, 2500); });
   });
@@ -208,11 +242,14 @@ function drawer(mid){
     '<span class="pill ' + (s.c === 'green' ? 'ok' : s.c === 'red' ? 'bad' : s.c === 'lock' ? 'lock' : 'amber') + '" style="font-size:13px;padding:6px 12px">' + s.label + '</span>' +
     '<h3>Locks on</h3>' + (locks.length ? lockRows(locks, true) : '<div class="empty">Not isolated</div>') +
     '<h3>Defects</h3>' + (defs.length ? defs.map(function(d){ var o = CS.op(d.op); return '<div class="drow">' + (d.photo ? '<img src="' + d.photo + '" alt="Defect photo" data-zoom>' : '') + '<span class="sp"><b>' + esc(d.note) + '</b><br><small style="color:var(--muted)">' + esc(o.first + ' ' + o.last) + ' · ' + CS.hm(d.at) + '</small><br>' + (d.open ? '<span class="pill ' + (d.severity === 'serious' ? 'bad' : 'amber') + '">' + (d.severity === 'serious' ? 'Serious, do not use' : 'Minor') + '</span>' : '<span class="pill ok">Fixed ' + CS.hm(d.fixedAt) + '</span>') + '</span>' + (d.open ? '<button class="smallbtn" data-fix="' + d.id + '">' + ic('check') + 'Mark fixed</button>' : '') + '</div>'; }).join('') : '<div class="empty">No defects</div>') +
+    '<h3>Inspections</h3>' + CS.inspections(mid).map(function(x){ return '<div class="drow"><span class="sp"><b>' + esc(x.name) + '</b><br><small style="color:var(--muted)">' + esc(x.every) + ' · last ' + CS.dYear(x.last) + ' · ' + esc(x.ref) + '</small></span><span class="pill ' + (x.c === 'green' ? 'ok' : x.c === 'red' ? 'bad' : 'amber') + '">' + esc(x.label) + '</span></div>'; }).join('') +
+    '<button class="smallbtn audbtn" data-audit="' + mid + '">' + ic('file-search') + 'Audit pack: everything for ' + esc(m.name) + ', last 30 days</button>' +
     '<h3>Checks today</h3>' + (cks.length ? cks.map(function(c){ var o = CS.op(c.op), t = CS.byId(CS.CHECK_TYPES, c.type), f = c.items.filter(function(i){ return !i.ok; }).length; return '<div class="drow"><span class="sp"><b>' + t.name + '</b> · ' + CS.hm(c.at) + '<br><small style="color:var(--muted)">' + esc(o.first + ' ' + o.last) + '</small></span>' + (f ? '<span class="pill bad">' + f + ' defect' + (f > 1 ? 's' : '') + '</span>' : '<span class="pill ok">All OK</span>') + '<button class="smallbtn" data-rec="' + c.id + '">' + ic('printer') + 'Record</button></div>'; }).join('') : '<div class="empty">No checks yet today</div>') +
     '</aside>';
   $$('[data-close]', layer).forEach(function(b){ b.addEventListener('click', closeLayer); });
   $$('[data-fix]', layer).forEach(function(b){ b.addEventListener('click', function(){ CS.fixDefect(b.dataset.fix); prevStatus = snapshot(); render(); drawer(mid); toast('Defect marked fixed', 'green', 'check'); }); });
   $$('[data-rec]', layer).forEach(function(b){ b.addEventListener('click', function(){ record(b.dataset.rec); }); });
+  $$('[data-audit]', layer).forEach(function(b){ b.addEventListener('click', function(){ audit(b.dataset.audit); }); });
   $$('[data-zoom]', layer).forEach(function(i){ i.addEventListener('click', function(){ zoom(i.src); }); });
 }
 function zoom(src){ var d = document.createElement('div'); d.className = 'lightbox'; d.innerHTML = '<img src="' + src + '" alt="Defect photo">'; d.addEventListener('click', function(){ d.remove(); }); document.body.appendChild(d); }
@@ -232,6 +269,62 @@ function record(cid){
     (defs.length ? '<div class="defs"><b>Defects reported</b>' + defs.map(function(d){ return '<div style="margin-top:6px">' + esc(d.note) + ' · <b>' + (d.severity === 'serious' ? 'Serious, machine marked Do not use' : 'Minor') + '</b>' + (d.open ? '' : ' · Fixed ' + CS.hm(d.fixedAt)) + (d.photo ? '<img src="' + d.photo + '" alt="Defect photo">' : '') + '</div>'; }).join('') + '</div>' : '') +
     '<div class="sig"><div class="box">' + (c.sig ? '<img src="' + c.sig + '" alt="Signature">' : 'Signed by tap: ' + esc(o.first + ' ' + o.last)) + '</div><div class="box" style="flex:0 0 200px">' + CS.hm(c.at) + ', ' + CS.dayLabel(c.at) + '</div></div>' +
     '<div class="rf"><span>Coastal Recycling · Site safety record</span><span>Demo record, sample data · Built by ApexLine</span></div></article></div>';
+  $$('[data-close]', layer).forEach(function(b){ b.addEventListener('click', closeLayer); });
+  layer.querySelector('[data-print]').addEventListener('click', function(){ window.print(); });
+}
+
+/* ---------- inspections ---------- */
+function pageInsp(){
+  var ms = machines();
+  var cell = function(m, kind){ var x = CS.inspections(m.id).filter(function(i){ return i.kind === kind; })[0]; if (!x) return '<td><span style="color:var(--muted)">' + (kind === 'LOLER' ? 'Not used for lifting' : 'Not tracked here') + '</span></td>'; return '<td><span class="pill ' + (x.c === 'green' ? 'ok' : x.c === 'red' ? 'bad' : 'amber') + '">' + esc(x.label) + '</span><br><small style="color:var(--muted)">' + esc(x.every) + ' · last ' + CS.dYear(x.last) + ' · ' + esc(x.ref) + '</small></td>'; };
+  return filters() + '<section class="panel"><div class="ph"><h2>' + ic('calendar') + 'Inspection and examination dates</h2><span class="sp"></span><span class="legend"><span><i style="background:var(--ok)"></i>over 30 days</span><span><i style="background:var(--amber)"></i>due in 30 days</span><span><i style="background:var(--bad)"></i>overdue</span></span></div>' +
+    '<div class="tw"><table class="t"><thead><tr><th>Machine</th><th>LOLER thorough examination</th><th>PUWER inspection</th><th>Service</th><th></th></tr></thead><tbody>' +
+    ms.map(function(m){ return '<tr><td><b>' + esc(m.name) + '</b><br><small style="color:var(--muted)">' + esc(m.model + ' · ' + CS.site(m.site).name) + '</small></td>' + cell(m, 'LOLER') + cell(m, 'PUWER') + cell(m, 'SERVICE') + '<td><button class="smallbtn" data-audit="' + m.id + '">' + ic('file-search') + 'Audit pack</button></td></tr>'; }).join('') +
+    '</tbody></table></div><div class="ph" style="margin:12px 0 0"><span class="note">LOLER: lifting equipment such as forklifts and telehandlers needs a thorough examination by a competent person at least every 12 months (every 6 months for lifting accessories or anything that lifts people), or to a written examination scheme. PUWER reg 6: inspect plant where wear could make it unsafe, and keep the result until the next inspection. Dates and intervals shown are sample data.</span></div></section>';
+}
+
+/* ---------- people: authorisations and training ---------- */
+function pagePeople(){
+  var ops = CS.OPS.filter(function(o){ return siteF === 'all' || o.site === siteF; });
+  return filters() + '<section class="panel"><div class="ph"><h2>' + ic('id-badge') + 'Who can use what, and who can isolate what</h2><span class="sp"></span><span class="note">The phone blocks anyone not on these lists</span></div>' +
+    '<div class="tw"><table class="t"><thead><tr><th>Person</th><th>Trained to use</th><th>Authorised to isolate</th><th>Training needing action</th><th>New LOTOTO</th></tr></thead><tbody>' +
+    ops.map(function(o){
+      var flags = CS.training(o.id).filter(function(t){ return CS.tStatus(t).c !== 'green'; });
+      return '<tr><td><span class="who">' + CS.avatar(o, 'sm') + '<span><b>' + esc(o.first + ' ' + o.last) + '</b><br><small style="color:var(--muted)">' + esc(o.role + ' · ' + CS.site(o.site).name + ' · lock ' + o.lock) + '</small></span></span></td>' +
+        '<td>' + o.drive.map(function(id){ var ok = CS.canDrive(o.id, id).ok; return '<span class="tagm' + (ok ? '' : ' bad') + '">' + esc(CS.machine(id).name) + '</span>'; }).join('') + '</td>' +
+        '<td>' + (o.iso.length ? o.iso.map(function(id){ return '<span class="tagm lk">' + ic('lock') + esc(CS.machine(id).name) + '</span>'; }).join('') : '<span class="pill bad">Not authorised</span>') + '</td>' +
+        '<td>' + (flags.length ? flags.map(function(t){ var st = CS.tStatus(t); return '<span class="pill ' + (st.c === 'red' ? 'bad' : 'amber') + '" style="margin:2px 4px 2px 0">' + esc(t.name.replace('(in-house)', '').trim() + ': ' + st.label) + '</span>'; }).join('') : '<span class="pill ok">All in date</span>') + '</td>' +
+        '<td>' + (CS.hasSigned('lototo', o.id) ? '<span class="pill ok">' + ic('check') + 'Signed</span>' : '<span class="pill amber">Not yet</span>') + '</td></tr>';
+    }).join('') + '</tbody></table></div></section>';
+}
+
+/* ---------- audit pack: everything for one machine, last 30 days ---------- */
+function audit(mid){
+  var m = CS.machine(mid), hist = CS.history(mid), todayCks = CS.state.checks.filter(function(c){ return c.machine === mid; });
+  var rows = hist.concat(todayCks.map(function(c){ var f = c.items.filter(function(i){ return !i.ok; }).length; return { at: c.at, type: c.type, op: c.op, ok: !f, note: f ? f + ' defect' + (f > 1 ? 's' : '') + ' reported' : '' }; })).sort(function(a, b){ return b.at - a.at; });
+  var days = {}; rows.forEach(function(r){ if (r.type === 'pre') days[CS.dShort(r.at)] = 1; });
+  var defs = CS.state.defects.filter(function(d){ return d.machine === mid; });
+  var locks = CS.state.locks.filter(function(l){ return l.machine === mid; });
+  var permits = CS.state.permits.filter(function(p){ return p.machine === mid; });
+  var nms = CS.state.nearmisses.filter(function(n){ return n.machine === mid; });
+  var drivers = CS.OPS.filter(function(o){ return o.drive.indexOf(mid) >= 0; });
+  var T = function(t){ return CS.dShort(t) + ' ' + CS.hm(t); };
+  var nm = function(id){ var o = CS.op(id); return esc(o.first + ' ' + o.last); };
+  layer.innerHTML = '<div class="recwrap"><div class="recbar"><button class="smallbtn" data-close>' + ic('arrow-left') + 'Back</button><span class="sp"></span><span class="linknote" style="color:#cfd6d2">' + ic('file-search') + 'Built in one click from the records</span><button class="smallbtn" data-print style="background:var(--brand);color:#fff;border-color:var(--brand)">' + ic('printer') + 'Print or save as PDF</button></div>' +
+    '<article class="rec"><div class="rh"><img src="coastal-logo.svg" alt="Coastal Recycling"><div class="ti"><b>Audit pack: ' + esc(m.name) + '</b><small>Last 30 days to ' + CS.dayLabel(CS.now()) + '</small></div></div>' +
+    '<div class="meta"><div><small>Machine</small><b>' + esc(m.name) + '</b><br>' + esc(m.model) + '</div><div><small>Reg or asset</small><b>' + esc(m.ref) + '</b></div><div><small>Site</small><b>' + esc(CS.site(m.site).name) + '</b></div>' +
+    '<div><small>Checks recorded</small><b>' + rows.length + '</b><br>' + Object.keys(days).length + ' days with a pre-use check</div><div><small>Defects open now</small><b>' + defs.filter(function(d){ return d.open; }).length + '</b><br>' + defs.length + ' on record today</div><div><small>Isolations</small><b>' + locks.length + ' locks, ' + permits.length + ' permits</b></div></div>' +
+    '<h4>Inspections and examinations</h4><table><thead><tr><th>Type</th><th>Interval</th><th>Last</th><th>Next due</th><th>Report</th></tr></thead><tbody>' +
+    CS.inspections(mid).map(function(x){ return '<tr><td><b>' + esc(x.name) + '</b></td><td>' + esc(x.every) + '</td><td>' + CS.dShort(x.last) + '</td><td class="' + (x.c === 'red' ? 'res-bad' : '') + '">' + esc(x.label) + '</td><td>' + esc(x.ref) + '</td></tr>'; }).join('') + '</tbody></table>' +
+    '<h4>Defects and how they were closed</h4><table><thead><tr><th>Reported</th><th>Defect</th><th>By</th><th>Severity</th><th>Closed</th></tr></thead><tbody>' +
+    (defs.length ? defs.map(function(d){ return '<tr><td>' + T(d.at) + '</td><td>' + esc(d.note) + (d.how === 'voice' ? ' (by voice)' : '') + '</td><td>' + nm(d.op) + '</td><td>' + (d.severity === 'serious' ? 'Serious, Do not use' : 'Minor') + '</td><td>' + (d.open ? '<span class="res-bad">Open</span>' : T(d.fixedAt) + (d.fixedBy ? ', ' + nm(d.fixedBy) : '') + (d.fixNote ? ': ' + esc(d.fixNote) : '')) + '</td></tr>'; }).join('') : '<tr><td colspan="5">No defects open today. Earlier minor defects are in the check log below.</td></tr>') + '</tbody></table>' +
+    '<h4>Isolations</h4><table><thead><tr><th>On</th><th>Off</th><th>Who</th><th>Why</th></tr></thead><tbody>' +
+    (locks.length ? locks.map(function(l){ return '<tr><td>' + T(l.on) + '</td><td>' + (l.off ? T(l.off) : '<b>Still on</b>') + '</td><td>' + nm(l.op) + ', lock ' + CS.op(l.op).lock + '</td><td>' + esc(l.reason || '') + (l.permit ? ' (' + esc(l.permit) + ')' : '') + '</td></tr>'; }).join('') : '<tr><td colspan="4">No isolations recorded</td></tr>') + '</tbody></table>' +
+    (nms.length ? '<h4>Near misses</h4><table><tbody>' + nms.map(function(n){ return '<tr><td>' + T(n.at) + '</td><td>' + esc(n.text) + '</td><td>' + esc(n.action) + '</td></tr>'; }).join('') + '</tbody></table>' : '') +
+    '<h4>Who is trained to use it</h4><table><tbody>' + drivers.map(function(o){ var t = CS.training(o.id).filter(function(x){ return x.name === CS.CARD[m.kind]; })[0], st = t ? CS.tStatus(t) : null; return '<tr><td><b>' + nm(o.id) + '</b></td><td>' + esc(t ? t.name : 'Fitter') + '</td><td class="' + (st && st.c === 'red' ? 'res-bad' : '') + '">' + esc(st ? st.label : '') + '</td></tr>'; }).join('') + '</tbody></table>' +
+    '<h4>Check log</h4><table><thead><tr><th>When</th><th>Check</th><th>Who</th><th>Result</th></tr></thead><tbody>' +
+    rows.map(function(r){ return '<tr><td>' + T(r.at) + '</td><td>' + CS.byId(CS.CHECK_TYPES, r.type).name + '</td><td>' + nm(r.op) + '</td><td class="' + (r.ok ? 'res-ok' : 'res-bad') + '">' + (r.ok ? 'All OK' : esc(r.note)) + '</td></tr>'; }).join('') + '</tbody></table>' +
+    '<div class="rf"><span>Coastal Recycling · Audit pack · ' + esc(m.name) + '</span><span>Demo, sample data. Earlier days are made up for the demo · Built by ApexLine</span></div></article></div>';
   $$('[data-close]', layer).forEach(function(b){ b.addEventListener('click', closeLayer); });
   layer.querySelector('[data-print]').addEventListener('click', function(){ window.print(); });
 }
@@ -258,7 +351,8 @@ window.addEventListener('storage', function(e){
   render(changed);
   fresh.forEach(function(x){
     var tone = x.kind === 'defect' ? 'red' : x.kind === 'check' || x.kind === 'lockoff' || x.kind === 'sign' ? 'green' : '';
-    var icon = x.kind === 'lockon' ? 'lock' : x.kind === 'lockoff' ? 'lock-open' : x.kind === 'defect' ? 'alert-triangle' : x.kind === 'sign' ? 'signature' : 'clipboard-check';
+    if (x.kind === 'nearmiss') tone = 'red';
+    var icon = x.kind === 'nearmiss' ? 'alert-octagon' : x.kind === 'lockon' ? 'lock' : x.kind === 'lockoff' ? 'lock-open' : x.kind === 'defect' ? 'alert-triangle' : x.kind === 'sign' ? 'signature' : 'clipboard-check';
     toast(x.text, tone, icon);
   });
 });
