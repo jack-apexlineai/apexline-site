@@ -47,6 +47,9 @@
     if (ls) alerts.push({ t: ls + ' part' + (ls > 1 ? 's are' : ' is') + ' at or below the minimum stock level', go: 'stock', cls: 'warn' });
     var od = WS.dueItems(-1).length;
     if (od) alerts.push({ t: od + ' compliance item' + (od > 1 ? 's are' : ' is') + ' overdue across the fleet', go: 'compliance', cls: 'bad' });
+    (WS.portalBookings ? WS.portalBookings() : []).filter(function (j) { return !j.fitterId && j.date >= T; }).slice(0, 3).forEach(function (j) {
+      alerts.unshift({ t: WS.bookingLine(j), go: 'vcal', cls: 'go' });
+    });
     if (!WS.xeroOk()) alerts.push({ t: 'Xero is not connected yet, so invoices have to be exported by hand', go: 'settings', cls: 'go' });
 
     /* one HTML string per block; personalise.js lays them out in the order you chose */

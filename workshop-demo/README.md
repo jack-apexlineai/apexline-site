@@ -48,6 +48,20 @@ workshop trades under another name. The rest are placeholders. Correct these fir
 
 Changing them updates the sidebar, both phone apps, the portal and the invoices.
 
+## Vehicle calendar and customer self booking
+
+**Vehicle calendar** (its own menu item, and a spoke on the wheel) puts every PMI, MOT, brake test,
+tacho and LOLER date on a month, week or list view. Overdue chips are red, the next 7 days amber,
+later ones plain, and a click opens the vehicle. The prompts at the top say what is overdue, due this
+week and due next month, and each customer's next 30 days. **Email customers with work due** drafts one
+email per customer for the period you pick, with a link to their portal. In the demo Send only shows a
+toast and logs it in Alerts; nothing is sent.
+
+On the **customer portal**, **Book vehicles in** lets an operator tick vehicles, see what is due, pick a
+day (full and closed days are greyed out from the fitters' free hours) and a drop off time. The booking
+lands in the office straight away: a toast, Home Needs you, the Vehicle calendar, Book in, and the Day
+planner's waiting list for that day.
+
 ## What to try
 
 **Office, on a laptop**

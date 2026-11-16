@@ -11,7 +11,7 @@
   var SECT = [
     ['planner', 'Day planner'], ['live', 'Live view'], ['board', 'Workshop board'], ['bookin', 'Book in'],
     ['approvals', 'Authorisations'], ['checks', 'Driver checks'], ['vehicles', 'Vehicles'], ['money', 'Money'],
-    ['stock', 'Parts and stock'], ['timesheets', 'Timesheets']
+    ['stock', 'Parts and stock'], ['vcal', 'Vehicle calendar']
   ];
   O.WHEEL_SECT = SECT;
   var STAR = [0, 5, 2, 7, 4, 9, 6, 1, 8, 3];   // the order a fitter torques a ten stud wheel
@@ -46,6 +46,7 @@
     money: '<path d="M16.6 7.4A4.1 4.1 0 0 0 9 9.6v4.1c0 2.7-.9 4.6-2.8 5.8h12"/><path d="M6.4 13.4h7.4"/>',
     stock: '<path d="M12 2.9l8.3 4.5v9.2L12 21.1l-8.3-4.5V7.4z"/><path d="M3.7 7.4 12 12l8.3-4.6M12 12v9.1"/>',
     timesheets: '<circle cx="12" cy="12" r="8.8"/><path d="M12 7.2V12l3.3 2.1"/>',
+    vcal: '<rect x="3.5" y="4.8" width="17" height="15.7" rx="2.6"/><path d="M3.5 9.6h17M8.2 2.9v3.6M15.8 2.9v3.6"/><path d="M8.4 15.1l2.2 2.1 4.6-4.6"/>',
     reports: '<path d="M3.5 20.2h17M6.6 16.6v-5.4M11.4 16.6V6.6M16.2 16.6v-3.4"/>',
     settings: gear(),
     alerts: '<path d="M6.2 9.6a5.8 5.8 0 0 1 11.6 0c0 5.6 2.4 7.2 2.4 7.2H3.8s2.4-1.6 2.4-7.2"/><path d="M10.2 19.6a1.9 1.9 0 0 0 3.6 0"/>',
@@ -133,6 +134,7 @@
       case 'money': return n ? n + ' ready to invoice' : 'All invoiced';
       case 'stock': return n ? n + ' low on stock' : 'Stock levels fine';
       case 'timesheets': return 'Hours off the clock';
+      case 'vcal': return WS.dueBetween ? WS.dueBetween(WS.day(0), WS.isoAdd(WS.day(0), 7)).length + ' due this week' : 'PMIs, MOTs, LOLER';
       case 'home': return 'Back to the start';
       case 'settings': return 'Workshop, team and look';
       case 'alerts': return 'Everything that needs you';
@@ -250,7 +252,7 @@
     money: 'invoices invoice bills pay payroll xero accounts wages', stock: 'parts bins purchase orders', board: 'jobs bays',
     bookin: 'book new job', checks: 'defects walkaround driver', compliance: 'pmi mot test inspections', er: 'dvsa earned',
     timesheets: 'hours clock', campaigns: 'recalls', approvals: 'authorise extra work', planner: 'plan day schedule',
-    live: 'clocked fitters now', vehicles: 'fleet trucks lorries reg', settings: 'team users brand appearance', reports: 'margin revenue'
+    live: 'clocked fitters now', vcal: 'pmi mot annual test loler tacho brake due dates calendar booking bookings', vehicles: 'fleet trucks lorries reg', settings: 'team users brand appearance', reports: 'margin revenue'
   };
   function search(q) {
     q = q.trim().toLowerCase();

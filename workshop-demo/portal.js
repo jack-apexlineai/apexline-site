@@ -137,7 +137,7 @@
 
       '<div class="ptab">' +
       [['home', 'Approvals', waiting.length], ['shop', 'In the workshop', inShop.length],
-       ['veh', 'My vehicles', myVehicles().length], ['docs', 'Inspection records', ''],
+       ['veh', 'My vehicles', myVehicles().length], ['book', 'Book vehicles in', dueSoon().length || ''], ['docs', 'Inspection records', ''],
        ['bills', 'Invoices', myInvoices().length]].map(function (t) {
         return '<button data-pt="' + t[0] + '"' + (tab === t[0] ? ' class="on"' : '') + '>' + t[1] +
           (t[2] !== '' ? '<span class="n">' + t[2] + '</span>' : '') + '</button>';
@@ -146,8 +146,107 @@
       (tab === 'home' ? approvalsHtml()
         : tab === 'shop' ? shopHtml()
         : tab === 'veh' ? vehHtml()
+        : tab === 'book' ? bookHtml()
         : tab === 'docs' ? docsHtml()
         : billsHtml());
+  }
+
+  /* ---------------- Book vehicles in ---------------- */
+  var bk = { sel: {}, date: '', time: '08:00', done: null };
+  var BK_TYPES = [['PMI', 'PMI'], ['MOT prep', 'MOT (annual test)'], ['LOLER', 'LOLER'], ['Service', 'Service'], ['Repair', 'Repair or defect'], ['Tyres', 'Tyres']];
+  function dueOf(v, days) {
+    var T = WS.day(0), lim = WS.isoAdd(T, days);
+    return WS.DUE_KINDS.filter(function (k) { return v[k.key] && v[k.key] <= lim; })
+      .map(function (k) { return { key: k.key, kind: WS.DUE_SHORT[k.key], date: v[k.key], u: WS.urgency(v[k.key]) }; })
+      .sort(function (a, b) { return a.date.localeCompare(b.date); });
+  }
+  function dueSoon() { return myVehicles().filter(function (v) { return dueOf(v, 30).length; }); }
+  function need() {
+    var ids = Object.keys(bk.sel);
+    return ids.reduce(function (s2, id) { return s2 + WS.stdTime(bk.sel[id]); }, 0);
+  }
+  function bookHtml() {
+    var T = WS.day(0), vs = myVehicles().slice().sort(function (a, b) {
+      var da = dueOf(a, 60)[0], db = dueOf(b, 60)[0];
+      return (da ? da.date : '9') .localeCompare(db ? db.date : '9') || a.reg.localeCompare(b.reg);
+    });
+    var picked = Object.keys(bk.sel).length, hrs = need();
+    var html = '';
+    if (bk.done) {
+      html += '<div class="note" style="margin-bottom:14px" id="bkDone"><b>Booked.</b> ' + esc(bk.done) + ' The workshop can see it now.</div>';
+    }
+    html += '<div class="bk-steps">' +
+      '<div class="card"><div class="ch"><h2>1. Pick the vehicles</h2></div><div class="hint" style="margin-bottom:10px">What is due in the next 60 days is shown under each one.</div><div class="bk-veh">' +
+      vs.map(function (v) {
+        var due = dueOf(v, 60), on = !!bk.sel[v.id];
+        return '<label class="bk-v' + (on ? ' on' : '') + '"><input type="checkbox" data-bkv="' + v.id + '"' + (on ? ' checked' : '') + '>' +
+          '<span class="bk-m"><span class="rg" style="font-size:15px">' + esc(v.reg) + '</span> <span class="muted sm">' + esc(v.make + ' ' + v.model) + '</span>' +
+          '<span class="bk-due">' + (due.length ? due.map(function (x) {
+            return '<span class="pill ' + (x.u || '') + '">' + esc(x.kind + ' ' + WS.parse(x.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })) + '</span>';
+          }).join('') : '<span class="muted sm">Nothing due soon</span>') + '</span>' +
+          (on ? '<select class="in" data-bkt="' + v.id + '" aria-label="What for">' + BK_TYPES.map(function (t) {
+            return '<option value="' + t[0] + '"' + (bk.sel[v.id] === t[0] ? ' selected' : '') + '>' + esc(t[1]) + '</option>';
+          }).join('') + '</select>' : '') + '</span></label>';
+      }).join('') + '</div></div>';
+
+    // the next five weeks, Monday first
+    var g0 = WS.weekStartOf(T), cells = '', lastMonth = '';
+    ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(function (d) { cells += '<div class="dw">' + d + '</div>'; });
+    for (var i = 0; i < 35; i++) {
+      var d = WS.isoAdd(g0, i), cap = WS.dayCapacity(d), dt = WS.parse(d);
+      var past = d <= T, full = !cap.closed && cap.free < Math.max(hrs, 1);
+      var off = past || cap.closed || full;
+      var lab = past ? '' : cap.closed ? 'Closed' : full ? 'Full' : cap.free >= cap.cap * 0.4 ? 'Room' : 'Filling up';
+      var mon = dt.toLocaleDateString('en-GB', { month: 'short' });
+      cells += '<button type="button" class="bk-d' + (bk.date === d ? ' on' : '') + (!off && cap.free < cap.cap * 0.4 ? ' mid' : '') + '" data-bkd="' + d + '"' + (off ? ' disabled' : '') +
+        ' aria-label="' + esc(WS.dayLabel(d) + (lab ? ', ' + lab : '')) + '"><b>' + dt.getDate() + '</b>' +
+        (mon !== lastMonth && dt.getDate() <= 7 ? '<i>' + mon + '</i>' : '<i>' + esc(lab) + '</i>') + (off ? '' : '<span class="dt"></span>') + '</button>';
+      if (dt.getDate() <= 7) lastMonth = mon;
+    }
+    html += '<div><div class="card"><div class="ch"><h2>2. Pick a day</h2></div>' +
+      '<div class="hint" style="margin-bottom:10px">Greyed out days are full or closed. ' + (picked ? 'Your ' + picked + ' vehicle' + (picked === 1 ? '' : 's') + ' need' + (picked === 1 ? 's' : '') + ' about ' + WS.dur(hrs) + ' of workshop time.' : 'Pick vehicles first to see the days with room for them.') + '</div>' +
+      '<div class="bk-cal">' + cells + '</div></div>' +
+      '<div class="card"><div class="ch"><h2>3. Drop off time</h2></div><div class="bk-times seg" role="radiogroup">' + WS.OPEN_TIMES.map(function (t) {
+        return '<button type="button" role="radio" data-bkt2="' + t + '" aria-checked="' + (bk.time === t) + '"' + (bk.time === t ? ' class="on"' : '') + '>' + t + '</button>';
+      }).join('') + '</div>' +
+      '<div class="bk-sum">' + (picked && bk.date
+        ? '<div class="hint" style="margin-bottom:10px" id="bkSum">' + picked + ' vehicle' + (picked === 1 ? '' : 's') + ' on ' + esc(WS.dayLabel(bk.date)) + ', drop off ' + bk.time + '.</div>'
+        : '<div class="hint" style="margin-bottom:10px" id="bkSum">Pick at least one vehicle and a day.</div>') +
+      '<button class="btn block lg" id="bkGo"' + (picked && bk.date ? '' : ' disabled') + '>Confirm booking</button></div></div></div></div>';
+    return html;
+  }
+  function wireBook() {
+    document.querySelectorAll('[data-bkv]').forEach(function (c) {
+      c.onchange = function () {
+        var v = WS.vehicle(c.dataset.bkv);
+        if (c.checked) { var d = dueOf(v, 60)[0]; bk.sel[v.id] = d ? WS.DUE_JOB[d.key] : 'Service'; }
+        else delete bk.sel[v.id];
+        bk.done = null;
+        // a day picked earlier may not have room any more
+        if (bk.date) { var cap = WS.dayCapacity(bk.date); if (cap.free < need()) bk.date = ''; }
+        render();
+      };
+    });
+    document.querySelectorAll('[data-bkt]').forEach(function (s2) {
+      s2.onclick = function (e) { e.stopPropagation(); };
+      s2.onchange = function () { bk.sel[s2.dataset.bkt] = s2.value; render(); };
+    });
+    document.querySelectorAll('[data-bkd]').forEach(function (b) { b.onclick = function () { bk.date = b.dataset.bkd; bk.done = null; render(); }; });
+    document.querySelectorAll('[data-bkt2]').forEach(function (b) { b.onclick = function () { bk.time = b.dataset.bkt2; render(); }; });
+    var go = $('bkGo');
+    if (go) go.onclick = function () {
+      var ids = Object.keys(bk.sel);
+      if (!ids.length || !bk.date) return;
+      var jobs = WS.bookVehicles({
+        operatorId: me.id, by: me.contact, date: bk.date, time: bk.time,
+        items: ids.map(function (id) { return { vehicleId: id, type: bk.sel[id] }; })
+      });
+      bk.done = jobs.map(function (j) { var v = WS.vehicle(j.vehicleId); return (v ? v.reg : '') + ' for its ' + (WS.JOB_FOR[j.type] || j.type); }).join(', ') +
+        ' on ' + WS.dayLabel(bk.date) + ', drop off ' + bk.time + '.';
+      bk.sel = {}; bk.date = '';
+      render();
+      WS.toast('Booked in. The workshop has it.', 'ok');
+    };
   }
 
   function statBox(k, v, f, cls) {
@@ -269,6 +368,7 @@
     document.querySelectorAll('[data-pay]').forEach(function (b) {
       b.onclick = function (e) { e.stopPropagation(); pay(b.dataset.pay); };
     });
+    if (tab === 'book') wireBook();
   }
 
   function decide(id, yes) {

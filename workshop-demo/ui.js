@@ -55,6 +55,7 @@
       paintBrand();
       buildNav();
       WS.watch();
+      if (O.watchBookings) O.watchBookings();
       WS.onChange(function () {
         if (O.dragging) return;
         if (['live', 'board', 'home', 'planner', 'approvals', 'checks'].indexOf(O.screen) >= 0) O.render();
