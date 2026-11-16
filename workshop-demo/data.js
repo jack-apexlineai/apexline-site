@@ -758,6 +758,13 @@ WS.seed = function () {
     });
   }
 
+  /* one lorry with its PMI due in 2 days, not booked in and no reminder sent yet,
+     so the start-up and the urgent pop up have something real to point at */
+  var soonV = vehicles.filter(function (v) {
+    return v.operatorId === 'o1' && !/trailer/i.test(v.type) && !jobs.some(function (j) { return j.vehicleId === v.id && j.status !== 'done'; });
+  })[0];
+  if (soonV) { soonV.nextPmi = WS.day(2); soonV.lastPmi = WS.day(2 - soonV.pmiWeeks * 7); }
+
   return {
     v: 1,
     settings: settings,

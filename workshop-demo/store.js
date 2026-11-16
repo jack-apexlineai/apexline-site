@@ -3,7 +3,7 @@
 
 var WS = window.WS || {};
 WS.KEY = 'wsDemo:state';
-WS.SEED_V = 26;
+WS.SEED_V = 27;
 
 /* ---------- state ---------- */
 WS.state = null;

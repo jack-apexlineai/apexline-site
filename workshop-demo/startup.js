@@ -166,6 +166,23 @@
   };
 
   /* ---------------- the briefing, from the live data ---------------- */
+  /* due in the next 2 days, with no open job for the vehicle and no reminder sent: needs doing now */
+  WS.remKey = function (v, key) { return v.id + ':' + key; };
+  WS.dueSoonUnactioned = function () {
+    var st = WS.state, T = WS.day(0), rem = st.reminders || {}, out = [];
+    st.vehicles.forEach(function (v) {
+      WS.DUE_KINDS.forEach(function (k) {
+        var d = v[k.key];
+        if (!d) return;
+        var n = WS.daysBetween(T, d);
+        if (n < 0 || n > 2) return;
+        if (rem[WS.remKey(v, k.key)]) return;
+        if (st.jobs.some(function (j) { return j.vehicleId === v.id && j.status !== 'done' && j.date <= d; })) return;
+        out.push({ v: v, key: k.key, kind: k.label, date: d, days: n, op: WS.operator(v.operatorId) });
+      });
+    });
+    return out.sort(function (x, y) { return x.date.localeCompare(y.date); });
+  };
   O.briefData = function () {
     var st = WS.state, T = WS.day(0);
     var today = WS.jobsOn(T);
@@ -179,46 +196,61 @@
     sent.forEach(function (a) { ops[a.operatorId || a.id] = 1; });
     var ready = st.jobs.filter(function (j) { return j.status === 'done' && !j.invoiceId; });
     var money = Math.round(ready.reduce(function (s, j) { return s + (WS.quoteJob(j).net || 0); }, 0));
-    var defects = st.checks.filter(function (c) { return c.date === T && c.defects && c.defects.length; }).length;
+    var dchecks = st.checks.filter(function (c) { return c.date === T && c.defects && c.defects.length; });
     return {
       jobs: today.length, clocked: clocked, vor: vor, overdue: overdue,
       customers: Object.keys(ops).length, approvals: sent.length,
-      readyJobs: ready.length, money: money, defects: defects
+      readyJobs: ready.length, money: money, defects: dchecks.length,
+      noCard: dchecks.filter(function (c) { return !c.jobId; }).length,
+      soon: WS.dueSoonUnactioned().length
     };
   };
   function pl(n, one, many) { return n === 1 ? one : many; }
-  /* each line: parts of text and numbers, and a status */
+  /* each line: parts of text and numbers, a status, whether it is urgent, and the screen it opens */
   O.briefLines = function (d) {
     d = d || O.briefData();
     var L = [];
     L.push({
-      k: 'jobs', s: d.jobs ? 'go' : 'ok',
+      k: 'jobs', s: d.jobs ? 'go' : 'ok', go: 'live',
       parts: [{ n: d.jobs }, ' ' + pl(d.jobs, 'job', 'jobs') + ' on today. ', d.clocked ? { n: d.clocked } : 'Nobody', ' ' + (d.clocked ? pl(d.clocked, 'fitter', 'fitters') + ' clocked on.' : 'clocked on yet.')]
     });
     L.push(d.vor
-      ? { k: 'vor', s: 'bad', parts: [{ n: d.vor }, ' ' + pl(d.vor, 'vehicle', 'vehicles') + ' off the road.'] }
-      : { k: 'vor', s: 'ok', parts: ['Every vehicle is on the road.'] });
+      ? { k: 'vor', s: 'bad', urgent: true, go: 'vehicles', parts: [{ n: d.vor }, ' ' + pl(d.vor, 'vehicle', 'vehicles') + ' off the road.'] }
+      : { k: 'vor', s: 'ok', go: 'vehicles', parts: ['Every vehicle is on the road.'] });
     L.push(d.overdue
-      ? { k: 'overdue', s: 'bad', parts: [{ n: d.overdue }, ' compliance ' + pl(d.overdue, 'item', 'items') + ' overdue.'] }
-      : { k: 'overdue', s: 'ok', parts: ['Compliance is all in date.'] });
+      ? { k: 'overdue', s: 'bad', urgent: true, go: 'compliance', parts: [{ n: d.overdue }, ' compliance ' + pl(d.overdue, 'item', 'items') + ' overdue.'] }
+      : { k: 'overdue', s: 'ok', go: 'compliance', parts: ['Compliance is all in date.'] });
+    if (d.soon) L.push({ k: 'soon', s: 'bad', urgent: true, go: 'compliance', parts: [{ n: d.soon }, ' ' + pl(d.soon, 'item', 'items') + ' due in the next 2 days, not booked in.'] });
     L.push(d.customers
-      ? { k: 'customers', s: 'warn', parts: [{ n: d.customers }, ' ' + pl(d.customers, 'customer', 'customers') + ' waiting to authorise extra work.'] }
-      : { k: 'customers', s: 'ok', parts: ['No customers waiting to authorise work.'] });
+      ? { k: 'customers', s: 'warn', go: 'approvals', parts: [{ n: d.customers }, ' ' + pl(d.customers, 'customer', 'customers') + ' waiting to authorise extra work.'] }
+      : { k: 'customers', s: 'ok', go: 'approvals', parts: ['No customers waiting to authorise work.'] });
     L.push(d.money
-      ? { k: 'money', s: 'ok', parts: [{ n: d.money, money: true }, ' ready to invoice across ', { n: d.readyJobs }, ' ' + pl(d.readyJobs, 'job.', 'jobs.')] }
-      : { k: 'money', s: 'ok', parts: ['Everything finished is invoiced.'] });
+      ? { k: 'money', s: 'ok', go: 'invoices', parts: [{ n: d.money, money: true }, ' ready to invoice across ', { n: d.readyJobs }, ' ' + pl(d.readyJobs, 'job.', 'jobs.')] }
+      : { k: 'money', s: 'ok', go: 'invoices', parts: ['Everything finished is invoiced.'] });
     L.push(d.defects
-      ? { k: 'defects', s: 'warn', parts: [{ n: d.defects }, ' driver defect ' + pl(d.defects, 'report', 'reports') + ' in today.'] }
-      : { k: 'defects', s: 'ok', parts: ['No driver defects reported today.'] });
-    return L;
+      ? { k: 'defects', s: d.noCard ? 'bad' : 'warn', urgent: !!d.noCard, go: 'checks', parts: [{ n: d.defects }, ' driver defect ' + pl(d.defects, 'report', 'reports') + ' in today' + (d.noCard ? ', ' : '.')].concat(d.noCard ? [{ n: d.noCard }, ' with no job card.'] : []) }
+      : { k: 'defects', s: 'ok', go: 'checks', parts: ['No driver defects reported today.'] });
+    // urgent first, otherwise in the order above
+    return L.map(function (x, i) { x._i = i; return x; }).sort(function (a, b) { return (b.urgent ? 1 : 0) - (a.urgent ? 1 : 0) || a._i - b._i; });
+  };
+  /* open the screen a line is about */
+  O.briefGo = function (k) {
+    var L = O.briefLines().filter(function (x) { return x.k === k; })[0];
+    if (!L) return;
+    if (k === 'vor') O.vehFilter = { q: '', type: '', op: '', vor: 'y' };
+    O.go(L.go);
+    if (k === 'overdue' || k === 'soon') { O.compFilter = k === 'overdue' ? 'overdue' : ''; O.render(); }
   };
   function lineHtml(x, i) {
     var tx = x.parts.map(function (p) {
       if (typeof p === 'string') return esc(p);
       return '<b class="bt-n" data-n="' + p.n + '"' + (p.money ? ' data-money="1"' : '') + '>' + (p.money ? WS.money0(0) : '0') + '</b>';
     }).join('');
-    return '<li class="bt-line" data-k="' + x.k + '" data-s="' + x.s + '"><span class="bt-ix">' + (i < 9 ? '0' : '') + (i + 1) + '</span>' +
-      '<span class="bt-tx">' + tx + '</span><i class="bt-dot" aria-hidden="true"></i></li>';
+    return '<li class="bt-line' + (x.urgent ? ' urgent' : '') + '" data-k="' + x.k + '" data-s="' + x.s + '" data-go="' + x.go + '" role="button" tabindex="0">' +
+      '<span class="bt-ix">' + (i < 9 ? '0' : '') + (i + 1) + '</span>' +
+      '<span class="bt-tx">' + tx + '</span>' +
+      '<span class="bt-uslot">' + (x.urgent ? '<span class="bt-urg">Urgent</span>' : '') + '</span>' +
+      '<i class="bt-dot" aria-hidden="true"></i><span class="bt-go" aria-hidden="true">›</span></li>';
   }
   function plain(x) {
     return x.parts.map(function (p) { return typeof p === 'string' ? p : p.money ? WS.money0(p.n) : String(p.n); }).join('').trim();
@@ -239,7 +271,8 @@
     if (!document.body.animate) { O.startupState = 'skipped'; return false; }
     if (O.closeModal) O.closeModal();
 
-    var S = WS.state.settings, lines = O.briefLines(), anims = [], timers = [], over = false;
+    var S = WS.state.settings, lines = O.briefLines(), anims = [], timers = [], over = false, paused = false;
+    var nUrgent = lines.filter(function (x) { return x.urgent; }).length;
     var hello = WS.greeting(first) + '.';
     var wheelMode = WS.look('menuStyle') === 'wheel' && !!O.playIntro;
     var now = new Date();
@@ -263,11 +296,14 @@
       '<div class="bt-stage">' +
       '<div class="bt-logo">' + logo + '<i class="bt-scan" aria-hidden="true"></i></div>' +
       '<div class="bt-rule" aria-hidden="true"></div>' +
-      '<h1 class="bt-hello" aria-live="polite">' + hello.split(' ').map(function (w) { return '<span>' + esc(w) + '</span>'; }).join(' ') + '</h1>' +
+      '<div class="bt-hrow"><h1 class="bt-hello" aria-live="polite">' + hello.split(' ').map(function (w) { return '<span>' + esc(w) + '</span>'; }).join(' ') + '</h1>' +
+      (nUrgent ? '<span class="bt-ucount">' + nUrgent + ' urgent</span>' : '') + '</div>' +
       '<ol class="bt-lines" aria-live="polite">' + lines.map(lineHtml).join('') + '</ol>' +
       '</div>' +
       '<div class="bt-foot">' +
-      '<span class="bt-skip">' + (touch ? 'Tap' : 'Click') + ' anywhere or press any key to skip</span></div>' +
+      '<span class="bt-skip">' + (touch ? 'Tap' : 'Click') + ' a line to go straight there, or anywhere else to carry on</span>' +
+      '<div class="bt-pause" hidden><button type="button" class="bt-cont" id="btCont">Continue <span id="btSecs">10</span></button>' +
+      '<span class="bt-cd" aria-hidden="true"><i></i></span></div></div>' +
       '<div class="bt-prog" aria-hidden="true"><i></i></div>';
     document.body.appendChild(ov);
     document.documentElement.classList.add('boot-on');
@@ -328,8 +364,9 @@
       li.querySelectorAll('.bt-n').forEach(function (n) { T(function () { count(n, 750); }, d0 + 80); });
     });
     var LAST = L0 + (lines.length - 1) * STEP + 480;
-    var END = LAST + 1100;
-    A(q('.bt-prog i'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: END, easing: 'linear', fill: 'both' });
+    var PAUSE = 10000;
+    if (nUrgent) A(q('.bt-ucount'), [{ opacity: 0, transform: 'scale(.8)' }, { opacity: 1, transform: 'none' }], { delay: L0, duration: 420, easing: EASE, fill: 'both' });
+    var prog = A(q('.bt-prog i'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: LAST, easing: 'linear', fill: 'both' });
 
     function count(n, ms) {
       var to = +n.dataset.n || 0, money = !!n.dataset.money, t0 = performance.now();
@@ -343,14 +380,43 @@
       requestAnimationFrame(step);
     }
 
-    /* 4. hand over to the office */
-    T(function () { leave(false); }, END);
+    /* 4. a pause to read it and click a line, then hand over to the office */
+    T(pause, LAST);
+    var cdAnim = null, secT = null;
+    function pause() {
+      if (over || paused) return;
+      paused = true;
+      O.startupState = 'paused';
+      ov.classList.add('paused');
+      q('.bt-skip').textContent = (touch ? 'Tap' : 'Click') + ' a line to go straight there';
+      q('.bt-pause').hidden = false;
+      var t0 = Date.now(), secs = q('#btSecs');
+      cdAnim = q('.bt-cd i').animate([{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }], { duration: PAUSE, easing: 'linear', fill: 'both' });
+      secT = setInterval(function () { secs.textContent = Math.max(0, Math.ceil((PAUSE - (Date.now() - t0)) / 1000)); }, 250);
+      T(function () { leave(false); }, PAUSE);
+    }
+    /* the first click or key while it is still building shows everything at once and waits */
+    function finishBuild() {
+      if (over || paused) return;
+      timers.forEach(clearTimeout);
+      timers = [];
+      anims.forEach(function (a) { try { a.finish(); } catch (e) { } });
+      ov.querySelectorAll('.bt-n').forEach(function (n) { n.textContent = n.dataset.money ? WS.money0(+n.dataset.n) : n.dataset.n; });
+      pause();
+    }
+    O.startupContinue = function () { leave(false); };
+    O.startupGo = function (k) { leave(true, k); };
+    q('#btCont').onclick = function (e) { e.stopPropagation(); leave(false); };
+    ov.querySelectorAll('.bt-line').forEach(function (li) {
+      li.onclick = function (e) { e.stopPropagation(); leave(true, li.dataset.k); };
+    });
 
-    function leave(skipped) {
+    function leave(skipped, goK) {
       if (over) return;
       over = true;
       timers.forEach(clearTimeout);
-      ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) { document.removeEventListener(ev, skip, true); });
+      if (secT) clearInterval(secT);
+      ['pointerdown', 'keydown'].forEach(function (ev) { document.removeEventListener(ev, skip, true); });
       document.documentElement.classList.remove('boot-on');
       if (skipped) {
         anims.forEach(function (a) { try { a.finish(); } catch (e) { } });
@@ -363,6 +429,8 @@
         setTimeout(function () { ov.remove(); }, 400);
         if (wheelMode && O.skipIntro) O.skipIntro();
         markWheelSeen();
+        if (goK) O.briefGo(goK);
+        if (O.urgentScan) setTimeout(O.urgentScan, 600);
         return;
       }
       O.startupState = 'done';
@@ -375,17 +443,82 @@
       ov.animate([{ opacity: 1 }, { opacity: 0 }], { delay: 160, duration: 520, easing: 'ease-in-out', fill: 'forwards' }).onfinish = function () { ov.remove(); };
       setTimeout(function () { ov.remove(); }, 900);
       void a1;
+      if (O.urgentScan) setTimeout(O.urgentScan, wheelMode ? 2200 : 900);
     }
     function markWheelSeen() { try { sessionStorage.setItem('wsDemo:introSeen', '1'); } catch (e) { } }
+    /* a click on empty space or a key: first finishes the build, then carries on. Esc carries on straight away */
     function skip(e) {
       if (over) return;
-      if (e && e.type === 'keydown' && /^(Shift|Control|Alt|Meta|CapsLock|Tab)$/.test(e.key)) return;
-      if (e && e.type === 'keydown') { e.preventDefault(); e.stopPropagation(); }
-      leave(true);
+      if (e.type === 'keydown') {
+        if (/^(Shift|Control|Alt|Meta|CapsLock|Tab)$/.test(e.key)) return;
+        var li = e.target && e.target.closest && e.target.closest('.bt-line');
+        if (li && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); leave(true, li.dataset.k); return; }
+        e.preventDefault(); e.stopPropagation();
+        if (e.key === 'Escape' || paused) leave(false); else finishBuild();
+        return;
+      }
+      if (e.target && e.target.closest && e.target.closest('.bt-line, .bt-cont')) return;
+      if (paused) leave(false); else finishBuild();
     }
     O.skipStartup = function () { leave(true); };
-    ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) { document.addEventListener(ev, skip, { capture: true, passive: ev !== 'keydown' }); });
+    ['pointerdown', 'keydown'].forEach(function (ev) { document.addEventListener(ev, skip, { capture: true, passive: ev !== 'keydown' }); });
     return true;
+  };
+
+  /* ---------------- urgent pop ups ----------------
+     Top right, one per item per browser session, dismissable. Today: a PMI, test or LOLER due in
+     the next 2 days with no job booked and no reminder sent to the customer. */
+  var USEEN = 'wsDemo:urgentSeen';
+  function useen() { try { return JSON.parse(sessionStorage.getItem(USEEN) || '[]'); } catch (e) { return []; } }
+  function markUseen(k) { var a = useen(); if (a.indexOf(k) < 0) a.push(k); try { sessionStorage.setItem(USEEN, JSON.stringify(a)); } catch (e) { } }
+  function whenTx(n) { return n === 0 ? 'is due today' : n === 1 ? 'is due tomorrow' : 'is due in ' + n + ' days'; }
+  WS.reminderText = function (x) {
+    var first = String((x.op && x.op.contact) || '').split(' ')[0] || 'there';
+    return 'Hi ' + first + ',\n\nA reminder that ' + x.v.reg + ' ' + whenTx(x.days) + ' for its ' + x.kind + ' (' + WS.dateUK(x.date) + '). ' +
+      'Let us know when you can send it in, or book a day on your customer portal.\n\nThanks,\n' + WS.shortName(WS.state.settings.name);
+  };
+  O.sendReminder = function (vid, key) {
+    var x = WS.dueSoonUnactioned().filter(function (i) { return i.v.id === vid && i.key === key; })[0];
+    var v = WS.vehicle(vid);
+    if (!x) { WS.toast((v ? v.reg : 'That vehicle') + ' is already sorted.', 'ok'); return; }
+    var m = O.modal('Reminder to ' + (x.op ? x.op.name : 'the customer'),
+      '<div class="note" style="margin-bottom:12px"><b>Demo.</b> Nothing is sent from here. On the real system it goes from the workshop\'s own email address.</div>' +
+      '<div class="muted sm" style="margin-bottom:6px">To ' + esc(x.op ? x.op.contact + ', ' + x.op.email : '') + '</div>' +
+      '<pre class="vem-b" id="remBody">' + esc(WS.reminderText(x)) + '</pre>', 'Send reminder', function () {
+        WS.state.reminders = WS.state.reminders || {};
+        WS.state.reminders[WS.remKey(x.v, x.key)] = WS.nowStamp();
+        WS.notify(x.op ? x.op.contact + ', ' + x.op.name : 'Customer', 'Email', x.v.reg + ' ' + x.kind + ' reminder', WS.reminderText(x), 'reminder');
+        WS.save();
+        O.closeModal();
+        WS.toast('Demo: reminder for ' + x.v.reg + ' drafted, nothing was actually sent. It is in Alerts as a record.', 'ok');
+        var c = document.querySelector('[data-up="' + WS.remKey(x.v, x.key) + '"]');
+        if (c) c.remove();
+      });
+    return m;
+  };
+  O.urgentScan = function () {
+    if (!WS.state || document.getElementById('wsBoot') || O.introState === 'playing' || document.getElementById('wsSignin')) {
+      clearTimeout(O._uT); O._uT = setTimeout(O.urgentScan, 1500); return;
+    }
+    var seenL = useen();
+    if (seenL.indexOf('*') >= 0) return;
+    var wrap = $('wsUrgent');
+    var list = WS.dueSoonUnactioned().filter(function (x) { return seenL.indexOf(WS.remKey(x.v, x.key)) < 0; }).slice(0, 2);
+    if (!list.length) return;
+    if (!wrap) { wrap = WS.el('div', 'upops'); wrap.id = 'wsUrgent'; wrap.setAttribute('role', 'region'); wrap.setAttribute('aria-label', 'Urgent'); document.body.appendChild(wrap); }
+    list.forEach(function (x) {
+      var k = WS.remKey(x.v, x.key);
+      markUseen(k);
+      var c = WS.el('div', 'upop');
+      c.setAttribute('data-up', k);
+      c.setAttribute('role', 'alert');
+      c.innerHTML = '<div class="up-h"><span class="up-dot"></span><b>Urgent</b><button type="button" class="up-x" aria-label="Dismiss">&times;</button></div>' +
+        '<div class="up-t">' + esc(x.v.reg + '\'s ' + x.kind + ' ' + whenTx(x.days) + ' and ' + (x.op ? WS.shortName(x.op.name) : 'the customer') + ' hasn\'t been sent a reminder. Send it now?') + '</div>' +
+        '<div class="up-b"><button type="button" class="btn sm" data-uprem>Send reminder</button><button type="button" class="btn alt sm" data-upno>Not now</button></div>';
+      wrap.appendChild(c);
+      c.querySelector('.up-x').onclick = c.querySelector('[data-upno]').onclick = function () { c.remove(); };
+      c.querySelector('[data-uprem]').onclick = function () { O.sendReminder(x.v.id, x.key); };
+    });
   };
 
   /* ---------------- Settings > Appearance ---------------- */

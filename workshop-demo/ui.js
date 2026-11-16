@@ -10,6 +10,7 @@
     tsWeek: 0, prWeek: 0,
     planDay: 0,
     vehFilter: { q: '', type: '', op: '', vor: '' },
+    compFilter: '',
     stockFilter: '',
     suggest: null,
     tab: {}
@@ -80,6 +81,8 @@
       // straight after sign in: the start-up briefing, which hands over to the wheel itself
       var briefing = !!(fresh && O.playStartup && O.playStartup({ boot: true }));
       if (O.wheelBoot) O.wheelBoot(briefing);
+      if (!briefing && O.urgentScan) setTimeout(O.urgentScan, 900);
+      WS.onChange(function () { if (O.urgentScan && O.startupState !== 'playing' && O.startupState !== 'paused') O.urgentScan(); });
       setInterval(function () { if (O.screen === 'live') O.paintTimers && O.paintTimers(); }, 1000);
       setInterval(function () { if (O.screen === 'live' || O.screen === 'planner') O.render(); }, 30000);
     }
@@ -354,6 +357,7 @@
     if (MONEY_VIEWS[s] && O.setMoneyView) { O.setMoneyView(MONEY_VIEWS[s]); s = 'money'; }
     if (!O.SCREENS[s]) s = 'home';
     if (s !== 'planner') O.suggest = null;
+    if (s !== 'compliance') O.compFilter = '';
     O.screen = s;
     location.hash = s;
     document.querySelectorAll('nav.side button.nv').forEach(function (b) { b.classList.toggle('on', b.dataset.screen === s); });

@@ -379,9 +379,11 @@
           '<div class="bar2' + (i === 0 ? '' : ' ok') + '" style="height:' + Math.max(3, counts[i] / max * 120) + 'px"></div>' +
           '<div class="lb">' + esc(mo.label) + '</div></div>';
       }).join('') + '</div></div>' +
+      (O.compFilter === 'overdue' ? '<div class="note" id="cFilt" style="margin:14px 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><b>Showing overdue only.</b>' +
+        '<button type="button" class="btn alt sm" id="cAll">Show everything</button></div>' : '') +
       '<div class="tablewrap"><table class="tbl"><thead><tr><th>Vehicle</th><th class="hide-sm">Operator</th>' +
       '<th>What</th><th>Due</th><th>Status</th><th></th></tr></thead><tbody>' +
-      items.slice(0, 60).map(function (i) {
+      (O.compFilter === 'overdue' ? over : items).slice(0, 60).map(function (i) {
         var o = WS.operator(i.vehicle.operatorId);
         return '<tr><td><span class="reg">' + esc(i.vehicle.reg) + '</span>' +
           '<div class="muted sm">' + esc(i.vehicle.make + ' ' + i.vehicle.model) + '</div></td>' +
@@ -395,6 +397,8 @@
   };
 
   W.compliance = function () {
+    var ca = $('cAll');
+    if (ca) ca.onclick = function () { O.compFilter = ''; O.render(); };
     document.querySelectorAll('[data-book]').forEach(function (b) {
       b.onclick = function () {
         var v = WS.vehicle(b.dataset.book);
