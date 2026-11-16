@@ -21,7 +21,7 @@
     var list = users();
     return '<div class="card" id="team"><div class="ch"><h2>Team and permissions</h2>' +
       '<div class="sp"><button type="button" class="btn sm" id="tmAdd">Add user</button></div></div>' +
-      '<div class="hint" style="margin-bottom:12px">Who can sign in and what they can do. You are signed in as <b class="mono">' + esc(WS.ME) + '</b>, Director.</div>' +
+      '<div class="hint" style="margin-bottom:12px">Who can sign in and what they can do. You are signed in as <b class="mono">' + esc(WS.ME) + '</b>, ' + esc(((WS.me && WS.me()) || {}).role || 'Director') + '.</div>' +
       '<div class="tlist">' + list.map(function (u) {
         return '<div class="trow' + (u.status === 'suspended' ? ' sus' : '') + '" data-user="' + u.id + '">' +
           '<div class="tav">' + esc(initials(u)) + '</div>' +

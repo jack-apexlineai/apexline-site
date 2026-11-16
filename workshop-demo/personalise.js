@@ -176,6 +176,7 @@
       '<div class="sp"><button type="button" class="btn alt sm" id="apHome">Customise home</button><button type="button" class="btn alt sm" id="apMenu">Edit menu</button></div></div>' +
       '<div class="lkrow" style="margin-top:14px"><div><div class="b">Wheel load in</div><div class="muted sm">The wheel rolls in and its nuts become the menu. Plays once each time the office opens in Wheel style.</div></div>' +
       '<div class="sp"><button type="button" class="btn alt sm" id="apIntro">Play it now</button></div></div>' +
+      (O.startupCardHtml ? O.startupCardHtml() : '') +
       '</div>';
   };
   O.wireAppearance = function () {
@@ -195,6 +196,7 @@
     });
     var pi = $('apIntro');
     if (pi) pi.onclick = function () { if (O.playIntro && !O.playIntro()) WS.toast('Your device is set to reduce motion, so the load in is off.', 'ok'); };
+    if (O.wireStartupCard) O.wireStartupCard();
     var h = $('apHome');
     if (h) h.onclick = function () { O.homeEdit = true; O._custIn = true; markHint(); O.go('home'); };
     var m = $('apMenu');

@@ -7,6 +7,7 @@
   WS.initTheme();
   WS.gate(function () {
     WS.load();
+    WS.applyBrand();
     WS.banner();
     $('app').hidden = false;
     try { me = WS.fitter(localStorage.getItem('wsDemo:fitter')) || null; } catch (e) { }
@@ -49,8 +50,8 @@
     var fitters = WS.loginFitters();
     if (!pickFitter) {
       return '<div style="padding:26px 2px 10px;text-align:center">' +
-        '<div class="logo" style="width:52px;height:52px;border-radius:14px;margin:0 auto 14px;font-size:19px">' + esc(WS.state.settings.initials || 'NC') + '</div>' +
-        '<h1 style="margin-bottom:4px">' + esc(WS.state.settings.name) + '</h1>' +
+        WS.logoHtml('applogo') +
+        '<h1 style="margin-bottom:4px">' + esc(WS.logoShowsName() ? 'Fitter app' : WS.state.settings.name) + '</h1>' +
         '<div class="muted sm" style="margin-bottom:22px">Tap your name to clock on</div></div>' +
         fitters.map(function (f) {
           return '<div class="fjob" data-pick="' + f.id + '"><div class="r1"><span class="rg" style="font-size:17px">' + esc(f.name) + '</span></div>' +

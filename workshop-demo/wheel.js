@@ -367,6 +367,8 @@
       if (match && match.id === 'home') hiHome = true;
       paintHub();
     });
+    // focus straight away, so typing right after W or Ctrl K lands in the search
+    try { inp.focus({ preventScroll: true }); } catch (e) { }
     setTimeout(function () { if (menu) inp.focus({ preventScroll: true }); }, 10);
 
     if (!RM.matches && wheel.animate) {
@@ -494,12 +496,15 @@
       var b = document.querySelector('nav.side button.nv[data-screen="' + x[0] + '"] i');
       return shown(b) ? b : null;
     });
-    var dock = shown(launch) ? launch.querySelector('.wl-w') : document.querySelector('nav.side .brandrow .logo');
+    var dock = shown(launch) ? launch.querySelector('.wl-w') : document.querySelector('nav.side .brandrow .logo, nav.side .brandrow .brandimg');
     if (!shown(dock)) dock = null;
     return { tiles: tiles, dock: dock };
   }
 
-  O.playIntro = function () {
+  /* opts.quick: straight after the start-up briefing. No roll in and no name, the wheel
+     fades up where the briefing was and its nuts fly out into the menu. */
+  O.playIntro = function (opts) {
+    var quick = !!(opts && opts.quick);
     if (RM.matches || document.getElementById('wsIntro')) { O.introState = RM.matches ? 'skipped' : O.introState; return false; }
     if (!document.body.animate) return false;
     try { sessionStorage.setItem('wsDemo:introSeen', '1'); } catch (e) { }
@@ -510,7 +515,7 @@
     root.classList.add('wintro-on');
     var ov = document.createElement('div');
     ov.id = 'wsIntro';
-    ov.className = 'wintro';
+    ov.className = 'wintro' + (quick ? ' quick' : '');
     ov.setAttribute('aria-hidden', 'true');
     ov.innerHTML = '<div class="wi-bg"></div>' +
       '<div class="wi-dock"><div class="wi-stage"><div class="wi-shadow"></div><div class="wi-wheel">' + wheelSvg(true) + '</div></div></div>' +
@@ -525,16 +530,26 @@
     var word = ov.querySelector('.wi-word'), size = wheel.getBoundingClientRect().width || 300;
     var dist = Math.min(window.innerWidth * 0.62, 940), rot = dist / (size / 2) * 180 / Math.PI;
     var roll = 'cubic-bezier(.12,.82,.22,1)';
+    var FLY = 1300;
+    if (quick) {
+      FLY = 640;
+      word.style.display = 'none';
+      ov.querySelector('.wi-skip').style.display = 'none';
+      A(ov.querySelector('.wi-bg'), [{ opacity: 0 }, { opacity: 1 }], { duration: 260, fill: 'both' });
+      A(stage, [{ transform: 'scale(.82)', opacity: 0 }, { transform: 'none', opacity: 1 }], { delay: 120, duration: 420, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'both' });
+      A(wheel, [{ transform: 'rotate(-80deg)' }, { transform: 'none' }], { delay: 120, duration: 520, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'both' });
+    } else {
     A(stage, [{ transform: 'translateX(' + (-dist) + 'px)', opacity: 0 }, { opacity: 1, offset: 0.25 }, { transform: 'none', opacity: 1 }], { duration: 1000, easing: roll, fill: 'both' });
     A(wheel, [{ transform: 'rotate(' + (-rot) + 'deg)' }, { transform: 'none' }], { duration: 1000, easing: roll, fill: 'both' });
     A(word, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { delay: 420, duration: 480, easing: 'ease-out', fill: 'both' });
     A(ov.querySelector('.wi-bar i'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 1300, easing: 'cubic-bezier(.45,0,.2,1)', fill: 'both' });
+    }
     var stripe = ov.querySelector('.wo-stripe'), C = 2 * Math.PI * 57.4;
     stripe.style.strokeDasharray = C;
-    A(stripe, [{ strokeDashoffset: C }, { strokeDashoffset: 0 }], { delay: 520, duration: 620, easing: 'ease-in-out', fill: 'both' });
+    A(stripe, [{ strokeDashoffset: C }, { strokeDashoffset: 0 }], { delay: quick ? 160 : 520, duration: quick ? 420 : 620, easing: 'ease-in-out', fill: 'both' });
     var nuts = [].slice.call(ov.querySelectorAll('.wo-nut'));
     STAR.forEach(function (n, k) {
-      var g = nuts[n], d = 760 + k * 40;
+      var g = nuts[n], d = quick ? 260 + k * 26 : 760 + k * 40;
       A(g.querySelector('.wo-nh'), [{ transform: 'rotate(0deg)' }, { transform: 'rotate(60deg)' }], { delay: d, duration: 220, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'both' });
       A(g.querySelector('.wo-flash'), [{ opacity: 0 }, { opacity: 0.95, offset: 0.35 }, { opacity: 0 }], { delay: d, duration: 360, fill: 'both' });
       A(g.querySelector('.wo-ind'), [{ opacity: 0, transform: 'scale(.2)' }, { opacity: 1, transform: 'none' }], { delay: d + 80, duration: 200, easing: 'ease-out', fill: 'both' });
@@ -585,7 +600,7 @@
       A(ov.querySelector('.wi-skip'), [{ opacity: 1 }, { opacity: 0 }], { duration: 150, fill: 'both' });
       A(ov.querySelector('.wi-bg'), [{ opacity: 1 }, { opacity: 0 }], { delay: 120, duration: 520, easing: 'ease-in-out', fill: 'both' });
       T(finish, 24 * 9 + 680);
-    }, 1300);
+    }, FLY);
 
     function skip(e) {
       if (e && e.type === 'keydown' && /^(Shift|Control|Alt|Meta)$/.test(e.key)) return;
@@ -609,8 +624,10 @@
   };
 
   /* called by the office once it has drawn its first screen */
-  O.wheelBoot = function () {
+  O.wheelBoot = function (briefing) {
     buildLauncher();
+    // the start-up briefing is playing and hands over to the wheel when it ends
+    if (briefing) { try { sessionStorage.setItem('wsDemo:introSeen', '1'); } catch (e) { } return; }
     var seen = false;
     try { seen = sessionStorage.getItem('wsDemo:introSeen') === '1'; } catch (e) { }
     if (wheelOn() && !seen) {

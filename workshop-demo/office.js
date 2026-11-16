@@ -10,7 +10,8 @@
     var T = WS.day(0), st = WS.state, today = WS.jobsOn(T);
     var inProg = today.filter(function (j) { return j.status === 'in_progress'; }).length;
     var waiting = st.jobs.filter(function (j) { return j.status === 'waiting_parts'; }).length;
-    var ready = st.jobs.filter(function (j) { return j.status === 'done' && !j.invoiceId; }).length;
+    var readyJobs = st.jobs.filter(function (j) { return j.status === 'done' && !j.invoiceId; }), ready = readyJobs.length;
+    var readyVal = readyJobs.reduce(function (s2, j) { return s2 + (WS.quoteJob(j).net || 0); }, 0);
     var overduePmi = st.vehicles.filter(function (v) { var d = WS.dueState(v.nextPmi); return d && d.days <= 7; }).length;
     var vor = st.vehicles.filter(function (v) { return v.vor; }).length;
     var auth = st.approvals.filter(function (a) { return a.status === 'Sent'; }).length;
@@ -52,7 +53,7 @@
     var blocks = {
       today: stat('In today', today.length, inProg + ' being worked on', '', 'board'),
       parts: stat('Waiting on parts', waiting, waiting ? 'chase the supplier' : 'nothing held up', waiting ? 'warn' : '', 'board'),
-      ready: stat('Ready to invoice', ready, ready ? 'worth ' + WS.money0(ready * 240) : 'all invoiced', ready ? 'ok' : '', 'invoices'),
+      ready: stat('Ready to invoice', ready, ready ? 'worth ' + WS.money0(readyVal) : 'all invoiced', ready ? 'ok' : '', 'invoices'),
       auth: stat('Needs authorising', auth, auth ? 'customer has not replied' : 'nothing pending', auth ? 'warn' : '', 'approvals'),
       pmi: stat('PMIs due this week', overduePmi, 'next 7 days', overduePmi ? 'warn' : '', 'compliance'),
       vor: stat('Off the road', vor, vor ? 'losing the operator money' : 'all running', vor ? 'bad' : 'ok', 'vehicles'),
@@ -95,7 +96,7 @@
       }).join('') + '</ul></div>'
     };
 
-    return O.homeView('Good ' + (new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'),
+    return O.homeView(WS.greeting ? WS.greeting(WS.greetName ? WS.greetName() : '') : 'Good ' + (new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'),
       WS.dayName(T) + ' · ' + today.length + ' jobs on the board',
       '<button class="btn alt" data-go="planner">Plan the day</button><button class="btn" data-go="bookin">Book a vehicle in</button>',
       blocks);

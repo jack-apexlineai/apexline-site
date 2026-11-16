@@ -38,10 +38,9 @@
     var st = WS.state.settings;
     if (!pick) {
       return '<div style="padding:30px 2px 14px;text-align:center">' +
-        '<div class="logo" style="width:56px;height:56px;border-radius:15px;margin:0 auto 14px;font-size:20px">' +
-        esc(st.initials || 'NC') + '</div>' +
-        '<h1 style="margin-bottom:5px">' + esc(st.name) + '</h1>' +
-        '<div class="muted sm" style="margin-bottom:24px">Customer portal. Your vehicles, your paperwork, 24 hours a day.</div></div>' +
+        WS.logoHtml('applogo') +
+        '<h1 style="margin-bottom:5px">' + esc(WS.logoShowsName() ? 'Customer portal' : st.name) + '</h1>' +
+        '<div class="muted sm" style="margin-bottom:24px">' + (WS.logoShowsName() ? '' : 'Customer portal. ') + 'Your vehicles, your paperwork, 24 hours a day.</div></div>' +
         '<div class="grid g2">' + WS.state.operators.map(function (o) {
           var waiting = WS.state.approvals.filter(function (a) { return a.operatorId === o.id && a.status === 'Sent'; }).length;
           return '<div class="fjob" data-pick="' + o.id + '"><div class="r1">' +
@@ -348,7 +347,7 @@
   function invoiceView(id) {
     var i = WS.invoice(id), v = WS.vehicle(i.vehicleId), st = WS.state.settings;
     var rc = WS.rateFor(i.operatorId);
-    pop(i.no, '<div class="inv"><div class="ih"><div><h2>' + esc(st.name) + '</h2>' +
+    pop(i.no, '<div class="inv"><div class="ih"><div>' + (st.logo ? WS.logoHtml('inv-logo') : '') + '<h2' + (WS.logoShowsName() ? ' class="vh"' : '') + '>' + esc(st.name) + '</h2>' +
       '<div class="muted" style="font-size:12.5px;margin-top:6px">' + esc(st.address) + '<br>VAT ' + esc(st.vatNo) + '</div></div>' +
       '<div class="n"><div style="font-size:20px;font-weight:800">INVOICE</div>' +
       '<div style="font-weight:700;margin-top:4px">' + esc(i.no) + '</div>' +

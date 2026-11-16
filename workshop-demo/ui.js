@@ -44,7 +44,12 @@
     WS.gate(function () {
       WS.load();
       WS.applyBrand();
-      WS.banner('<button id="wsBell" type="button" class="bell">Alerts</button>');
+      (O.signIn || function (cb) { cb(false); })(function (fresh) { openOffice(fresh); });
+    });
+    function openOffice(fresh) {
+      WS.banner((O.whoBarHtml ? O.whoBarHtml() : '') + '<button id="wsBell" type="button" class="bell">Alerts</button>' +
+        '<button id="wsGear" type="button" class="gearbtn" aria-label="Settings" title="Settings">' + GEAR + '</button>');
+      if (O.wireWho) O.wireWho();
       $('shell').hidden = false;
       paintBrand();
       buildNav();
@@ -61,20 +66,41 @@
       };
       var bell = $('wsBell');
       if (bell) bell.onclick = function () { O.go('alerts'); };
+      // Settings opens from the top bar gear and the sidebar footer, in every menu style
+      var gear = $('wsGear');
+      if (gear) gear.onclick = function () { closeNav(); if (O.closeWheel) O.closeWheel(true); O.go('settings'); };
+      document.querySelectorAll('.sidefoot button.nv[data-screen]').forEach(function (b) {
+        b.onclick = function () { closeNav(); O.go(b.dataset.screen); };
+      });
       if (O.initPhone) O.initPhone();
       paintBell();
-      O.go(location.hash.replace('#', '') || 'home');
-      if (O.wheelBoot) O.wheelBoot();
+      O.go(fresh ? 'home' : (location.hash.replace('#', '') || 'home'));
+      // straight after sign in: the start-up briefing, which hands over to the wheel itself
+      var briefing = !!(fresh && O.playStartup && O.playStartup({ boot: true }));
+      if (O.wheelBoot) O.wheelBoot(briefing);
       setInterval(function () { if (O.screen === 'live') O.paintTimers && O.paintTimers(); }, 1000);
       setInterval(function () { if (O.screen === 'live' || O.screen === 'planner') O.render(); }, 30000);
-    });
+    }
   };
 
+  var GEAR = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
+  function closeNav() {
+    document.body.classList.remove('navopen');
+    if (O.navEditing) O.navEdit(false);
+  }
   function paintBrand() {
-    var S = WS.state.settings;
-    $('bizName').textContent = shortName(S.name);
-    document.querySelectorAll('.logo').forEach(function (l) { l.textContent = S.initials || 'NC'; });
-    document.title = shortName(S.name) + ' · Workshop';
+    var S = WS.state.settings, row = document.querySelector('nav.side .brandrow');
+    var short = shortName(S.name), same = !!S.logo && shortName(S.logoName || '') === short;
+    if (row) {
+      row.classList.toggle('haslogo', !!S.logo);
+      row.innerHTML = (S.logo ? WS.logoHtml('side-logo', true) : '<div class="logo">' + esc(S.initials || 'WS') + '</div>') +
+        '<div style="min-width:0"><div class="bname' + (same ? ' vh' : '') + '" id="bizName"></div>' +
+        '<div class="bsub">Workshop system</div></div>';
+    }
+    $('bizName').textContent = short;
+    if (S.logo) { var pre = new Image(); pre.src = S.logo; }
+    document.querySelectorAll('.logo').forEach(function (l) { if (!l.children.length) l.textContent = S.initials || 'WS'; });
+    document.title = short + ' · Workshop';
     if (O.paintWheelBrand) O.paintWheelBrand();
   }
   O.paintBrand = paintBrand;
@@ -345,7 +371,7 @@
 
   /* ---------------- small builders ---------------- */
   /* the sidebar is 236px, so the legal suffix gets in the way */
-  function shortName(n) { return String(n || '').replace(/\s+(Ltd|Limited|LLP|PLC)\.?$/i, ''); }
+  var shortName = WS.shortName;
   O.shortName = shortName;
   O.pill = function (text, cls) { return '<span class="pill ' + (cls || '') + '">' + esc(text) + '</span>'; };
   O.chip = function (text, cls) { return '<span class="chip ' + (cls || '') + '">' + esc(text) + '</span>'; };

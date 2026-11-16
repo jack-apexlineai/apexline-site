@@ -4,7 +4,7 @@
 var WS = window.WS || {};
 WS.KEY = 'wsDemo:state';
 WS.PIN = '240411';
-WS.SEED_V = 23;
+WS.SEED_V = 25;
 
 /* ---------- state ---------- */
 WS.state = null;
@@ -344,7 +344,8 @@ WS.audit = function (job, who, what) {
 
 /* ---------- team and permissions ----------
    Everyone who can sign in. Fitters are linked to their fitter record, whose PIN the
-   fitter app checks. In the demo the office is signed in as the owner, g.noble. */
+   fitter app checks. The office signs in as one of the office users (startup.js);
+   until then WS.ME is the owner, g.noble. */
 WS.ROLES = ['Director', 'Office', 'Accounts', 'Fitter', 'Driver'];
 WS.PERMS = [
   ['money', 'See money and invoices'], ['xero', 'Send to Xero'], ['quotes', 'Approve quotes'],
@@ -377,8 +378,8 @@ WS.ensureUsers = function (s) {
   if (!s.users) {
     changed = true;
     s.users = [
-      { id: 'u1', first: 'George', last: 'Noble', username: 'g.noble', role: 'Director', title: 'Owner', owner: true, signIn: 'password', secret: 'demo-owner', status: 'active', perms: WS.rolePerms('Director'), addedBy: '', addedAt: seedAt },
-      { id: 'u2', first: 'Jess', last: 'Harper', username: 'j.harper', role: 'Office', title: 'Office and accounts', signIn: 'password', secret: 'demo-office', status: 'active',
+      { id: 'u1', first: 'George', last: 'Noble', username: 'g.noble', role: 'Director', title: 'Owner', owner: true, signIn: 'pin', pin: '1234', status: 'active', perms: WS.rolePerms('Director'), addedBy: '', addedAt: seedAt },
+      { id: 'u2', first: 'Office', last: 'Admin', username: 'office', role: 'Office', title: 'Office and accounts', shared: true, signIn: 'pin', pin: '1234', status: 'active',
         perms: (function () { var p = WS.rolePerms('Office'); p.money = p.xero = p.pay = true; return p; })(), addedBy: 'g.noble', addedAt: seedAt }
     ];
   }
@@ -651,7 +652,7 @@ WS.theme = function (set) {
   return document.documentElement.getAttribute('data-theme') || 'dark';
 };
 WS.look = function (key, val) {
-  var k = 'wsDemo:' + key, d = { textSize: 'standard', density: 'comfortable', menuStyle: 'sidebar' }[key];
+  var k = 'wsDemo:' + key, d = { textSize: 'standard', density: 'comfortable', menuStyle: 'wheel' }[key];
   if (val) { try { localStorage.setItem(k, val); } catch (e) { } WS._paintLook(); return val; }
   var v = null;
   try { v = localStorage.getItem(k); } catch (e) { }
@@ -704,18 +705,79 @@ WS.themeToggle = function (id) {
   b.onclick = function () { WS.theme(WS.theme() === 'dark' ? 'light' : 'dark'); };
   return b;
 };
-/* the workshop's own colour drives every accent in both apps */
+/* the workshop's own colour drives every accent in every app. It also works out a readable
+   version of the colour for text on the dark and on the light theme, and a glow for the start-up. */
+WS.DEFAULT_BRAND = '#6D7882';
+function hexRgb(c) {
+  var m = /^#?([0-9a-f]{6})$/i.exec(String(c || '').trim());
+  if (!m) return null;
+  var n = parseInt(m[1], 16);
+  return [n >> 16 & 255, n >> 8 & 255, n & 255];
+}
+function rgbHex(c) { return '#' + c.map(function (v) { return ('0' + Math.round(v).toString(16)).slice(-2); }).join('').toUpperCase(); }
+function lumOf(c) {
+  var a = c.map(function (v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+  return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
+}
+WS.contrast = function (a, b) {
+  var A = lumOf(a), B = lumOf(b);
+  return (Math.max(A, B) + 0.05) / (Math.min(A, B) + 0.05);
+};
+function towards(c, to, bg, need) {
+  for (var k = 0; k <= 1.0001; k += 0.04) {
+    var m = c.map(function (v, i) { return v + (to[i] - v) * k; });
+    if (WS.contrast(m, bg) >= need) return m;
+  }
+  return to;
+}
+WS.shortName = function (n) { return String(n || '').replace(/\s+(Ltd|Limited|LLP|PLC)\.?$/i, ''); };
 WS.applyBrand = function () {
-  var c = (WS.state && WS.state.settings && WS.state.settings.brand) || '#2E6BE6';
-  var m = /^#?([0-9a-f]{6})$/i.exec(String(c).trim());
-  if (!m) return;
-  var n = parseInt(m[1], 16), R = n >> 16 & 255, G = n >> 8 & 255, B = n & 255;
+  var S = (WS.state && WS.state.settings) || {};
+  var rgb = hexRgb(S.brand) || hexRgb(WS.DEFAULT_BRAND);
+  var R = rgb[0], G = rgb[1], B = rgb[2], hex = rgbHex(rgb);
   var root = document.documentElement.style;
-  root.setProperty('--brand', '#' + m[1]);
+  root.setProperty('--brand', hex);
   root.setProperty('--brand-l', 'rgba(' + R + ',' + G + ',' + B + ',.10)');
   root.setProperty('--brand-m', 'rgba(' + R + ',' + G + ',' + B + ',.28)');
+  root.setProperty('--brand-xl', 'rgba(' + R + ',' + G + ',' + B + ',.09)');
+  root.setProperty('--brand-ink-d', rgbHex(towards(rgb, [255, 255, 255], [16, 24, 40], 6.5)));
+  root.setProperty('--brand-ink-l', rgbHex(towards(rgb, [0, 0, 0], [243, 245, 249], 4.8)));
+  // solid fills (buttons, selected tabs, badges): a grey brand reads as disabled on the dark
+  // theme, so a low colour brand fills with its light steel version and dark text instead
+  var mx = Math.max(R, G, B), mn = Math.min(R, G, B), sat = mx ? (mx - mn) / mx : 0;
+  var inkD = towards(rgb, [255, 255, 255], [16, 24, 40], 6.5);
+  var fillD = sat < 0.3 ? inkD : rgb;
+  root.setProperty('--brand-fill-d', rgbHex(fillD));
+  root.setProperty('--brand-on-d', WS.contrast(fillD, [255, 255, 255]) < 3.2 ? '#0B1220' : '#FFFFFF');
+  var fillL = WS.contrast(rgb, [255, 255, 255]) < 4.6 ? towards(rgb, [0, 0, 0], [255, 255, 255], 4.6) : rgb;
+  root.setProperty('--brand-fill-l', rgbHex(fillL));
+  root.setProperty('--brand-on-l', '#FFFFFF');
   var tc = document.querySelector('meta[name="theme-color"]');
   if (tc && WS.theme() === 'dark') tc.setAttribute('content', '#0A101C');
+  // the short code, the tab title and the tab icon follow the workshop
+  var code = String(S.initials || '').slice(0, 3);
+  if (code) document.querySelectorAll('.logo').forEach(function (l) { if (!l.children.length) l.textContent = code; });
+  var short = WS.shortName(S.name);
+  if (short && document.title.indexOf(' · ') > 0) document.title = short + document.title.slice(document.title.indexOf(' · '));
+  var ic = document.querySelector('link[rel="icon"]');
+  if (ic && code) {
+    var fs = code.length > 2 ? 21 : 27;
+    ic.href = 'data:image/svg+xml,' + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='" + hex +
+      "'/><text x='32' y='" + (code.length > 2 ? 40 : 42) + "' font-family='Inter,Arial,sans-serif' font-size='" + fs + "' font-weight='700' fill='white' text-anchor='middle'>" + WS.esc(code) + "</text></svg>");
+  }
+};
+/* true when the logo already spells out the display name, so a heading under it can say something else */
+WS.logoShowsName = function () {
+  var S = (WS.state && WS.state.settings) || {};
+  return !!S.logo && !!S.logoName && WS.shortName(S.logoName) === WS.shortName(S.name);
+};
+/* the workshop's logo: their image when there is one, otherwise the short code in a brand square.
+   stacked: the narrow version for the sidebar. */
+WS.logoHtml = function (cls, stacked) {
+  var S = (WS.state && WS.state.settings) || {};
+  var src = stacked ? (S.logoStack || S.logo) : S.logo;
+  if (src) return '<img class="brandimg ' + (cls || '') + (S.logoMono ? ' mono' : '') + '" src="' + WS.esc(src) + '" alt="' + WS.esc(S.name || '') + '" draggable="false">';
+  return '<div class="logo ' + (cls || '') + '">' + WS.esc(S.initials || 'WS') + '</div>';
 };
 
 /* ---------- helpers ---------- */
@@ -792,9 +854,9 @@ WS.listen = function (onText, onEnd) {
 /* ---------- demo banner ---------- */
 WS.banner = function (extraHtml) {
   var b = WS.el('div', 'dbar');
-  b.innerHTML = '<span class="dot"></span><b>Workshop demo</b><span class="desc">sample data, nothing here is real</span>' +
+  b.innerHTML = '<span class="dot"></span><b><span class="xl">Workshop demo</span><span class="xs">Demo</span></b><span class="desc">sample data, nothing here is real</span>' +
     '<span class="sp">' + (extraHtml || '') +
-    '<button id="wsReset" type="button">Reset demo</button></span>';
+    '<button id="wsReset" type="button">Reset<span class="xl"> demo</span></button></span>';
   document.body.insertBefore(b, document.body.firstChild);
   var rb = WS.$('wsReset');
   rb.parentNode.insertBefore(WS.themeToggle('wsTheme'), rb);
@@ -813,10 +875,11 @@ WS.gate = function (onOpen, sub) {
   try { ok = localStorage.getItem('wsDemo:unlocked') === '1'; } catch (e) { }
   if (ok) { onOpen(); return; }
 
+  WS.applyBrand();
   var wrap = WS.el('div', 'lock');
   wrap.innerHTML =
     '<div class="lockbox">' +
-    '<div class="logo">NC</div>' +
+    '<div class="logo">' + WS.esc((WS.state && WS.state.settings && WS.state.settings.initials) || 'LEG') + '</div>' +
     '<h1>Workshop demo</h1>' +
     '<p>' + WS.esc(sub || 'Enter the 6 digit demo PIN to carry on.') + '</p>' +
     '<input class="in pinin" id="gpin" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="------" aria-label="Demo PIN">' +

@@ -182,7 +182,7 @@
     var j = WS.job(i.jobId), st = WS.state.settings;
     var rc = WS.rateFor(i.operatorId);
     var body = '<div class="inv">' +
-      '<div class="ih"><div><h2>' + esc(st.name) + '</h2>' +
+      '<div class="ih"><div>' + (st.logo ? WS.logoHtml('inv-logo') : '') + '<h2' + (WS.logoShowsName() ? ' class="vh"' : '') + '>' + esc(st.name) + '</h2>' +
       '<div class="muted" style="font-size:12.5px;line-height:1.55;margin-top:6px">' + esc(st.address) + '<br>' +
       esc(st.phone) + ' · ' + esc(st.email) + '<br>VAT ' + esc(st.vatNo) + ' · O licence ' + esc(st.opLicence) + '</div></div>' +
       '<div class="n"><div style="font-size:22px;font-weight:800">INVOICE</div>' +
@@ -633,7 +633,7 @@
       'Nothing is sent until you say so.</div>' +
       '<div class="row">' +
       '<label class="f"><span class="lb">Xero API key</span><input class="in" id="xKey" type="password" placeholder="paste the key here" value="' + esc(x.key) + '"></label>' +
-      '<label class="f"><span class="lb">Organisation</span><input class="in" id="xTen" placeholder="Noble Commercials Ltd" value="' + esc(x.tenantName) + '"></label>' +
+      '<label class="f"><span class="lb">Organisation</span><input class="in" id="xTen" placeholder="' + esc(st.name) + '" value="' + esc(x.tenantName) + '"></label>' +
       '</div>' +
       '<div class="row">' +
       '<label class="f"><span class="lb">Labour account code</span><input class="in" id="xSales" value="' + esc(x.salesAccount) + '"></label>' +
@@ -651,10 +651,16 @@
 
       '<div class="card"><div class="ch"><h2>The workshop</h2></div>' +
       '<div class="row">' +
-      '<label class="f"><span class="lb">Business name</span><input class="in" id="sName" value="' + esc(st.name) + '"></label>' +
+      '<label class="f"><span class="lb">Display name</span><input class="in" id="sName" value="' + esc(st.name) + '">' +
+      '<span class="hint">Shown on the sidebar, sign in, both phone apps, the portal and invoices. Use the trading name if the workshop trades under another name.</span></label>' +
       '<label class="f"><span class="lb">Short code on the logo</span><input class="in" id="sInit" maxlength="3" value="' + esc(st.initials) + '"></label>' +
       '<label class="f"><span class="lb">Brand colour</span><input class="in swatch" id="sBrand" type="color" value="' + esc(st.brand) + '" style="width:100%;height:42px;padding:3px"></label>' +
       '</div>' +
+      '<div class="f"><span class="lb">Logo</span><div class="logoset">' +
+      (st.logo ? '<span class="lgprev">' + WS.logoHtml('') + '</span>' : '<span class="muted sm">No logo yet, the short code shows instead</span>') +
+      '<label class="btn alt sm" style="cursor:pointer">' + (st.logo ? 'Change' : 'Upload') + '<input type="file" id="sLogo" accept="image/png,image/svg+xml,image/jpeg,image/webp" hidden></label>' +
+      (st.logo ? '<button type="button" class="btn alt sm" id="sLogoOff">Remove</button>' : '') + '</div>' +
+      '<span class="hint">A wide logo works best. PNG or SVG, under 400 KB.</span></div>' +
       '<label class="f"><span class="lb">Address</span><input class="in" id="sAddr" value="' + esc(st.address) + '"></label>' +
       '<div class="row">' +
       '<label class="f"><span class="lb">Phone</span><input class="in" id="sPhone" value="' + esc(st.phone) + '"></label>' +
@@ -783,9 +789,32 @@
       WS.toast('Xero disconnected. Invoices go back to CSV export.');
     };
 
+    var lg = $('sLogo');
+    if (lg) lg.onchange = function () {
+      var file = lg.files && lg.files[0];
+      if (!file) return;
+      if (file.size > 400 * 1024) { WS.toast('That logo is over 400 KB. Try a smaller PNG or an SVG.', 'bad'); return; }
+      var fr = new FileReader();
+      fr.onload = function () {
+        st.logo = st.logoStack = String(fr.result);
+        st.logoMono = false;
+        st.logoName = '';
+        WS.save(); WS.applyBrand(); O.paintBrand(); O.render();
+        WS.toast('Logo saved. The sidebar, sign in, start-up and invoices all use it.', 'ok');
+      };
+      fr.onerror = function () { WS.toast('Could not read that file.', 'bad'); };
+      fr.readAsDataURL(file);
+    };
+    var lgo = $('sLogoOff');
+    if (lgo) lgo.onclick = function () {
+      st.logo = st.logoStack = '';
+      WS.save(); WS.applyBrand(); O.paintBrand(); O.render();
+      WS.toast('Logo removed. The short code shows instead.', 'ok');
+    };
+
     $('sSave').onclick = function () {
       st.name = $('sName').value || st.name;
-      st.initials = ($('sInit').value || 'NC').toUpperCase();
+      st.initials = ($('sInit').value || 'WS').toUpperCase();
       st.brand = $('sBrand').value;
       st.address = $('sAddr').value; st.phone = $('sPhone').value;
       st.email = $('sEmail').value; st.web = $('sWeb').value;

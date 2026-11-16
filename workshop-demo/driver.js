@@ -38,8 +38,7 @@
     var ds = WS.state.drivers;
     if (!pick) {
       return '<div style="padding:26px 2px 10px;text-align:center">' +
-        '<div class="logo" style="width:52px;height:52px;border-radius:14px;margin:0 auto 14px;font-size:19px">' +
-        esc(WS.state.settings.initials || 'NC') + '</div>' +
+        WS.logoHtml('applogo') +
         '<h1 style="margin-bottom:4px">Driver check</h1>' +
         '<div class="muted sm" style="margin-bottom:22px">Tap your name to start today\'s walkaround</div></div>' +
         ds.map(function (d) {

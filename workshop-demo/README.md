@@ -17,19 +17,34 @@ real data. Everything runs in the browser and is made up.
 
 Cloudflare drops the `.html`, so `/workshop-demo/fitter.html` redirects to `/workshop-demo/fitter`.
 
-Demo PIN: **240411**
+Demo PIN: **240411**. Then the office asks who you are: **g.noble** (George) or **office** (a shared office and accounts login), PIN **1234**.
 
 Every page is `noindex` and nothing on the site links to them.
 
+## Start-up briefing
+
+Signing in to the office plays a short start-up: the logo resolves on a dark screen, "Good morning,
+George." by UK time, then the day builds line by line from the live data (jobs on today and fitters
+clocked on, vehicles off the road, overdue compliance, customers waiting to authorise, money ready to
+invoice, today's driver defects). About 7 seconds. Any click or key skips it; reduced motion skips it.
+In Wheel menu style it ends with the wheel nuts flying into the menu.
+
+The start-up is silent. **Settings > Appearance** has **Play start-up**. **Sign out** is in the top bar.
+
+The menu style is **Wheel** by default, so every sign in ends with the wheel nuts flying out into the
+menu. **Sidebar** is still there in **Settings > Appearance > Menu style**. Reset demo goes back to Wheel.
+
 ## Before this goes to a customer
 
-The workshop is set up as **Noble Commercials Ltd** with placeholder details. No real company
-record was used. Correct these in **Settings > The workshop** first:
+The workshop is branded as **London Environmental Group Ltd**, from their public website
+(londonenvironmentalgroup.co.uk): the name as their site shows it, their text logo in League Spartan
+(recreated as outlines in `brand/`, their site has no image logo) and the slate accent `#6D7882` from
+their stylesheet. The **Display name** in **Settings > The workshop** is one setting: change it if the
+workshop trades under another name. The rest are placeholders. Correct these first:
 
-- address, phone, email, website
+- address, phone, email
 - VAT number, company number, O licence number
 - bank details printed on the invoice
-- the brand colour and the two letter logo code
 
 Changing them updates the sidebar, both phone apps, the portal and the invoices.
 
@@ -90,6 +105,8 @@ None of that exists in Truckfile or AssetMinder.
 | Who | PIN |
 |---|---|
 | Demo gate | 240411 |
+| George Noble, g.noble, office | 1234 |
+| Office Admin, office, shared office login | 1234 |
 | Dave Mitchell, foreman | 1111 |
 | Marek Nowak | 2222 |
 | Lee Barnard | 3333 |
@@ -119,6 +136,8 @@ Plain HTML, CSS and JavaScript. No build step, no framework, no backend.
 | `data.js` | Sample workshop, vehicles, jobs, stock and invoices, dated off today |
 | `store.js` | Browser storage, planner maths, payroll, compliance, invoice maths, Xero |
 | `ui.js` | Office shell: navigation, screen registry, modals, pointer drag and drop |
+| `startup.js` | Office sign in, the start-up briefing and Speak briefing |
+| `brand/` | The workshop's logo files |
 | `office.js` | Home, day planner, live view, board, book in, vehicles |
 | `office2.js` | Job card, inspection sheet, authorisations, driver checks, quotes, campaigns |
 | `office3.js` | Invoices and Xero, stock, compliance, Earned Recognition, timesheets, reports, settings |
