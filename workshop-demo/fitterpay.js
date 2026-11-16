@@ -138,8 +138,8 @@
   WS.payRows = function (p) {
     var set = WS.state.settings, t = p.totals;
     var rows = [['Fitter pay', set.name], ['Period', periodLabel(p)], [],
-      ['Fitter', 'Role', 'Paid by', 'Rate', 'Days worked', 'Hours clocked', 'Basic hours', 'Basic pay',
-        'Overtime hours', 'Overtime rate', 'Overtime pay', 'Extras', 'Extras note', 'Total pay']];
+      ['Fitter', 'Role', 'Paid by', 'Rate', 'Days worked', 'Hours clocked, hours (decimal)', 'Basic hours, hours (decimal)', 'Basic pay',
+        'Overtime, hours (decimal)', 'Overtime rate', 'Overtime pay', 'Extras', 'Extras note', 'Total pay']];
     p.rows.forEach(function (r) {
       rows.push([r.fitter.name, r.fitter.role, r.pay.type === 'day' ? 'Day rate' : 'Hourly', r2(r.pay.rate), r.days, r.hours,
         r.basicHours, r.basic, r.otHours, r.otRate, r.otPay, r.extra, r.note, r.total]);
@@ -210,7 +210,7 @@
       '<span class="muted sm"> · ' + plural(p.rows.length, 'fitter', 'fitters') + ' · past ' + p.ot + ' hours a day only counts once you add it as overtime</span></div></div>' +
 
       '<div class="grid g4" style="margin-bottom:16px">' +
-      stat('Hours clocked', WS.hrs(t.hours), t.over ? WS.hrs(t.over) + ' of it past ' + p.ot + 'h a day' : 'across ' + p.rows.length + ' fitters', t.over ? 'warn' : '') +
+      stat('Hours clocked', WS.hrs(t.hours), t.over ? WS.hrs(t.over) + ' of it past ' + WS.dur(p.ot) + ' a day' : 'across ' + p.rows.length + ' fitters', t.over ? 'warn' : '') +
       stat('Basic pay', WS.money0(t.basic), 'rates times days or hours') +
       stat('Overtime and extras', WS.money0(extras), t.otHours ? WS.hrs(t.otHours) + ' overtime added' : 'nothing added yet', extras ? 'warn' : '') +
       stat('Total to pay', WS.money0(t.total), 'before tax and NI', 'ok') +
@@ -222,7 +222,7 @@
       p.rows.map(function (r) {
         var otCell = r.otHours
           ? WS.hrs(r.otHours) + ' · ' + WS.money(r.otPay) + '<div class="muted sm">at ' + WS.money(r.otRate) + '</div>'
-          : (r.over && !r.answered ? '<span class="muted sm">' + WS.hrs(r.over) + ' past ' + p.ot + 'h, not added</span>' : '<span class="muted">-</span>');
+          : (r.over && !r.answered ? '<span class="muted sm">' + WS.hrs(r.over) + ' past ' + WS.dur(p.ot) + ', not added</span>' : '<span class="muted">-</span>');
         var btn = function (lbl) { return '<button class="btn alt sm" data-fpx="' + r.fitter.id + '">' + lbl + '</button>'; };
         return '<tr data-fprow="' + r.fitter.id + '"><td><b>' + esc(r.fitter.name) + '</b>' +
           '<div class="muted sm">' + esc(WS.payLabel(r.fitter)) + '</div>' +

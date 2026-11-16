@@ -18,7 +18,11 @@ WS.load = function () {
     try {
       var s = JSON.parse(raw);
       // reseed when the demo data shape changes, or when the seed is from another day
-      if (s && s.v === WS.SEED_V && s.seedDay === WS.day(0)) { WS.state = s; WS._rev = s.rev || 0; return WS.state; }
+      if (s && s.v === WS.SEED_V && s.seedDay === WS.day(0)) {
+        WS.state = s; WS._rev = s.rev || 0;
+        if (WS.ensureUsers(s)) WS.persist();
+        return WS.state;
+      }
     } catch (e) { }
   }
   return WS.reset(true);
@@ -29,6 +33,7 @@ WS.reset = function (quiet) {
   s.v = WS.SEED_V;
   s.seedDay = WS.day(0);
   s.rev = (WS._rev || 0) + 1;
+  WS.ensureUsers(s);
   WS.state = s;
   WS._rev = s.rev;
   WS.persist();
@@ -44,6 +49,7 @@ WS.persist = function () {
 
 /* call after any change: bumps the revision so the other app picks it up */
 WS.save = function () {
+  WS.ensureUsers(WS.state);
   WS.state.rev = (WS.state.rev || 0) + 1;
   WS._rev = WS.state.rev;
   WS.persist();
@@ -115,15 +121,18 @@ WS.hoursOn = function (job, upToNow) {
   });
   return t;
 };
-WS.hhmm = function (hours) {
-  var m = Math.max(0, Math.round(hours * 60));
-  var h = Math.floor(m / 60);
-  return h ? h + 'h ' + String(m % 60).padStart(2, '0') + 'm' : (m % 60) + 'm';
+/* One way to show a length of time on screen: hours and minutes, "1h 30m", "1h 36m", "6m", "2h".
+   Decimal hours only where money is worked out or in exports, labelled "hours (decimal)". */
+WS.dur = function (hours) {
+  var m = Math.max(0, Math.round((+hours || 0) * 60));
+  var h = Math.floor(m / 60), r = m % 60;
+  if (!h) return r + 'm';
+  return r ? h + 'h ' + r + 'm' : h + 'h';
 };
-WS.hrs = function (hours) {
-  var h = Math.round((hours || 0) * 100) / 100;
-  return (h % 1 === 0 ? h : h.toFixed(2).replace(/0$/, '')) + 'h';
-};
+WS.hhmm = WS.dur;
+WS.hrs = WS.dur;
+/* decimal hours, for money lines and exports only */
+WS.hrsDec = function (hours) { return String(Math.round((+hours || 0) * 100) / 100); };
 WS.hms = function (ms) {
   var s = Math.max(0, Math.floor(ms / 1000));
   return String(Math.floor(s / 3600)).padStart(2, '0') + ':' + String(Math.floor(s / 60) % 60).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
@@ -333,6 +342,126 @@ WS.audit = function (job, who, what) {
   job.audit.push({ at: WS.nowStamp(), who: who, what: what });
 };
 
+/* ---------- team and permissions ----------
+   Everyone who can sign in. Fitters are linked to their fitter record, whose PIN the
+   fitter app checks. In the demo the office is signed in as the owner, g.noble. */
+WS.ROLES = ['Director', 'Office', 'Accounts', 'Fitter', 'Driver'];
+WS.PERMS = [
+  ['money', 'See money and invoices'], ['xero', 'Send to Xero'], ['quotes', 'Approve quotes'],
+  ['prices', 'Edit prices and labour rates'], ['bookin', 'Book in jobs'], ['pay', 'Run fitter pay'],
+  ['users', 'Manage users'], ['fitterOnly', 'Fitter app only'], ['driverOnly', 'Driver app only']
+];
+WS.rolePerms = function (role) {
+  var on = {
+    Director: ['money', 'xero', 'quotes', 'prices', 'bookin', 'pay', 'users'],
+    Office: ['quotes', 'bookin'],
+    Accounts: ['money', 'xero', 'pay'],
+    Fitter: ['fitterOnly'],
+    Driver: ['driverOnly']
+  }[role] || [];
+  var o = {};
+  WS.PERMS.forEach(function (p) { o[p[0]] = on.indexOf(p[0]) >= 0; });
+  return o;
+};
+WS.username = function (first, last, users, skipId) {
+  var base = (String(first || '').trim().charAt(0) + '.' + String(last || '').trim()).toLowerCase().replace(/[^a-z0-9.]/g, '');
+  if (base === '.') return '';
+  var u = base, n = 2;
+  while ((users || []).some(function (x) { return x.username === u && x.id !== skipId && x.status !== 'removed'; })) u = base + n++;
+  return u;
+};
+WS.ME = 'g.noble';
+WS.ensureUsers = function (s) {
+  if (!s || !s.settings) return false;
+  var changed = false, seedAt = WS.at ? WS.at(WS.day(-21), 9, 0) : '';
+  if (!s.users) {
+    changed = true;
+    s.users = [
+      { id: 'u1', first: 'George', last: 'Noble', username: 'g.noble', role: 'Director', title: 'Owner', owner: true, signIn: 'password', secret: 'demo-owner', status: 'active', perms: WS.rolePerms('Director'), addedBy: '', addedAt: seedAt },
+      { id: 'u2', first: 'Jess', last: 'Harper', username: 'j.harper', role: 'Office', title: 'Office and accounts', signIn: 'password', secret: 'demo-office', status: 'active',
+        perms: (function () { var p = WS.rolePerms('Office'); p.money = p.xero = p.pay = true; return p; })(), addedBy: 'g.noble', addedAt: seedAt }
+    ];
+  }
+  s.settings.fitters.forEach(function (f) {
+    if (s.users.some(function (u) { return u.fitterId === f.id; })) return;
+    changed = true;
+    var parts = String(f.name).trim().split(/\s+/), first = parts[0] || '', last = parts.slice(1).join(' ') || first;
+    s.users.push({
+      id: 'u' + f.id, first: first, last: last, username: WS.username(first, last, s.users), role: 'Fitter', title: f.role || 'Fitter',
+      signIn: 'pin', status: 'active', perms: WS.rolePerms('Fitter'), fitterId: f.id, addedBy: 'g.noble', addedAt: seedAt
+    });
+  });
+  return changed;
+};
+WS.userOf = function (fitterId) {
+  return ((WS.state && WS.state.users) || []).filter(function (u) { return u.fitterId === fitterId; })[0] || null;
+};
+/* who can sign into the fitter app: active users with the Fitter role */
+WS.loginFitters = function () {
+  return WS.state.settings.fitters.filter(function (f) {
+    var u = WS.userOf(f.id);
+    return !u || (u.status === 'active' && u.role === 'Fitter');
+  });
+};
+
+/* ---------- the standard job card format ----------
+   One layout for every piece of work on a job card, typed or spoken, so the office,
+   the invoice and the DVSA record always read the same way. See Workshop/JOB_CARD_FORMAT.md. */
+WS.LOCATIONS = ['Nearside front (NSF)', 'Offside front (OSF)', 'Nearside rear (NSR)', 'Offside rear (OSR)', 'Front', 'Rear', 'Cab', 'Chassis',
+  'Engine', 'Gearbox', 'Exhaust', 'Electrics', 'Body', 'Multiple'];
+WS.URGENCY = [['VOR', 'VOR, off the road'], ['Urgent', 'Urgent, today'], ['Routine', 'Routine, book it in'], ['Advisory', 'Advisory, monitor, next PMI']];
+WS.WORK_FIELDS = [
+  ['concern', 'Concern'], ['location', 'Location'], ['cause', 'Cause or finding'], ['fix', 'Fix'],
+  ['parts', 'Parts'], ['labour', 'Labour'], ['urgency', 'Urgency'], ['photos', 'Photos']
+];
+WS.urgencyLabel = function (u) {
+  var x = WS.URGENCY.filter(function (r) { return r[0] === u; })[0];
+  return x ? x[1] : u;
+};
+/* the value of one field as text, or '' when it was not given */
+WS.workText = function (e, k) {
+  if (k === 'parts') return (e.parts || []).filter(function (p) { return p.partNo || p.desc; }).map(function (p) {
+    return [p.partNo, p.desc].filter(Boolean).join(', ') + (p.qty ? ' x ' + p.qty : '');
+  }).join('; ');
+  if (k === 'labour') return e.labour ? WS.dur(parseFloat(e.labour)) + ' estimated' : '';
+  if (k === 'urgency') return e.urgency ? WS.urgencyLabel(e.urgency) : '';
+  if (k === 'photos') return (e.photos || []).length ? e.photos.length + ' attached' : '';
+  return e[k] || '';
+};
+WS.workHtml = function (e) {
+  var esc = WS.esc;
+  var cls = e.urgency === 'VOR' ? 'bad' : e.urgency === 'Urgent' ? 'warn' : e.urgency === 'Advisory' ? '' : 'go';
+  return '<div class="wentry">' +
+    '<div class="wtop"><b>' + esc(e.concern || 'Work') + '</b>' + (e.urgency ? '<span class="pill ' + cls + '">' + esc(e.urgency) + '</span>' : '') + '</div>' +
+    '<div class="wgrid">' + WS.WORK_FIELDS.map(function (f) {
+      var t = WS.workText(e, f[0]);
+      return '<div class="wk">' + esc(f[1]) + '</div><div class="wv' + (t ? '' : ' none') + '">' + esc(t || 'Not given') + '</div>';
+    }).join('') + '<div class="wk">Odometer</div><div class="wv' + (e.odometer ? '' : ' none') + '">' + esc(e.odometer ? Number(e.odometer).toLocaleString('en-GB') : 'Not given') + '</div></div>' +
+    ((e.photos || []).length ? '<div class="thumbs" style="margin-top:8px">' + e.photos.map(function (p) { return '<img class="thumb" src="' + p + '" alt="work photo">'; }).join('') + '</div>' : '') +
+    '<div class="wby">' + esc((e.source === 'voice' ? 'Voice job card preview, approved' : 'Typed') + ' by ' + (e.by || '') + ' · ' + WS.whenUK(e.at)) + (e.status ? ' · ' + esc(e.status) : '') + '</div>' +
+    '</div>';
+};
+/* the header fills itself from the job, never spoken (the odometer can be) */
+WS.jobHeader = function (j, fitterName) {
+  var v = WS.vehicle(j.vehicleId) || {}, o = WS.operator(j.operatorId) || {};
+  var opened = j.createdAt ? WS.whenUK(j.createdAt) : WS.dateUK(j.date);
+  return [
+    ['Job number', j.no],
+    ['Opened', opened],
+    ['Operator', o.name || 'Internal'],
+    ['Reg or fleet no', v.reg || ''],
+    ['Make, model, type', [v.make, v.model].filter(Boolean).join(' ') + (v.type ? ', ' + v.type : '')],
+    ['Odometer', j.odometer ? Number(j.odometer).toLocaleString('en-GB') : ''],
+    ['Job type', j.type],
+    ['Fitter', fitterName || ((WS.fitter(j.fitterId) || {}).name) || '']
+  ];
+};
+WS.jobHeaderHtml = function (j, fitterName) {
+  return '<div class="jhead">' + WS.jobHeader(j, fitterName).map(function (r) {
+    return '<div><span>' + WS.esc(r[0]) + '</span><b' + (r[1] ? '' : ' class="none"') + '>' + WS.esc(r[1] || 'Not read yet') + '</b></div>';
+  }).join('') + '</div>';
+};
+
 /* ---------- invoice maths ---------- */
 WS.quoteJob = function (job) {
   var S = WS.state.settings, rc = WS.rateFor(job.operatorId);
@@ -498,7 +627,7 @@ WS.toast = function (msg, kind) {
 /* ---------- theme and brand ---------- */
 /* wsDemo:theme holds dark, light or auto (match the device).
    WS.theme() always answers with what is on screen now: dark or light. */
-WS.LOOK_KEYS = ['wsDemo:theme', 'wsDemo:textSize', 'wsDemo:density'];
+WS.LOOK_KEYS = ['wsDemo:theme', 'wsDemo:textSize', 'wsDemo:density', 'wsDemo:menuStyle'];
 WS._mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 WS.themePref = function () {
   var p = 'dark';
@@ -522,7 +651,7 @@ WS.theme = function (set) {
   return document.documentElement.getAttribute('data-theme') || 'dark';
 };
 WS.look = function (key, val) {
-  var k = 'wsDemo:' + key, d = key === 'textSize' ? 'standard' : 'comfortable';
+  var k = 'wsDemo:' + key, d = { textSize: 'standard', density: 'comfortable', menuStyle: 'sidebar' }[key];
   if (val) { try { localStorage.setItem(k, val); } catch (e) { } WS._paintLook(); return val; }
   var v = null;
   try { v = localStorage.getItem(k); } catch (e) { }
@@ -532,10 +661,22 @@ WS._paintLook = function () {
   var h = document.documentElement;
   h.setAttribute('data-text', WS.look('textSize'));
   h.setAttribute('data-density', WS.look('density'));
+  h.setAttribute('data-menu', WS.look('menuStyle'));
 };
+/* inside the office's phone frame the demo bar goes, so it looks like the real app */
+WS.inDock = /[?&]dock=1/.test(location.search) && window.parent !== window;
+if (WS.inDock) document.documentElement.classList.add('indock');
 WS.initTheme = function () {
   WS._paintTheme();
   WS._paintLook();
+  if (!WS._lookSync) {
+    WS._lookSync = true;
+    // the office and the phone frame share one browser, so a theme change shows in both
+    window.addEventListener('storage', function (e) {
+      if (e.key === 'wsDemo:theme' || e.key === null) WS._paintTheme();
+      if (e.key === 'wsDemo:textSize' || e.key === 'wsDemo:density' || e.key === 'wsDemo:menuStyle') WS._paintLook();
+    });
+  }
   if (WS._mq && !WS._mqOn) {
     WS._mqOn = true;
     var f = function () { if (WS.themePref() === 'auto') WS._paintTheme(); };

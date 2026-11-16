@@ -162,7 +162,7 @@
     pend.forEach(function (i) {
       var o = WS.operator(i.operatorId) || {}, v = WS.vehicle(i.vehicleId) || {};
       rows.push([o.name, o.email, i.no, v.reg, WS.dateUK(i.date), WS.dateUK(i.due),
-        'Labour ' + WS.hrs(i.hours) + ' at ' + WS.money(i.rate), i.hours, i.rate, x.salesAccount, x.taxType, 'Vehicle', v.reg]);
+        'Labour ' + WS.hrsDec(i.hours) + ' hours (decimal) at ' + WS.money(i.rate), i.hours, i.rate, x.salesAccount, x.taxType, 'Vehicle', v.reg]);
       (i.parts || []).forEach(function (p) {
         var rc = WS.rateFor(i.operatorId);
         rows.push([o.name, o.email, i.no, v.reg, WS.dateUK(i.date), WS.dateUK(i.due),
@@ -199,7 +199,7 @@
       '<div style="font-weight:700;margin-top:4px">' + esc(j ? j.no : '') + '</div>' +
       '<div class="muted" style="font-size:12.5px">' + esc(j ? j.type : '') + '</div></div></div>' +
       '<table><thead><tr><th>Description</th><th style="text-align:right">Qty</th><th style="text-align:right">Unit</th><th style="text-align:right">Amount</th></tr></thead><tbody>' +
-      '<tr><td>Workshop labour</td><td style="text-align:right">' + i.hours + '</td>' +
+      '<tr><td>Workshop labour, ' + WS.dur(i.hours) + '<div class="muted" style="font-size:11px">Qty in hours (decimal)</div></td><td style="text-align:right">' + WS.hrsDec(i.hours) + '</td>' +
       '<td style="text-align:right">' + WS.money(i.rate) + '</td><td style="text-align:right">' + WS.money(i.labour) + '</td></tr>' +
       (i.parts || []).map(function (p) {
         var unit = Math.round(p.cost * (1 + rc.markup / 100) * 100) / 100;
@@ -527,7 +527,7 @@
     $('tThis').onclick = function () { O.tsWeek = 0; O.render(); };
     $('tExp').onclick = function () {
       var p = WS.payroll(O.tsWeek);
-      var rows = [['Fitter', 'Role'].concat(p.days.map(function (d) { return WS.dow3(d) + ' ' + WS.dateShort(d); })).concat(['Total', 'Labour sold', 'Recovery %'])];
+      var rows = [['Fitter', 'Role'].concat(p.days.map(function (d) { return WS.dow3(d) + ' ' + WS.dateShort(d) + ', hours (decimal)'; })).concat(['Total, hours (decimal)', 'Labour sold', 'Recovery %'])];
       p.rows.forEach(function (r) {
         rows.push([r.fitter.name, r.fitter.role].concat(r.days).concat([r.total, r.value, r.util]));
       });
@@ -611,7 +611,7 @@
       var byOp = {};
       st.invoices.forEach(function (i) { byOp[i.operatorId] = (byOp[i.operatorId] || 0) + i.net; });
       Object.keys(byOp).forEach(function (k) { rows.push([(WS.operator(k) || {}).name || '', byOp[k]]); });
-      rows.push([]); rows.push(['Fitter', 'Hours', 'Labour sold', 'Wage cost', 'Contribution', 'Recovery %']);
+      rows.push([]); rows.push(['Fitter', 'Hours (decimal)', 'Labour sold', 'Wage cost', 'Contribution', 'Recovery %']);
       p.rows.forEach(function (r) { rows.push([r.fitter.name, r.total, r.value, r.cost, r.value - r.cost, r.util]); });
       WS.download('workshop-report-' + WS.day(0) + '.csv', WS.csv(rows));
       WS.toast('Report downloaded.', 'ok');
@@ -624,6 +624,7 @@
     return head('Settings', 'Everything the system needs to know about the workshop') +
 
       O.appearanceCard() +
+      O.teamCard() +
 
       '<div class="card"><div class="ch"><h2>Accounts: Xero</h2>' +
       '<div class="sp">' + (WS.xeroOk() ? pill('connected', 'ok') : pill('not connected', 'warn')) + '</div></div>' +
@@ -697,7 +698,7 @@
           '<td class="mono">' + esc(f.pin) + '</td>' +
           '<td class="num hide-sm">' + WS.money(f.costRate) + '</td>' +
           '<td class="num">' + esc(WS.payLabel(f)) + '</td>' +
-          '<td class="num">' + f.dayHours + 'h</td>' +
+          '<td class="num">' + WS.dur(f.dayHours) + '</td>' +
           '<td class="num"><button class="btn alt sm" data-fed="' + f.id + '">Edit</button></td></tr>';
       }).join('') + '</tbody></table></div></div>' +
 
@@ -750,6 +751,7 @@
   W.settings = function () {
     var st = WS.state.settings;
     O.wireAppearance();
+    O.wireTeam();
 
     $('xConn').onclick = function () {
       var key = $('xKey').value.trim();

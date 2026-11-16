@@ -73,6 +73,7 @@
         '<button type="button" class="x" id="mkX" aria-label="Dismiss">&times;</button></div>';
     }
 
+    if (!ed && WS.look('menuStyle') === 'wheel' && O.wheelHtml) html += O.wheelHtml();
     html += '<div class="hblocks' + (ed ? ' edit' : '') + '" id="hBlocks">';
     l.order.forEach(function (id, i) {
       var d = blockDef(id), off = l.hidden.indexOf(id) >= 0;
@@ -101,6 +102,7 @@
   };
 
   O.wireHome = function () {
+    if (O.wireWheel) O.wireWheel();
     var cust = $('hCust');
     if (cust) cust.onclick = function () { O.homeCustomise(true); };
     var go = $('mkGo');
@@ -168,9 +170,12 @@
       '<div class="lk"><div class="lb">Theme</div>' + seg('theme', WS.themePref(), [['dark', 'Dark'], ['light', 'Light'], ['auto', 'Match my device']]) + '</div>' +
       '<div class="lk"><div class="lb">Text size</div>' + seg('textSize', WS.look('textSize'), [['standard', 'Standard'], ['large', 'Large']]) + '</div>' +
       '<div class="lk"><div class="lb">Spacing</div>' + seg('density', WS.look('density'), [['comfortable', 'Comfortable'], ['compact', 'Compact']]) + '</div>' +
+      '<div class="lk"><div class="lb">Menu style</div>' + seg('menuStyle', WS.look('menuStyle'), [['sidebar', 'Sidebar'], ['wheel', 'Wheel']]) + '</div>' +
       '</div>' +
       '<div class="lkrow"><div><div class="b">Home screen and menu</div><div class="muted sm">Move things about, hide what you never use, pin your favourites.</div></div>' +
       '<div class="sp"><button type="button" class="btn alt sm" id="apHome">Customise home</button><button type="button" class="btn alt sm" id="apMenu">Edit menu</button></div></div>' +
+      '<div class="lkrow" style="margin-top:14px"><div><div class="b">Wheel load in</div><div class="muted sm">The wheel rolls in and its nuts become the menu. Plays once each time the office opens in Wheel style.</div></div>' +
+      '<div class="sp"><button type="button" class="btn alt sm" id="apIntro">Play it now</button></div></div>' +
       '</div>';
   };
   O.wireAppearance = function () {
@@ -179,6 +184,8 @@
         b.onclick = function () {
           var k = g.dataset.look, v = b.dataset.v;
           if (k === 'theme') WS.theme(v); else WS.look(k, v);
+          if (k === 'menuStyle') document.body.classList.remove('navopen');
+          if (k === 'menuStyle' && v === 'wheel' && O.playIntro) O.playIntro();
           g.querySelectorAll('button').forEach(function (x) {
             x.classList.toggle('on', x === b);
             x.setAttribute('aria-checked', String(x === b));
@@ -186,6 +193,8 @@
         };
       });
     });
+    var pi = $('apIntro');
+    if (pi) pi.onclick = function () { if (O.playIntro && !O.playIntro()) WS.toast('Your device is set to reduce motion, so the load in is off.', 'ok'); };
     var h = $('apHome');
     if (h) h.onclick = function () { O.homeEdit = true; O._custIn = true; markHint(); O.go('home'); };
     var m = $('apMenu');

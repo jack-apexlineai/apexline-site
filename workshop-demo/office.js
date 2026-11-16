@@ -77,7 +77,7 @@
           '<div style="min-width:0"><div style="font-weight:700;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(x.f.name) + '</div>' +
           '<div class="muted sm">' + (x.live ? 'On ' + esc((WS.vehicle(x.live.vehicleId) || {}).reg || x.live.type) : x.n ? x.n + ' jobs today' : 'Nothing planned') + '</div></div></div>' +
           '<div class="cap"><i class="' + cls + '" style="width:' + Math.min(100, x.planned / x.f.dayHours * 100) + '%"></i></div>' +
-          '<div class="muted sm" style="margin-top:6px">' + WS.hrs(x.planned) + ' planned of ' + x.f.dayHours + 'h · ' + pctDone + '% done</div>' +
+          '<div class="muted sm" style="margin-top:6px">' + WS.dur(x.planned) + ' planned of ' + WS.dur(x.f.dayHours) + ' · ' + pctDone + '% done</div>' +
           '</div>';
       }).join('') + '</div></div>',
 
@@ -124,7 +124,7 @@
 
       '<div class="grid g4" style="margin-bottom:16px">' +
       stat('Work planned', WS.hrs(totalPlanned), 'across ' + cols.length + ' fitters') +
-      stat('Hours available', WS.hrs(totalCap), st.settings.dayHours + 'h each') +
+      stat('Hours available', WS.hrs(totalCap), WS.dur(st.settings.dayHours) + ' each') +
       stat('Spare capacity', WS.hrs(Math.max(0, totalCap - totalPlanned)), totalPlanned > totalCap ? 'the day is overbooked' : 'room for more work',
         totalPlanned > totalCap ? 'bad' : totalCap - totalPlanned > 4 ? 'warn' : 'ok') +
       stat('Not planned yet', pool.length, WS.hrs(poolHours) + ' of work', pool.length ? 'warn' : 'ok') +

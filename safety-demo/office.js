@@ -17,8 +17,74 @@ function snapshot(){ var o = {}; CS.MACHINES.forEach(function(m){ var s = CS.sta
 
 /* ---------- top bar ---------- */
 document.getElementById('openPhone').innerHTML = ic('device-mobile') + '<span class="btxt">Phone view</span>';
+document.getElementById('openPhone').title = 'Open the operative phone over the office';
 document.getElementById('resetBtn').innerHTML = ic('refresh') + '<span class="btxt">Reset demo</span>';
-document.getElementById('openPhone').addEventListener('click', function(){ window.open('phone.html', 'coastal-phone', 'width=430,height=900'); });
+document.getElementById('openPhone').addEventListener('click', openPhoneView);
+
+/* ---------- the operative phone, over the office ----------
+   The real phone.html in a same-origin iframe, in a phone frame. It shares this browser's
+   storage, so a check, defect or lock done in it shows on the board. On a phone itself
+   the button just opens the phone page. */
+var PSTEPS = [
+  ['Log in', 'Tap your name, then your four number PIN. It is 1234 for the demo.'],
+  ['Pre-shift check', 'Check a machine, then pick it. Each check is read out. Tap OK or Problem.'],
+  ['Report a defect', 'Tap Report a defect and just say what is wrong. Check what it heard, then send it. It lands on the live board.'],
+  ['Lock on', 'My lock, Put my lock on, pick the machine. Stop it, isolate it, fit your lock and tag, then tap My lock is on.'],
+  ['Sign the LOTOTO procedure', 'Procedures, pick the isolation one. Listen to each step, then tap the big box to sign.']
+];
+var phoneMask = null, phoneFit = null;
+function phoneKey(e){ if (e.key === 'Escape') closePhoneView(); }
+function phoneSize(){
+  if (!phoneMask) return;
+  var s = Math.max(0.4, Math.min(1, (window.innerHeight - 40) / 824));
+  phoneMask.querySelector('.pframe').style.transform = 'scale(' + s + ')';
+  var sz = phoneMask.querySelector('.psizer');
+  sz.style.width = Math.round(414 * s) + 'px';
+  sz.style.height = Math.round(824 * s) + 'px';
+}
+function openPhoneView(){
+  if (window.innerWidth <= 760) { location.href = 'phone.html'; return; }
+  if (phoneMask) return;
+  phoneMask = document.createElement('div');
+  phoneMask.className = 'pmask';
+  phoneMask.setAttribute('role', 'dialog');
+  phoneMask.setAttribute('aria-modal', 'true');
+  phoneMask.setAttribute('aria-label', 'Operative phone');
+  phoneMask.innerHTML = '<button type="button" class="pmx" id="pmClose" aria-label="Close the phone" title="Close (Esc)">&times;</button>' +
+    '<div class="pmwrap"><div class="psizer"><div class="pframe"><span class="pbtn pb1"></span><span class="pbtn pb2"></span><span class="pbtn pb3"></span>' +
+    '<div class="pscreen"><div class="psbar"><span class="ptime">' + CS.hm(CS.now()) + '</span><span class="pisland"></span>' +
+    '<span class="picons"><svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>' +
+    '<svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x=".5" y=".5" width="21" height="11" rx="3.2" stroke="currentColor" opacity=".45"/><rect x="2" y="2" width="15" height="8" rx="2" fill="currentColor"/></svg></span></div>' +
+    '<iframe class="pifr" src="phone.html" title="Operative phone"></iframe><div class="phome"><span></span></div></div></div></div>' +
+    '<div class="pmsteps"><div class="pmk">' + ic('device-mobile') + 'Operative phone</div><h2>How it works</h2><ol>' +
+    PSTEPS.map(function(x){ return '<li><b>' + esc(x[0]) + '</b><span>' + esc(x[1]) + '</span></li>'; }).join('') +
+    '</ol><div class="pmfoot">Close the phone to see it on the office board.</div></div></div>';
+  document.body.appendChild(phoneMask);
+  document.body.classList.add('phoneopen');
+  phoneSize();
+  document.getElementById('pmClose').addEventListener('click', closePhoneView);
+  phoneMask.addEventListener('click', function(e){ if (e.target === phoneMask || e.target.classList.contains('pmwrap')) closePhoneView(); });
+  document.addEventListener('keydown', phoneKey);
+  var f = phoneMask.querySelector('iframe');
+  f.addEventListener('load', function(){ try { f.contentWindow.document.addEventListener('keydown', phoneKey); } catch (e) {} });
+  phoneFit = phoneSize;
+  window.addEventListener('resize', phoneFit);
+  setTimeout(function(){ var c = document.getElementById('pmClose'); if (c) c.focus(); }, 30);
+}
+function closePhoneView(){
+  if (!phoneMask) return;
+  try { var w = phoneMask.querySelector('iframe').contentWindow; if (w.speechSynthesis) w.speechSynthesis.cancel(); } catch (e) {}
+  phoneMask.remove(); phoneMask = null;
+  document.body.classList.remove('phoneopen');
+  document.removeEventListener('keydown', phoneKey);
+  window.removeEventListener('resize', phoneFit);
+  /* pick up whatever was done in the phone, then redraw the office */
+  CS.load();
+  prevStatus = snapshot();
+  CS.state.events.forEach(function(x){ seenEvents[x.id] = 1; });
+  render();
+  document.getElementById('openPhone').focus();
+}
 document.getElementById('resetBtn').addEventListener('click', function(){
   if (!confirm('Reset the demo back to the sample data?')) return;
   CS.reset(); prevStatus = snapshot(); seenEvents = {}; CS.state.events.forEach(function(e){ seenEvents[e.id] = 1; });

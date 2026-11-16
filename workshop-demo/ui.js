@@ -61,8 +61,10 @@
       };
       var bell = $('wsBell');
       if (bell) bell.onclick = function () { O.go('alerts'); };
+      if (O.initPhone) O.initPhone();
       paintBell();
       O.go(location.hash.replace('#', '') || 'home');
+      if (O.wheelBoot) O.wheelBoot();
       setInterval(function () { if (O.screen === 'live') O.paintTimers && O.paintTimers(); }, 1000);
       setInterval(function () { if (O.screen === 'live' || O.screen === 'planner') O.render(); }, 30000);
     });
@@ -73,6 +75,7 @@
     $('bizName').textContent = shortName(S.name);
     document.querySelectorAll('.logo').forEach(function (l) { l.textContent = S.initials || 'NC'; });
     document.title = shortName(S.name) + ' · Workshop';
+    if (O.paintWheelBrand) O.paintWheelBrand();
   }
   O.paintBrand = paintBrand;
 
@@ -281,9 +284,9 @@
   }
   O.buildNav = buildNav;
 
-  function navCounts() {
+  O.navCountData = function () {
     var today = WS.jobsOn(WS.day(0));
-    var c = {
+    return {
       board: today.length,
       live: today.filter(function (j) { return j.status === 'in_progress'; }).length,
       planner: WS.unplanned(WS.day(0)).length,
@@ -293,6 +296,9 @@
       money: WS.state.jobs.filter(function (j) { return j.status === 'done' && !j.invoiceId; }).length,
       quotes: WS.state.quotes.filter(function (q) { return q.status === 'Sent' || q.status === 'Draft'; }).length
     };
+  };
+  function navCounts() {
+    var c = O.navCountData();
     document.querySelectorAll('nav.side button.nv').forEach(function (b) {
       var el = b.querySelector('.cnt'), v = c[b.dataset.screen];
       if (!el) return;

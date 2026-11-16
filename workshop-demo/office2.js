@@ -28,6 +28,7 @@
       '<div><div class="muted sm">Vehicle</div>' +
       '<div style="font-size:19px;font-weight:800">' + esc(v ? v.reg : 'No vehicle') + '</div>' +
       '<div class="muted sm">' + esc(v ? v.make + ' ' + v.model + ' · ' + v.type : 'Internal work') + '</div>' +
+      (j.odometer ? '<div class="muted sm">Odometer at this job: <b style="color:var(--ink)">' + Number(j.odometer).toLocaleString('en-GB') + '</b></div>' : '') +
       '<div class="muted sm" style="margin-top:8px">Operator</div><div class="b">' + esc(o ? o.name : 'Internal') + '</div></div>' +
       '<div><div class="muted sm">Job</div><div class="b">' + esc(j.no + ' · ' + j.type) + '</div>' +
       '<div style="margin-top:6px">' + pill(WS.statusLabel(j.status), WS.statusCls(j.status)) +
@@ -60,6 +61,8 @@
           '<div class="meta">' + esc(a.raisedBy) + ' · ' + WS.money(t.total) + ' inc VAT</div></div>' +
           '<div class="sp">' + pill(a.status, a.status === 'Approved' ? 'ok' : a.status === 'Declined' ? 'bad' : 'warn') + '</div></div></div>';
       }).join('') : '') +
+
+      ((j.work || []).length ? '<h3 style="margin:16px 0 8px">Work on this job card</h3>' + j.work.map(WS.workHtml).join('') : '') +
 
       '<h3 style="margin:16px 0 8px">Tasks</h3>' +
       '<div class="card tight" style="padding:4px 14px">' +

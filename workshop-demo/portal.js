@@ -354,7 +354,7 @@
       '<div style="font-weight:700;margin-top:4px">' + esc(i.no) + '</div>' +
       '<div class="muted" style="font-size:12.5px;margin-top:6px">' + WS.dateUK(i.date) + '</div></div></div>' +
       '<table><thead><tr><th>Description</th><th style="text-align:right">Qty</th><th style="text-align:right">Amount</th></tr></thead><tbody>' +
-      '<tr><td>Workshop labour on ' + esc(v ? v.reg : '') + '</td><td style="text-align:right">' + i.hours + '</td>' +
+      '<tr><td>Workshop labour on ' + esc(v ? v.reg : '') + ', ' + WS.dur(i.hours) + '<div class="muted" style="font-size:11px">Qty in hours (decimal)</div></td><td style="text-align:right">' + WS.hrsDec(i.hours) + '</td>' +
       '<td style="text-align:right">' + WS.money(i.labour) + '</td></tr>' +
       (i.parts || []).map(function (p) {
         var unit = Math.round(p.cost * (1 + rc.markup / 100) * 100) / 100;
