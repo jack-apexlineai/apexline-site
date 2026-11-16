@@ -496,19 +496,72 @@ WS.toast = function (msg, kind) {
 };
 
 /* ---------- theme and brand ---------- */
+/* wsDemo:theme holds dark, light or auto (match the device).
+   WS.theme() always answers with what is on screen now: dark or light. */
+WS.LOOK_KEYS = ['wsDemo:theme', 'wsDemo:textSize', 'wsDemo:density'];
+WS._mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+WS.themePref = function () {
+  var p = 'dark';
+  try { p = localStorage.getItem('wsDemo:theme') || 'dark'; } catch (e) { }
+  return p === 'light' || p === 'auto' ? p : 'dark';
+};
+WS._paintTheme = function () {
+  var p = WS.themePref();
+  var t = p === 'auto' ? (WS._mq && !WS._mq.matches ? 'light' : 'dark') : p;
+  document.documentElement.setAttribute('data-theme', t);
+  var tc = document.querySelector('meta[name="theme-color"]');
+  if (tc) tc.setAttribute('content', t === 'dark' ? '#0A101C' : '#F3F5F9');
+  document.querySelectorAll('.themetog').forEach(WS._paintToggle);
+  return t;
+};
 WS.theme = function (set) {
-  var cur = document.documentElement.getAttribute('data-theme') || 'dark';
   if (set) {
-    document.documentElement.setAttribute('data-theme', set);
     try { localStorage.setItem('wsDemo:theme', set); } catch (e) { }
-    return set;
+    return WS._paintTheme();
   }
-  return cur;
+  return document.documentElement.getAttribute('data-theme') || 'dark';
+};
+WS.look = function (key, val) {
+  var k = 'wsDemo:' + key, d = key === 'textSize' ? 'standard' : 'comfortable';
+  if (val) { try { localStorage.setItem(k, val); } catch (e) { } WS._paintLook(); return val; }
+  var v = null;
+  try { v = localStorage.getItem(k); } catch (e) { }
+  return v || d;
+};
+WS._paintLook = function () {
+  var h = document.documentElement;
+  h.setAttribute('data-text', WS.look('textSize'));
+  h.setAttribute('data-density', WS.look('density'));
 };
 WS.initTheme = function () {
-  var t = 'dark';
-  try { t = localStorage.getItem('wsDemo:theme') || 'dark'; } catch (e) { }
-  document.documentElement.setAttribute('data-theme', t);
+  WS._paintTheme();
+  WS._paintLook();
+  if (WS._mq && !WS._mqOn) {
+    WS._mqOn = true;
+    var f = function () { if (WS.themePref() === 'auto') WS._paintTheme(); };
+    if (WS._mq.addEventListener) WS._mq.addEventListener('change', f); else if (WS._mq.addListener) WS._mq.addListener(f);
+  }
+};
+/* Reset demo also puts the screen back: layout, menu, theme, text size and density */
+WS.resetLooks = function () {
+  WS.LOOK_KEYS.concat(['wsDemo:homeLayout', 'wsDemo:navLayout', 'wsDemo:navShut', 'wsDemo:homeHint'])
+    .forEach(function (k) { try { localStorage.removeItem(k); } catch (e) { } });
+};
+var SUN = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>';
+var MOON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7z"/></svg>';
+WS._paintToggle = function (b) {
+  var dark = WS.theme() === 'dark';
+  b.innerHTML = dark ? SUN : MOON;
+  b.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+  b.title = dark ? 'Light mode' : 'Dark mode';
+};
+WS.themeToggle = function (id) {
+  var b = WS.el('button', 'themetog');
+  b.type = 'button';
+  if (id) b.id = id;
+  WS._paintToggle(b);
+  b.onclick = function () { WS.theme(WS.theme() === 'dark' ? 'light' : 'dark'); };
+  return b;
 };
 /* the workshop's own colour drives every accent in both apps */
 WS.applyBrand = function () {
@@ -600,16 +653,14 @@ WS.banner = function (extraHtml) {
   var b = WS.el('div', 'dbar');
   b.innerHTML = '<span class="dot"></span><b>Workshop demo</b><span class="desc">sample data, nothing here is real</span>' +
     '<span class="sp">' + (extraHtml || '') +
-    '<button id="wsTheme" type="button">Light</button>' +
     '<button id="wsReset" type="button">Reset demo</button></span>';
   document.body.insertBefore(b, document.body.firstChild);
-  var tb = WS.$('wsTheme');
-  var paint = function () { tb.textContent = WS.theme() === 'dark' ? 'Light' : 'Dark'; };
-  paint();
-  tb.onclick = function () { WS.theme(WS.theme() === 'dark' ? 'light' : 'dark'); paint(); };
-  WS.$('wsReset').onclick = function () {
+  var rb = WS.$('wsReset');
+  rb.parentNode.insertBefore(WS.themeToggle('wsTheme'), rb);
+  rb.onclick = function () {
     if (!confirm('Reset the demo back to the sample data? Anything you changed will go.')) return;
     WS.reset();
+    WS.resetLooks();
     location.reload();
   };
   return b;

@@ -48,31 +48,24 @@
     if (od) alerts.push({ t: od + ' compliance item' + (od > 1 ? 's are' : ' is') + ' overdue across the fleet', go: 'compliance', cls: 'bad' });
     if (!WS.xeroOk()) alerts.push({ t: 'Xero is not connected yet, so invoices have to be exported by hand', go: 'settings', cls: 'go' });
 
-    return head('Good ' + (new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'),
-      WS.dayName(T) + ' · ' + today.length + ' jobs on the board',
-      '<button class="btn alt" data-go="planner">Plan the day</button><button class="btn" data-go="bookin">Book a vehicle in</button>') +
+    /* one HTML string per block; personalise.js lays them out in the order you chose */
+    var blocks = {
+      today: stat('In today', today.length, inProg + ' being worked on', '', 'board'),
+      parts: stat('Waiting on parts', waiting, waiting ? 'chase the supplier' : 'nothing held up', waiting ? 'warn' : '', 'board'),
+      ready: stat('Ready to invoice', ready, ready ? 'worth ' + WS.money0(ready * 240) : 'all invoiced', ready ? 'ok' : '', 'invoices'),
+      auth: stat('Needs authorising', auth, auth ? 'customer has not replied' : 'nothing pending', auth ? 'warn' : '', 'approvals'),
+      pmi: stat('PMIs due this week', overduePmi, 'next 7 days', overduePmi ? 'warn' : '', 'compliance'),
+      vor: stat('Off the road', vor, vor ? 'losing the operator money' : 'all running', vor ? 'bad' : 'ok', 'vehicles'),
+      hours: stat('Hours this month', WS.hrs(hrs), 'clocked by the fitters', '', 'timesheets'),
+      invoiced: stat('Invoiced this month', WS.money0(rev), 'before VAT', 'ok', 'invoices'),
 
-      '<div class="grid g4" style="margin-bottom:16px">' +
-      stat('In today', today.length, inProg + ' being worked on', '', 'board') +
-      stat('Waiting on parts', waiting, waiting ? 'chase the supplier' : 'nothing held up', waiting ? 'warn' : '', 'board') +
-      stat('Ready to invoice', ready, ready ? 'worth ' + WS.money0(ready * 240) : 'all invoiced', ready ? 'ok' : '', 'invoices') +
-      stat('Needs authorising', auth, auth ? 'customer has not replied' : 'nothing pending', auth ? 'warn' : '', 'approvals') +
-      '</div>' +
-
-      '<div class="grid g4" style="margin-bottom:18px">' +
-      stat('PMIs due this week', overduePmi, 'next 7 days', overduePmi ? 'warn' : '', 'compliance') +
-      stat('Off the road', vor, vor ? 'losing the operator money' : 'all running', vor ? 'bad' : 'ok', 'vehicles') +
-      stat('Hours this month', WS.hrs(hrs), 'clocked by the fitters', '', 'timesheets') +
-      stat('Invoiced this month', WS.money0(rev), 'before VAT', 'ok', 'invoices') +
-      '</div>' +
-
-      (alerts.length ? '<div class="card"><div class="ch"><h2>Needs you</h2></div>' +
+      needs: alerts.length ? '<div class="card"><div class="ch"><h2>Needs you</h2></div>' +
         '<ul class="feed">' + alerts.map(function (a) {
           return '<li style="cursor:pointer" data-go="' + a.go + '"><div class="ic ' + a.cls + '">!</div>' +
             '<div><div class="t">' + esc(a.t) + '</div></div><div class="w">Open</div></li>';
-        }).join('') + '</ul></div>' : '') +
+        }).join('') + '</ul></div>' : '',
 
-      '<div class="card"><div class="ch"><h2>The day by fitter</h2><div class="sp">' +
+      fitters: '<div class="card"><div class="ch"><h2>The day by fitter</h2><div class="sp">' +
       '<button class="btn alt sm" data-go="live">Live view</button>' +
       '<button class="btn alt sm" data-go="planner">Day planner</button></div></div>' +
       '<div class="grid g4">' + fit.map(function (x) {
@@ -86,12 +79,12 @@
           '<div class="cap"><i class="' + cls + '" style="width:' + Math.min(100, x.planned / x.f.dayHours * 100) + '%"></i></div>' +
           '<div class="muted sm" style="margin-top:6px">' + WS.hrs(x.planned) + ' planned of ' + x.f.dayHours + 'h · ' + pctDone + '% done</div>' +
           '</div>';
-      }).join('') + '</div></div>' +
+      }).join('') + '</div></div>',
 
-      '<div class="grid g2">' +
-      '<div class="card"><div class="ch"><h2>Last messages out</h2><div class="sp"><button class="btn alt sm" data-go="alerts">All activity</button></div></div>' +
-      (feed ? '<ul class="feed">' + feed + '</ul>' : empty('Nothing sent yet today.')) + '</div>' +
-      '<div class="card"><div class="ch"><h2>Coming next</h2></div>' +
+      messages: '<div class="card"><div class="ch"><h2>Last messages out</h2><div class="sp"><button class="btn alt sm" data-go="alerts">All activity</button></div></div>' +
+      (feed ? '<ul class="feed">' + feed + '</ul>' : empty('Nothing sent yet today.')) + '</div>',
+
+      next: '<div class="card"><div class="ch"><h2>Coming next</h2></div>' +
       '<div class="hint">Built and ready to switch on when you are:</div>' +
       '<ul class="feed" style="margin-top:8px">' +
       [['Telematics fault codes booking their own jobs', 'Read the fault off the vehicle and open a job card before it breaks down'],
@@ -99,9 +92,15 @@
        ['Tyre and brake wear tracking', 'Predict the next change from the last three readings'],
        ['Multi site', 'Run a second workshop off the same system']].map(function (c) {
         return '<li><div class="ic go">+</div><div><div class="t">' + esc(c[0]) + '</div><div class="s">' + esc(c[1]) + '</div></div></li>';
-      }).join('') + '</ul></div></div>';
+      }).join('') + '</ul></div>'
+    };
+
+    return O.homeView('Good ' + (new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'),
+      WS.dayName(T) + ' · ' + today.length + ' jobs on the board',
+      '<button class="btn alt" data-go="planner">Plan the day</button><button class="btn" data-go="bookin">Book a vehicle in</button>',
+      blocks);
   };
-  W.home = function () { O.wireGo(); };
+  W.home = function () { O.wireGo(); O.wireHome(); };
 
   /* ============================ day planner ============================ */
   S.planner = function () {

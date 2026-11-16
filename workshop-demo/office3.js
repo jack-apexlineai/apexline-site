@@ -623,6 +623,8 @@
     var st = WS.state.settings, x = st.xero;
     return head('Settings', 'Everything the system needs to know about the workshop') +
 
+      O.appearanceCard() +
+
       '<div class="card"><div class="ch"><h2>Accounts: Xero</h2>' +
       '<div class="sp">' + (WS.xeroOk() ? pill('connected', 'ok') : pill('not connected', 'warn')) + '</div></div>' +
       '<div class="hint" style="margin-bottom:14px">Paste the API key from your Xero app. Once it is in, every invoice you raise ' +
@@ -741,12 +743,13 @@
       '</div></div>' +
 
       '<div class="card"><div class="ch"><h2>Demo</h2></div>' +
-      '<div class="hint" style="margin-bottom:12px">Puts the sample data back the way it was and throws away anything you have changed.</div>' +
+      '<div class="hint" style="margin-bottom:12px">Puts the sample data back the way it was and throws away anything you have changed, including the layout and appearance.</div>' +
       '<button class="btn danger" id="sReset">Reset the demo</button></div>';
   };
 
   W.settings = function () {
     var st = WS.state.settings;
+    O.wireAppearance();
 
     $('xConn').onclick = function () {
       var key = $('xKey').value.trim();
@@ -889,6 +892,7 @@
     $('sReset').onclick = function () {
       if (!confirm('Reset the demo back to the sample data?')) return;
       WS.reset();
+      WS.resetLooks();
       location.reload();
     };
   };
