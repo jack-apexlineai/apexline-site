@@ -96,7 +96,7 @@
       }).join('') + '</ul></div>'
     };
 
-    return O.homeView(WS.greeting ? WS.greeting(WS.greetName ? WS.greetName() : '') : 'Good ' + (new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'),
+    return O.homeView((WS.greeting ? WS.greeting(WS.greetName ? WS.greetName() : '') : 'Good ' + (new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening')) + '.',
       WS.dayName(T) + ' · ' + today.length + ' jobs on the board',
       '<button class="btn alt" data-go="planner">Plan the day</button><button class="btn" data-go="bookin">Book a vehicle in</button>',
       blocks);
@@ -112,8 +112,10 @@
       var plan = WS.dayPlan(f.id, d);
       var planned = plan.reduce(function (s2, j) { return s2 + (j.estHours || 0); }, 0);
       totalPlanned += planned; totalCap += f.dayHours;
-      return { f: f, plan: plan, planned: planned };
+      return { f: f, plan: plan, planned: planned, full: planned >= f.dayHours - 0.25 };
     });
+    // fitters with time to spare first, a full day moves to the end of the row
+    cols = cols.map(function (c, i) { c.i = i; return c; }).sort(function (a, b) { return (a.full ? 1 : 0) - (b.full ? 1 : 0) || a.i - b.i; });
     var poolHours = pool.reduce(function (s2, j) { return s2 + (j.estHours || 0); }, 0);
 
     return head('Day planner', WS.dayName(d) + ' · tap a job to put it on a fitter, or drag it across on a laptop',
@@ -154,24 +156,39 @@
         var cls = over ? 'over' : c.planned >= c.f.dayHours - 0.5 ? 'full' : 'ok';
         var barCls = over ? 'bad' : c.planned >= c.f.dayHours - 0.5 ? 'warn' : 'ok';
         var lunched = false;
-        return '<div class="fcol" data-drop="' + c.f.id + '">' +
+        return '<div class="fcol' + (c.full ? ' isfull' : '') + '" data-drop="' + c.f.id + '" data-fitter="' + c.f.id + '">' +
           '<div class="fh"><div class="n">' +
           '<div class="av">' + esc(O.initials(c.f.name)) + '</div>' +
           '<div style="min-width:0"><div class="nm">' + esc(c.f.name) + '</div><div class="ro">' + esc(c.f.role) + '</div></div>' +
           '<div class="sp"><div class="hh ' + cls + '">' + WS.hrs(c.planned) + '</div><div class="ro">of ' + c.f.dayHours + 'h</div></div>' +
-          (c.plan.length ? '<button class="clr" data-clear="' + c.f.id + '" title="Clear this day">Clear</button>' : '') +
-          '</div><div class="cap"><i class="' + barCls + '" style="width:' + Math.min(100, c.planned / c.f.dayHours * 100) + '%"></i></div></div>' +
+          '</div><div class="capr"><div class="cap"><i class="' + barCls + '" style="width:' + Math.min(100, c.planned / c.f.dayHours * 100) + '%"></i></div>' +
+          (c.plan.length ? '<button class="clr" data-clear="' + c.f.id + '" title="Take the jobs that have not started off this day">Clear</button>' : '') + '</div></div>' +
           '<div class="fb">' +
           (c.plan.length ? c.plan.map(function (j, i) {
             var out = '';
             if (!lunched && j._planStart >= 12.5) { out += '<div class="lunch">Half hour break</div>'; lunched = true; }
             return out + pjob(j, false, i, c.plan.length);
-          }).join('') : (sugFor(c.f.id).length ? '' : '<div class="fe">Nothing planned.<br>Drag a job over.</div>')) +
+          }).join('') : '') +
           sugFor(c.f.id).map(sugCard).join('') +
+          slotsHtml(c) +
           (over ? '<div class="flagbox" style="margin:2px 0 8px">That is ' + WS.hrs(c.planned - c.f.dayHours) + ' more than ' + esc(c.f.name.split(' ')[0]) + ' has in the day.</div>' : '') +
           '</div></div>';
       }).join('') + '</div>';
   };
+
+  /* the day as six slots: jobs fill them in order, the rest are drop targets showing the time left */
+  var SLOTS = 6;
+  function slotsHtml(c) {
+    var used = c.plan.length + sugFor(c.f.id).length, left = Math.max(0, SLOTS - used);
+    var free = Math.max(0, c.f.dayHours - c.planned), out = '';
+    for (var k = 0; k < left; k++) {
+      out += c.full
+        ? '<div class="pslot off" aria-hidden="true"><span>Day full</span></div>'
+        : '<div class="pslot" data-drop="' + c.f.id + '" data-slot="' + k + '"><span class="ps-plus">+</span><span class="ps-t">Drop a job here</span>' +
+          (k === 0 ? '<span class="ps-f">' + WS.hrs(free) + ' free</span>' : '') + '</div>';
+    }
+    return out;
+  }
 
   function pjob(j, inPool, i, n) {
     var v = WS.vehicle(j.vehicleId), op = WS.operator(j.operatorId);

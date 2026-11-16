@@ -45,8 +45,10 @@
     WS.applyBrand();
     (O.signIn || function (cb) { cb(false); })(function (fresh) { openOffice(fresh); });
     function openOffice(fresh) {
-      WS.banner((O.whoBarHtml ? O.whoBarHtml() : '') + '<button id="wsBell" type="button" class="bell">Alerts</button>' +
-        '<button id="wsGear" type="button" class="gearbtn" aria-label="Settings" title="Settings">' + GEAR + '</button>');
+      WS.banner((O.whoBarHtml ? O.whoBarHtml() : '') +
+        '<button id="wsHome" type="button" class="ibtn" aria-label="Home" title="Home">' + HOME + '</button>' +
+        '<button id="wsBell" type="button" class="bell ibtn" aria-label="Alerts" title="Alerts"></button>' +
+        '<button id="wsGear" type="button" class="gearbtn ibtn" aria-label="Settings" title="Settings">' + GEAR + '</button>');
       if (O.wireWho) O.wireWho();
       $('shell').hidden = false;
       paintBrand();
@@ -63,7 +65,9 @@
         if (O.navEditing) O.navEdit(false);
       };
       var bell = $('wsBell');
-      if (bell) bell.onclick = function () { O.go('alerts'); };
+      if (bell) bell.onclick = function () { closeNav(); if (O.closeWheel) O.closeWheel(true); O.go('alerts'); };
+      var hm = $('wsHome');
+      if (hm) hm.onclick = function () { closeNav(); if (O.closeWheel) O.closeWheel(true); O.go('home'); };
       // Settings opens from the top bar gear and the sidebar footer, in every menu style
       var gear = $('wsGear');
       if (gear) gear.onclick = function () { closeNav(); if (O.closeWheel) O.closeWheel(true); O.go('settings'); };
@@ -82,6 +86,8 @@
   };
 
   var GEAR = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
+  var HOME = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10.8 12 3.8l8.5 7"/><path d="M5.8 9.2V20h12.4V9.2"/><path d="M10 20v-5.2h4V20"/></svg>';
+  var BELL = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.2 9.6a5.8 5.8 0 0 1 11.6 0c0 5.6 2.4 7.2 2.4 7.2H3.8s2.4-1.6 2.4-7.2"/><path d="M10.2 19.6a1.9 1.9 0 0 0 3.6 0"/></svg>';
   function closeNav() {
     document.body.classList.remove('navopen');
     if (O.navEditing) O.navEdit(false);
@@ -113,7 +119,9 @@
     var b = $('wsBell');
     if (!b) return;
     var n = openApprovals() + newChecks() + WS.lowStock().length;
-    b.innerHTML = 'Alerts' + (n ? '<span class="dt">' + n + '</span>' : '');
+    b.innerHTML = BELL + (n ? '<span class="dt">' + n + '</span>' : '');
+    b.setAttribute('aria-label', n ? 'Alerts, ' + n + ' need you' : 'Alerts');
+    b.title = b.getAttribute('aria-label');
   }
   O.paintBell = paintBell;
 
@@ -413,7 +421,23 @@
      Pointer based, not HTML5 drag and drop: a mouse drags a card between columns,
      a finger taps it open instead, so a phone still scrolls normally. */
   O.dragDrop = function (itemSel, zoneSel, onDrop, onTap) {
-    var held = null, moving = false, sx = 0, sy = 0, justDragged = false;
+    var held = null, moving = false, sx = 0, sy = 0, justDragged = false, ly = 0, lx = 0, raf = 0;
+    /* near the top or bottom of the window the page scrolls, so a far away fitter is still in reach */
+    function edge() {
+      raf = 0;
+      if (!held || !moving) return;
+      var top = 0, bot = window.innerHeight, dy = 0;
+      document.querySelectorAll('.dbar,.topbar').forEach(function (b) { var r = b.getBoundingClientRect(); if (r.height && r.top < 120) top = Math.max(top, r.bottom); });
+      if (ly < top + 60) dy = -Math.ceil((top + 60 - ly) / 4);
+      else if (ly > bot - 60) dy = Math.ceil((ly - (bot - 60)) / 4);
+      if (dy) {
+        window.scrollBy(0, Math.max(-20, Math.min(20, dy)));
+        clearHi();
+        var z = zoneAt(lx, ly);
+        if (z) z.classList.add('over');
+      }
+      raf = requestAnimationFrame(edge);
+    }
 
     function zoneAt(x, y) {
       var el = document.elementFromPoint(x, y);
@@ -423,6 +447,7 @@
       document.querySelectorAll(zoneSel).forEach(function (z) { z.classList.remove('over'); });
     }
     function stop(el) {
+      if (raf) { cancelAnimationFrame(raf); raf = 0; }
       if (el) el.classList.remove('drag');
       document.body.classList.remove('dragging');
       clearHi();
@@ -446,9 +471,11 @@
           document.body.classList.add('dragging');
         }
         e.preventDefault();
+        lx = e.clientX; ly = e.clientY;
         clearHi();
         var z = zoneAt(e.clientX, e.clientY);
         if (z) z.classList.add('over');
+        if (!raf) raf = requestAnimationFrame(edge);
       });
       el.addEventListener('pointerup', function (e) {
         if (held !== el) return;

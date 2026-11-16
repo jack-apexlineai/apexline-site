@@ -146,6 +146,10 @@
         '<div class="muted sm">Clocked on to</div>' +
         '<div class="inline" style="margin-top:4px"><span class="rg" style="font-size:18px;font-weight:800">' + esc((WS.vehicle(open.vehicleId) || {}).reg) + '</span>' +
         '<span class="bigtimer right" id="hdrTimer" data-start="' + open.clockOns.filter(function (c) { return !c.end; })[0].start + '">00:00:00</span></div></div>' : '') +
+      (!open && nextJob(list) ? '<div class="card tight upnext"><div class="muted sm">Up next</div>' +
+        '<div class="inline" style="margin-top:4px"><span class="rg" style="font-size:18px;font-weight:800">' + esc((WS.vehicle(nextJob(list).vehicleId) || {}).reg || nextJob(list).type) + '</span>' +
+        '<span class="chip">' + esc(nextJob(list).type) + '</span>' +
+        '<button class="btn right" id="fNextOn">Clock on</button></div></div>' : '') +
       (list.length ? list.map(jobRow).join('') : '<div class="card"><div class="empty">Nothing left on your list today.</div></div>') +
       (done.length ? '<h3 style="margin:20px 0 10px" class="muted">Finished today</h3>' + done.map(jobRow).join('') : '');
   }
@@ -172,7 +176,12 @@
       (j.fitterId === me.id ? '' : '<span class="pill">spare job</span>') + '</div></div>';
   }
 
+  function nextJob(list) {
+    return (list || myJobs()).filter(function (j) { return j.fitterId === me.id && (j.status === 'booked' || j.status === 'in_bay'); })[0] || null;
+  }
   function wireJobs() {
+    var nx = $('fNextOn');
+    if (nx) nx.onclick = function () { var j = nextJob(); if (j) { jobId = j.id; clockOn(j); } };
     document.querySelectorAll('[data-job]').forEach(function (c) {
       c.onclick = function () { jobId = c.dataset.job; view = 'job'; render(); };
     });
@@ -789,8 +798,8 @@
           '<div class="muted sm">' + esc(WS.whenUK(s.at)) + '</div>';
       }
       if (locked) return '<div class="hint">Not signed.</div>';
-      return '<input class="in" data-signame="' + which + '" placeholder="Full name" value="' + esc(s.name) + '" style="margin-bottom:8px">' +
-        '<div class="sigbox"><canvas data-sig="' + which + '"></canvas><div class="ph">Sign here</div></div>' +
+      return '<input class="in" data-signame="' + which + '" placeholder="Full name" value="' + esc(s.name) + '" style="margin-bottom:8px" autocomplete="off">' +
+        '<div class="sigbox"><canvas data-sig="' + which + '"></canvas><div class="ph">Sign here, or tap to sign with your name</div></div>' +
         '<div class="inline" style="margin-top:8px"><button class="btn alt sm" data-sigclear="' + which + '">Clear</button>' +
         '<button class="btn sm" data-sigsave="' + which + '">Save signature</button></div>';
     };
@@ -809,7 +818,8 @@
       '<label class="f"><span class="lb">Inspector</span><input class="in" id="iInsp" value="' + esc(i.header.inspector) + '"' + (locked ? ' disabled' : '') + '></label>' +
       '</div></div>' +
 
-      '<div class="card"><h2>Checks</h2>' +
+      '<div class="card"><div class="inline"><h2>Checks</h2>' +
+      (!locked && done < total ? '<button type="button" class="btn alt sm right" id="sAllS">Mark the rest serviceable</button>' : '') + '</div>' +
       '<div class="hint" style="margin:6px 0 12px">Serviceable, Defect or N/A on every item. Tap a section to open it.</div>' +
       secs +
       (defects ? '<div class="inline" style="margin-top:10px"><span class="pill bad">' + defects + ' defect' + (defects > 1 ? 's' : '') + ' raised</span></div>' : '') +
@@ -864,6 +874,13 @@
     $('iOdo').onchange = function () { i.header.odometer = +this.value || 0; save('Odometer recorded'); };
     $('iInsp').onchange = function () { i.header.inspector = this.value; save('Inspection header updated'); };
 
+    if ($('sAllS')) $('sAllS').onclick = function () {
+      var n = 0;
+      i.sections.forEach(function (s) { s.items.forEach(function (it) { if (!it.state) { it.state = 'S'; n++; } }); });
+      save(n + ' item' + (n === 1 ? '' : 's') + ' marked serviceable');
+      WS.toast(n + ' item' + (n === 1 ? '' : 's') + ' marked serviceable. Change any that are not.', 'ok');
+      render();
+    };
     document.querySelectorAll('[data-set]').forEach(function (b) {
       b.onclick = function () {
         var p = b.dataset.set.split('|'), it = i.sections[+p[0]].items[+p[1]];
@@ -936,12 +953,17 @@
         if (!cv.dataset.drawn) return WS.toast('Sign in the box first.', 'bad');
         i.sign[which] = { name: nameIn.value.trim(), at: WS.nowStamp(), sig: cv.toDataURL('image/png') };
         save((which === 'inspector' ? 'Inspector' : 'Roadworthiness') + ' signature captured: ' + nameIn.value.trim());
-        WS.toast('Signature saved.', 'ok');
         render();
       };
     });
 
     $('sLock').onclick = function () {
+      // a signature drawn and named but not saved yet still counts
+      ['inspector', 'declare'].forEach(function (which) {
+        if (i.sign[which].sig) return;
+        var cv = document.querySelector('[data-sig="' + which + '"]'), nm = document.querySelector('[data-signame="' + which + '"]');
+        if (cv && nm && cv.dataset.drawn && nm.value.trim()) i.sign[which] = { name: nm.value.trim(), at: WS.nowStamp(), sig: cv.toDataURL('image/png') };
+      });
       var missing = 0;
       i.sections.forEach(function (s) { s.items.forEach(function (it) { if (!it.state) missing++; }); });
       if (missing) return WS.toast(missing + ' item' + (missing > 1 ? 's are' : ' is') + ' not set yet.', 'bad');
@@ -966,8 +988,14 @@
         v.brakeTest = i.header.date;
       }
       WS.audit(j, me.name, 'Inspection signed off and locked');
+      // the sheet covers the PMI tasks, so the job is finished: clock off and send it to QC
+      (j.tasks || []).forEach(function (t) { t.done = true; });
+      (j.clockOns || []).forEach(function (c) { if (c.fitterId === me.id && !c.end) c.end = WS.nowStamp(); });
+      j.status = 'qc';
+      WS.audit(j, me.name, 'Job marked done, sent to QC');
       WS.save();
-      WS.toast('Sheet signed off and locked.', 'ok');
+      WS.toast('Sheet locked. ' + ((WS.vehicle(j.vehicleId) || {}).reg || 'The job') + ' is done and with the office for QC.', 'ok');
+      view = 'jobs';
       render();
     };
   }
@@ -987,10 +1015,13 @@
       var t = e.touches ? e.touches[0] : e;
       return { x: (t.clientX - r.left) * (cv.width / r.width), y: (t.clientY - r.top) * (cv.height / r.height) };
     }
+    var moved = false, down = null;
     function start(e) {
       e.preventDefault();
       drawing = true;
+      moved = false;
       last = pos(e);
+      down = last;
       cv.dataset.drawn = '1';
       var ph = cv.parentNode.querySelector('.ph');
       if (ph) ph.style.display = 'none';
@@ -999,13 +1030,34 @@
       if (!drawing) return;
       e.preventDefault();
       var p = pos(e);
+      if (Math.abs(p.x - down.x) + Math.abs(p.y - down.y) > 4) moved = true;
       c.beginPath();
       c.moveTo(last.x, last.y);
       c.lineTo(p.x, p.y);
       c.stroke();
       last = p;
     }
-    function end() { drawing = false; }
+    /* a tap with no stroke signs with the name typed above, in a handwriting style */
+    function end() {
+      if (drawing && !moved) {
+        var nm = document.querySelector('[data-signame="' + cv.dataset.sig + '"]');
+        var name = nm ? nm.value.trim() : '';
+        c.clearRect(0, 0, cv.width, cv.height);
+        if (name) {
+          c.save();
+          c.fillStyle = c.strokeStyle;
+          var fs = 46;
+          c.font = 'italic 600 ' + fs + 'px "Snell Roundhand","Segoe Script","Brush Script MT","Apple Chancery",cursive';
+          while (c.measureText(name).width > cv.width - 40 && fs > 18) { fs -= 2; c.font = 'italic 600 ' + fs + 'px "Snell Roundhand","Segoe Script","Brush Script MT","Apple Chancery",cursive'; }
+          c.fillText(name, 24, cv.height / 2 + fs / 3);
+          c.restore();
+        } else {
+          c.beginPath(); c.arc(down.x, down.y, 2.2, 0, Math.PI * 2); c.fill();
+          WS.toast('Put your name in above, then tap again to sign with it.', '');
+        }
+      }
+      drawing = false;
+    }
     cv.addEventListener('mousedown', start);
     cv.addEventListener('mousemove', move);
     window.addEventListener('mouseup', end);

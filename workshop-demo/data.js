@@ -157,8 +157,7 @@ WS.seed = function () {
       { id: 'f1', name: 'Dave Mitchell', pin: '1111', role: 'Workshop foreman', costRate: 26, payType: 'day', payRate: 180, dayHours: 8, skills: ['PMI', 'LOLER', 'MOT prep', 'Repair', 'Service'] },
       { id: 'f2', name: 'Marek Nowak', pin: '2222', role: 'HGV technician', costRate: 23, payType: 'hour', payRate: 20.5, dayHours: 8, skills: ['PMI', 'Repair', 'Service', 'Tyres'] },
       { id: 'f3', name: 'Lee Barnard', pin: '3333', role: 'HGV technician', costRate: 23, payType: 'hour', payRate: 19.75, dayHours: 8, skills: ['PMI', 'Repair', 'Roadside callout', 'Service'] },
-      { id: 'f4', name: 'Sam Okafor', pin: '4444', role: 'Apprentice technician', costRate: 14, payType: 'hour', payRate: 16, dayHours: 8, skills: ['Service', 'Tyres', 'Defect'] },
-      { id: 'f5', name: 'Ryan Cole', pin: '5555', role: 'Mobile technician', costRate: 25, payType: 'day', payRate: 165, dayHours: 8, skills: ['Roadside callout', 'Repair', 'Defect', 'Collection / delivery'] }
+      { id: 'f4', name: 'Sam Okafor', pin: '4444', role: 'Apprentice technician', costRate: 14, payType: 'hour', payRate: 16, dayHours: 8, skills: ['Service', 'Tyres', 'Defect'] }
     ],
     /* standard operational times in hours, used to load the day planner */
     standardTimes: {
@@ -399,8 +398,7 @@ WS.seed = function () {
     f1: { PMI: 0.84, LOLER: 0.88, 'MOT prep': 0.95, Repair: 1.02, Service: 0.96, Defect: 0.95, Tyres: 1.05 },
     f2: { PMI: 0.99, LOLER: 1.08, 'MOT prep': 1.02, Repair: 1.16, Service: 0.88, Defect: 1.0, Tyres: 0.92 },
     f3: { PMI: 1.12, LOLER: 1.0, 'MOT prep': 0.9, Repair: 0.86, Service: 1.0, Defect: 0.9, Tyres: 1.0 },
-    f4: { PMI: 1.3, LOLER: 1.25, 'MOT prep': 1.2, Repair: 1.22, Service: 1.12, Defect: 1.1, Tyres: 0.94 },
-    f5: { PMI: 1.05, LOLER: 1.1, 'MOT prep': 1.05, Repair: 0.94, Service: 1.0, Defect: 0.92, Tyres: 1.0 }
+    f4: { PMI: 1.3, LOLER: 1.25, 'MOT prep': 1.2, Repair: 1.22, Service: 1.12, Defect: 1.1, Tyres: 0.94 }
   };
   function tendency(fitterId, type) {
     var t = TENDENCY[fitterId] || {};
@@ -415,8 +413,7 @@ WS.seed = function () {
       var hv = vehicles[int(0, vehicles.length - 1)];
       var htype = pick(types);
       // the apprentice gets less of the heavy work, the mobile man is mostly out
-      var hf = settings.fitters[htype === 'LOLER' || htype === 'MOT prep' ? int(0, 2) : int(0, 4)];
-      if (hf.id === 'f5' && r() < 0.6) hf = settings.fitters[int(0, 3)];
+      var hf = settings.fitters[htype === 'LOLER' || htype === 'MOT prep' ? int(0, 2) : int(0, 3)];
       var hest = std(htype);
       var hours0 = hest * tendency(hf.id, htype) * (0.88 + r() * 0.24);
       hours0 = Math.round(hours0 * 4) / 4;
@@ -482,21 +479,28 @@ WS.seed = function () {
 
   /* ---------------- today's board ---------------- */
   var f1 = settings.fitters[0], f2 = settings.fitters[1], f3 = settings.fitters[2],
-      f4 = settings.fitters[3], f5 = settings.fitters[4];
+      f4 = settings.fitters[3];
   var vIn = function (i) { return vehicles[i]; };
 
-  /* Dave: PMI running now, then two more planned */
-  jobs.push(newJob({ vehicle: vIn(6), type: 'PMI', date: T, bay: 'Bay 1', fitterId: f1.id, status: 'qc',
-    estHours: 1.5, order: 0, tasksDone: true,
-    clockOns: [clockAgo(f1.id, 300, 85)],
-    audit: [{ at: ago(310), who: 'Office', what: 'Job card created' },
-      { at: ago(300), who: f1.name, what: 'Clocked on' },
-      { at: ago(215), who: f1.name, what: 'Job marked done, sent to QC' }] }));
+  /* Dave: the PMI on YJ18 WRA, clocked on about 1h 45m ago so just over the 1h 30m standard.
+     The sheet is filled in (every item serviceable, brake figures, re torque) and waits for the two
+     signatures. Next on his list, the PMI on SN17 LEB, booked and not started. Then two more. */
+  vIn(6).reg = 'YJ18 WRA';
+  vIn(0).reg = 'SN17 LEB';
+  var daveSheet = filledInspection(vIn(6), f1, T, false);
+  daveSheet.header.operator = (operators.filter(function (o) { return o.id === vIn(6).operatorId; })[0] || {}).name || '';
+  daveSheet.brake.service = 61; daveSheet.brake.secondary = 34; daveSheet.brake.parking = 22;
+  daveSheet.sign = { inspector: { name: '', at: '', sig: '' }, declare: { name: '', at: '', sig: '' } };
+  daveSheet.lockedAt = '';
+  jobs.push(newJob({ vehicle: vIn(6), type: 'PMI', date: T, bay: 'Bay 1', fitterId: f1.id, status: 'in_progress',
+    estHours: 1.5, order: 0, inspection: daveSheet,
+    clockOns: [{ fitterId: f1.id, start: ago(105), end: '' }],
+    audit: [{ at: ago(115), who: 'Office', what: 'Job card created' }, { at: ago(105), who: f1.name, what: 'Clocked on' },
+      { at: ago(100), who: f1.name, what: 'Started the PMI inspection sheet' }] }));
 
-  jobs.push(newJob({ vehicle: vIn(0), type: 'PMI', date: T, bay: 'Bay 1', fitterId: f1.id, status: 'in_progress',
+  jobs.push(newJob({ vehicle: vIn(0), type: 'PMI', date: T, bay: 'Bay 1', fitterId: f1.id, status: 'booked',
     estHours: 1.5, order: 1,
-    clockOns: [{ fitterId: f1.id, start: ago(95), end: '' }],
-    audit: [{ at: ago(110), who: 'Office', what: 'Job card created' }, { at: ago(95), who: f1.name, what: 'Clocked on' }] }));
+    audit: [{ at: ago(120), who: 'Office', what: 'Job card created' }] }));
 
   jobs.push(newJob({ vehicle: vIn(11), type: 'Service', date: T, bay: 'Bay 1', fitterId: f1.id, status: 'booked', estHours: 2, order: 2 }));
   jobs.push(newJob({ vehicle: vIn(24), type: 'LOLER', date: T, bay: 'Bay 1', fitterId: f1.id, status: 'booked', estHours: 1, order: 3 }));
@@ -552,14 +556,13 @@ WS.seed = function () {
   jobs.push(newJob({ vehicle: vIn(25), type: 'Service', date: T, bay: 'Bay 4', fitterId: f4.id, status: 'booked', estHours: 2, order: 1 }));
   jobs.push(newJob({ vehicle: null, operatorId: '', type: 'Workshop duties', date: T, bay: '', fitterId: f4.id, status: 'booked', estHours: 1, order: 2 }));
 
-  /* Ryan, mobile: a roadside callout and a collection */
-  jobs.push(newJob({ vehicle: vIn(29), type: 'Roadside callout', date: T, bay: 'Mobile van', fitterId: f5.id, status: 'in_progress',
-    estHours: 2.5, order: 0,
+  /* a roadside callout and a collection, phoned in this morning and not on anyone's day yet */
+  jobs.push(newJob({ vehicle: vIn(29), type: 'Roadside callout', date: T, bay: 'Mobile van', fitterId: '', status: 'booked',
+    estHours: 2.5, priority: 'high',
     notes: 'Broken down on the A23 at Purley. Reported as no air build up.',
-    clockOns: [{ fitterId: f5.id, start: ago(70), end: '' }],
-    audit: [{ at: ago(85), who: 'Office', what: 'Job card created from a phone call' }, { at: ago(70), who: f5.name, what: 'Clocked on' }] }));
+    audit: [{ at: ago(85), who: 'Office', what: 'Job card created from a phone call' }] }));
 
-  jobs.push(newJob({ vehicle: vIn(14), type: 'Collection / delivery', date: T, bay: 'Mobile van', fitterId: f5.id, status: 'booked', estHours: 1, order: 1 }));
+  jobs.push(newJob({ vehicle: vIn(14), type: 'Collection / delivery', date: T, bay: 'Mobile van', fitterId: '', status: 'booked', estHours: 1 }));
 
   /* unassigned, waiting to be planned */
   jobs.push(newJob({ vehicle: vIn(8), type: 'Repair', date: T, bay: '', fitterId: '', status: 'booked', estHours: 2,
@@ -732,7 +735,7 @@ WS.seed = function () {
       var roll = rc(), sm = 5 * cint(3, 8), start, end;
       if (cdow === 6) {
         // Saturday mornings: the mobile fitter most weeks, the foreman every other week
-        var sat = (f.id === 'f5' && roll < 0.75) || (f.id === 'f1' && Math.floor(-cd / 7) % 2 === 0) || mine.length;
+        var sat = (f.id === 'f1' && Math.floor(-cd / 7) % 2 === 0) || mine.length;
         if (!sat) return;
         start = WS.at(cday, 7, sm);
         end = stampAdd(cday, 7, sm, 60 * 4 + 5 * cint(0, 8));

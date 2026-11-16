@@ -101,7 +101,8 @@
     b.title = 'Open the fitter app on a phone';
     b.setAttribute('aria-label', 'Fitter app');
     b.innerHTML = PHONE + '<span>Fitter app</span>';
-    bell.parentNode.insertBefore(b, bell);
+    var g = $('wsDemoBtns');
+    if (g) g.insertBefore(b, g.firstChild); else bell.parentNode.insertBefore(b, bell);
     b.onclick = O.openPhone;
   };
 })();

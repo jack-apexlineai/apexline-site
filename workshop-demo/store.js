@@ -3,7 +3,7 @@
 
 var WS = window.WS || {};
 WS.KEY = 'wsDemo:state';
-WS.SEED_V = 25;
+WS.SEED_V = 26;
 
 /* ---------- state ---------- */
 WS.state = null;
@@ -853,12 +853,14 @@ WS.listen = function (onText, onEnd) {
 /* ---------- demo banner ---------- */
 WS.banner = function (extraHtml) {
   var b = WS.el('div', 'dbar');
-  b.innerHTML = '<span class="dot"></span><b><span class="xl">Workshop demo</span><span class="xs">Demo</span></b><span class="desc">sample data, nothing here is real</span>' +
-    '<span class="sp">' + (extraHtml || '') +
-    '<button id="wsReset" type="button">Reset<span class="xl"> demo</span></button></span>';
+  // left: the demo only controls in their own small group. right: the app's own controls, then the theme
+  b.innerHTML = '<span class="dgrp" role="group" aria-label="Demo controls"><span class="dlab"><span class="dot"></span>Demo</span>' +
+    '<span class="dbtns" id="wsDemoBtns"><button id="wsReset" type="button">Reset<span class="xl"> demo</span></button></span></span>' +
+    '<span class="desc">sample data, nothing here is real</span>' +
+    '<span class="sp">' + (extraHtml || '') + '</span>';
   document.body.insertBefore(b, document.body.firstChild);
   var rb = WS.$('wsReset');
-  rb.parentNode.insertBefore(WS.themeToggle('wsTheme'), rb);
+  b.querySelector('.sp').appendChild(WS.themeToggle('wsTheme'));
   rb.onclick = function () {
     if (!confirm('Reset the demo back to the sample data? Anything you changed will go.')) return;
     WS.reset();

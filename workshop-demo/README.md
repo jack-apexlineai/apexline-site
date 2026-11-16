@@ -110,7 +110,6 @@ None of that exists in Truckfile or AssetMinder.
 | Marek Nowak | 2222 |
 | Lee Barnard | 3333 |
 | Sam Okafor | 4444 |
-| Ryan Cole, mobile | 5555 |
 | Drivers | shown on the driver login |
 | Customer portal | shown on the portal login |
 
