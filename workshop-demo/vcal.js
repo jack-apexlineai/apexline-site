@@ -153,6 +153,13 @@
     wireChips();
     document.querySelectorAll('[data-vview]').forEach(function (b) { b.onclick = function () { setView(b.dataset.vview); O.render(); }; });
     document.querySelectorAll('[data-vmore]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); dayModal(b.dataset.vmore); }; });
+    // on a phone the chips are just marks: tap the day for its list
+    document.querySelectorAll('.vcal-grid .vc-day').forEach(function (c) {
+      c.onclick = function () {
+        if (window.innerWidth > 700) return;
+        if (c.querySelector('.vchip')) dayModal(c.dataset.vday);
+      };
+    });
     var step = function (dir) {
       if (view() === 'month') { var d = WS.parse(O.vcal.month || WS.monthStart(T)); d.setMonth(d.getMonth() + dir); O.vcal.month = WS.monthStart(WS.iso(d)); }
       else O.vcal.week = WS.isoAdd(O.vcal.week || WS.weekStartOf(T), 7 * dir);

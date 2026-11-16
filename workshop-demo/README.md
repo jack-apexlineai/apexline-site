@@ -62,6 +62,40 @@ day (full and closed days are greyed out from the fitters' free hours) and a dro
 lands in the office straight away: a toast, Home Needs you, the Vehicle calendar, Book in, and the Day
 planner's waiting list for that day.
 
+## Customer portal: each customer's own account
+
+Each operator signs in with their own username (the first word of the company name: thameside,
+hanworth, crane, boroughs, m4, vale) and PIN, or taps their name on the demo list. They only ever
+see their own vehicles, jobs, bookings and invoices. The account opens on **My fleet**: every lorry
+with its next PMI, MOT, brake test, tacho and LOLER dates (overdue red, due in 14 days amber), what
+is in the workshop now with its status, and two big actions: **Book vehicles in** and **Report a
+repair**.
+
+**Report a repair**: pick the lorry (search by reg, or type a reg that is not on the list and the
+office checks it), tap what is wrong (brakes, lights, tyres, air leak and so on) and describe it,
+add photos, say whether it can be driven in (the first day with room is picked) or needs collecting,
+and how urgent. Before sending it shows an **estimate**: a range from the standard repair time at the
+customer's labour rate plus typical parts, "Final price after inspection, nothing done over the
+estimate without your OK". It is never a quote. The office gets a toast, a job card with the concern
+and the estimate on it, the job on the planner's waiting list (off the road ones in red, and the
+lorry marked off the road), and a line in Alerts.
+
+## Customers, and the portal from the office
+
+**Customers** (Money and people) lists every operator with plain figures from the live data:
+vehicles, invoiced this year, paid, owed (in words, like "£480 over 30 days", no colours), work done
+but not invoiced, pending estimates, next PMI or MOT due, and last visit, with a totals row that
+matches Money. Click a customer for their vehicles, jobs, invoices, estimates and bookings, and
+**View as customer**.
+
+**Customer portal** in the Demo group of the top bar opens a browser window over the office. It
+starts on a mock-up of the workshop's own website (labelled as a mock-up) with a **Customer login /
+Book your lorry in** button. That moves the address bar to the portal and shows the sign in with
+Thameside Skips picked and the PIN filled in for the demo, then My fleet. **Skip to portal** goes
+straight in, and **Switch customer** changes who you are signed in as. The booking
+calendar greys out days the fitters have no room on (one is seeded full and says Full). Close the
+window and the booking is on the Day planner, the Vehicle calendar and Home.
+
 ## What to try
 
 **Office, on a laptop**

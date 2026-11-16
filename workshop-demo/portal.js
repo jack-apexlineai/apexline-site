@@ -3,7 +3,7 @@
    Truckfile has nothing like this and AssetMinder's is read only. */
 (function () {
   var $ = WS.$, esc = WS.esc;
-  var me = null, tab = 'home', pick = null, pinBuf = '';
+  var me = null, tab = 'fleet', pick = null, pinBuf = '', demoFor = '';
 
   WS.initTheme();
   (function () {
@@ -13,9 +13,19 @@
     $('app').hidden = false;
     var hash = location.hash.replace('#', '');
     try { me = WS.operator(localStorage.getItem('wsDemo:op')) || null; } catch (e) { }
+    // opened from the office's Customer portal window: already signed in as that customer
+    var dm = /[?&]demo=([a-z0-9]+)/i.exec(location.search);
+    if (dm && WS.inDock && WS.operator(dm[1])) { demoFor = dm[1]; me = null; try { localStorage.removeItem('wsDemo:op'); } catch (e) { } }
+    var as = /[?&]as=([a-z0-9]+)/i.exec(location.search);
+    if (as && WS.inDock && WS.operator(as[1])) { me = WS.operator(as[1]); try { localStorage.setItem('wsDemo:op', me.id); } catch (e) { } }
     if (hash && WS.operator(hash)) pick = hash;
     WS.watch();
-    WS.onChange(function () { render(); });
+    WS.onChange(function () {
+      // live updates from the workshop, but never under someone who is typing into a form
+      var a = document.activeElement;
+      if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.closest('#pview')) return;
+      render();
+    });
     render();
   })();
 
@@ -28,7 +38,7 @@
   }
 
   function signOut() {
-    me = null; pick = null; pinBuf = ''; tab = 'home';
+    me = null; pick = null; pinBuf = ''; tab = 'fleet';
     try { localStorage.removeItem('wsDemo:op'); } catch (e) { }
     render();
   }
@@ -40,23 +50,27 @@
       return '<div style="padding:30px 2px 14px;text-align:center">' +
         WS.logoHtml('applogo') +
         '<h1 style="margin-bottom:5px">' + esc(WS.logoShowsName() ? 'Customer portal' : st.name) + '</h1>' +
-        '<div class="muted sm" style="margin-bottom:24px">' + (WS.logoShowsName() ? '' : 'Customer portal. ') + 'Your vehicles, your paperwork, 24 hours a day.</div></div>' +
+        '<div class="muted sm" style="margin-bottom:22px">' + (WS.logoShowsName() ? '' : 'Customer portal. ') + 'Your fleet, your bookings and your paperwork, 24 hours a day.</div></div>' +
+        '<form class="card pu-card" id="puForm" autocomplete="off" novalidate><h2 style="margin-bottom:12px">Sign in to your account</h2>' +
+        '<label class="f"><span class="lb">Username</span><input class="in mono" id="puUser" placeholder="your company username" autocapitalize="none" spellcheck="false" value="' + (demoFor ? esc(portalUser(WS.operator(demoFor))) : '') + '"></label>' +
+        '<div class="lockerr" id="puErr"></div>' +
+        '<button class="btn block lg" id="puGo" type="submit">Continue</button></form>' +
+        '<div class="muted sm" style="margin:20px 0 10px;text-align:center">Demo customers. Tap one to sign in as them.</div>' +
         '<div class="grid g2">' + WS.state.operators.map(function (o) {
           var waiting = WS.state.approvals.filter(function (a) { return a.operatorId === o.id && a.status === 'Sent'; }).length;
-          return '<div class="fjob" data-pick="' + o.id + '"><div class="r1">' +
+          return '<div class="fjob' + (o.id === demoFor ? ' sel' : '') + '" data-pick="' + o.id + '"><div class="r1">' +
             '<span class="rg" style="font-size:16px">' + esc(o.name) + '</span>' +
             (waiting ? '<span class="pill warn right">' + waiting + ' to approve</span>' : '') + '</div>' +
-            '<div class="mk">' + esc(o.contact) + ' · ' + WS.vehiclesOf(o.id).length + ' vehicles</div></div>';
-        }).join('') + '</div>' +
-        '<div class="card tight" style="margin-top:18px"><div class="hint"><b class="b">Demo PINs</b><br>' +
-        WS.state.operators.map(function (o) { return esc(o.name) + ' · ' + esc(o.portalPin); }).join('<br>') + '</div></div>';
+            '<div class="mk"><span class="mono">' + esc(portalUser(o)) + '</span> · PIN ' + esc(o.portalPin) + ' · ' + WS.vehiclesOf(o.id).length + ' vehicles</div></div>';
+        }).join('') + '</div>';
     }
     var o = WS.operator(pick);
     return '<div style="max-width:380px;margin:0 auto;padding:26px 2px 6px;text-align:center">' +
       '<h1 style="margin-bottom:4px">' + esc(o.name) + '</h1>' +
-      '<div class="muted sm">Enter your 4 digit portal PIN</div>' +
+      '<div class="muted sm">Signed in as <b class="mono">' + esc(portalUser(o)) + '</b>. ' + (pinBuf.length === 4 && o.id === demoFor ? 'PIN filled in for the demo, tap Sign in' : 'Enter your 4 digit PIN') + '</div>' +
       '<div class="pindots">' + [0, 1, 2, 3].map(function (i) { return '<i class="' + (pinBuf.length > i ? 'on' : '') + '"></i>'; }).join('') + '</div>' +
       '<div class="lockerr" id="pErr"></div>' +
+      (pinBuf.length === 4 ? '<button class="btn block lg" id="pSignIn" style="margin:2px 0 14px">Sign in</button>' : '') +
       '<div class="pinpad">' +
       [1, 2, 3, 4, 5, 6, 7, 8, 9].map(function (n) { return '<button data-k="' + n + '">' + n + '</button>'; }).join('') +
       '<button data-k="back">←</button><button data-k="0">0</button><button data-k="clear">✕</button></div>' +
@@ -64,9 +78,25 @@
       '<div class="hint" style="margin-top:12px">Demo PIN is ' + esc(o.portalPin) + '</div></div>';
   }
 
+  /* each customer signs in with their own username: the first word of the company name */
+  function portalUser(o) { return o.portalUser || String(o.name || '').split(/\s+/)[0].toLowerCase().replace(/[^a-z0-9]/g, ''); }
   function wireLogin() {
+    var f = $('puForm');
+    if (f) f.onsubmit = function (e) {
+      e.preventDefault();
+      var u = $('puUser').value.trim().toLowerCase();
+      var o = WS.state.operators.filter(function (x) { return portalUser(x) === u; })[0];
+      if (!u) { $('puErr').textContent = 'Put in your username.'; return; }
+      if (!o) { $('puErr').textContent = 'We do not have an account called ' + u + '. Try thameside, or tap a demo customer below.'; return; }
+      pick = o.id; pinBuf = o.id === demoFor ? o.portalPin : ''; render();
+    };
+    var si = $('pSignIn');
+    if (si) si.onclick = function () {
+      var o = WS.operator(pick);
+      if (o && o.portalPin === pinBuf) { me = o; try { localStorage.setItem('wsDemo:op', o.id); } catch (e) { } pick = null; pinBuf = ''; tab = 'fleet'; render(); }
+    };
     document.querySelectorAll('[data-pick]').forEach(function (b) {
-      b.onclick = function () { pick = b.dataset.pick; pinBuf = ''; render(); };
+      b.onclick = function () { pick = b.dataset.pick; pinBuf = pick === demoFor ? WS.operator(pick).portalPin : ''; render(); };
     });
     if ($('pBack')) $('pBack').onclick = function () { pick = null; pinBuf = ''; location.hash = ''; render(); };
     document.querySelectorAll('.pinpad button').forEach(function (b) {
@@ -119,9 +149,9 @@
     var unpaid = myInvoices().filter(function (i) { return !i.paid; });
 
     return '<div class="phero">' +
-      '<div class="logo">' + esc(st.initials || 'NC') + '</div>' +
-      '<div><div style="font-weight:800;font-size:18px">' + esc(me.name) + '</div>' +
-      '<div class="muted sm">' + esc(st.name) + ' customer portal</div></div>' +
+      '<div class="ph-brand">' + WS.logoHtml('phlogo') + '<div class="muted sm">Customer portal</div></div>' +
+      '<div class="ph-acct"><div class="ph-av">' + esc(String(me.name).charAt(0)) + '</div><div><div style="font-weight:800;font-size:17px">' + esc(me.name) + '</div>' +
+      '<div class="muted sm">' + esc(me.contact) + ' · <span class="mono">' + esc(portalUser(me)) + '</span></div></div></div>' +
       '<div class="sp"><button class="btn alt sm" id="pOut">Sign out</button></div></div>' +
 
       (waiting.length ? '<div class="flagbox" style="margin-bottom:16px"><b>' + waiting.length +
@@ -136,23 +166,55 @@
       '</div>' +
 
       '<div class="ptab">' +
-      [['home', 'Approvals', waiting.length], ['shop', 'In the workshop', inShop.length],
-       ['veh', 'My vehicles', myVehicles().length], ['book', 'Book vehicles in', dueSoon().length || ''], ['docs', 'Inspection records', ''],
+      [['fleet', 'My fleet', myVehicles().length], ['home', 'Approvals', waiting.length], ['shop', 'In the workshop', inShop.length],
+       ['book', 'Book vehicles in', dueSoon().length || ''], ['repair', 'Report a repair', ''], ['docs', 'Inspection records', ''],
        ['bills', 'Invoices', myInvoices().length]].map(function (t) {
         return '<button data-pt="' + t[0] + '"' + (tab === t[0] ? ' class="on"' : '') + '>' + t[1] +
           (t[2] !== '' ? '<span class="n">' + t[2] + '</span>' : '') + '</button>';
       }).join('') + '</div>' +
 
-      (tab === 'home' ? approvalsHtml()
+      (tab === 'fleet' || tab === 'veh' ? fleetHtml()
+        : tab === 'home' ? approvalsHtml()
         : tab === 'shop' ? shopHtml()
         : tab === 'veh' ? vehHtml()
         : tab === 'book' ? bookHtml()
+        : tab === 'repair' ? repairHtml()
         : tab === 'docs' ? docsHtml()
         : billsHtml());
   }
 
+  /* ---------------- My fleet: the account home ---------------- */
+  function fleetHtml() {
+    var open = myJobs().filter(function (j) { return WS.OPEN_STATUSES.indexOf(j.status) >= 0; })
+      .sort(function (a, b) { return a.date.localeCompare(b.date); });
+    var vs = myVehicles().slice().sort(function (a, b) { return a.reg.localeCompare(b.reg); });
+    var chip = function (v, k) {
+      var d = v[k.key];
+      if (!d) return '';
+      var n = WS.daysBetween(WS.day(0), d), cls = n < 0 ? 'bad' : n <= 14 ? 'warn' : '';
+      return '<span class="pill ' + cls + '" data-due="' + k.key + '" data-cls="' + cls + '">' + esc(WS.DUE_SHORT[k.key]) + ' ' +
+        esc(WS.parse(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })) + (n < 0 ? ', overdue' : '') + '</span>';
+    };
+    return '<div class="pacts">' +
+      '<button type="button" class="pact" data-pt="book"><b>Book vehicles in</b><span>See what is due and pick a day with room</span></button>' +
+      '<button type="button" class="pact" data-pt="repair"><b>Report a repair</b><span>Tell us what is wrong and get an estimate</span></button></div>' +
+      '<div class="card" id="pShopNow"><div class="ch"><h2>In the workshop now</h2></div>' +
+      (open.length ? '<div class="pshop">' + open.map(function (j) {
+        var v = WS.vehicle(j.vehicleId) || {};
+        return '<div class="pshop-r" data-shop="' + j.id + '"><span class="rg">' + esc(v.reg || '') + '</span><span class="muted sm">' + esc(j.type) + ' · ' + esc(WS.dayName(j.date)) + (j.dropOff ? ', drop off ' + esc(j.dropOff) : '') + '</span>' +
+          '<span class="pill ' + WS.statusCls(j.status) + ' right">' + esc(WS.statusLabel(j.status)) + '</span></div>';
+      }).join('') + '</div>' : empty('Nothing of yours is in the workshop.')) + '</div>' +
+      '<div class="card"><div class="ch"><h2>Your fleet</h2><div class="sp"><span class="muted sm">' + vs.length + ' vehicles</span></div></div>' +
+      '<div class="pfleet">' + vs.map(function (v) {
+        return '<div class="pfv" data-pfv="' + v.id + '"><div class="pfv-h"><span class="rg">' + esc(v.reg) + '</span>' + (v.vor ? '<span class="pill bad">off the road</span>' : '') +
+          (v.needsCheck ? '<span class="pill">being checked</span>' : '') + '</div>' +
+          '<div class="muted sm">' + esc((v.make + ' ' + v.model).trim() || 'Details to follow') + (v.type ? ' · ' + esc(v.type) : '') + '</div>' +
+          '<div class="pfv-d">' + WS.DUE_KINDS.map(function (k) { return chip(v, k); }).join('') + '</div></div>';
+      }).join('') + '</div></div>';
+  }
+
   /* ---------------- Book vehicles in ---------------- */
-  var bk = { sel: {}, date: '', time: '08:00', done: null };
+  var bk = { sel: {}, date: '', time: '08:00', done: null, rep: {} };
   var BK_TYPES = [['PMI', 'PMI'], ['MOT prep', 'MOT (annual test)'], ['LOLER', 'LOLER'], ['Service', 'Service'], ['Repair', 'Repair or defect'], ['Tyres', 'Tyres']];
   function dueOf(v, days) {
     var T = WS.day(0), lim = WS.isoAdd(T, days);
@@ -165,6 +227,38 @@
     var ids = Object.keys(bk.sel);
     return ids.reduce(function (s2, id) { return s2 + WS.stdTime(bk.sel[id]); }, 0);
   }
+  /* the next five weeks, Monday first: closed, past and full days greyed from the fitters' free hours */
+  function dayCells(sel, hrs, attr) {
+    var T = WS.day(0), g0 = WS.weekStartOf(T), cells = '', lastMonth = '';
+    ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(function (d) { cells += '<div class="dw">' + d + '</div>'; });
+    for (var i = 0; i < 35; i++) {
+      var d = WS.isoAdd(g0, i), cap = WS.dayCapacity(d), dt = WS.parse(d);
+      var past = d <= T, full = !cap.closed && cap.free < Math.max(hrs, 1);
+      var off = past || cap.closed || full;
+      var lab = past ? '' : cap.closed ? 'Closed' : full ? 'Full' : cap.free >= cap.cap * 0.4 ? 'Room' : 'Filling up';
+      var mon = dt.toLocaleDateString('en-GB', { month: 'short' });
+      cells += '<button type="button" class="bk-d' + (sel === d ? ' on' : '') + (!off && cap.free < cap.cap * 0.4 ? ' mid' : '') + '" data-' + attr + '="' + d + '"' + (off ? ' disabled' : '') +
+        ' aria-label="' + esc(WS.dayLabel(d) + (lab ? ', ' + lab : '')) + '"><b>' + dt.getDate() + '</b>' +
+        (mon !== lastMonth && dt.getDate() <= 7 ? '<i>' + mon + '</i>' : '<i>' + esc(lab) + '</i>') + (off ? '' : '<span class="dt"></span>') + '</button>';
+      if (dt.getDate() <= 7) lastMonth = mon;
+    }
+    return cells;
+  }
+  function firstOpenDay(hrs) {
+    var T = WS.day(0);
+    for (var i = 1; i < 40; i++) {
+      var d = WS.isoAdd(T, i), c = WS.dayCapacity(d);
+      if (!c.closed && c.free >= Math.max(hrs, 1)) return d;
+    }
+    return '';
+  }
+  function chipsHtml(sel, attr, key) {
+    return '<div class="rp-chips" role="group" aria-label="What is wrong">' + WS.REPAIR_CHIPS.map(function (c) {
+      var on = sel.indexOf(c[0]) >= 0;
+      return '<button type="button" class="rp-chip' + (on ? ' on' : '') + '" aria-pressed="' + on + '" data-' + attr + '="' + (key ? key + '|' : '') + c[0] + '">' + esc(c[1]) + '</button>';
+    }).join('') + '</div>';
+  }
+
   function bookHtml() {
     var T = WS.day(0), vs = myVehicles().slice().sort(function (a, b) {
       var da = dueOf(a, 60)[0], db = dueOf(b, 60)[0];
@@ -186,23 +280,12 @@
           }).join('') : '<span class="muted sm">Nothing due soon</span>') + '</span>' +
           (on ? '<select class="in" data-bkt="' + v.id + '" aria-label="What for">' + BK_TYPES.map(function (t) {
             return '<option value="' + t[0] + '"' + (bk.sel[v.id] === t[0] ? ' selected' : '') + '>' + esc(t[1]) + '</option>';
-          }).join('') + '</select>' : '') + '</span></label>';
+          }).join('') + '</select>' : '') +
+          (on && bk.sel[v.id] === 'Repair' ? '<span class="bk-rep">' + chipsHtml((bk.rep[v.id] || {}).chips || [], 'bkrc', v.id) +
+            '<textarea class="in" data-bkrd="' + v.id + '" rows="2" placeholder="Describe it (optional)">' + esc((bk.rep[v.id] || {}).desc || '') + '</textarea></span>' : '') + '</span></label>';
       }).join('') + '</div></div>';
 
-    // the next five weeks, Monday first
-    var g0 = WS.weekStartOf(T), cells = '', lastMonth = '';
-    ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(function (d) { cells += '<div class="dw">' + d + '</div>'; });
-    for (var i = 0; i < 35; i++) {
-      var d = WS.isoAdd(g0, i), cap = WS.dayCapacity(d), dt = WS.parse(d);
-      var past = d <= T, full = !cap.closed && cap.free < Math.max(hrs, 1);
-      var off = past || cap.closed || full;
-      var lab = past ? '' : cap.closed ? 'Closed' : full ? 'Full' : cap.free >= cap.cap * 0.4 ? 'Room' : 'Filling up';
-      var mon = dt.toLocaleDateString('en-GB', { month: 'short' });
-      cells += '<button type="button" class="bk-d' + (bk.date === d ? ' on' : '') + (!off && cap.free < cap.cap * 0.4 ? ' mid' : '') + '" data-bkd="' + d + '"' + (off ? ' disabled' : '') +
-        ' aria-label="' + esc(WS.dayLabel(d) + (lab ? ', ' + lab : '')) + '"><b>' + dt.getDate() + '</b>' +
-        (mon !== lastMonth && dt.getDate() <= 7 ? '<i>' + mon + '</i>' : '<i>' + esc(lab) + '</i>') + (off ? '' : '<span class="dt"></span>') + '</button>';
-      if (dt.getDate() <= 7) lastMonth = mon;
-    }
+    var cells = dayCells(bk.date, hrs, 'bkd');
     html += '<div><div class="card"><div class="ch"><h2>2. Pick a day</h2></div>' +
       '<div class="hint" style="margin-bottom:10px">Greyed out days are full or closed. ' + (picked ? 'Your ' + picked + ' vehicle' + (picked === 1 ? '' : 's') + ' need' + (picked === 1 ? 's' : '') + ' about ' + WS.dur(hrs) + ' of workshop time.' : 'Pick vehicles first to see the days with room for them.') + '</div>' +
       '<div class="bk-cal">' + cells + '</div></div>' +
@@ -231,6 +314,18 @@
       s2.onclick = function (e) { e.stopPropagation(); };
       s2.onchange = function () { bk.sel[s2.dataset.bkt] = s2.value; render(); };
     });
+    document.querySelectorAll('[data-bkrc]').forEach(function (b) {
+      b.onclick = function (e) {
+        e.preventDefault(); e.stopPropagation();
+        var p = b.dataset.bkrc.split('|'), r = bk.rep[p[0]] = bk.rep[p[0]] || { chips: [], desc: '' }, i = r.chips.indexOf(p[1]);
+        if (i >= 0) r.chips.splice(i, 1); else r.chips.push(p[1]);
+        render();
+      };
+    });
+    document.querySelectorAll('[data-bkrd]').forEach(function (t) {
+      t.onclick = function (e) { e.stopPropagation(); };
+      t.oninput = function () { var r = bk.rep[t.dataset.bkrd] = bk.rep[t.dataset.bkrd] || { chips: [], desc: '' }; r.desc = t.value; };
+    });
     document.querySelectorAll('[data-bkd]').forEach(function (b) { b.onclick = function () { bk.date = b.dataset.bkd; bk.done = null; render(); }; });
     document.querySelectorAll('[data-bkt2]').forEach(function (b) { b.onclick = function () { bk.time = b.dataset.bkt2; render(); }; });
     var go = $('bkGo');
@@ -239,13 +334,133 @@
       if (!ids.length || !bk.date) return;
       var jobs = WS.bookVehicles({
         operatorId: me.id, by: me.contact, date: bk.date, time: bk.time,
-        items: ids.map(function (id) { return { vehicleId: id, type: bk.sel[id] }; })
+        items: ids.map(function (id) {
+          var r = bk.sel[id] === 'Repair' ? bk.rep[id] || {} : {};
+          return { vehicleId: id, type: bk.sel[id], chips: r.chips || [], desc: r.desc || '' };
+        })
       });
+      bk.rep = {};
       bk.done = jobs.map(function (j) { var v = WS.vehicle(j.vehicleId); return (v ? v.reg : '') + ' for its ' + (WS.JOB_FOR[j.type] || j.type); }).join(', ') +
         ' on ' + WS.dayLabel(bk.date) + ', drop off ' + bk.time + '.';
       bk.sel = {}; bk.date = '';
       render();
       WS.toast('Booked in. The workshop has it.', 'ok');
+    };
+  }
+
+  /* ---------------- Report a repair ---------------- */
+  var rp = { vid: '', newReg: '', chips: [], desc: '', photos: [], drive: 'yes', date: '', time: '08:00', addr: '', who: '', urg: 'soon', done: null };
+  function repairHtml() {
+    var vs = myVehicles().slice().sort(function (a, b) { return a.reg.localeCompare(b.reg); });
+    var hrs = WS.stdTime('Repair');
+    if (rp.drive === 'yes' && (!rp.date || WS.dayCapacity(rp.date).free < hrs)) rp.date = firstOpenDay(hrs);
+    if (!rp.who) rp.who = me.contact + (me.phone ? ', ' + me.phone : '');
+    var html = '';
+    if (rp.done) html += '<div class="note" style="margin-bottom:14px" id="rpDone"><b>Reported.</b> ' + esc(rp.done) + '. The workshop can see it now.</div>';
+    var chosen = rp.vid === '__new' ? null : WS.vehicle(rp.vid);
+    html += '<div class="bk-steps">' +
+      '<div><div class="card"><div class="ch"><h2>1. Which lorry</h2></div>' +
+      '<input class="in" id="rpQ" placeholder="Search by reg" autocomplete="off" style="margin-bottom:10px">' +
+      '<div class="bk-veh rp-veh">' + vs.map(function (v) {
+        var on = rp.vid === v.id;
+        return '<button type="button" class="bk-v rp-v' + (on ? ' on' : '') + '" data-rpv="' + v.id + '" data-q="' + esc((v.reg + ' ' + v.make + ' ' + v.model).toLowerCase()) + '" aria-pressed="' + on + '">' +
+          '<span class="rp-dot"></span><span class="bk-m"><span class="rg" style="font-size:15px">' + esc(v.reg) + '</span> <span class="muted sm">' + esc((v.make + ' ' + v.model).trim()) + '</span>' +
+          (v.vor ? ' <span class="pill bad">off the road</span>' : '') + '</span></button>';
+      }).join('') + '</div>' +
+      '<div class="rp-new"><div class="muted sm" style="margin-bottom:6px">Not on the list? Type the reg</div>' +
+      '<div class="inline"><input class="in mono" id="rpNewReg" placeholder="KX19 ABC" value="' + esc(rp.newReg) + '" autocomplete="off" style="flex:1;text-transform:uppercase">' +
+      '<button type="button" class="btn alt" id="rpNewAdd">Use this reg</button></div>' +
+      (rp.vid === '__new' ? '<div class="hint" style="margin-top:6px" id="rpNewNote"><b>' + esc(rp.newReg) + '</b> will be added to your fleet. The workshop will check the details.</div>' : '') +
+      '</div></div>' +
+      '<div class="card"><div class="ch"><h2>2. What is wrong</h2></div>' + chipsHtml(rp.chips, 'rpc') +
+      '<textarea class="in" id="rpDesc" rows="3" placeholder="Describe it in a few words" style="margin-top:12px">' + esc(rp.desc) + '</textarea>' +
+      '<div class="inline" style="margin-top:10px;flex-wrap:wrap">' + rp.photos.map(function (ph) { return '<img class="thumb" src="' + ph + '" alt="photo">'; }).join('') +
+      '<label class="btn alt sm" style="cursor:pointer">Add photos<input type="file" accept="image/*" capture="environment" multiple id="rpPh" hidden></label></div></div></div>' +
+
+      '<div><div class="card"><div class="ch"><h2>3. Can it be driven in?</h2></div>' +
+      '<div class="seg rp-seg" role="radiogroup" aria-label="Can it be driven in">' +
+      [['yes', 'Yes, we will bring it'], ['no', 'No, it needs collecting']].map(function (x) {
+        return '<button type="button" role="radio" data-rpd="' + x[0] + '" aria-checked="' + (rp.drive === x[0]) + '"' + (rp.drive === x[0] ? ' class="on"' : '') + '>' + x[1] + '</button>';
+      }).join('') + '</div>' +
+      (rp.drive === 'yes'
+        ? '<div class="hint" style="margin:12px 0 8px">The first day with room is picked for you. Greyed out days are full or closed.</div>' +
+          '<div class="bk-cal">' + dayCells(rp.date, hrs, 'rpday') + '</div>' +
+          '<div class="lb" style="margin:14px 0 6px">Drop off time</div><div class="bk-times seg" role="radiogroup">' + WS.OPEN_TIMES.map(function (t) {
+            return '<button type="button" role="radio" data-rpt="' + t + '" aria-checked="' + (rp.time === t) + '"' + (rp.time === t ? ' class="on"' : '') + '>' + t + '</button>';
+          }).join('') + '</div>'
+        : '<label class="f" style="margin-top:12px"><span class="lb">Where is it</span><input class="in" id="rpAddr" placeholder="Address or where it has stopped" value="' + esc(rp.addr) + '"></label>' +
+          '<label class="f"><span class="lb">Who should the workshop call</span><input class="in" id="rpWho" value="' + esc(rp.who) + '"></label>' +
+          '<div class="hint">The workshop calls you back to arrange collection or recovery.</div>') +
+      '</div>' +
+      '<div class="card"><div class="ch"><h2>4. How urgent</h2></div><div class="seg rp-seg" role="radiogroup" aria-label="How urgent">' +
+      [['vor', 'Off the road now'], ['soon', 'Soon'], ['next', 'Next visit']].map(function (x) {
+        return '<button type="button" role="radio" data-rpu="' + x[0] + '" aria-checked="' + (rp.urg === x[0]) + '"' + (rp.urg === x[0] ? ' class="on' + (x[0] === 'vor' ? ' bad' : '') + '"' : '') + '>' + x[1] + '</button>';
+      }).join('') + '</div>' +
+      '<div class="hint" id="rpSum" style="margin:14px 0 10px">' + esc(summary(chosen)) + '</div>' +
+      estHtml() +
+      '<div class="lockerr" id="rpErr"></div>' +
+      '<button class="btn block lg" id="rpGo">Send it to the workshop</button></div></div></div>';
+    return html;
+  }
+  function estHtml() {
+    if (!rp.chips.length && !rp.desc.trim()) return '';
+    var e = WS.repairEstimate(me.id, rp.chips);
+    return '<div class="rp-est" id="rpEst"><div class="rp-est-k">Estimate</div><div class="rp-est-v">' + esc(WS.money0(e.low)) + ' to ' + esc(WS.money0(e.high)) + ' <span>+ VAT</span></div>' +
+      '<div class="rp-est-n">' + esc(e.note) + '</div></div>';
+  }
+  function summary(v) {
+    var reg = v ? v.reg : rp.vid === '__new' ? rp.newReg : 'Pick a lorry';
+    return reg + (rp.chips.length || rp.desc ? ': ' + WS.repairConcern(rp.chips, rp.desc) : '') + '. ' +
+      (rp.drive === 'yes' ? (rp.date ? 'Drop off ' + WS.dayLabel(rp.date) + ' ' + rp.time + '.' : 'Pick a day.') : 'Needs collecting, the workshop will call you.');
+  }
+  function wireRepair() {
+    var q = $('rpQ');
+    if (q) q.oninput = function () {
+      var t = q.value.trim().toLowerCase().replace(/\s+/g, '');
+      document.querySelectorAll('[data-rpv]').forEach(function (b) { b.hidden = !!t && b.dataset.q.replace(/\s+/g, '').indexOf(t) < 0; });
+    };
+    document.querySelectorAll('[data-rpv]').forEach(function (b) { b.onclick = function () { rp.vid = b.dataset.rpv; rp.newReg = ''; rp.done = null; render(); }; });
+    $('rpNewAdd').onclick = function () {
+      var r = $('rpNewReg').value.toUpperCase().replace(/\s+/g, ' ').trim();
+      if (!/^[A-Z0-9 ]{2,9}$/.test(r)) { WS.toast('Type the registration, like KX19 ABC.', 'bad'); return; }
+      var have = myVehicles().filter(function (v) { return v.reg.replace(/\s/g, '') === r.replace(/\s/g, ''); })[0];
+      if (have) { rp.vid = have.id; rp.newReg = ''; } else { rp.vid = '__new'; rp.newReg = r; }
+      render();
+    };
+    document.querySelectorAll('[data-rpc]').forEach(function (b) {
+      b.onclick = function () { var i = rp.chips.indexOf(b.dataset.rpc); if (i >= 0) rp.chips.splice(i, 1); else rp.chips.push(b.dataset.rpc); render(); };
+    });
+    $('rpDesc').oninput = function () {
+      var had = !!(rp.chips.length || rp.desc.trim());
+      rp.desc = this.value;
+      $('rpSum').textContent = summary(rp.vid === '__new' ? null : WS.vehicle(rp.vid));
+      if (!had && rp.desc.trim()) { var e = $('rpSum'); e.insertAdjacentHTML('afterend', estHtml()); }
+    };
+    var ph = $('rpPh');
+    if (ph) ph.onchange = function () {
+      [].slice.call(ph.files || []).slice(0, 4).forEach(function (f) { WS.readPhoto(f, function (url) { if (url) { rp.photos.push(url); render(); } }); });
+    };
+    document.querySelectorAll('[data-rpd]').forEach(function (b) { b.onclick = function () { rp.drive = b.dataset.rpd; render(); }; });
+    document.querySelectorAll('[data-rpday]').forEach(function (b) { b.onclick = function () { rp.date = b.dataset.rpday; render(); }; });
+    document.querySelectorAll('[data-rpt]').forEach(function (b) { b.onclick = function () { rp.time = b.dataset.rpt; render(); }; });
+    document.querySelectorAll('[data-rpu]').forEach(function (b) { b.onclick = function () { rp.urg = b.dataset.rpu; render(); }; });
+    if ($('rpAddr')) $('rpAddr').oninput = function () { rp.addr = this.value; };
+    if ($('rpWho')) $('rpWho').oninput = function () { rp.who = this.value; };
+    $('rpGo').onclick = function () {
+      var err = $('rpErr');
+      if (!rp.vid) { err.textContent = 'Pick the lorry first, or type its reg.'; return; }
+      if (!rp.chips.length && !rp.desc.trim()) { err.textContent = 'Say what is wrong: tap one or more, or describe it.'; return; }
+      if (rp.drive === 'yes' && !rp.date) { err.textContent = 'Pick a day to bring it in.'; return; }
+      if (rp.drive === 'no' && !rp.addr.trim()) { err.textContent = 'Say where it is so we can collect it.'; return; }
+      var j = WS.reportRepair({
+        operatorId: me.id, by: me.contact, vehicleId: rp.vid === '__new' ? '' : rp.vid, newReg: rp.newReg,
+        chips: rp.chips.slice(), desc: rp.desc, photos: rp.photos.slice(), drive: rp.drive, date: rp.date, time: rp.time,
+        addr: rp.addr, contact: rp.who, urgency: rp.urg
+      });
+      rp = { vid: '', newReg: '', chips: [], desc: '', photos: [], drive: 'yes', date: '', time: '08:00', addr: '', who: '', urg: 'soon', done: j.portalLine.replace(/^[^,]*? reported/, 'You reported') + '. ' + j.estimate.text + ', final price after inspection' };
+      render();
+      window.scrollTo(0, 0);
+      WS.toast('Sent. The workshop has it.', 'ok');
     };
   }
 
@@ -331,8 +546,11 @@
   }
 
   function billsHtml() {
-    var list = myInvoices();
-    return '<div class="tablewrap"><table class="tbl"><thead><tr><th>Invoice</th><th class="hide-sm">Vehicle</th>' +
+    var list = myInvoices(), f = WS.customerFigures(me.id);
+    var fig = function (k, v, sub) { return '<div class="cfig"><div class="k">' + esc(k) + '</div><div class="v">' + esc(v) + '</div>' + (sub ? '<div class="f">' + esc(sub) + '</div>' : '') + '</div>'; };
+    return '<div class="cfigs" id="pFigs">' + fig('Invoiced this year', WS.money0(f.invoiced)) + fig('Paid', WS.money0(f.paid)) +
+      fig('Owed', WS.owedText(f), WS.lateText(f)) + fig('Pending estimates', WS.estText(f), f.estN ? 'nothing done over an estimate without your OK' : '') + '</div>' +
+      '<div class="tablewrap"><table class="tbl"><thead><tr><th>Invoice</th><th class="hide-sm">Vehicle</th>' +
       '<th class="num">Total</th><th>Due</th><th></th></tr></thead><tbody>' +
       (list.length ? list.map(function (i) {
         var v = WS.vehicle(i.vehicleId);
@@ -369,6 +587,7 @@
       b.onclick = function (e) { e.stopPropagation(); pay(b.dataset.pay); };
     });
     if (tab === 'book') wireBook();
+    if (tab === 'repair') wireRepair();
   }
 
   function decide(id, yes) {

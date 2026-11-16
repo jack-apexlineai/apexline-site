@@ -796,6 +796,17 @@ WS.seed = function () {
     });
   }
 
+  /* the third working day from today is fully booked, so the portal calendar shows a Full day */
+  var fullDay = T, wd = 0;
+  while (wd < 3) { fullDay = WS.day(WS.daysBetween(T, fullDay) + 1); var dw = WS.parse(fullDay).getDay(); if (dw !== 0 && dw !== 6) wd++; }
+  var lorries = vehicles.filter(function (v) { return !/trailer/i.test(v.type); });
+  settings.fitters.forEach(function (f, fi) {
+    ['Service', 'Repair', 'MOT prep', 'Service'].forEach(function (t, k) {
+      var fv = lorries[(fi * 4 + k * 3 + 5) % lorries.length];
+      jobs.push(newJob({ vehicle: fv, type: t, date: fullDay, bay: settings.bays[fi], fitterId: f.id, status: 'booked', estHours: 2, order: k }));
+    });
+  });
+
   /* one lorry with its PMI due in 2 days, not booked in and no reminder sent yet,
      so the start-up and the urgent pop up have something real to point at */
   var soonV = vehicles.filter(function (v) {

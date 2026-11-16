@@ -62,6 +62,9 @@
           '<div class="sp">' + pill(a.status, a.status === 'Approved' ? 'ok' : a.status === 'Declined' ? 'bad' : 'warn') + '</div></div></div>';
       }).join('') : '') +
 
+      (j.estimate ? '<div class="note estnote" style="margin-top:14px"><b>Customer was given an estimate: ' + esc(WS.money0(j.estimate.low)) + ' to ' + esc(WS.money0(j.estimate.high)) + ' + VAT.</b> ' +
+        'Indicative only, from ' + esc(WS.hrs(j.estimate.hours)) + ' at ' + esc(WS.money(j.estimate.rate)) + ' an hour' + (j.estimate.parts.length ? ' and typical parts (' + esc(j.estimate.parts.join(', ')) + ')' : '') +
+        '. Get their OK before going over it.</div>' : '') +
       ((j.work || []).length ? '<h3 style="margin:16px 0 8px">Work on this job card</h3>' + j.work.map(WS.workHtml).join('') : '') +
 
       '<h3 style="margin:16px 0 8px">Tasks</h3>' +

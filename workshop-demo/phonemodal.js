@@ -104,5 +104,105 @@
     var g = $('wsDemoBtns');
     if (g) g.insertBefore(b, g.firstChild); else bell.parentNode.insertBefore(b, bell);
     b.onclick = O.openPhone;
+    // the customer portal, in a browser window, next to it
+    var c = WS.el('button', 'phonebtn');
+    c.type = 'button';
+    c.id = 'wsPortal';
+    c.title = 'Open the customer portal as a customer';
+    c.setAttribute('aria-label', 'Customer portal');
+    c.innerHTML = BROWSER + '<span>Customer portal</span>';
+    b.parentNode.insertBefore(c, b.nextSibling);
+    c.onclick = function () { O.openPortal(null, { site: true }); };
+  };
+
+  /* ---------------- the customer portal in a browser window ----------------
+     The real portal.html in a same-origin iframe, already signed in as a customer
+     (Thameside Skips by default, they have PMIs due soon). Switch customer in the bar. */
+  var BROWSER = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="16" rx="2.4"/><path d="M2.5 8.5h19M6 6.3h.01M8.6 6.3h.01"/></svg>';
+  var pmask = null, pfit = null;
+  function psize() {
+    if (!pmask) return;
+    var w = Math.min(1180, window.innerWidth - 110), h = Math.min(860, window.innerHeight - 56);
+    var win = pmask.querySelector('.bwin');
+    win.style.width = w + 'px';
+    win.style.height = h + 'px';
+  }
+  function pKey(e) { if (e.key === 'Escape') O.closePortal(); }
+  /* opts.site: start on a mock-up of the workshop's own website, whose Customer login button
+     leads to the portal sign in (prefilled for the demo). Otherwise straight into the portal. */
+  var SITE = 'londonenvironmentalgroup.co.uk', PORTAL = 'portal.londonenvironmentalgroup.co.uk';
+  function siteHtml() {
+    var S = WS.state.settings;
+    return '<div class="mocksite" id="mockSite"><span class="ms-tag">Mock-up of your website</span>' +
+      '<header class="ms-nav"><span class="ms-logo">' + (S.logo ? '<img src="' + WS.esc(S.logo) + '" alt="' + WS.esc(S.name) + '">' : WS.esc(S.name)) + '</span>' +
+      '<nav><span>Skip hire</span><span>Workshop</span><span>Contact</span><button type="button" class="ms-mini" data-mslogin>Customer login</button></nav></header>' +
+      '<section class="ms-hero"><div class="ms-in"><div class="ms-kick">' + WS.esc(WS.shortName(S.name)) + '</div>' +
+      '<h1>Skip hire and HGV workshop, London</h1>' +
+      '<p>Book your lorry in, report a repair and see your paperwork online, any time.</p>' +
+      '<button type="button" class="ms-cta" id="msLogin" data-mslogin>Customer login / Book your lorry in</button></div></section>' +
+      '<section class="ms-row"><div><b>PMIs and MOT prep</b><span>Six weekly inspections done to the DVSA guide.</span></div>' +
+      '<div><b>Repairs and defects</b><span>Tell us what is wrong and get an estimate first.</span></div>' +
+      '<div><b>Your fleet online</b><span>Due dates, bookings and invoices in one place.</span></div></section></div>';
+  }
+  O.openPortal = function (opId, opts) {
+    opts = opts || {};
+    opId = opId || O.portalAs || 'o1';
+    if (window.innerWidth <= 760) { location.href = 'portal.html'; return; }
+    if (pmask) O.closePortal();
+    O.portalAs = opId;
+    pmask = WS.el('div', 'pmask');
+    pmask.setAttribute('role', 'dialog');
+    pmask.setAttribute('aria-modal', 'true');
+    pmask.setAttribute('aria-label', 'Customer portal');
+    pmask.innerHTML =
+      '<button type="button" class="pmx" id="bwClose" aria-label="Close the customer portal" title="Close (Esc)">&times;</button>' +
+      '<div class="bwin"><div class="bw-bar"><span class="bw-dots" aria-hidden="true"><i></i><i></i><i></i></span>' +
+      '<span class="bw-url"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg><span id="bwUrl"></span></span>' +
+      '<button type="button" class="bw-skip" id="bwSkip">Skip to portal</button>' +
+      '<label class="bw-sw" id="bwSwL"><span>Switch customer</span><select id="bwSw">' + WS.state.operators.map(function (o) {
+        return '<option value="' + o.id + '"' + (o.id === opId ? ' selected' : '') + '>' + WS.esc(o.name) + '</option>';
+      }).join('') + '</select></label></div>' +
+      '<div class="bw-body" id="bwBody"></div></div>';
+    document.body.appendChild(pmask);
+    document.body.classList.add('phoneopen');
+    psize();
+    $('bwClose').onclick = O.closePortal;
+    $('bwSkip').onclick = function () { showPortal('as'); };
+    $('bwSw').onchange = function () { O.portalAs = this.value; showPortal('as'); };
+    pmask.addEventListener('click', function (e) { if (e.target === pmask) O.closePortal(); });
+    document.addEventListener('keydown', pKey);
+    pfit = psize;
+    window.addEventListener('resize', pfit);
+    if (opts.site) showSite(); else showPortal('as');
+  };
+  function showSite() {
+    $('bwUrl').textContent = SITE;
+    $('bwSkip').hidden = false;
+    $('bwSwL').hidden = true;
+    $('bwBody').innerHTML = siteHtml();
+    O.portalStep = 'site';
+    $('bwBody').querySelectorAll('[data-mslogin]').forEach(function (b) { b.onclick = function () { showPortal('demo'); }; });
+  }
+  /* how: 'as' signs straight in as the chosen customer, 'demo' shows the sign in prefilled */
+  function showPortal(how) {
+    $('bwUrl').textContent = PORTAL;
+    $('bwSkip').hidden = true;
+    $('bwSwL').hidden = false;
+    $('bwBody').innerHTML = '<iframe class="bw-ifr" src="portal.html?dock=1&' + (how === 'demo' ? 'demo=' : 'as=') + O.portalAs + '" title="Customer portal"></iframe>';
+    O.portalStep = 'portal';
+    var ifr = $('bwBody').querySelector('iframe');
+    ifr.addEventListener('load', function () { try { ifr.contentWindow.document.addEventListener('keydown', pKey); } catch (e) { } });
+  }
+  O.closePortal = function () {
+    if (!pmask) return;
+    pmask.remove();
+    pmask = null;
+    document.body.classList.remove('phoneopen');
+    document.removeEventListener('keydown', pKey);
+    window.removeEventListener('resize', pfit);
+    WS._pull();
+    O.render();
+    var b = $('wsPortal');
+    if (b) b.focus();
   };
 })();

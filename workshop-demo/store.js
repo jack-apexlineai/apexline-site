@@ -3,7 +3,7 @@
 
 var WS = window.WS || {};
 WS.KEY = 'wsDemo:state';
-WS.SEED_V = 28;
+WS.SEED_V = 29;
 
 /* ---------- state ---------- */
 WS.state = null;
@@ -438,7 +438,7 @@ WS.workHtml = function (e) {
       return '<div class="wk">' + esc(f[1]) + '</div><div class="wv' + (t ? '' : ' none') + '">' + esc(t || 'Not given') + '</div>';
     }).join('') + '<div class="wk">Odometer</div><div class="wv' + (e.odometer ? '' : ' none') + '">' + esc(e.odometer ? Number(e.odometer).toLocaleString('en-GB') : 'Not given') + '</div></div>' +
     ((e.photos || []).length ? '<div class="thumbs" style="margin-top:8px">' + e.photos.map(function (p) { return '<img class="thumb" src="' + p + '" alt="work photo">'; }).join('') + '</div>' : '') +
-    '<div class="wby">' + esc((e.source === 'voice' ? 'Voice job card preview, approved' : 'Typed') + ' by ' + (e.by || '') + ' · ' + WS.whenUK(e.at)) + (e.status ? ' · ' + esc(e.status) : '') + '</div>' +
+    '<div class="wby">' + esc((e.source === 'voice' ? 'Voice job card preview, approved' : e.source === 'portal' ? 'Reported on the customer portal' : 'Typed') + ' by ' + (e.by || '') + ' · ' + WS.whenUK(e.at)) + (e.status ? ' · ' + esc(e.status) : '') + '</div>' +
     '</div>';
 };
 /* the header fills itself from the job, never spoken (the odometer can be) */
