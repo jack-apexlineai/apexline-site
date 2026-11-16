@@ -5,7 +5,7 @@
   var me = null, view = 'home', pick = null, pinBuf = '', draft = null, openSec = {};
 
   WS.initTheme();
-  WS.gate(function () {
+  (function () {
     WS.load();
     WS.applyBrand();
     WS.banner();
@@ -19,7 +19,7 @@
       render();
     };
     render();
-  });
+  })();
 
   function render() {
     var v = $('dview');

@@ -41,11 +41,9 @@
   /* ---------------- boot ---------------- */
   O.boot = function () {
     WS.initTheme();
-    WS.gate(function () {
-      WS.load();
-      WS.applyBrand();
-      (O.signIn || function (cb) { cb(false); })(function (fresh) { openOffice(fresh); });
-    });
+    WS.load();
+    WS.applyBrand();
+    (O.signIn || function (cb) { cb(false); })(function (fresh) { openOffice(fresh); });
     function openOffice(fresh) {
       WS.banner((O.whoBarHtml ? O.whoBarHtml() : '') + '<button id="wsBell" type="button" class="bell">Alerts</button>' +
         '<button id="wsGear" type="button" class="gearbtn" aria-label="Settings" title="Settings">' + GEAR + '</button>');

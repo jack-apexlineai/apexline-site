@@ -17,7 +17,7 @@ real data. Everything runs in the browser and is made up.
 
 Cloudflare drops the `.html`, so `/workshop-demo/fitter.html` redirects to `/workshop-demo/fitter`.
 
-Demo PIN: **240411**. Then the office asks who you are: **g.noble** (George) or **office** (a shared office and accounts login), PIN **1234**.
+The office opens on a sign in: **g.noble** (George) or **office** (a shared office and accounts login), PIN **1234**.
 
 Every page is `noindex` and nothing on the site links to them.
 
@@ -104,7 +104,6 @@ None of that exists in Truckfile or AssetMinder.
 
 | Who | PIN |
 |---|---|
-| Demo gate | 240411 |
 | George Noble, g.noble, office | 1234 |
 | Office Admin, office, shared office login | 1234 |
 | Dave Mitchell, foreman | 1111 |

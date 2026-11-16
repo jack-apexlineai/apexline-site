@@ -1,9 +1,8 @@
-/* Shared state, PIN gate, theme, toasts and formatting for the workshop demo.
+/* Shared state, theme, toasts and formatting for the workshop demo.
    Everything lives in this browser. Nothing is sent anywhere. */
 
 var WS = window.WS || {};
 WS.KEY = 'wsDemo:state';
-WS.PIN = '240411';
 WS.SEED_V = 25;
 
 /* ---------- state ---------- */
@@ -867,47 +866,6 @@ WS.banner = function (extraHtml) {
     location.reload();
   };
   return b;
-};
-
-/* ---------- PIN gate ---------- */
-WS.gate = function (onOpen, sub) {
-  var ok = false;
-  try { ok = localStorage.getItem('wsDemo:unlocked') === '1'; } catch (e) { }
-  if (ok) { onOpen(); return; }
-
-  WS.applyBrand();
-  var wrap = WS.el('div', 'lock');
-  wrap.innerHTML =
-    '<div class="lockbox">' +
-    '<div class="logo">' + WS.esc((WS.state && WS.state.settings && WS.state.settings.initials) || 'LEG') + '</div>' +
-    '<h1>Workshop demo</h1>' +
-    '<p>' + WS.esc(sub || 'Enter the 6 digit demo PIN to carry on.') + '</p>' +
-    '<input class="in pinin" id="gpin" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="------" aria-label="Demo PIN">' +
-    '<div class="lockerr" id="gerr"></div>' +
-    '<button class="btn block lg" id="gbtn" style="margin-top:8px">Open the demo</button>' +
-    '</div>';
-  document.body.appendChild(wrap);
-  var inp = WS.$('gpin'), err = WS.$('gerr');
-  setTimeout(function () { inp.focus(); }, 60);
-  var tries = 0;
-  function go() {
-    if (inp.value.replace(/\D/g, '') === WS.PIN) {
-      try { localStorage.setItem('wsDemo:unlocked', '1'); } catch (e) { }
-      wrap.remove();
-      onOpen();
-    } else {
-      tries++;
-      err.textContent = tries > 1 ? 'Still not right. The PIN is 6 digits.' : 'That PIN is not right.';
-      inp.value = '';
-      inp.focus();
-    }
-  }
-  WS.$('gbtn').onclick = go;
-  inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
-  inp.addEventListener('input', function () {
-    inp.value = inp.value.replace(/\D/g, '').slice(0, 6);
-    if (inp.value.length === 6) go();
-  });
 };
 
 window.WS = WS;

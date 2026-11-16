@@ -5,7 +5,7 @@
   var me = null, view = 'jobs', jobId = null, pinBuf = '', pickFitter = null, openSec = {};
 
   WS.initTheme();
-  WS.gate(function () {
+  (function () {
     WS.load();
     WS.applyBrand();
     WS.banner();
@@ -16,7 +16,7 @@
     $('fOut').onclick = signOut;
     setInterval(tick, 1000);
     render();
-  });
+  })();
 
   function signOut() {
     me = null;

@@ -1,5 +1,5 @@
 /* Office sign-in and the start-up briefing.
-   1. Sign in. After the demo PIN gate the office asks who you are: username and a 4 digit PIN
+   1. Sign in. The office opens on who you are: username and a 4 digit PIN
       (George g.noble and the shared office account are 1234 in the demo). Kept for the browser session in
       sessionStorage. Sign out in the top bar comes back here.
    2. The start-up briefing. On sign in, and from Settings > Appearance, the workshop's logo

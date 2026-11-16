@@ -6,7 +6,7 @@
   var me = null, tab = 'home', pick = null, pinBuf = '';
 
   WS.initTheme();
-  WS.gate(function () {
+  (function () {
     WS.load();
     WS.applyBrand();
     WS.banner();
@@ -17,7 +17,7 @@
     WS.watch();
     WS.onChange(function () { render(); });
     render();
-  });
+  })();
 
   function render() {
     var v = $('pview');
