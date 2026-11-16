@@ -47,6 +47,7 @@
     (O.signIn || function (cb) { cb(false); })(function (fresh) { openOffice(fresh); });
     function openOffice(fresh) {
       WS.banner((O.whoBarHtml ? O.whoBarHtml() : '') +
+        (O.assistant ? O.assistant.buttonHtml() : '') +
         '<button id="wsHome" type="button" class="ibtn" aria-label="Home" title="Home">' + HOME + '</button>' +
         '<button id="wsBell" type="button" class="bell ibtn" aria-label="Alerts" title="Alerts"></button>' +
         '<button id="wsGear" type="button" class="gearbtn ibtn" aria-label="Settings" title="Settings">' + GEAR + '</button>');
@@ -68,6 +69,7 @@
       };
       var bell = $('wsBell');
       if (bell) bell.onclick = function () { closeNav(); if (O.closeWheel) O.closeWheel(true); O.go('alerts'); };
+      if (O.wireAsk) O.wireAsk();
       var hm = $('wsHome');
       if (hm) hm.onclick = function () { closeNav(); if (O.closeWheel) O.closeWheel(true); O.go('home'); };
       // Settings opens from the top bar gear and the sidebar footer, in every menu style

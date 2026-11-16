@@ -50,6 +50,7 @@
     (WS.portalBookings ? WS.portalBookings() : []).filter(function (j) { return !j.fitterId && j.date >= T; }).slice(0, 3).forEach(function (j) {
       alerts.unshift({ t: WS.bookingLine(j), go: 'vcal', cls: 'go' });
     });
+    if (O.followUpAlerts) O.followUpAlerts().forEach(function (a) { alerts.unshift(a); });
     if (!WS.xeroOk()) alerts.push({ t: 'Xero is not connected yet, so invoices have to be exported by hand', go: 'settings', cls: 'go' });
 
     /* one HTML string per block; personalise.js lays them out in the order you chose */

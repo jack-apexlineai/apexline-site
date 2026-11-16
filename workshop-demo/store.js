@@ -621,7 +621,9 @@ WS.toast = function (msg, kind) {
   t.firstChild.textContent = msg;
   t.querySelector('.x').onclick = function () { t.remove(); };
   wrap.appendChild(t);
-  setTimeout(function () { t.remove(); }, 4600);
+  // no more than three at once, the oldest goes first
+  while (wrap.children.length > 3) wrap.removeChild(wrap.firstChild);
+  setTimeout(function () { t.remove(); }, 4000);
 };
 
 /* ---------- theme and brand ---------- */

@@ -96,6 +96,18 @@ straight in, and **Switch customer** changes who you are signed in as. The booki
 calendar greys out days the fitters have no room on (one is seeded full and says Full). Close the
 window and the booking is on the Day planner, the Vehicle calendar and Home.
 
+## Assistant (preview)
+
+**Ask** in the top bar, or the **/** key, opens a chat panel tagged "Assistant preview". It answers
+from the live demo data, worked out in the browser with plain intent matching: no AI service and no
+keys in the demo. It handles how the fitters are getting on (who is over time, who is waiting), who
+we can invoice (by customer), parts we are waiting for, spare time today, what is due (this week,
+next month, by customer), who is fastest at PMIs, services and repairs, and anything urgent today.
+Actions always show what they will do and wait for a yes: email everyone with a PMI due next month,
+chase the supplier for parts, remind me to follow up (shows on Home). Five templates (PMI due, MOT
+due, parts chase, invoice reminder, booking confirmation); if none fits it offers "Save this as a new
+template". Anything it does not understand gets a list of what it can do. On a phone it is full screen.
+
 ## What to try
 
 **Office, on a laptop**

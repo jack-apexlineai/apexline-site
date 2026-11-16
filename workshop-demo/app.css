@@ -1384,3 +1384,52 @@ button.bk-v{width:100%;font:inherit;color:var(--ink);text-align:left;align-items
 /* customising home: whatever you scroll to stays above the Done bar */
 html:has(body.homeedit){scroll-padding-bottom:110px}
 body.homeedit main{padding-bottom:120px}
+/* ---------- Assistant (preview) ---------- */
+.dbar button.askbtn{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 11px 0 9px;border-radius:999px;border-color:var(--brand-m);background:var(--brand-l);color:var(--ink)}
+.dbar button.askbtn svg{display:block;color:var(--brand-ink)}
+.dbar button.askbtn[aria-expanded="true"]{background:var(--brand-fill);color:var(--brand-on);border-color:var(--brand-fill)}
+.dbar button.askbtn[aria-expanded="true"] svg{color:var(--brand-on)}
+.askp{position:fixed;top:41px;right:0;bottom:0;width:min(430px,100vw);z-index:72;display:flex;flex-direction:column;background:var(--card);border-left:1px solid var(--line);box-shadow:-24px 0 60px rgba(0,0,0,.28);animation:akin .22s cubic-bezier(.2,.8,.2,1)}
+@keyframes akin{from{transform:translateX(24px);opacity:0}}
+.ak-h{display:flex;align-items:center;gap:11px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.ak-mark{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:var(--brand-l);color:var(--brand-ink);border:1px solid var(--brand-m);flex:0 0 auto}
+.ak-mark svg{width:18px;height:18px}
+.ak-ht{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ak-ht b{font-size:15px}
+.ak-tag{align-self:flex-start;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border:1px dashed var(--in-line);border-radius:999px;padding:2px 8px}
+.ak-x{margin-left:auto;border:0;background:none;color:var(--muted);font-size:24px;line-height:1;cursor:pointer;padding:2px 6px;border-radius:8px}
+.ak-x:hover{color:var(--ink);background:var(--hover)}
+.ak-log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;overscroll-behavior:contain}
+.ak-m{max-width:100%;font-size:13.5px;line-height:1.5;border-radius:14px;padding:11px 13px}
+.ak-m p{margin:0 0 8px}.ak-m p:last-child{margin-bottom:0}
+.ak-m ul{margin:0 0 8px;padding-left:18px}.ak-m li{margin:2px 0}
+.ak-m.bot{background:var(--soft);border:1px solid var(--line);border-top-left-radius:5px;align-self:stretch}
+.ak-m.me{align-self:flex-end;background:var(--brand-fill);color:var(--brand-on);border-top-right-radius:5px;max-width:85%}
+.ak-bad{color:var(--bad);font-weight:650}
+.ak-mut{color:var(--muted);font-size:12.5px}
+.ak-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ak-chips button{border:1px solid var(--in-line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 11px;font:500 12.5px Inter,system-ui,sans-serif;cursor:pointer;text-align:left}
+.ak-chips button:hover{border-color:var(--brand-ink);background:var(--brand-l)}
+.ak-link{display:inline-flex;margin-top:4px;border:0;background:none;color:var(--brand-ink);font:650 13px Inter,system-ui,sans-serif;cursor:pointer;padding:2px 0}
+.ak-link:hover{text-decoration:underline}
+.ak-inl{border:0;background:none;color:var(--ink);font:inherit;padding:0;cursor:pointer;text-align:left;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.ak-draft{white-space:pre-wrap;font:12.5px/1.5 Inter,system-ui,sans-serif;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:6px 0 8px;overflow-wrap:anywhere;max-height:220px;overflow:auto}
+.ak-ed{width:100%;min-height:150px;font:13px/1.5 Inter,system-ui,sans-serif;margin:6px 0 8px;resize:vertical}
+.ak-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.ak-tplname{display:flex;gap:8px;margin-top:10px}
+.ak-tplname .in{flex:1;min-width:0}
+.ak-f{display:flex;gap:8px;padding:12px 14px 8px;border-top:1px solid var(--line)}
+.ak-f .in{flex:1;min-width:0}
+.ak-foot{font-size:11px;color:var(--muted);padding:0 16px 12px}
+@media(max-width:700px){
+  .askp{top:0;width:100vw;z-index:96;border-left:0;box-shadow:none}
+  .dbar button.askbtn span{display:none}
+  .dbar button.askbtn{padding:0 8px}
+}
+@media(max-width:430px){.dlab{font-size:0;gap:0}.dlab .dot{margin:0 2px}.dbar:has(#wsAsk) #wsHome{display:none}}
+/* on a phone Home is in the menu and the wheel sheet, so the top bar fits */
+@media print{.askp{display:none !important}}
+
+/* toasts never cover the assistant: beside it on a laptop, and on a phone the answer says it */
+body.ask-open .toasts{right:calc(min(430px,100vw) + 18px)}
+@media(max-width:700px){body.ask-open .toasts{display:none}}
