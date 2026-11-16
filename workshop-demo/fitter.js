@@ -134,7 +134,8 @@
     var cap = me.dayHours || 8;
     var capCls = planned > cap ? 'bad' : planned >= cap - 0.5 ? 'warn' : 'ok';
     return '<div class="phead" style="margin-bottom:14px"><div><h1>My day</h1>' +
-      '<div class="sub">' + esc(WS.dayName(WS.day(0))) + ' · ' + list.length + ' to do' + (done.length ? ', ' + done.length + ' finished' : '') + '</div></div></div>' +
+      '<div class="sub">' + esc(WS.dayName(WS.day(0))) + ' · ' + list.length + ' to do' + (done.length ? ', ' + done.length + ' finished' : '') + '</div></div>' +
+      '<div class="sp"><button type="button" class="btn alt sm" id="fMySig">' + ((myFitter() || {}).sig ? 'My signature' : 'Add my signature') + '</button></div></div>' +
       '<div class="card tight" style="margin-bottom:14px">' +
       '<div class="inline"><span class="b">' + WS.hrs(planned) + ' planned</span>' +
       '<span class="muted sm">of ' + WS.dur(cap) + '</span>' +
@@ -179,7 +180,35 @@
   function nextJob(list) {
     return (list || myJobs()).filter(function (j) { return j.fitterId === me.id && (j.status === 'booked' || j.status === 'in_bay'); })[0] || null;
   }
+  /* the signed in fitter's own record, fresh from the state */
+  function myFitter() { return me ? WS.fitter(me.id) : null; }
+  function O_initials(n) { return String(n || '').split(/\s+/).slice(0, 2).map(function (p) { return p[0] || ''; }).join('').toUpperCase(); }
+  var declOther = false;
+  /* My signature: draw it once, then sign offs are one tap */
+  function mySignature() {
+    var mf = myFitter();
+    sheet('My signature',
+      (mf.sig ? '<div class="hint" style="margin-bottom:10px">This goes on your sign offs when you tap Sign as ' + esc(me.name) + '. Saved ' + esc(WS.whenUK(mf.sigAt)) + '.</div>' +
+        '<div class="sigbox sigdone" style="padding:8px;margin-bottom:12px"><img class="sigimg" src="' + mf.sig + '" alt="your signature"></div>' +
+        '<div class="hint" style="margin-bottom:8px">To change it, sign again below.</div>'
+        : '<div class="hint" style="margin-bottom:10px">Sign once here. After that every sign off is one tap.</div>') +
+      '<div class="sigbox"><canvas data-sig="mine"></canvas><div class="ph">Sign here</div></div>' +
+      '<input type="hidden" data-signame="mine" value="' + esc(me.name) + '">',
+      'Save my signature', function () {
+        var cv = document.querySelector('[data-sig="mine"]');
+        if (!cv || !cv.dataset.drawn) { WS.toast('Sign in the box first.', 'bad'); return false; }
+        var f = myFitter();
+        f.sig = cv.toDataURL('image/png');
+        f.sigAt = WS.nowStamp();
+        WS.save();
+        WS.toast('Signature saved. Sign offs are one tap now.', 'ok');
+        render();
+      });
+    var cv = document.querySelector('[data-sig="mine"]');
+    if (cv) initPad(cv);
+  }
   function wireJobs() {
+    if ($('fMySig')) $('fMySig').onclick = mySignature;
     var nx = $('fNextOn');
     if (nx) nx.onclick = function () { var j = nextJob(); if (j) { jobId = j.id; clockOn(j); } };
     document.querySelectorAll('[data-job]').forEach(function (c) {
@@ -791,6 +820,7 @@
         }).join('') : '') + '</div>';
     }).join('');
 
+    var mine = myFitter(), mySig = mine && mine.sig;
     var sigBox = function (which, s) {
       if (s.sig) {
         return '<div class="sigbox sigdone" style="padding:8px"><img class="sigimg" src="' + s.sig + '" alt="signature"></div>' +
@@ -798,10 +828,25 @@
           '<div class="muted sm">' + esc(WS.whenUK(s.at)) + '</div>';
       }
       if (locked) return '<div class="hint">Not signed.</div>';
-      return '<input class="in" data-signame="' + which + '" placeholder="Full name" value="' + esc(s.name) + '" style="margin-bottom:8px" autocomplete="off">' +
-        '<div class="sigbox"><canvas data-sig="' + which + '"></canvas><div class="ph">Sign here, or tap to sign with your name</div></div>' +
+      // someone else declaring it roadworthy: their name, and they draw it
+      if (which === 'declare' && declOther) {
+        return '<input class="in" data-signame="declare" placeholder="Their full name" value="" style="margin-bottom:8px" autocomplete="off">' +
+          '<div class="sigbox"><canvas data-sig="declare"></canvas><div class="ph">Sign here, or tap to sign with the name above</div></div>' +
+          '<div class="inline" style="margin-top:8px"><button class="btn alt sm" data-sigclear="declare">Clear</button>' +
+          '<button class="btn sm" data-sigsave="declare">Save signature</button>' +
+          '<button type="button" class="lnk right" data-sigmine="declare">I am declaring it</button></div>';
+      }
+      var who = '<div class="signer"><span class="sg-av">' + esc(O_initials(me.name)) + '</span><div><b>' + esc(me.name) + '</b><div class="muted sm">signed in on this phone</div></div></div>' +
+        '<input type="hidden" data-signame="' + which + '" value="' + esc(me.name) + '">';
+      var other = which === 'declare' ? '<button type="button" class="lnk" data-sigother="declare">Someone else is declaring it</button>' : '';
+      if (mySig) {
+        return who + '<button type="button" class="btn block lg sigme" data-sigme="' + which + '"><img src="' + mySig + '" alt="" class="sigthumb">Sign as ' + esc(me.name) + '</button>' +
+          (other ? '<div style="margin-top:8px">' + other + '</div>' : '');
+      }
+      return who + '<div class="sigbox"><canvas data-sig="' + which + '"></canvas><div class="ph">Sign here, or tap to sign with your name</div></div>' +
+        '<label class="inline sm" style="margin-top:8px;gap:8px"><input type="checkbox" data-sigkeep="' + which + '" checked> Save this as my signature</label>' +
         '<div class="inline" style="margin-top:8px"><button class="btn alt sm" data-sigclear="' + which + '">Clear</button>' +
-        '<button class="btn sm" data-sigsave="' + which + '">Save signature</button></div>';
+        '<button class="btn sm" data-sigsave="' + which + '">Save signature</button>' + (other ? '<span class="right">' + other + '</span>' : '') + '</div>';
     };
 
     return '<button class="btn alt sm" id="sBack" style="margin-bottom:14px">← Job card</button>' +
@@ -952,10 +997,26 @@
         if (!nameIn.value.trim()) return WS.toast('Put the name in first.', 'bad');
         if (!cv.dataset.drawn) return WS.toast('Sign in the box first.', 'bad');
         i.sign[which] = { name: nameIn.value.trim(), at: WS.nowStamp(), sig: cv.toDataURL('image/png') };
+        var keep = document.querySelector('[data-sigkeep="' + which + '"]');
+        if (keep && keep.checked && nameIn.value.trim() === me.name) {
+          var mf = myFitter();
+          if (mf && !mf.sig) { mf.sig = i.sign[which].sig; mf.sigAt = WS.nowStamp(); WS.toast('Saved as your signature. Next time it is one tap.', 'ok'); }
+        }
         save((which === 'inspector' ? 'Inspector' : 'Roadworthiness') + ' signature captured: ' + nameIn.value.trim());
         render();
       };
     });
+    document.querySelectorAll('[data-sigme]').forEach(function (b) {
+      b.onclick = function () {
+        var which = b.dataset.sigme, mf = myFitter();
+        if (!mf || !mf.sig) return;
+        i.sign[which] = { name: me.name, at: WS.nowStamp(), sig: mf.sig };
+        save((which === 'inspector' ? 'Inspector' : 'Roadworthiness') + ' signature captured: ' + me.name);
+        render();
+      };
+    });
+    document.querySelectorAll('[data-sigother]').forEach(function (b) { b.onclick = function () { declOther = true; render(); }; });
+    document.querySelectorAll('[data-sigmine]').forEach(function (b) { b.onclick = function () { declOther = false; render(); }; });
 
     $('sLock').onclick = function () {
       // a signature drawn and named but not saved yet still counts
@@ -988,6 +1049,7 @@
         v.brakeTest = i.header.date;
       }
       WS.audit(j, me.name, 'Inspection signed off and locked');
+      declOther = false;
       // the sheet covers the PMI tasks, so the job is finished: clock off and send it to QC
       (j.tasks || []).forEach(function (t) { t.done = true; });
       (j.clockOns || []).forEach(function (c) { if (c.fitterId === me.id && !c.end) c.end = WS.nowStamp(); });
@@ -1008,7 +1070,7 @@
     c.lineWidth = 2.2;
     c.lineCap = 'round';
     c.lineJoin = 'round';
-    c.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#111';
+    c.strokeStyle = '#1B2433';   // ink on paper, in both themes
     var drawing = false, last = null;
     function pos(e) {
       var r = cv.getBoundingClientRect();

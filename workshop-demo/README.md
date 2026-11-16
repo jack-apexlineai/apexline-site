@@ -138,6 +138,8 @@ The demo reseeds itself if you come back on a different day, so the board is alw
 
 Plain HTML, CSS and JavaScript. No build step, no framework, no backend.
 
+Every time and date on screen is UK time (Europe/London), whatever the laptop's own time zone. `data.js` moves the demo's clock to UK time before anything else runs, so a demo given from abroad shows the customer the same times they see.
+
 | File | What it does |
 |---|---|
 | `index.html` | Office app shell |

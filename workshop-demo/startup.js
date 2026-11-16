@@ -15,7 +15,7 @@
 
   /* ---------------- time of day, UK ---------------- */
   WS.ukHour = function (d) {
-    d = d || new Date();
+    if (!d) return new Date().getHours();   // the demo clock already runs on UK time (data.js)
     try {
       var h = +new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hourCycle: 'h23', timeZone: 'Europe/London' }).format(d);
       if (h >= 0 && h < 24) return h;
@@ -276,8 +276,8 @@
     var hello = WS.greeting(first) + '.';
     var wheelMode = WS.look('menuStyle') === 'wheel' && !!O.playIntro;
     var now = new Date();
-    var dateTx = now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/London' }) + ' · ' +
-      now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' });
+    var dateTx = now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + ' · ' +
+      now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     var logo = S.logo
       ? '<div class="bt-mark" role="img" aria-label="' + esc(S.name) + '" style="-webkit-mask-image:url(\'' + esc(S.logo) + '\');mask-image:url(\'' + esc(S.logo) + '\')"></div>'
       : '<div class="bt-word">' + esc(String(O.shortName ? O.shortName(S.name) : S.name).toUpperCase()) + '</div>';

@@ -2,6 +2,44 @@
    the real current date, so the board always looks live. The PRNG is seeded, so a
    reset always rebuilds exactly the same demo. */
 
+/* UK clock. The workshop is in the UK, so every time and date the demo shows is UK time
+   (Europe/London), whatever the laptop is set to (Jack demos from abroad). The demo works in
+   wall clock time throughout, so the clock is moved once, here, before anything else runs:
+   on a laptop already on UK time nothing changes. */
+(function () {
+  var Real = window.Date;
+  if (Real.__uk) return;
+  function londonMinutes(ms) {
+    try {
+      var p = {};
+      new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        .formatToParts(new Real(ms)).forEach(function (x) { p[x.type] = +x.value; });
+      var wall = Real.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+      return Math.round((wall - Math.floor(ms / 1000) * 1000) / 60000);
+    } catch (e) { return null; }
+  }
+  var now = Real.now(), lon = londonMinutes(now);
+  if (lon == null) return;
+  var shift = (lon + new Real(now).getTimezoneOffset()) * 60000;
+  if (!shift) return;
+  var UK = function Date(a, b, c, d, e, f, g) {
+    if (!(this instanceof UK)) return new Real(Real.now() + shift).toString();
+    var n = arguments.length, x;
+    if (n === 0) x = new Real(Real.now() + shift);
+    else if (n === 1) x = new Real(a);
+    else x = new Real(a, b, c === undefined ? 1 : c, d || 0, e || 0, f || 0, g || 0);
+    Object.setPrototypeOf(x, UK.prototype);
+    return x;
+  };
+  UK.prototype = Real.prototype;
+  UK.now = function () { return Real.now() + shift; };
+  UK.parse = Real.parse;
+  UK.UTC = Real.UTC;
+  UK.__uk = true;
+  UK.__shift = shift;
+  window.Date = UK;
+})();
+
 var WS = window.WS || {};
 
 WS.rng = function (seed) {
@@ -154,7 +192,7 @@ WS.seed = function () {
     dayHours: 8,
     bays: ['Bay 1', 'Bay 2', 'Bay 3', 'Bay 4', 'Bay 5 MOT', 'Mobile van'],
     fitters: [
-      { id: 'f1', name: 'Dave Mitchell', pin: '1111', role: 'Workshop foreman', costRate: 26, payType: 'day', payRate: 180, dayHours: 8, skills: ['PMI', 'LOLER', 'MOT prep', 'Repair', 'Service'] },
+      { id: 'f1', name: 'Dave Mitchell', pin: '1111', sig: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 110'><g fill='none' stroke='%231B2433' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'><path d='M30 76 C30 52 31 34 34 24 C60 19 73 40 67 58 C61 74 44 81 27 74'/><path d='M84 73 C88 58 92 45 96 38 C100 52 102 62 104 67 C108 53 113 43 118 38 C120 52 122 64 125 72'/><path d='M128 66 C136 48 141 71 149 58 C157 45 159 72 169 60 C177 48 179 30 183 26 C187 40 185 62 191 64 C199 66 205 40 207 30 C209 46 207 62 215 64 C223 66 228 52 236 47'/><path d='M141 44 l1 0'/><path d='M38 90 C110 83 190 80 266 71'/></g></svg>", sigAt: WS.at(WS.day(-30), 8, 5), role: 'Workshop foreman', costRate: 26, payType: 'day', payRate: 180, dayHours: 8, skills: ['PMI', 'LOLER', 'MOT prep', 'Repair', 'Service'] },
       { id: 'f2', name: 'Marek Nowak', pin: '2222', role: 'HGV technician', costRate: 23, payType: 'hour', payRate: 20.5, dayHours: 8, skills: ['PMI', 'Repair', 'Service', 'Tyres'] },
       { id: 'f3', name: 'Lee Barnard', pin: '3333', role: 'HGV technician', costRate: 23, payType: 'hour', payRate: 19.75, dayHours: 8, skills: ['PMI', 'Repair', 'Roadside callout', 'Service'] },
       { id: 'f4', name: 'Sam Okafor', pin: '4444', role: 'Apprentice technician', costRate: 14, payType: 'hour', payRate: 16, dayHours: 8, skills: ['Service', 'Tyres', 'Defect'] }
