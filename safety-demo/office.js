@@ -24,7 +24,7 @@ document.getElementById('resetBtn').addEventListener('click', function(){
   CS.reset(); prevStatus = snapshot(); seenEvents = {}; CS.state.events.forEach(function(e){ seenEvents[e.id] = 1; });
   closeLayer(); render(); toast('Demo reset to the sample data', 'green', 'refresh');
 });
-function tick(){ document.getElementById('clock').innerHTML = CS.hm(CS.now()) + '<small>UK</small>'; }
+function tick(){ document.getElementById('clock').innerHTML = CS.hm(CS.now()); }
 tick(); setInterval(tick, 10000);
 
 function tabs(){
