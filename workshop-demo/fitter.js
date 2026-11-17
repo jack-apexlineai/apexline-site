@@ -113,7 +113,7 @@
     var T = WS.day(0);
     WS.dayPlan(me.id, T);
     return WS.state.jobs.filter(function (j) {
-      return j.date === T && (j.fitterId === me.id || !j.fitterId) && j.status !== 'done';
+      return j.date === T && (j.fitterId === me.id || !j.fitterId) && j.status !== 'done' && j.status !== 'qc';
     }).sort(function (a, b) {
       var mine = function (j) { return j.fitterId === me.id ? 0 : 1; };
       if (mine(a) !== mine(b)) return mine(a) - mine(b);
@@ -161,7 +161,8 @@
     var running = (j.clockOns || []).filter(function (c) { return !c.end; })[0];
     var h = WS.hoursOn(j), p = WS.jobProgress(j);
     var fill = Math.min(100, p.est ? p.actual / (p.est * 1.2) * 100 : 0);
-    var barCls = p.state === 'over' ? 'bad' : p.state === 'close' ? 'warn' : running ? '' : 'ok';
+    var fin = j.status === 'done' || j.status === 'qc';
+    var barCls = fin ? 'ok' : p.state === 'over' ? 'bad' : p.state === 'close' ? 'warn' : running ? '' : 'ok';
     return '<div class="fjob" data-job="' + j.id + '">' +
       '<div class="r1">' +
       (j._planStart != null ? '<span class="muted sm mono">' + WS.clockHM(j._planStart) + '</span>' : '') +
@@ -171,7 +172,7 @@
       '<div class="mk">' + esc((v.make || '') + ' ' + (v.model || '')) + (o.name ? ' · ' + esc(o.name) : '') + '</div>' +
       (p.actual ? '<div class="bar" style="margin-top:9px"><i class="' + barCls + '" style="width:' + fill + '%"></i><u style="left:83.3%"></u></div>' +
         '<div class="muted sm" style="margin-top:5px">' + WS.hhmm(p.actual) + ' of ' + WS.hrs(p.est) +
-        (p.state === 'over' ? ' <b style="color:var(--bad)">over by ' + WS.hhmm(p.over) + '</b>' : '') + '</div>' : '') +
+        (p.state === 'over' && !fin ? ' <b style="color:var(--bad)">over by ' + WS.hhmm(p.over) + '</b>' : '') + '</div>' : '') +
       '<div class="r2"><span class="pill ' + WS.statusCls(j.status) + '">' + esc(WS.statusLabel(j.status)) + '</span>' +
       (j.bay ? '<span class="muted sm">' + esc(j.bay) + '</span>' : '<span class="muted sm">no bay yet</span>') +
       (j.priority === 'high' ? '<span class="chip bad">urgent</span>' : '') +
@@ -267,12 +268,13 @@
         '<div class="hint" style="margin-bottom:12px">DVSA safety inspection, brake test and sign off.</div>' +
         '<button class="btn block" id="jSheet">' + (j.inspection ? (j.inspection.lockedAt ? 'View the sheet' : 'Carry on with the sheet') : 'Start the inspection') + '</button></div>' : '') +
 
-      '<div class="card"><h2>Tasks</h2><div class="sep" style="margin:10px 0"></div>' + tasks + '</div>' +
+      '<div class="card"><h2>Checks for this job</h2><div class="sep" style="margin:10px 0"></div>' + tasks +
+      '<div class="hint" style="margin-top:10px">Set up with you: anything you want your fitters to double check on every job goes here.</div></div>' +
 
-      '<div class="card"><h2>Parts used</h2><div class="sep" style="margin:10px 0"></div>' + parts +
+      '<div class="card" hidden><h2>Parts used</h2><div class="sep" style="margin:10px 0"></div>' + parts +
       '<button class="btn alt block" id="jAddPart" style="margin-top:12px">Add a part</button></div>' +
 
-      '<div class="card"><h2>Photos</h2><div class="sep" style="margin:10px 0"></div>' + photos + '</div>' +
+      '<div class="card" hidden><h2>Photos</h2><div class="sep" style="margin:10px 0"></div>' + photos + '</div>' +
 
       '<div class="card"><h2>Notes</h2><div class="sep" style="margin:10px 0"></div>' +
       '<div class="inline" style="align-items:flex-start"><textarea class="in" id="jNotes" placeholder="What you found, what you did">' + esc(j.fitterNotes || '') + '</textarea>' +
