@@ -37,7 +37,7 @@
     if (!me) { v.innerHTML = loginHtml(); wireLogin(); return; }
     $('fWho').textContent = me.name;
     var open = openJob();
-    $('fSub').textContent = open ? 'clocked on to ' + (WS.vehicle(open.vehicleId) || {}).reg : me.role;
+    $('fSub').textContent = open ? 'working on ' + (WS.vehicle(open.vehicleId) || {}).reg : me.role;
     if (view === 'job' && jobId) { v.innerHTML = jobHtml(); wireJob(); }
     else if (view === 'sheet' && jobId) { v.innerHTML = sheetHtml(); wireSheet(); }
     else { v.innerHTML = jobsHtml(); wireJobs(); }
@@ -128,6 +128,11 @@
     return found;
   }
 
+  /* "Start PMI", "Start repair": the button says what you are starting */
+  function startLabel(j) {
+    var t = (j && j.type) || 'job', m = { 'MOT prep': 'MOT prep', 'PMI': 'PMI', 'LOLER': 'LOLER' };
+    return 'Start ' + (m[t] || t.toLowerCase());
+  }
   function jobsHtml() {
     var list = myJobs(), open = openJob();
     var done = WS.state.jobs.filter(function (j) { return j.date === WS.day(0) && j.fitterId === me.id && (j.status === 'done' || j.status === 'qc'); });
@@ -139,21 +144,14 @@
     return '<div class="phead" style="margin-bottom:14px"><div><h1>My day</h1>' +
       '<div class="sub">' + esc(WS.dayName(WS.day(0))) + ' · ' + list.length + ' to do' + (done.length ? ', ' + done.length + ' finished' : '') + '</div></div>' +
       '<div class="sp"><button type="button" class="btn alt sm" id="fMySig">' + ((myFitter() || {}).sig ? 'My signature' : 'Add my signature') + '</button></div></div>' +
-      '<div class="card tight" style="margin-bottom:14px">' +
-      '<div class="inline"><span class="b">' + WS.hrs(planned) + ' planned</span>' +
-      '<span class="muted sm">of ' + WS.dur(cap) + '</span>' +
-      '<span class="right b mono">' + WS.hhmm(clocked) + ' clocked</span></div>' +
-      '<div class="cap"><i class="' + capCls + '" style="width:' + Math.min(100, planned / cap * 100) + '%"></i></div>' +
-      (planned > cap ? '<div class="muted sm" style="margin-top:7px;color:var(--bad)">That is more than your day. Tell the office if it will not fit.</div>' : '') +
-      '</div>' +
       (open ? '<div class="card tight" style="border-color:var(--brand);margin-bottom:14px">' +
-        '<div class="muted sm">Clocked on to</div>' +
+        '<div class="muted sm">Working on</div>' +
         '<div class="inline" style="margin-top:4px"><span class="rg" style="font-size:18px;font-weight:800">' + esc((WS.vehicle(open.vehicleId) || {}).reg) + '</span>' +
         '<span class="bigtimer right" id="hdrTimer" data-start="' + open.clockOns.filter(function (c) { return !c.end; })[0].start + '">00:00:00</span></div></div>' : '') +
       (!open && nextJob(list) ? '<div class="card tight upnext"><div class="muted sm">Up next</div>' +
         '<div class="inline" style="margin-top:4px"><span class="rg" style="font-size:18px;font-weight:800">' + esc((WS.vehicle(nextJob(list).vehicleId) || {}).reg || nextJob(list).type) + '</span>' +
         '<span class="chip">' + esc(nextJob(list).type) + '</span>' +
-        '<button class="btn right" id="fNextOn">Clock on</button></div></div>' : '') +
+        '<button class="btn right" id="fNextOn">' + esc(startLabel(nextJob(list))) + '</button></div></div>' : '') +
       (list.length ? list.map(jobRow).join('') : '<div class="card"><div class="empty">Nothing left on your list today.</div></div>') +
       (done.length ? '<h3 style="margin:20px 0 10px" class="muted">Finished today</h3>' + done.map(jobRow).join('') : '');
   }
@@ -251,11 +249,11 @@
       '<div class="muted sm">' + esc(j.bay || 'no bay yet') + ' · job ' + esc(j.no) + '</div>' +
       (j.notes ? '<div style="margin-top:12px;padding:11px 12px;background:var(--soft);border-radius:10px;font-size:13.5px">' + esc(j.notes) + '</div>' : '') +
       '<div class="sep"></div>' +
-      '<div class="inline"><div><div class="muted sm">Clocked on this job</div>' +
+      '<div class="inline"><div><div class="muted sm">Time on this job</div>' +
       '<div class="bigtimer" ' + (running ? 'data-start="' + running.start + '"' : '') + '>' + (running ? '00:00:00' : WS.hhmm(h)) + '</div></div>' +
       '<div class="right">' + (running
-        ? '<button class="btn danger lg" id="jOff">Clock off</button>'
-        : '<button class="btn lg" id="jOn">Clock on</button>') + '</div></div>' +
+        ? '<button class="btn alt lg" id="jOff">Pause</button>'
+        : '<button class="btn lg" id="jOn">' + esc(startLabel(j)) + '</button>') + '</div></div>' +
       '<div class="bar" style="margin-top:12px"><i class="' + (prog.state === 'over' ? 'bad' : prog.state === 'close' ? 'warn' : 'ok') + '" ' +
       'style="width:' + Math.min(100, prog.est ? prog.actual / (prog.est * 1.2) * 100 : 0) + '%"></i><u style="left:83.3%"></u></div>' +
       '<div class="muted sm" style="margin-top:6px">You are allowed <b>' + WS.hrs(prog.est) + '</b> for this one' +
@@ -581,7 +579,7 @@
     if (prev && prev.id !== j.id) {
       prev.clockOns.forEach(function (c) { if (c.fitterId === me.id && !c.end) c.end = WS.nowStamp(); });
       WS.audit(prev, me.name, 'Clocked off (moved to ' + (WS.vehicle(j.vehicleId) || {}).reg + ')');
-      WS.toast('Clocked off ' + (WS.vehicle(prev.vehicleId) || {}).reg + '.', '');
+      WS.toast('Paused ' + (WS.vehicle(prev.vehicleId) || {}).reg + '.', '');
     }
     j.clockOns = j.clockOns || [];
     j.clockOns.push({ fitterId: me.id, start: WS.nowStamp(), end: '' });
@@ -589,7 +587,7 @@
     if (j.status === 'booked' || j.status === 'in_bay') j.status = 'in_progress';
     WS.audit(j, me.name, 'Clocked on');
     WS.save();
-    WS.toast('Clocked on to ' + (WS.vehicle(j.vehicleId) || {}).reg + '.', 'ok');
+    WS.toast('Started ' + (WS.vehicle(j.vehicleId) || {}).reg + '. The office can see it live.', 'ok');
     render();
   }
 
@@ -597,7 +595,7 @@
     j.clockOns.forEach(function (c) { if (c.fitterId === me.id && !c.end) c.end = WS.nowStamp(); });
     WS.audit(j, me.name, 'Clocked off');
     WS.save();
-    WS.toast('Clocked off.', 'ok');
+    WS.toast('Paused.', 'ok');
     render();
   }
 

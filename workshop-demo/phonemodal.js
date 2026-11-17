@@ -10,7 +10,7 @@
   var STEPS = [
     ['Log in with your PIN', 'Tap your name and put in your 4 digit PIN. Dave is 1111.'],
     ['Your jobs for today', 'My day lists your jobs in order, with the time each one is allowed.'],
-    ['Clock on', 'Open a job and press Clock on. The timer starts and the office sees it on Live view.'],
+    ['Start the job', 'Open a job and press Start (Start PMI, Start repair). The timer starts and the office sees it on Live view.'],
     ['Do the job', 'Tick the tasks, add the parts used and a photo. Found something else wrong? Send it for the customer to authorise.'],
     ['Speak the job card', 'A preview of what is coming. Say it in one go and it fills the standard job card: concern, location, cause, fix, parts, labour, urgency. Check what it read back, approve.'],
     ['Job done', 'Press Job done and it goes to the office for QC.']
