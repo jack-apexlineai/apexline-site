@@ -470,7 +470,9 @@
      Pointer based, not HTML5 drag and drop: a mouse drags a card between columns,
      a finger taps it open instead, so a phone still scrolls normally. */
   O.dragDrop = function (itemSel, zoneSel, onDrop, onTap) {
-    var held = null, moving = false, sx = 0, sy = 0, justDragged = false, ly = 0, lx = 0, raf = 0;
+    var held = null, moving = false, sx = 0, sy = 0, justDragged = false, ly = 0, lx = 0, raf = 0, ghost = null, gox = 0, goy = 0, gz = 1;
+    /* a copy of the card follows the mouse while it is dragged */
+    function ghostAt(x, y) { if (ghost) { ghost.style.left = ((x - gox) / gz) + 'px'; ghost.style.top = ((y - goy) / gz) + 'px'; } }
     /* near the top or bottom of the window the page scrolls, so a far away fitter is still in reach */
     function edge() {
       raf = 0;
@@ -498,6 +500,7 @@
     function stop(el) {
       if (raf) { cancelAnimationFrame(raf); raf = 0; }
       if (el) el.classList.remove('drag');
+      if (ghost) { ghost.remove(); ghost = null; }
       document.body.classList.remove('dragging');
       clearHi();
       held = null; moving = false;
@@ -516,11 +519,20 @@
         if (!moving) {
           if (Math.abs(e.clientX - sx) < 5 && Math.abs(e.clientY - sy) < 5) return;
           moving = true;
+          var r = el.getBoundingClientRect();
+          gz = zoomOf(el); gox = sx - r.left; goy = sy - r.top;
+          ghost = el.cloneNode(true);
+          ghost.classList.add('sortghost', 'dragghost');
+          ghost.classList.remove('drag');
+          ghost.removeAttribute('id');
+          ghost.style.cssText += ';position:fixed;margin:0;left:' + (r.left / gz) + 'px;top:' + (r.top / gz) + 'px;width:' + (r.width / gz) + 'px;height:' + (r.height / gz) + 'px;zoom:' + gz;
+          document.body.appendChild(ghost);
           el.classList.add('drag');
           document.body.classList.add('dragging');
         }
         e.preventDefault();
         lx = e.clientX; ly = e.clientY;
+        ghostAt(lx, ly);
         clearHi();
         var z = zoneAt(e.clientX, e.clientY);
         if (z) z.classList.add('over');
