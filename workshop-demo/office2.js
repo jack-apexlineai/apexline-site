@@ -559,39 +559,49 @@
       O.opts(st.operators, '', 'id', 'name') + '</select></label>' +
       '<label class="f"><span class="lb">Vehicle</span><select class="in" id="qVeh"></select></label></div>' +
       '<label class="f"><span class="lb">What is it for</span><input class="in" id="qTitle" placeholder="Brake overhaul, drive axle"></label>' +
-      '<div class="row"><label class="f"><span class="lb">Labour hours</span><input class="in" id="qLh" type="number" step="0.25" value="3"></label>' +
-      '<label class="f"><span class="lb">Parts cost to you</span><input class="in" id="qPc" type="number" step="0.01" value="0"></label></div>' +
+      '<label class="f"><span class="lb">Description for the customer</span><textarea class="in" id="qDesc" rows="2" placeholder="Strip and inspect both drive axle brakes, replace pads and discs, road test"></textarea></label>' +
+      '<div class="row"><label class="f"><span class="lb">Labour hours</span><input class="in" id="qLh" type="number" step="0.25" min="0" value="3"></label>' +
+      '<label class="f"><span class="lb">Labour rate per hour £</span><input class="in" id="qRate" type="number" step="0.5" min="0"></label></div>' +
+      '<div class="row"><label class="f"><span class="lb">Parts</span><input class="in" id="qPd" placeholder="Pads and discs, drive axle"></label>' +
+      '<label class="f"><span class="lb">Parts cost to you £</span><input class="in" id="qPc" type="number" step="0.01" min="0" value="0"></label></div>' +
+      '<label class="f"><span class="lb">Customer PO number (if they use one)</span><input class="in" id="qPo" placeholder="Carried onto the invoice"></label>' +
       '<div id="qPrev" class="money"></div>',
       'Create the quote', function () {
         var opId = $('qOp').value, rc = WS.rateFor(opId);
         var lh = parseFloat($('qLh').value) || 0, pc = parseFloat($('qPc').value) || 0;
+        var rate = parseFloat($('qRate').value) || rc.rate;
         var title = $('qTitle').value.trim() || 'Workshop work';
-        var lines = [{ kind: 'Labour', desc: title, qty: lh, unit: rc.rate }];
-        if (pc) lines.push({ kind: 'Part', desc: 'Parts and materials', qty: 1, unit: Math.round(pc * (1 + rc.markup / 100) * 100) / 100 });
+        var lines = [{ kind: 'Labour', desc: $('qDesc').value.trim() || title, qty: lh, unit: rate }];
+        if (pc) lines.push({ kind: 'Part', desc: $('qPd').value.trim() || 'Parts and materials', qty: 1, unit: Math.round(pc * (1 + rc.markup / 100) * 100) / 100 });
         var q = {
           id: WS.uid('q'), no: 'QT-' + (2043 + st.quotes.length + 1), operatorId: opId,
-          vehicleId: $('qVeh').value, date: WS.day(0), title: title, lines: lines,
+          vehicleId: $('qVeh').value, date: WS.day(0), title: title, lines: lines, po: $('qPo').value.trim(),
           status: 'Draft', sentAt: '', decidedAt: ''
         };
         st.quotes.push(q);
         WS.save(); O.closeModal(); O.render();
-        WS.toast(q.no + ' created as a draft.', 'ok');
+        WS.toast(q.no + ' created as a draft' + (q.po ? ', PO ' + q.po : '') + '.', 'ok');
       });
     function fillV() {
       var list = WS.vehiclesOf($('qOp').value);
       $('qVeh').innerHTML = list.map(function (v) { return '<option value="' + v.id + '">' + esc(v.reg) + '</option>'; }).join('');
+      $('qRate').value = WS.rateFor($('qOp').value).rate;
     }
     function prev() {
       var rc = WS.rateFor($('qOp').value);
       var lh = parseFloat($('qLh').value) || 0, pc = parseFloat($('qPc').value) || 0;
-      var net = lh * rc.rate + pc * (1 + rc.markup / 100);
+      var rate = parseFloat($('qRate').value) || 0;
+      var parts = pc * (1 + rc.markup / 100);
+      var net = lh * rate + parts;
       var vat = net * st.settings.vat / 100;
-      $('qPrev').innerHTML = '<div><span>Labour at ' + WS.money(rc.rate) + '</span><b>' + WS.money(lh * rc.rate) + '</b></div>' +
-        '<div><span>Parts plus ' + rc.markup + '%</span><b>' + WS.money(pc * (1 + rc.markup / 100)) + '</b></div>' +
+      $('qPrev').innerHTML = '<div><span>Labour ' + WS.hrs(lh) + ' at ' + WS.money(rate) + ' an hour</span><b>' + WS.money(lh * rate) + '</b></div>' +
+        '<div><span>Parts plus ' + rc.markup + '%</span><b>' + WS.money(parts) + '</b></div>' +
+        '<div><span>Net</span><b>' + WS.money(net) + '</b></div>' +
+        '<div><span>VAT ' + st.settings.vat + '%</span><b>' + WS.money(vat) + '</b></div>' +
         '<div class="g"><span>Total inc VAT</span><span>' + WS.money(net + vat) + '</span></div>';
     }
     $('qOp').onchange = function () { fillV(); prev(); };
-    ['qLh', 'qPc'].forEach(function (i) { $(i).oninput = prev; });
+    ['qLh', 'qPc', 'qRate'].forEach(function (i) { $(i).oninput = prev; });
     fillV(); prev();
   };
 

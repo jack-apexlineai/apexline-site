@@ -851,23 +851,17 @@
       '<option value="y"' + (f.vor === 'y' ? ' selected' : '') + '>Off the road</option>' +
       '<option value="d"' + (f.vor === 'd' ? ' selected' : '') + '>PMI due or overdue</option></select>' +
       '</div></div>' +
-      '<div class="tablewrap"><table class="tbl"><thead><tr>' +
-      '<th>Vehicle</th><th class="hide-sm">Type</th><th class="hide-sm">Operator</th>' +
-      '<th class="num hide-sm">Odometer</th><th>Next PMI</th><th>Annual test</th><th></th>' +
-      '</tr></thead><tbody>' +
-      (list.length ? list.map(function (v) {
+      (list.length ? '<div class="vcards">' + list.map(function (v) {
         var o = WS.operator(v.operatorId), p = WS.dueState(v.nextPmi), a = WS.dueState(v.annualTest);
-        return '<tr class="click" data-veh="' + v.id + '">' +
-          '<td><span class="reg">' + esc(v.reg) + '</span>' + (v.vor ? ' ' + chip('VOR', 'bad') : '') +
-          '<div class="muted sm">' + esc(v.make + ' ' + v.model) + '</div></td>' +
-          '<td class="hide-sm">' + esc(v.type) + '</td>' +
-          '<td class="hide-sm">' + esc(o ? o.name : '') + '</td>' +
-          '<td class="num hide-sm">' + (v.odometer ? v.odometer.toLocaleString('en-GB') : '-') + '</td>' +
-          '<td>' + WS.dateShort(v.nextPmi) + (p ? ' ' + pill(p.short, p.cls) : '') + '</td>' +
-          '<td>' + WS.dateShort(v.annualTest) + (a && a.days <= 30 ? ' ' + pill(a.short, a.cls) : '') + '</td>' +
-          '<td class="num"><span class="muted sm">Open ›</span></td></tr>';
-      }).join('') : '<tr><td colspan="7">' + empty('Nothing matches that.') + '</td></tr>') +
-      '</tbody></table></div>';
+        return '<button type="button" class="vcard' + (v.vor ? ' vor' : '') + '" data-veh="' + v.id + '">' +
+          '<div class="vc-top"><span class="rl-plate">' + esc(v.reg) + '</span>' + (v.vor ? chip('Off the road', 'bad') : '') + '</div>' +
+          '<div class="vc-mk">' + esc((v.make + ' ' + v.model).trim() || 'Details to check') + '</div>' +
+          '<div class="muted sm">' + esc(v.type) + (o ? ' · ' + esc(o.name) : '') + '</div>' +
+          '<div class="vc-due"><div><span class="muted sm">Next PMI</span><b>' + (v.nextPmi ? WS.dateShort(v.nextPmi) : '-') + '</b>' + (p ? pill(p.short, p.cls) : '') + '</div>' +
+          '<div><span class="muted sm">Annual test</span><b>' + (v.annualTest ? WS.dateShort(v.annualTest) : '-') + '</b>' + (a && a.days <= 30 ? pill(a.short, a.cls) : '') + '</div>' +
+          '<div><span class="muted sm">Odometer</span><b>' + (v.odometer ? v.odometer.toLocaleString('en-GB') + ' km' : '-') + '</b></div></div>' +
+          '</button>';
+      }).join('') + '</div>' : empty('Nothing matches that.'));
   };
 
   W.vehicles = function () {

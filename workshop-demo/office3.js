@@ -381,26 +381,27 @@
       }).join('') + '</div></div>' +
       (O.compFilter === 'overdue' ? '<div class="note" id="cFilt" style="margin:14px 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><b>Showing overdue only.</b>' +
         '<button type="button" class="btn alt sm" id="cAll">Show everything</button></div>' : '') +
-      '<div class="tablewrap"><table class="tbl"><thead><tr><th>Vehicle</th><th class="hide-sm">Operator</th>' +
-      '<th>What</th><th>Due</th><th>Status</th><th></th></tr></thead><tbody>' +
+      '<div class="vcards" id="compCards">' +
       (O.compFilter === 'overdue' ? over : items).slice(0, 60).map(function (i) {
         var o = WS.operator(i.vehicle.operatorId);
-        return '<tr><td><span class="reg">' + esc(i.vehicle.reg) + '</span>' +
-          '<div class="muted sm">' + esc(i.vehicle.make + ' ' + i.vehicle.model) + '</div></td>' +
-          '<td class="hide-sm">' + esc(o ? o.name : '') + '</td>' +
-          '<td>' + esc(i.kind) + '</td><td>' + WS.dateShort(i.date) + '</td>' +
-          '<td>' + pill(window.innerWidth < 700 ? i.st.short : i.st.label, i.st.cls) + '</td>' +
-          '<td class="num"><button class="btn alt sm" data-book="' + i.vehicle.id + '" data-kind="' + esc(i.kind) + '">Book in</button></td></tr>';
-      }).join('') +
-      '</tbody></table></div>' +
+        return '<div class="vcard ccard ' + i.st.cls + '" data-comp="' + i.vehicle.id + '">' +
+          '<div class="vc-top"><span class="rl-plate">' + esc(i.vehicle.reg) + '</span>' + pill(i.st.label, i.st.cls) + '</div>' +
+          '<div class="vc-mk">' + esc(i.kind) + ' <span class="muted">due ' + WS.dateShort(i.date) + '</span></div>' +
+          '<div class="muted sm">' + esc((i.vehicle.make + ' ' + i.vehicle.model).trim()) + (o ? ' · ' + esc(o.name) : '') + '</div>' +
+          '<div class="vc-act"><button class="btn sm" data-book="' + i.vehicle.id + '" data-kind="' + esc(i.kind) + '">Book in</button>' +
+          (O.vcalAct ? '<button class="btn alt sm" data-cmail="' + i.vehicle.id + '">Email or call</button>' : '') + '</div></div>';
+      }).join('') + '</div>' +
       (items.length > 60 ? '<div class="hint" style="margin-top:10px">Showing the first 60. Export the CSV for the lot.</div>' : '');
   };
 
   W.compliance = function () {
     var ca = $('cAll');
     if (ca) ca.onclick = function () { O.compFilter = ''; O.render(); };
+    document.querySelectorAll('[data-cmail]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); O.vcalAct(b.dataset.cmail); }; });
+    document.querySelectorAll('[data-comp]').forEach(function (c) { c.onclick = function (e) { if (e.target.closest('button')) return; O.vehicleFile(c.dataset.comp); }; });
     document.querySelectorAll('[data-book]').forEach(function (b) {
-      b.onclick = function () {
+      b.onclick = function (e) {
+        if (e) e.stopPropagation();
         var v = WS.vehicle(b.dataset.book);
         var k = b.dataset.kind;
         var t = k === 'PMI' ? 'PMI' : k === 'LOLER' ? 'LOLER' : k === 'Annual test' ? 'MOT prep' : 'PMI';

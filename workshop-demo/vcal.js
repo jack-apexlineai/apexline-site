@@ -139,9 +139,39 @@
     O.modal(WS.dayLabel(iso), '<div class="vday-list">' + list.map(function (x) { return chip(x); }).join('') + bk.map(bookedChip).join('') + '</div>');
     wireChips(document.querySelector('.modal'));
   }
+  /* click a vehicle that is due: email the customer, call them, or open the vehicle */
+  O.vcalAct = function (vid) {
+    var v = WS.vehicle(vid); if (!v) return;
+    var op = WS.operator(v.operatorId) || {}, S2 = WS.state.settings, T = WS.day(0);
+    var due = WS.DUE_KINDS.map(function (k) { return { k: k, d: v[k.key] }; })
+      .filter(function (x) { return x.d && WS.daysBetween(T, x.d) <= 60; })
+      .sort(function (a, b) { return a.d < b.d ? -1 : 1; });
+    var dueTx = due.map(function (x) { return x.k.label + ' ' + WS.parse(x.d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }); });
+    var joined = dueTx.length > 1 ? dueTx.slice(0, -1).join(', ') + ' and ' + dueTx[dueTx.length - 1] : (dueTx[0] || 'work');
+    var first = String(op.contact || '').split(' ')[0] || 'there';
+    var link = location.origin + location.pathname.replace(/[^/]*$/, '') + 'portal#' + (op.id || '');
+    var body = 'Hi ' + first + ',\n\n' + v.reg + ' is due its ' + joined + '. Pick a day to send it in here: ' + link +
+      '\n\nOr just reply to this email and we will book it for you.\n\nThanks,\n' + WS.shortName(S2.name);
+    var m = O.modal(v.reg + ' · ' + (op.name || ''),
+      '<div class="muted sm" style="margin-bottom:10px">Due: <b style="color:var(--ink)">' + esc(joined) + '</b></div>' +
+      '<div class="vact"><div><b>' + esc(op.contact || '') + '</b><div class="muted sm">' + esc(op.email || '') + ' · ' + esc(op.phone || '') + '</div></div>' +
+      '<a class="btn alt sm" href="tel:' + esc(String(op.phone || '').replace(/\s/g, '')) + '" id="vaCall">Call ' + esc(first) + '</a></div>' +
+      '<label class="f" style="margin-top:12px"><span class="lb">Email to ' + esc(op.email || '') + '</span>' +
+      '<textarea class="in" id="vaBody" rows="7">' + esc(body) + '</textarea></label>' +
+      '<div class="inline" style="margin-top:4px"><button type="button" class="lnk" id="vaOpen">Open the vehicle file</button></div>',
+      'Send the email', function () {
+        WS.notify(op.contact + ', ' + op.name, 'Email', v.reg + ' is due', $('vaBody').value, 'message');
+        WS.save();
+        O.closeModal();
+        WS.toast('Email sent to ' + op.contact + ' (' + op.email + '). Demo: nothing actually left the browser.', 'ok');
+      });
+    $('vaOpen').onclick = function () { O.closeModal(); O.vehicleFile(vid); };
+    $('vaCall').onclick = function () { WS.toast('Calling ' + op.contact + ' on ' + op.phone + '.', 'ok'); };
+    return m;
+  };
   function wireChips(root) {
     (root || document).querySelectorAll('[data-vveh]').forEach(function (b) {
-      b.onclick = function (e) { e.stopPropagation(); O.closeModal(); O.vehicleFile(b.dataset.vveh); };
+      b.onclick = function (e) { e.stopPropagation(); O.closeModal(); O.vcalAct(b.dataset.vveh); };
     });
     (root || document).querySelectorAll('[data-vjob]').forEach(function (b) {
       b.onclick = function (e) { e.stopPropagation(); O.closeModal(); if (O.jobCard) O.jobCard(b.dataset.vjob); };
@@ -267,6 +297,22 @@
       if (!fresh.length) return;
       setSeen(k.concat(fresh.map(function (j) { return j.id; })));
       fresh.forEach(function (j) { WS.toast(WS.bookingLine(j) + '.', 'ok'); });
+    });
+    /* a customer approves or declines extra work on the portal: it pops up here */
+    var AS = 'wsDemo:apprSeen';
+    var aseen = function () { try { return JSON.parse(sessionStorage.getItem(AS) || 'null'); } catch (e) { return null; } };
+    var setA = function (a) { try { sessionStorage.setItem(AS, JSON.stringify(a)); } catch (e) { } };
+    var decided = function () { return WS.state.approvals.filter(function (a) { return (a.status === 'Approved' || a.status === 'Declined') && a.decidedAt; }); };
+    if (!aseen()) setA(decided().map(function (a) { return a.id; }));
+    WS.onChange(function () {
+      var k = aseen() || [], fresh = decided().filter(function (a) { return k.indexOf(a.id) < 0; });
+      if (!fresh.length) return;
+      setA(k.concat(fresh.map(function (a) { return a.id; })));
+      fresh.forEach(function (a) {
+        var v = WS.vehicle(a.vehicleId), op = WS.operator((v || {}).operatorId), yes = a.status === 'Approved';
+        WS.toast('Extra work ' + (yes ? 'approved' : 'declined') + ' by ' + (a.decidedBy || 'the customer') +
+          (op ? ', ' + WS.shortName(op.name) : '') + ': ' + a.title + (v ? ' on ' + v.reg : '') + '.', yes ? 'ok' : 'bad');
+      });
     });
   };
 })();

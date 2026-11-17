@@ -124,7 +124,7 @@
   function paintBell() {
     var b = $('wsBell');
     if (!b) return;
-    var n = openApprovals() + newChecks() + WS.lowStock().length;
+    var n = openApprovals() + newChecks();
     b.innerHTML = BELL + (n ? '<span class="dt">' + n + '</span>' : '');
     b.setAttribute('aria-label', n ? 'Alerts, ' + n + ' need you' : 'Alerts');
     b.title = b.getAttribute('aria-label');
@@ -365,16 +365,12 @@
   O.buildNav = buildNav;
 
   O.navCountData = function () {
-    var today = WS.jobsOn(WS.day(0));
+    // only what needs someone: jobs to plan, customer answers, driver defects, quotes to send
     return {
-      board: today.length,
-      live: today.filter(function (j) { return j.status === 'in_progress'; }).length,
       planner: WS.unplanned(WS.day(0)).length,
       approvals: openApprovals(),
       checks: newChecks(),
-      stock: WS.lowStock().length,
-      money: WS.state.jobs.filter(function (j) { return j.status === 'done' && !j.invoiceId; }).length,
-      quotes: WS.state.quotes.filter(function (q) { return q.status === 'Sent' || q.status === 'Draft'; }).length
+      quotes: WS.state.quotes.filter(function (q) { return q.status === 'Draft'; }).length
     };
   };
   function navCounts() {
