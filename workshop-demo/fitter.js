@@ -42,8 +42,11 @@
     else if (view === 'sheet' && jobId) { v.innerHTML = sheetHtml(); wireSheet(); }
     else { v.innerHTML = jobsHtml(); wireJobs(); }
     tick();
-    window.scrollTo(0, 0);
+    var where = view + '|' + (jobId || '');
+    if (where !== lastWhere) window.scrollTo(0, 0);
+    lastWhere = where;
   }
+  var lastWhere = '';
 
   /* ---------------- login ---------------- */
   function loginHtml() {
@@ -749,11 +752,26 @@
 
   function finish(j) {
     if (j.type === 'PMI' && (!j.inspection || !j.inspection.lockedAt)) {
-      WS.toast('Finish and sign off the inspection sheet first.', 'bad');
+      var mf = myFitter();
+      if (j.inspection && !sheetGaps(j.inspection) && mf && mf.sig) {
+        // the sheet is filled in: Job done signs it as him (inspected and roadworthy), locks it and sends it to QC
+        var at = WS.nowStamp(), i = j.inspection;
+        if (!i.sign.inspector.sig) i.sign.inspector = { name: me.name, at: at, sig: mf.sig };
+        if (!i.sign.declare.sig) i.sign.declare = { name: me.name, at: at, sig: mf.sig };
+        var err = lockSheet(j);
+        if (err) { WS.toast(err, 'bad'); return; }
+        view = 'jobs';
+        render();
+        return;
+      }
+      ensureSheet(j);
+      WS.toast('Finish the inspection sheet, then one tap signs it off.', 'bad');
+      view = 'sheet';
+      render();
       return;
     }
     var undone = (j.tasks || []).filter(function (t) { return !t.done; }).length;
-    if (undone && !confirm(undone + ' task' + (undone > 1 ? 's are' : ' is') + ' still unticked. Send it to QC anyway?')) return;
+    if (undone) (j.tasks || []).forEach(function (t) { t.done = true; });
     j.clockOns.forEach(function (c) { if (c.fitterId === me.id && !c.end) c.end = WS.nowStamp(); });
     j.status = 'qc';
     WS.audit(j, me.name, 'Job marked done, sent to QC');
@@ -1040,41 +1058,51 @@
         var cv = document.querySelector('[data-sig="' + which + '"]'), nm = document.querySelector('[data-signame="' + which + '"]');
         if (cv && nm && cv.dataset.drawn && nm.value.trim()) i.sign[which] = { name: nm.value.trim(), at: WS.nowStamp(), sig: cv.toDataURL('image/png') };
       });
-      var missing = 0;
-      i.sections.forEach(function (s) { s.items.forEach(function (it) { if (!it.state) missing++; }); });
-      if (missing) return WS.toast(missing + ' item' + (missing > 1 ? 's are' : ' is') + ' not set yet.', 'bad');
-      if (i.brake.service === '' || i.brake.secondary === '' || i.brake.parking === '') {
-        if (!i.brake.photo) return WS.toast('Put the brake figures in, or attach the printout.', 'bad');
-      }
-      if (!i.sign.inspector.sig || !i.sign.declare.sig) return WS.toast('Both signatures are needed.', 'bad');
-      i.lockedAt = WS.nowStamp();
-      j.defects = [];
-      i.sections.forEach(function (s) {
-        s.items.forEach(function (it) {
-          if (it.state === 'D') j.defects.push({ item: it.name, note: it.note, rectBy: it.rectBy, rectAt: it.rectAt, photo: it.photo });
-        });
-      });
-      var v = WS.vehicle(j.vehicleId);
-      if (v) {
-        v.lastPmi = i.header.date;
-        var nx = WS.parse(i.header.date);
-        nx.setDate(nx.getDate() + (v.pmiWeeks || 6) * 7);
-        v.nextPmi = WS.iso(nx);
-        if (i.header.odometer) v.odometer = +i.header.odometer;
-        v.brakeTest = i.header.date;
-      }
-      WS.audit(j, me.name, 'Inspection signed off and locked');
+      var err = lockSheet(j);
+      if (err) return WS.toast(err, 'bad');
       declOther = false;
-      // the sheet covers the PMI tasks, so the job is finished: clock off and send it to QC
-      (j.tasks || []).forEach(function (t) { t.done = true; });
-      (j.clockOns || []).forEach(function (c) { if (c.fitterId === me.id && !c.end) c.end = WS.nowStamp(); });
-      j.status = 'qc';
-      WS.audit(j, me.name, 'Job marked done, sent to QC');
-      WS.save();
-      WS.toast('Sheet locked. ' + ((WS.vehicle(j.vehicleId) || {}).reg || 'The job') + ' is done and with the office for QC.', 'ok');
       view = 'jobs';
       render();
     };
+  }
+
+  /* sign off and lock the PMI sheet, clock off and send the job to QC. Returns a reason if it cannot. */
+  function sheetGaps(i) {
+    var missing = 0;
+    i.sections.forEach(function (s) { s.items.forEach(function (it) { if (!it.state) missing++; }); });
+    if (missing) return missing + ' item' + (missing > 1 ? 's are' : ' is') + ' not set yet.';
+    if ((i.brake.service === '' || i.brake.secondary === '' || i.brake.parking === '') && !i.brake.photo) return 'Put the brake figures in, or attach the printout.';
+    return '';
+  }
+  function lockSheet(j) {
+    var i = j.inspection;
+    var gap = sheetGaps(i);
+    if (gap) return gap;
+    if (!i.sign.inspector.sig || !i.sign.declare.sig) return 'Both signatures are needed.';
+    i.lockedAt = WS.nowStamp();
+    j.defects = [];
+    i.sections.forEach(function (s) {
+      s.items.forEach(function (it) {
+        if (it.state === 'D') j.defects.push({ item: it.name, note: it.note, rectBy: it.rectBy, rectAt: it.rectAt, photo: it.photo });
+      });
+    });
+    var v = WS.vehicle(j.vehicleId);
+    if (v) {
+      v.lastPmi = i.header.date;
+      var nx = WS.parse(i.header.date);
+      nx.setDate(nx.getDate() + (v.pmiWeeks || 6) * 7);
+      v.nextPmi = WS.iso(nx);
+      if (i.header.odometer) v.odometer = +i.header.odometer;
+      v.brakeTest = i.header.date;
+    }
+    WS.audit(j, me.name, 'Inspection signed off and locked');
+    (j.tasks || []).forEach(function (t) { t.done = true; });
+    (j.clockOns || []).forEach(function (c) { if (c.fitterId === me.id && !c.end) c.end = WS.nowStamp(); });
+    j.status = 'qc';
+    WS.audit(j, me.name, 'Job marked done, sent to QC');
+    WS.save();
+    WS.toast('Sheet signed and locked. ' + ((WS.vehicle(j.vehicleId) || {}).reg || 'The job') + ' is done and with the office for QC.', 'ok');
+    return '';
   }
 
   function initPad(cv) {
