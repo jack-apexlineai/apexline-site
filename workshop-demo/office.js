@@ -5,6 +5,26 @@
   var S = O.SCREENS, W = O.WIRE;
   var pill = O.pill, chip = O.chip, stat = O.stat, vehLine = O.vehLine, head = O.head, empty = O.empty;
 
+  /* what needs George: Home's Needs you list and the bell panel share it */
+  O.needsAlerts = function () {
+    var T = WS.day(0), st = WS.state;
+    var auth = st.approvals.filter(function (a) { return a.status === 'Sent'; }).length;
+    var alerts = [];
+    if (auth) alerts.push({ t: auth + ' job' + (auth > 1 ? 's' : '') + ' waiting on the customer to authorise extra work', go: 'approvals', cls: 'warn' });
+    var dc = st.checks.filter(function (c) { return c.date === T && c.defects.length && !c.jobId; }).length;
+    if (dc) alerts.push({ t: dc + ' driver defect report' + (dc > 1 ? 's' : '') + ' from this morning with no job card yet', go: 'checks', cls: 'bad' });
+    var ls = WS.lowStock().length;
+    if (ls) alerts.push({ t: ls + ' part' + (ls > 1 ? 's are' : ' is') + ' at or below the minimum stock level', go: 'stock', cls: 'warn' });
+    var od = WS.dueItems(-1).length;
+    if (od) alerts.push({ t: od + ' compliance item' + (od > 1 ? 's are' : ' is') + ' overdue across the fleet', go: 'compliance', cls: 'bad' });
+    (WS.portalBookings ? WS.portalBookings() : []).filter(function (j) { return !j.fitterId && j.date >= T; }).slice(0, 3).forEach(function (j) {
+      alerts.unshift({ t: WS.bookingLine(j), go: 'vcal', cls: 'go' });
+    });
+    if (O.followUpAlerts) O.followUpAlerts().forEach(function (a) { alerts.unshift(a); });
+    if (!WS.xeroOk()) alerts.push({ t: 'Xero is not connected yet, so invoices have to be exported by hand', go: 'settings', cls: 'go' });
+    return alerts;
+  };
+
   /* ============================ home ============================ */
   S.home = function () {
     var T = WS.day(0), st = WS.state, today = WS.jobsOn(T);
@@ -39,19 +59,7 @@
         '<div class="w">' + esc(WS.timeUK(n.at)) + '</div></li>';
     }).join('');
 
-    var alerts = [];
-    if (auth) alerts.push({ t: auth + ' job' + (auth > 1 ? 's' : '') + ' waiting on the customer to authorise extra work', go: 'approvals', cls: 'warn' });
-    var dc = st.checks.filter(function (c) { return c.date === T && c.defects.length && !c.jobId; }).length;
-    if (dc) alerts.push({ t: dc + ' driver defect report' + (dc > 1 ? 's' : '') + ' from this morning with no job card yet', go: 'checks', cls: 'bad' });
-    var ls = WS.lowStock().length;
-    if (ls) alerts.push({ t: ls + ' part' + (ls > 1 ? 's are' : ' is') + ' at or below the minimum stock level', go: 'stock', cls: 'warn' });
-    var od = WS.dueItems(-1).length;
-    if (od) alerts.push({ t: od + ' compliance item' + (od > 1 ? 's are' : ' is') + ' overdue across the fleet', go: 'compliance', cls: 'bad' });
-    (WS.portalBookings ? WS.portalBookings() : []).filter(function (j) { return !j.fitterId && j.date >= T; }).slice(0, 3).forEach(function (j) {
-      alerts.unshift({ t: WS.bookingLine(j), go: 'vcal', cls: 'go' });
-    });
-    if (O.followUpAlerts) O.followUpAlerts().forEach(function (a) { alerts.unshift(a); });
-    if (!WS.xeroOk()) alerts.push({ t: 'Xero is not connected yet, so invoices have to be exported by hand', go: 'settings', cls: 'go' });
+    var alerts = O.needsAlerts();
 
     /* one HTML string per block; personalise.js lays them out in the order you chose */
     var blocks = {
@@ -122,10 +130,12 @@
     cols = cols.map(function (c, i) { c.i = i; return c; }).sort(function (a, b) { return (a.full ? 1 : 0) - (b.full ? 1 : 0) || a.i - b.i; });
     var poolHours = pool.reduce(function (s2, j) { return s2 + (j.estHours || 0); }, 0);
 
-    return head('Day planner', WS.dayName(d) + ' · tap a job to put it on a fitter, or drag it across on a laptop',
-      '<button class="btn alt sm" id="pPrev">‹ Day before</button>' +
-      '<button class="btn alt sm" id="pToday">Today</button>' +
-      '<button class="btn alt sm" id="pNext">Day after ›</button>' +
+    var rel = O.planDay === 0 ? 'Today, ' : O.planDay === 1 ? 'Tomorrow, ' : O.planDay === -1 ? 'Yesterday, ' : '';
+    return head('Day planner', rel + WS.dayLong(d) + ' · tap a job to put it on a fitter, or drag it across on a laptop',
+      '<button class="btn alt sm" id="pPrev" aria-label="Day before">‹</button>' +
+      '<input class="in" type="date" id="pDate" value="' + d + '" aria-label="Pick a day" style="width:auto;flex:0 0 auto;padding:5px 8px;font-size:13px">' +
+      '<button class="btn alt sm" id="pNext" aria-label="Day after">›</button>' +
+      (O.planDay !== 0 ? '<button class="btn alt sm" id="pToday">Back to today</button>' : '') +
       (totalPlanned ? '<button class="btn alt sm" id="pClearAll">Clear the day</button>' : '') +
       '<button class="btn" id="pAuto">Suggest a plan</button>') +
 
@@ -332,7 +342,11 @@
     var d = WS.day(O.planDay);
     $('pPrev').onclick = function () { O.planDay--; O.suggest = null; O.render(); };
     $('pNext').onclick = function () { O.planDay++; O.suggest = null; O.render(); };
-    $('pToday').onclick = function () { O.planDay = 0; O.suggest = null; O.render(); };
+    if ($('pToday')) $('pToday').onclick = function () { O.planDay = 0; O.suggest = null; O.render(); };
+    $('pDate').onchange = function () {
+      if (!this.value) return;
+      O.planDay = WS.daysBetween(WS.day(0), this.value); O.suggest = null; O.render();
+    };
     $('pAuto').onclick = function () {
       O.suggest = buildSuggestion(d);
       O.render();

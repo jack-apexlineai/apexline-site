@@ -821,6 +821,8 @@
     }).join('');
 
     var mine = myFitter(), mySig = mine && mine.sig;
+    // his saved signature, nothing signed yet, and he is declaring it himself: one tap does both
+    var oneTap = !locked && !!mySig && !declOther && !i.sign.inspector.sig && !i.sign.declare.sig;
     var sigBox = function (which, s) {
       if (s.sig) {
         return '<div class="sigbox sigdone" style="padding:8px"><img class="sigimg" src="' + s.sig + '" alt="signature"></div>' +
@@ -895,10 +897,15 @@
       '</div>' +
 
       '<div class="card"><h2>Sign off</h2>' +
-      '<div class="hint" style="margin:6px 0 14px">Two signatures: the person who inspected it, then the person declaring it roadworthy. Locked afterwards.</div>' +
-      '<h3 style="margin-bottom:8px">Inspected by</h3>' + sigBox('inspector', i.sign.inspector) +
-      '<div class="sep"></div>' +
-      '<h3 style="margin-bottom:8px">Roadworthiness declared by</h3>' + sigBox('declare', i.sign.declare) +
+      (oneTap
+        ? '<div class="hint" style="margin:6px 0 14px">Inspected by and roadworthiness declared by. One tap signs both. Locked afterwards.</div>' +
+          '<div class="signer"><span class="sg-av">' + esc(O_initials(me.name)) + '</span><div><b>' + esc(me.name) + '</b><div class="muted sm">signed in on this phone</div></div></div>' +
+          '<button type="button" class="btn block lg sigme" data-sigme="both"><img src="' + mySig + '" alt="" class="sigthumb">Sign as ' + esc(me.name) + '</button>' +
+          '<div style="margin-top:8px"><button type="button" class="lnk" data-sigother="declare">Someone else is declaring it</button></div>'
+        : '<div class="hint" style="margin:6px 0 14px">Two signatures: the person who inspected it, then the person declaring it roadworthy. Locked afterwards.</div>' +
+          '<h3 style="margin-bottom:8px">Inspected by</h3>' + sigBox('inspector', i.sign.inspector) +
+          '<div class="sep"></div>' +
+          '<h3 style="margin-bottom:8px">Roadworthiness declared by</h3>' + sigBox('declare', i.sign.declare)) +
       (locked ? '<div class="inline" style="margin-top:14px"><span class="pill ok">Locked ' + esc(WS.whenUK(i.lockedAt)) + '</span>' +
         '<span class="muted sm">kept on file for 15 months</span></div>'
         : '<button class="btn block lg" id="sLock" style="margin-top:16px">Complete and lock the sheet</button>') +
@@ -1010,7 +1017,15 @@
       b.onclick = function () {
         var which = b.dataset.sigme, mf = myFitter();
         if (!mf || !mf.sig) return;
-        i.sign[which] = { name: me.name, at: WS.nowStamp(), sig: mf.sig };
+        var at = WS.nowStamp();
+        if (which === 'both') {
+          i.sign.inspector = { name: me.name, at: at, sig: mf.sig };
+          i.sign.declare = { name: me.name, at: at, sig: mf.sig };
+          save('Inspected and roadworthiness declared, signed: ' + me.name);
+          render();
+          return;
+        }
+        i.sign[which] = { name: me.name, at: at, sig: mf.sig };
         save((which === 'inspector' ? 'Inspector' : 'Roadworthiness') + ' signature captured: ' + me.name);
         render();
       };

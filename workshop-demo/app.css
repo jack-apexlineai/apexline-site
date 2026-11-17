@@ -1433,3 +1433,15 @@ body.homeedit main{padding-bottom:120px}
 /* toasts never cover the assistant: beside it on a laptop, and on a phone the answer says it */
 body.ask-open .toasts{right:calc(min(430px,100vw) + 18px)}
 @media(max-width:700px){body.ask-open .toasts{display:none}}
+
+/* bell panel: drops down under the bell, top right */
+.bellpop{position:fixed;z-index:120;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 50px rgba(10,16,28,.22);overflow:hidden;animation:bpIn .14s ease-out}
+@keyframes bpIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.bellpop .bp-h{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.bellpop .bp-h b{font-size:15px}
+.bellpop .bp-h .btn{margin-left:auto}
+.bellpop .bp-b{max-height:min(62vh,460px);overflow:auto;padding:4px 14px 10px}
+.bellpop .bp-l{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:10px 0 2px}
+.bellpop .feed li{cursor:pointer;padding:9px 0}
+.bellpop .feed li:hover .t{text-decoration:underline}
+.bellpop .feed .t{font-size:13px}

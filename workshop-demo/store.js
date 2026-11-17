@@ -171,6 +171,10 @@ WS.dayName = function (d) {
   if (n === -1) return 'Yesterday';
   return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][x.getDay()] + ' ' + WS.dateShort(d);
 };
+/* "Tuesday 17 Nov 2026" */
+WS.dayLong = function (d) {
+  return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][WS.parse(d).getDay()] + ' ' + WS.dateUK(d).replace(/^0/, '');
+};
 WS.dow3 = function (d) { return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][WS.parse(d).getDay()]; };
 WS.nowStamp = function () { return WS.stampOf(new Date()); };
 WS.nowHours = function () { var d = new Date(); return d.getHours() + d.getMinutes() / 60; };
@@ -632,9 +636,9 @@ WS.toast = function (msg, kind) {
 WS.LOOK_KEYS = ['wsDemo:theme', 'wsDemo:textSize', 'wsDemo:density', 'wsDemo:menuStyle'];
 WS._mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 WS.themePref = function () {
-  var p = 'dark';
-  try { p = localStorage.getItem('wsDemo:theme') || 'dark'; } catch (e) { }
-  return p === 'light' || p === 'auto' ? p : 'dark';
+  var p = 'light';
+  try { p = localStorage.getItem('wsDemo:theme') || 'light'; } catch (e) { }
+  return p === 'dark' || p === 'auto' ? p : 'light';
 };
 WS._paintTheme = function () {
   var p = WS.themePref();
@@ -650,7 +654,7 @@ WS.theme = function (set) {
     try { localStorage.setItem('wsDemo:theme', set); } catch (e) { }
     return WS._paintTheme();
   }
-  return document.documentElement.getAttribute('data-theme') || 'dark';
+  return document.documentElement.getAttribute('data-theme') || 'light';
 };
 WS.look = function (key, val) {
   var k = 'wsDemo:' + key, d = { textSize: 'standard', density: 'comfortable', menuStyle: 'wheel' }[key];

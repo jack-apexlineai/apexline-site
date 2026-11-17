@@ -86,6 +86,7 @@
     if (h <= 0) return 0;
     return h > 6 ? h - 0.5 : h;
   }
+  function pct(a, b) { return b ? Math.round(a / b * 100) + '%' : '0%'; }
   WS.fitterPay = function (from, to) {
     var st = WS.state, set = st.settings, ot = set.overtimeAfter || 8, otx = set.overtimeRate || 1.5;
     var days = [];
@@ -104,22 +105,23 @@
           if (e > s) job[dd] = (job[dd] || 0) + (e - s) / 3600000;
         });
       });
-      var hours = 0, basicHours = 0, over = 0, worked = 0;
+      var hours = 0, basicHours = 0, over = 0, worked = 0, labour = 0;
       days.forEach(function (dd) {
+        labour += job[dd] || 0;
         var h = r2(Math.max(gate[dd] || 0, job[dd] || 0));
         if (!h) return;
         hours += h; basicHours += Math.min(h, ot);
         if (h - ot >= 0.25) over += h - ot;
         worked += h >= 6 ? 1 : 0.5;
       });
-      hours = r2(hours); basicHours = r2(basicHours); over = r2(over);
+      hours = r2(hours); basicHours = r2(basicHours); over = r2(over); labour = r2(Math.min(labour, hours));
       var basic = pay.type === 'day' ? r2(worked * pay.rate) : r2(basicHours * pay.rate);
       var hourly = pay.type === 'day' ? pay.rate / (f.dayHours || set.dayHours || 8) : pay.rate;
       var x = saved[f.id] || null;
       var otHours = x && !x.none ? r2(x.otHours) : 0, otRate = x && !x.none ? r2(x.otRate) : 0;
       var otPay = r2(otHours * otRate), extra = x && !x.none ? r2(x.extra) : 0;
       return {
-        fitter: f, pay: pay, days: worked, hours: hours, basicHours: basicHours, over: over,
+        fitter: f, pay: pay, days: worked, hours: hours, labour: labour, basicHours: basicHours, over: over,
         otRateSuggest: r2(hourly * otx), basic: basic, otHours: otHours, otRate: otRate, otPay: otPay,
         extra: extra, note: x && !x.none ? (x.note || '') : '', answered: !!x,
         total: r2(basic + otPay + extra)
@@ -128,7 +130,7 @@
     var sum = function (k) { return r2(rows.reduce(function (s, r) { return s + r[k]; }, 0)); };
     return {
       from: from, to: to, key: key, days: days, rows: rows, ot: ot, otx: otx,
-      totals: { days: sum('days'), hours: sum('hours'), basicHours: sum('basicHours'), basic: sum('basic'),
+      totals: { days: sum('days'), hours: sum('hours'), labour: sum('labour'), basicHours: sum('basicHours'), basic: sum('basic'),
         otHours: sum('otHours'), otPay: sum('otPay'), extra: sum('extra'), total: sum('total'), over: sum('over') }
     };
   };
@@ -210,7 +212,8 @@
       '<span class="muted sm"> · ' + plural(p.rows.length, 'fitter', 'fitters') + ' · past ' + p.ot + ' hours a day only counts once you add it as overtime</span></div></div>' +
 
       '<div class="grid g4" style="margin-bottom:16px">' +
-      stat('Hours clocked', WS.hrs(t.hours), t.over ? WS.hrs(t.over) + ' of it past ' + WS.dur(p.ot) + ' a day' : 'across ' + p.rows.length + ' fitters', t.over ? 'warn' : '') +
+      stat('Hours clocked', WS.hrs(t.hours), (t.labour ? WS.hrs(t.labour) + ' of it on jobs (' + pct(t.labour, t.hours) + ')' : 'across ' + p.rows.length + ' fitters') +
+        (t.over ? ', ' + WS.hrs(t.over) + ' past ' + WS.dur(p.ot) + ' a day' : ''), t.over ? 'warn' : '') +
       stat('Basic pay', WS.money0(t.basic), 'rates times days or hours') +
       stat('Overtime and extras', WS.money0(extras), t.otHours ? WS.hrs(t.otHours) + ' overtime added' : 'nothing added yet', extras ? 'warn' : '') +
       stat('Total to pay', WS.money0(t.total), 'before tax and NI', 'ok') +
@@ -229,6 +232,7 @@
           '<div class="only-sm" style="margin-top:6px">' + btn(r.answered ? 'Change extras' : 'Add extras') + '</div></td>' +
           '<td class="num hide-sm">' + (r.days || '<span class="muted">-</span>') + '</td>' +
           '<td class="num">' + (r.hours ? WS.hrs(r.hours) : '<span class="muted">-</span>') +
+          (r.labour ? '<div class="muted sm" data-fplab="' + r.fitter.id + '">' + WS.hrs(r.labour) + ' on jobs · ' + pct(r.labour, r.hours) + '</div>' : '') +
           (r.hours && r.hours !== r.basicHours ? '<div class="muted sm hide-sm">' + WS.hrs(r.basicHours) + ' basic</div>' : '') + '</td>' +
           '<td class="num hide-sm">' + WS.money(r.pay.rate) + '<div class="muted sm">' + (r.pay.type === 'day' ? 'a day' : 'an hour') + '</div></td>' +
           '<td class="num hide-sm">' + money(r.basic) + '</td>' +
@@ -247,6 +251,7 @@
       '</tbody></table></div>' +
 
       '<div class="note" style="margin-top:14px"><b>How the hours are worked out.</b> Off the clock: in at the gate to out at the gate, less half an hour for lunch. ' +
+      '<b>On jobs</b> is the time clocked onto jobs: the labour that goes on the invoice and teaches the planner. ' +
       'Hourly fitters are paid their rate for up to ' + p.ot + ' hours a day. Day rate fitters get a day for each day worked, half a day under 6 hours. ' +
       'Anything past ' + p.ot + ' hours a day is only paid when you add it as overtime, so nothing goes to the accountant you have not seen.</div>' +
 

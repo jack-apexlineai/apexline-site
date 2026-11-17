@@ -68,7 +68,7 @@
         if (O.navEditing) O.navEdit(false);
       };
       var bell = $('wsBell');
-      if (bell) bell.onclick = function () { closeNav(); if (O.closeWheel) O.closeWheel(true); O.go('alerts'); };
+      if (bell) bell.onclick = function (e) { e.stopPropagation(); closeNav(); if (O.closeWheel) O.closeWheel(true); O.bellPop(); };
       if (O.wireAsk) O.wireAsk();
       var hm = $('wsHome');
       if (hm) hm.onclick = function () { closeNav(); if (O.closeWheel) O.closeWheel(true); O.go('home'); };
@@ -130,6 +130,48 @@
     b.title = b.getAttribute('aria-label');
   }
   O.paintBell = paintBell;
+
+  /* the bell: a small panel under it, with a way into the full Alerts screen */
+  O.bellPop = function (force) {
+    var old = $('bellPop');
+    if (old && force !== true) { O.bellClose(); return; }
+    if (old) old.remove();
+    var bell = $('wsBell'); if (!bell) return;
+    var needs = O.needsAlerts ? O.needsAlerts() : [];
+    var sent = (WS.state.notifications || []).slice(0, 4);
+    var icon = function (n) { return n.channel.indexOf('WhatsApp') >= 0 ? '◎' : n.channel === 'SMS' ? '✉' : '@'; };
+    var p = document.createElement('div');
+    p.id = 'bellPop'; p.className = 'bellpop'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Alerts');
+    p.innerHTML = '<div class="bp-h"><b>Alerts</b><button type="button" class="btn alt sm" id="bpFull">Open full screen</button></div>' +
+      '<div class="bp-b">' +
+      '<div class="bp-l">Needs you</div>' +
+      (needs.length ? '<ul class="feed">' + needs.map(function (a) {
+        return '<li data-bpgo="' + esc(a.go) + '"><div class="ic ' + a.cls + '">!</div><div style="min-width:0"><div class="t">' + esc(a.t) + '</div></div></li>';
+      }).join('') + '</ul>' : '<div class="muted sm" style="padding:8px 0">Nothing needs you right now.</div>') +
+      (sent.length ? '<div class="bp-l" style="margin-top:6px">Latest sent</div><ul class="feed">' + sent.map(function (n) {
+        return '<li data-bpgo="alerts"><div class="ic go">' + icon(n) + '</div><div style="min-width:0"><div class="t">' + esc(n.subject) + '</div>' +
+          '<div class="s">' + esc(n.to) + ' · ' + esc(WS.timeUK(n.at)) + '</div></div></li>';
+      }).join('') + '</ul>' : '') +
+      '</div>';
+    document.body.appendChild(p);
+    var r = bell.getBoundingClientRect(), w = Math.min(380, window.innerWidth - 16);
+    p.style.width = w + 'px';
+    p.style.top = Math.round(r.bottom + 8) + 'px';
+    p.style.left = Math.round(Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8))) + 'px';
+    bell.setAttribute('aria-expanded', 'true');
+    p.addEventListener('click', function (e) { e.stopPropagation(); });
+    $('bpFull').onclick = function () { O.bellClose(); O.go('alerts'); };
+    p.querySelectorAll('[data-bpgo]').forEach(function (li) {
+      li.onclick = function () { var g = li.dataset.bpgo; O.bellClose(); O.go(g); };
+    });
+  };
+  O.bellClose = function () {
+    var p = $('bellPop'); if (p) p.remove();
+    var b = $('wsBell'); if (b) b.setAttribute('aria-expanded', 'false');
+  };
+  document.addEventListener('click', function () { if ($('bellPop')) O.bellClose(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && $('bellPop')) O.bellClose(); });
+  window.addEventListener('resize', function () { if ($('bellPop')) O.bellClose(); });
 
   /* the sidebar folds away by group, and remembers what you closed */
   function navShut() {
