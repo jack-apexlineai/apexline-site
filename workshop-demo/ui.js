@@ -87,7 +87,7 @@
       if (!briefing && O.urgentScan) setTimeout(O.urgentScan, 900);
       WS.onChange(function () { if (O.urgentScan && O.startupState !== 'playing' && O.startupState !== 'paused') O.urgentScan(); });
       setInterval(function () { if (O.screen === 'live') O.paintTimers && O.paintTimers(); }, 1000);
-      setInterval(function () { if (O.screen === 'live' || O.screen === 'planner') O.render(); }, 30000);
+      setInterval(function () { if (!O.dragging && (O.screen === 'live' || O.screen === 'planner')) O.render(); }, 30000);
     }
   };
 
@@ -497,6 +497,7 @@
       if (raf) { cancelAnimationFrame(raf); raf = 0; }
       if (el) el.classList.remove('drag');
       if (ghost) { ghost.remove(); ghost = null; }
+      O.dragging = false;
       document.body.classList.remove('dragging');
       clearHi();
       held = null; moving = false;
@@ -523,6 +524,7 @@
           ghost.removeAttribute('id');
           ghost.style.cssText += ';position:fixed;margin:0;left:' + (r.left / gz) + 'px;top:' + (r.top / gz) + 'px;width:' + (r.width / gz) + 'px;height:' + (r.height / gz) + 'px;zoom:' + gz;
           document.body.appendChild(ghost);
+          O.dragging = true;   // nothing re-draws the screen under a card being dragged
           el.classList.add('drag');
           document.body.classList.add('dragging');
         }
@@ -570,6 +572,19 @@
     return z;
   }
   O.dragging = false;
+  /* belt and braces: however a drag ends, nothing is left stuck on the screen */
+  function dragCleanup() {
+    setTimeout(function () {
+      if (document.querySelector('.sortghost:not(.dragghost)')) return;   // a menu reorder in progress handles itself
+      document.querySelectorAll('.dragghost').forEach(function (g) { g.remove(); });
+      document.querySelectorAll('.jcard.drag,.pjob.drag').forEach(function (e) { e.classList.remove('drag'); });
+      document.body.classList.remove('dragging');
+      O.dragging = false;
+    }, 120);
+  }
+  document.addEventListener('pointerup', dragCleanup, true);
+  document.addEventListener('pointercancel', dragCleanup, true);
+  window.addEventListener('blur', dragCleanup);
   O.sortable = function (o) {
     var root = o.root;
     if (!root || root._sortable) return;
