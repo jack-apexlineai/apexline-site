@@ -898,7 +898,7 @@
       '<div class="muted sm" style="margin-top:8px">Type</div><div class="b">' + esc(v.type) + '</div></div>' +
       '<div><div class="muted sm">VIN</div><div class="b mono">' + esc(v.vin || 'not recorded') + '</div>' +
       '<div class="muted sm" style="margin-top:8px">Odometer</div><div class="b">' + (v.odometer ? v.odometer.toLocaleString('en-GB') + ' km' : 'not recorded') + '</div>' +
-      '<div class="muted sm" style="margin-top:8px">PMI interval</div><div class="b">every ' + v.pmiWeeks + ' weeks</div></div>' +
+      '</div>' +
       '</div>' +
       (v.vor ? '<div class="flagbox"><b>Off the road.</b> ' + esc(v.notes) + '</div>' : '') +
       (camp.length ? '<div class="note" style="margin-bottom:12px"><b>Open campaigns:</b> ' +

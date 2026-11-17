@@ -1490,3 +1490,6 @@ body.ask-open .toasts{right:calc(min(430px,100vw) + 18px)}
 .vc-due{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
 .vc-due>div{display:flex;flex-direction:column;gap:2px;font-size:13px;align-items:flex-start}
 .vc-act{display:flex;gap:8px;margin-top:12px}
+
+.sched-list{display:flex;flex-direction:column;gap:6px}
+.sched-row{display:flex;align-items:center;gap:10px}
