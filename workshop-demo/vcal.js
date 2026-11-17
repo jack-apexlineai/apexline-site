@@ -21,8 +21,8 @@
   function setView(v) { O.vcal.view = v; try { localStorage.setItem(VIEW, v); } catch (e) { } }
 
   function chip(x, withDate) {
-    return '<button type="button" class="vchip ' + (x.u || '') + '" data-vveh="' + x.v.id + '" title="' + esc(x.v.reg + ' · ' + x.long + ' due ' + WS.dateUK(x.date) + (x.op ? ' · ' + x.op.name : '')) + '">' +
-      '<b>' + esc(x.v.reg) + '</b><span>' + esc(x.kind) + (withDate ? ' · ' + esc(WS.dayLabel(x.date)) : '') + '</span></button>';
+    return '<button type="button" class="vchip ' + (x.u || '') + (x.sched ? ' sch' : '') + '" data-vveh="' + x.v.id + '" data-vdate="' + x.date + '" data-vkey="' + (x.key || '') + '" title="' + esc(x.v.reg + ' · ' + x.long + (x.sched ? ' booked for ' : ' due ') + WS.dateUK(x.date) + (x.op ? ' · ' + x.op.name : '')) + '">' +
+      '<b>' + esc(x.v.reg) + '</b><span>' + esc(x.kind) + (x.sched ? ' · booked' : '') + (withDate ? ' · ' + esc(WS.dayLabel(x.date)) : '') + '</span></button>';
   }
   function bookedChip(j) {
     var v = WS.vehicle(j.vehicleId);
@@ -140,7 +140,7 @@
     wireChips(document.querySelector('.modal'));
   }
   /* click a vehicle that is due: email the customer, call them, or open the vehicle */
-  O.vcalAct = function (vid) {
+  O.vcalAct = function (vid, pmiDate) {
     var v = WS.vehicle(vid); if (!v) return;
     var op = WS.operator(v.operatorId) || {}, S2 = WS.state.settings, T = WS.day(0);
     var due = WS.DUE_KINDS.map(function (k) { return { k: k, d: v[k.key] }; })
@@ -158,6 +158,8 @@
       '<a class="btn alt sm" href="tel:' + esc(String(op.phone || '').replace(/\s/g, '')) + '" id="vaCall">Call ' + esc(first) + '</a></div>' +
       '<label class="f" style="margin-top:12px"><span class="lb">Email to ' + esc(op.email || '') + '</span>' +
       '<textarea class="in" id="vaBody" rows="7">' + esc(body) + '</textarea></label>' +
+      (pmiDate ? '<div class="vact" style="margin-top:12px"><div><b>Inspection booked for ' + esc(WS.dayLabel(pmiDate)) + '</b><div class="muted sm">Every ' + (v.pmiWeeks || 6) + ' weeks. Move this one to fit the diary.</div></div>' +
+        '<input class="in" type="date" id="vaMove" value="' + pmiDate + '" style="width:auto;padding:5px 8px"></div>' : '') +
       '<div class="inline" style="margin-top:4px"><button type="button" class="lnk" id="vaOpen">Open the vehicle file</button></div>',
       'Send the email', function () {
         WS.notify(op.contact + ', ' + op.name, 'Email', v.reg + ' is due', $('vaBody').value, 'message');
@@ -166,12 +168,19 @@
         WS.toast('Email sent to ' + op.contact + ' (' + op.email + '). Demo: nothing actually left the browser.', 'ok');
       });
     $('vaOpen').onclick = function () { O.closeModal(); O.vehicleFile(vid); };
+    if ($('vaMove')) $('vaMove').onchange = function () {
+      var nd = this.value; if (!nd || nd === pmiDate) return;
+      var sch = WS.pmiSchedule ? WS.pmiSchedule(v, 6) : [], hit = sch.filter(function (x) { return x.date === pmiDate; })[0];
+      if (!hit || hit.k === 0) v.nextPmi = nd; else { v.pmiMoves = v.pmiMoves || {}; v.pmiMoves[hit.k] = nd; }
+      WS.save(); O.closeModal(); O.render();
+      WS.toast(v.reg + ' inspection moved to ' + WS.dayLabel(nd) + '. The customer email moves with it.', 'ok');
+    };
     $('vaCall').onclick = function () { WS.toast('Calling ' + op.contact + ' on ' + op.phone + '.', 'ok'); };
     return m;
   };
   function wireChips(root) {
     (root || document).querySelectorAll('[data-vveh]').forEach(function (b) {
-      b.onclick = function (e) { e.stopPropagation(); O.closeModal(); O.vcalAct(b.dataset.vveh); };
+      b.onclick = function (e) { e.stopPropagation(); O.closeModal(); O.vcalAct(b.dataset.vveh, b.dataset.vkey === 'nextPmi' ? b.dataset.vdate : ''); };
     });
     (root || document).querySelectorAll('[data-vjob]').forEach(function (b) {
       b.onclick = function (e) { e.stopPropagation(); O.closeModal(); if (O.jobCard) O.jobCard(b.dataset.vjob); };

@@ -83,6 +83,20 @@
   }
   O.schedHtml = schedHtml;
 
+  /* every scheduled inspection shows on the calendar, not just the next one */
+  var db0 = WS.dueBetween;
+  WS.dueBetween = function (from, to, overdue) {
+    var out = db0.apply(this, arguments);
+    WS.state.vehicles.forEach(function (v) {
+      WS.pmiSchedule(v, 9).forEach(function (s) {
+        if (s.k === 0 || s.date < from || s.date > to) return;
+        out.push({ v: v, key: 'nextPmi', kind: WS.DUE_SHORT.nextPmi, long: WS.DUE_LONG.nextPmi, date: s.date, u: WS.urgency(s.date), op: WS.operator(v.operatorId), sched: true });
+      });
+    });
+    out.sort(function (a, b) { return a.date.localeCompare(b.date) || a.v.reg.localeCompare(b.v.reg); });
+    return out;
+  };
+
   /* the vehicle file opens with its schedule at the top */
   var vf0 = O.vehicleFile;
   O.vehicleFile = function (id) {

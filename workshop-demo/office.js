@@ -703,7 +703,9 @@
         look.disabled = false;
         if (!$('bLookRes')) return;
         box.innerHTML = WS.regLookupHtml(r) + (r.inFleet ? '' :
-          '<div class="inline" style="margin:10px 0 4px"><button class="btn" id="bLookAdd" type="button">Add ' + esc(r.reg) + ' to ' +
+          '<div class="inline" style="margin:10px 0 4px;gap:10px;flex-wrap:wrap"><label class="inline sm" style="gap:6px">Inspections every <select class="in" id="bLookW" style="width:auto;padding:4px 8px"><option>6</option><option>8</option><option>10</option><option>12</option></select> weeks, next on ' +
+          '<input class="in" type="date" id="bLookN" value="' + WS.day(14) + '" style="width:auto;padding:4px 8px"></label></div>' +
+          '<div class="inline" style="margin:6px 0 4px"><button class="btn" id="bLookAdd" type="button">Add ' + esc(r.reg) + ' to ' +
           (op.value && op.value !== '__new' ? esc(WS.shortName(WS.operator(op.value).name)) + '\'s fleet' : 'the fleet') + '</button>' +
           '<span class="muted sm">Pick the operator below first</span></div>');
         if (r.inFleet) {
@@ -716,13 +718,13 @@
             var v = {
               id: WS.uid('v'), reg: r.reg, vin: '', make: r.make, model: r.model, year: r.year,
               type: r.weight >= 32000 ? 'Hook loader 32t' : 'Skip loader 26t', operatorId: op.value,
-              odometer: r.odo, pmiWeeks: 6, lastPmi: '', nextPmi: WS.day(14), annualTest: r.testDue,
+              odometer: r.odo, pmiWeeks: +$('bLookW').value || 6, lastPmi: '', nextPmi: $('bLookN').value || WS.day(14), annualTest: r.testDue,
               brakeTest: '', tacho: '', loler: '', vor: false, notes: 'Details from the DVLA and DVSA (sample in the demo).', docs: []
             };
             WS.state.vehicles.push(v); WS.save();
             O.bookinDraft.op = op.value; O.bookinDraft.veh = v.id;
             fillVeh(); veh.value = v.id; checkDue();
-            $('bLookAdd').parentNode.innerHTML = '<span class="pill ok">Added to the fleet</span><span class="muted sm">Now pick the job and the day</span>';
+            $('bLookAdd').parentNode.innerHTML = '<span class="pill ok">Added to the fleet</span><span class="muted sm">Inspections every ' + v.pmiWeeks + ' weeks from ' + WS.dateShort(v.nextPmi) + ', on the calendar. Now pick the job and the day</span>';
             WS.toast(r.reg + ' added: ' + r.make + ' ' + r.model + ', annual test due ' + WS.dateShort(r.testDue) + '.', 'ok');
           };
         }
@@ -801,8 +803,8 @@
       '<div class="row"><label class="f"><span class="lb">Make</span><input class="in" id="nMake"></label>' +
       '<label class="f"><span class="lb">Model</span><input class="in" id="nModel"></label>' +
       '<label class="f"><span class="lb">Odometer km</span><input class="in" id="nOdo" type="number" value="0"></label></div>' +
-      '<div class="row"><label class="f"><span class="lb">PMI every (weeks)</span><input class="in" id="nPmi" type="number" value="6"></label>' +
-      '<label class="f"><span class="lb">Next PMI</span><input class="in" id="nNext" type="date" value="' + WS.day(14) + '"></label>' +
+      '<div class="row"><label class="f"><span class="lb">Inspections every</span><select class="in" id="nPmi"><option value="6">6 weeks</option><option value="8">8 weeks</option><option value="10">10 weeks</option><option value="12">12 weeks</option></select></label>' +
+      '<label class="f"><span class="lb">Next inspection</span><input class="in" id="nNext" type="date" value="' + WS.day(14) + '"></label>' +
       '<label class="f"><span class="lb">Annual test</span><input class="in" id="nTest" type="date" value="' + WS.day(180) + '"></label></div>',
       'Add the vehicle', function () {
         var rg = $('nReg').value.trim().toUpperCase();

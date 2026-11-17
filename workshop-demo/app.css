@@ -1493,3 +1493,5 @@ body.ask-open .toasts{right:calc(min(430px,100vw) + 18px)}
 
 .sched-list{display:flex;flex-direction:column;gap:6px}
 .sched-row{display:flex;align-items:center;gap:10px}
+
+.vchip.sch{border-style:dashed;opacity:.92}
