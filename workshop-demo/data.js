@@ -163,24 +163,25 @@ WS.seed = function () {
   var int = function (lo, hi) { return lo + Math.floor(r() * (hi - lo + 1)); };
   var T = WS.day(0);
 
-  /* Branding is London Environmental Group's own, from their public website
+  /* Branding is Noble Commercial Truck Services' own (badge, red, name, address, phone and email
+     from noblecommercials.com, 17 Nov 2026). Earlier it was London Environmental Group's, from their public website
      londonenvironmentalgroup.co.uk: the name as their header and page title show it, their
      text logo (League Spartan, recreated as outlines in brand/), and the slate accent from
      their site's stylesheet. The name is the display name: change it in Settings > The
      workshop if the workshop trades as something else. Address, phone, email, VAT, company
      number, O licence and bank are placeholders, not from any real company record. */
   var settings = {
-    name: 'London Environmental Group Ltd',
-    initials: 'LEG',
-    brand: '#6D7882',
-    logo: 'brand/leg-wordmark.svg',
-    logoStack: 'brand/leg-wordmark-stacked.svg',
-    logoMono: true,
-    logoName: 'London Environmental Group Ltd',
-    address: 'Unit 7, Beddington Cross, Beddington Lane, Croydon CR0 4XH',
-    phone: '020 8683 4120',
-    email: 'workshop@noblecommercials.co.uk',
-    web: 'londonenvironmentalgroup.co.uk',
+    name: 'Noble Commercial Truck Services Ltd',
+    initials: 'NCT',
+    brand: '#C03028',
+    logo: 'brand/noble-badge.png',
+    logoStack: 'brand/noble-badge.png',
+    logoMono: false,
+    logoName: 'Noble Commercial Truck Services Ltd',
+    address: 'Unit 2, Horton Depot, Stanwell Road, Colnbrook, Slough SL3 9PE',
+    phone: '01753 689268',
+    email: 'service@noblecommercials.com',
+    web: 'noblecommercials.com',
     vatNo: 'GB 418 2290 71',
     companyNo: '00000000',
     opLicence: 'OK2214788',

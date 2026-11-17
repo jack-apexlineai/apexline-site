@@ -130,14 +130,14 @@
   function pKey(e) { if (e.key === 'Escape') O.closePortal(); }
   /* opts.site: start on a mock-up of the workshop's own website, whose Customer login button
      leads to the portal sign in (prefilled for the demo). Otherwise straight into the portal. */
-  var SITE = 'londonenvironmentalgroup.co.uk', PORTAL = 'portal.londonenvironmentalgroup.co.uk';
+  var SITE = 'noblecommercials.com', PORTAL = 'portal.noblecommercials.com';
   function siteHtml() {
     var S = WS.state.settings;
     return '<div class="mocksite" id="mockSite"><span class="ms-tag">Mock-up of your website</span>' +
       '<header class="ms-nav"><span class="ms-logo">' + (S.logo ? '<img src="' + WS.esc(S.logo) + '" alt="' + WS.esc(S.name) + '">' : WS.esc(S.name)) + '</span>' +
-      '<nav><span>Skip hire</span><span>Workshop</span><span>Contact</span><button type="button" class="ms-mini" data-mslogin>Customer login</button></nav></header>' +
+      '<nav><span>Servicing</span><span>Repairs</span><span>24/7 Breakdown</span><span>Contact</span><button type="button" class="ms-mini" data-mslogin>Customer login</button></nav></header>' +
       '<section class="ms-hero"><div class="ms-in"><div class="ms-kick">' + WS.esc(WS.shortName(S.name)) + '</div>' +
-      '<h1>Skip hire and HGV workshop, London</h1>' +
+      '<h1>HGV servicing, repairs and 24/7 breakdown near Heathrow</h1>' +
       '<p>Book your lorry in, report a repair and see your paperwork online, any time.</p>' +
       '<button type="button" class="ms-cta" id="msLogin" data-mslogin>Customer login / Book your lorry in</button></div></section>' +
       '<section class="ms-row"><div><b>PMIs and MOT prep</b><span>Six weekly inspections done to the DVSA guide.</span></div>' +

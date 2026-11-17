@@ -622,6 +622,10 @@
     var types = Object.keys(st.settings.standardTimes);
     return head('Book a vehicle in', 'Creates a job card, and puts it straight on a fitter if you pick one') +
       '<div class="card" style="max-width:720px">' +
+      '<label class="f"><span class="lb">Registration</span>' +
+      '<div class="inline" style="gap:8px;flex-wrap:nowrap"><input class="in rl-in" id="bReg" placeholder="Type a reg, e.g. LN68 ZHV" autocomplete="off" spellcheck="false" value="' + esc(d.reg || '') + '">' +
+      '<button class="btn" id="bLook" type="button">Look up</button></div></label>' +
+      '<div id="bLookRes"></div>' +
       '<div class="row">' +
       '<label class="f"><span class="lb">Operator</span><select class="in" id="bOp">' +
       '<option value="">Pick an operator</option>' + O.opts(st.operators, d.op, 'id', 'name') +
@@ -685,6 +689,47 @@
     };
     type.onchange = function () { est.value = WS.stdTime(type.value); };
     fillVeh();
+
+    /* type a reg, Look up: the lorry fills itself (DVLA and DVSA on the real system) */
+    var regIn = $('bReg'), look = $('bLook');
+    function doLook() {
+      var r = WS.regLookup && WS.regLookup(regIn.value);
+      if (!r) { WS.toast('Type a registration first.', 'bad'); regIn.focus(); return; }
+      regIn.value = r.reg; O.bookinDraft.reg = r.reg;
+      var box = $('bLookRes');
+      box.innerHTML = '<div class="reglook rl-wait"><span class="rl-spin"></span>Checking ' + esc(r.reg) + ' with the DVLA and DVSA...</div>';
+      look.disabled = true;
+      setTimeout(function () {
+        look.disabled = false;
+        if (!$('bLookRes')) return;
+        box.innerHTML = WS.regLookupHtml(r) + (r.inFleet ? '' :
+          '<div class="inline" style="margin:10px 0 4px"><button class="btn" id="bLookAdd" type="button">Add ' + esc(r.reg) + ' to ' +
+          (op.value && op.value !== '__new' ? esc(WS.shortName(WS.operator(op.value).name)) + '\'s fleet' : 'the fleet') + '</button>' +
+          '<span class="muted sm">Pick the operator below first</span></div>');
+        if (r.inFleet) {
+          op.value = r.vehicle.operatorId; O.bookinDraft.op = op.value; O.bookinDraft.veh = r.vehicle.id; fillVeh();
+          veh.value = r.vehicle.id; checkDue();
+          WS.toast(r.reg + ' found: ' + r.make + ' ' + r.model + ', ' + WS.shortName(r.operator ? r.operator.name : '') + '.', 'ok');
+        } else {
+          $('bLookAdd').onclick = function () {
+            if (!op.value || op.value === '__new') { WS.toast('Pick the operator first.', 'bad'); op.focus(); return; }
+            var v = {
+              id: WS.uid('v'), reg: r.reg, vin: '', make: r.make, model: r.model, year: r.year,
+              type: r.weight >= 32000 ? 'Hook loader 32t' : 'Skip loader 26t', operatorId: op.value,
+              odometer: r.odo, pmiWeeks: 6, lastPmi: '', nextPmi: WS.day(14), annualTest: r.testDue,
+              brakeTest: '', tacho: '', loler: '', vor: false, notes: 'Details from the DVLA and DVSA (sample in the demo).', docs: []
+            };
+            WS.state.vehicles.push(v); WS.save();
+            O.bookinDraft.op = op.value; O.bookinDraft.veh = v.id;
+            fillVeh(); veh.value = v.id; checkDue();
+            $('bLookAdd').parentNode.innerHTML = '<span class="pill ok">Added to the fleet</span><span class="muted sm">Now pick the job and the day</span>';
+            WS.toast(r.reg + ' added: ' + r.make + ' ' + r.model + ', annual test due ' + WS.dateShort(r.testDue) + '.', 'ok');
+          };
+        }
+      }, 900);
+    }
+    look.onclick = doLook;
+    regIn.onkeydown = function (e) { if (e.key === 'Enter') { e.preventDefault(); doLook(); } };
 
     $('bClear').onclick = function () { O.bookinDraft = {}; O.render(); };
     $('bGo').onclick = function () {

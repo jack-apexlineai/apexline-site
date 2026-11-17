@@ -278,7 +278,9 @@
     var now = new Date();
     var dateTx = now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + ' · ' +
       now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    var logo = S.logo
+    var logo = S.logo && !S.logoMono
+      ? '<img class="bt-mark bt-img" src="' + esc(S.logo) + '" alt="' + esc(S.name) + '" draggable="false">'
+      : S.logo
       ? '<div class="bt-mark" role="img" aria-label="' + esc(S.name) + '" style="-webkit-mask-image:url(\'' + esc(S.logo) + '\');mask-image:url(\'' + esc(S.logo) + '\')"></div>'
       : '<div class="bt-word">' + esc(String(O.shortName ? O.shortName(S.name) : S.name).toUpperCase()) + '</div>';
     var touch = window.matchMedia && matchMedia('(pointer: coarse)').matches;
