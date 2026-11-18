@@ -4,116 +4,175 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#05080F">
+<meta name="theme-color" content="#0A0F1A">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>HQ</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#05080F;--card:#0B1220;--card2:#0F1A2E;--line:#1C2A44;--text:#E8EEF8;--muted:#8C9AB3;--hud:#5CE1FF;--brand:#3B82F6;--good:#2BD67B;--warn:#F5B544;--bad:#F2545B;--violet:#A78BFA;--r:14px;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace}
+:root{--bg:#0A0F1A;--side:#0C1320;--card:#111A2A;--card2:#16213A;--line:#1F2B40;--text:#E7ECF4;--muted:#8B97AD;--accent:#5CC8F5;--hud:#5CE1FF;--good:#34D399;--warn:#FBBF24;--bad:#F87171;--violet:#A78BFA;--r:16px;--sideW:236px;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--head:"Plus Jakarta Sans",Inter,system-ui,sans-serif}
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
-a{color:var(--hud)}
-.num{font-variant-numeric:tabular-nums}
-header{position:sticky;top:0;z-index:5;background:rgba(5,8,15,.9);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:10px}
-header h1{font-size:16px;margin:0;font-weight:700;letter-spacing:2px;font-family:var(--mono)}
-header .logo{width:28px;height:28px;flex:none}
-header .sub{color:var(--muted);font-size:12px;margin-left:auto;font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-main{max-width:900px;margin:0 auto;padding:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px;min-width:0}
-.card h2{font-size:13px;margin:0 0 12px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);font-family:var(--mono)}
-.card h2 b{color:var(--text)}
+html,body{margin:0;color:var(--text);font:15px/1.45 Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+html{background:var(--bg)}
+body{background:radial-gradient(1100px 520px at 75% -8%,rgba(40,90,150,.28) 0%,transparent 60%),var(--bg);min-height:100vh}
+a{color:var(--accent)}
+button,a,.tc,label{-webkit-tap-highlight-color:transparent}
+.hide{display:none!important}
 .muted{color:var(--muted)}
 .small{font-size:13px}
+.num{font-variant-numeric:tabular-nums}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.stat{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
-.stat b{display:block;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stat span{color:var(--muted);font-size:12px;display:block}
-.stat.hud{border-color:rgba(92,225,255,.25)}
-.stat.hud b{color:var(--hud)}
-input,select,textarea{background:#08101e;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;min-width:0;max-width:100%}
-input:focus,select:focus,textarea:focus{outline:2px solid var(--brand);outline-offset:0}
-textarea{width:100%;min-height:140px;resize:vertical}
-input[type=number]{width:90px}
-input[type=date],input[type=time]{min-height:42px}
-button{background:var(--brand);color:#fff;border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:600;cursor:pointer}
-button.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+input,select,textarea{background:#0B1322;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;min-width:0;max-width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+textarea{width:100%;min-height:90px;resize:vertical}
+input[type=number]{width:96px}
+button{background:var(--accent);color:#06121F;border:0;border-radius:10px;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--text);font-weight:600}
 button.x{background:transparent;color:var(--muted);padding:4px 8px;border:0;font-weight:500}
-button.sm{padding:6px 10px;font-size:13px}
+button.sm{padding:6px 12px;font-size:13px}
 button:disabled{opacity:.5}
-nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:#070c18;border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom)}
-nav a{flex:1;text-align:center;padding:10px 2px 12px;color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;min-width:0}
-nav a.on{color:var(--hud)}
-nav a i{display:block;font-style:normal;font-size:18px;line-height:1.2}
-.list{list-style:none;margin:0;padding:0}
-.list li{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);min-width:0}
-.list li:last-child{border-bottom:0}
-.list li .grow{flex:1;min-width:0;overflow-wrap:anywhere}
-.pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--card2);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
-.pill.good{color:var(--good);border-color:rgba(43,214,123,.35)}
-.pill.warn{color:var(--warn);border-color:rgba(245,181,68,.35)}
-.pill.bad{color:var(--bad);border-color:rgba(242,84,91,.35)}
-.pill.hud{color:var(--hud);border-color:rgba(92,225,255,.35)}
-.pill.violet{color:var(--violet);border-color:rgba(167,139,250,.35)}
-.bar{height:8px;background:var(--card2);border-radius:99px;overflow:hidden}
-.bar i{display:block;height:100%;background:var(--good)}
+
+/* shell: side menu like the WasteLine demo */
+.side{position:fixed;left:0;top:0;bottom:0;width:var(--sideW);background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:18px 12px calc(14px + env(safe-area-inset-bottom));z-index:40;overflow-y:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:2px 8px 18px}
+.brand svg{width:34px;height:34px;color:var(--hud);flex:none}
+.brand b{font-family:var(--head);font-size:17px;letter-spacing:.3px}
+.brand small{display:block;color:var(--muted);font-size:11px;font-family:var(--mono);letter-spacing:1px}
+.side a.nav{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;color:#C3CCDA;text-decoration:none;font-weight:500;margin-bottom:2px}
+.side a.nav svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.side a.nav:hover{background:rgba(255,255,255,.04)}
+.side a.nav.on{background:rgba(92,200,245,.1);color:#fff;box-shadow:inset 3px 0 0 var(--accent)}
+.side a.nav .badge{margin-left:auto;font-size:11px;font-weight:700;background:var(--card2);border-radius:99px;padding:1px 8px;color:var(--muted)}
+.side .sep{height:1px;background:var(--line);margin:12px 6px}
+.side .foot{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding:12px 4px 0}
+.content{margin-left:var(--sideW);padding:28px 32px 56px;max-width:1380px}
+.topbar{display:none}
+.scrim{display:none}
+
+.phead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:2px;color:var(--accent);text-transform:uppercase}
+.phead h1{font-family:var(--head);font-size:34px;line-height:1.1;margin:6px 0 0;letter-spacing:-.6px;font-weight:800}
+
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;min-width:0}
+.kpi b{display:block;font-family:var(--head);font-size:28px;font-weight:800;letter-spacing:-.4px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .lab{color:#C3CCDA;font-size:14px}
+.kpi .sub{border-top:1px solid var(--line);margin-top:12px;padding-top:10px;font-size:13px;color:var(--muted)}
+.kpi.hi b{color:var(--hud);text-shadow:0 0 18px rgba(92,225,255,.35)}
+.kpi .sub.warn{color:var(--warn)}
+
+.dash{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:16px;align-items:start}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;min-width:0}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.card-h h2{font-family:var(--head);font-size:17px;margin:0;font-weight:700}
+.card-h a,.card-h .lnk{color:var(--accent);font-weight:600;font-size:14px;text-decoration:none;background:none;padding:0;border:0;cursor:pointer}
+.card-h .cnt{color:var(--muted);font-size:13px;font-family:var(--mono)}
+.grid-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;align-items:start}
+.lines{list-style:none;margin:0;padding:0}
+.lines li{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);min-width:0}
+.lines li:last-child{border-bottom:0}
+.lines .grow{flex:1;min-width:0;overflow-wrap:anywhere}
+.lines .k{color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.chip.good{color:var(--good);border-color:rgba(52,211,153,.35)}
+.chip.warn{color:var(--warn);border-color:rgba(251,191,36,.35)}
+.chip.bad{color:var(--bad);border-color:rgba(248,113,113,.35)}
+.chip.hud{color:var(--hud);border-color:rgba(92,225,255,.35)}
+.chip.violet{color:var(--violet);border-color:rgba(167,139,250,.35)}
+.bar{height:8px;background:#0B1322;border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--good);border-radius:99px}
+.tablewrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{text-align:right;padding:6px 4px;border-bottom:1px solid var(--line)}
+th,td{text-align:right;padding:8px 6px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600}
 th:first-child,td:first-child{text-align:left}
-.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#0f1b33;border:1px solid var(--line);padding:10px 14px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:30;max-width:90vw}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#132036;border:1px solid var(--line);padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:120;max-width:90vw}
 .toast.show{opacity:1}
-.chat{max-height:360px;overflow:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
-.msg{padding:10px 12px;border-radius:12px;max-width:85%;white-space:pre-wrap}
-.msg.me{align-self:flex-end;background:var(--brand)}
-.msg.ai{align-self:flex-start;background:var(--card2);border:1px solid var(--line)}
-.hide{display:none!important}
-.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-.cal div{aspect-ratio:1;border-radius:6px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted)}
-.cal div.on{background:var(--brand);color:#fff;font-weight:700}
-.cal div.today{outline:1px solid var(--warn)}
-
-/* tasks */
-.task{align-items:flex-start!important}
-.task input[type=checkbox]{width:22px;height:22px;margin:2px 0 0;accent-color:var(--good);flex:none;padding:0}
-.task .t{font-weight:500}
-.task.s-done .t{text-decoration:line-through;color:var(--muted)}
-.task .meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:4px}
-.task .notes{color:var(--muted);font-size:12px;margin-top:3px}
-.task select.st{padding:2px 6px;font-size:11px;font-weight:600;border-radius:999px;background:var(--card2);min-height:0}
-.task select.st.s-running{color:var(--hud)}
-.task select.st.s-waiting{color:var(--warn)}
-.task select.st.s-scheduled{color:var(--violet)}
-.task select.st.s-done{color:var(--good)}
-.running-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--hud);box-shadow:0 0 8px var(--hud);animation:pulse 1.4s infinite}
-@keyframes pulse{50%{opacity:.3}}
-.addrow{display:grid;grid-template-columns:1fr;gap:8px}
-.addrow .row>*{flex:1 1 120px}
-.grp h3{font-size:14px;margin:4px 0 6px;display:flex;align-items:center;gap:8px}
-.grp + .grp{margin-top:14px}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
-.chips button{background:var(--card2);border:1px solid var(--line);color:var(--muted);padding:6px 10px;font-size:12px}
-.chips button.on{color:var(--hud);border-color:rgba(92,225,255,.4)}
+.chips button{background:var(--card);border:1px solid var(--line);color:var(--muted);padding:7px 12px;font-size:13px;font-weight:600}
+.chips button.on{color:#fff;border-color:var(--accent);background:rgba(92,200,245,.12)}
 
-/* money */
-.ringwrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
-.ringwrap svg{width:150px;height:150px;flex:none}
-.plan h3{font-size:13px;margin:12px 0 4px;color:var(--text)}
-.plan label{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+/* task cards */
+.tc{--st:var(--muted);display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-left:3px solid var(--st);border-radius:12px;background:var(--card2);margin-bottom:8px;cursor:pointer;min-width:0;transition:border-color .15s,background .15s}
+.tc:hover,.tc.open{border-color:rgba(92,200,245,.45);border-left-color:var(--st);background:#19263F}
+.tc.s-running{--st:var(--hud)}.tc.s-waiting{--st:var(--warn)}.tc.s-scheduled{--st:var(--violet)}.tc.s-done{--st:var(--good)}
+.tc .ck{width:24px;height:24px;border-radius:50%;border:2px solid #4A5870;background:transparent;flex:none;padding:0;display:grid;place-items:center;color:#06121F;font-size:14px;font-weight:800;margin-top:1px}
+.tc .ck:hover{border-color:var(--good)}
+.tc.s-done .ck{background:var(--good);border-color:var(--good)}
+.tc .body{flex:1;min-width:0}
+.tc .tt{font-weight:600;overflow-wrap:anywhere}
+.tc.s-done .tt{color:var(--muted);text-decoration:line-through}
+.tc .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tc .peek{color:var(--muted);font-size:13px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stdot{display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor}
+.chip.run .stdot{box-shadow:0 0 8px var(--hud);animation:pulse 1.4s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.quick{display:flex;gap:8px;margin-bottom:12px}
+.quick input{flex:1}
+.empty{color:var(--muted);font-size:14px;padding:10px 2px}
+
+/* task detail card: hover pop on laptop, sheet on phone */
+#tdBack{position:fixed;inset:0;background:rgba(3,6,12,.55);z-index:58}
+#td{position:fixed;z-index:60;width:390px;max-width:calc(100vw - 24px);max-height:min(76vh,640px);overflow:auto;background:#0F1828;border:1px solid rgba(92,200,245,.4);border-radius:16px;box-shadow:0 24px 70px rgba(0,0,0,.6);padding:18px;overscroll-behavior:contain}
+#td.sheet{left:0!important;right:0;bottom:0;top:auto!important;width:auto;max-width:none;max-height:86vh;border-radius:20px 20px 0 0;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+#td .grab{display:none;width:44px;height:5px;border-radius:9px;background:#33415a;margin:-6px auto 12px}
+#td.sheet .grab{display:block}
+#td .td-h{display:flex;gap:8px;align-items:flex-start}
+#td .td-title{flex:1;font-family:var(--head);font-size:18px;font-weight:700;background:transparent;border:1px solid transparent;padding:4px 6px;margin:-4px 0 0 -6px}
+#td .td-title:hover{border-color:var(--line)}
+#td .td-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+#td .td-meta select,#td .td-meta input{width:100%;padding:8px 10px;font-size:14px}
+#td h4{margin:16px 0 8px;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-family:var(--mono);display:flex;justify-content:space-between;align-items:center}
+#td .desc{white-space:pre-wrap;font-size:14px;line-height:1.55;color:#D5DDEA}
+#td .desc ul{margin:4px 0;padding-left:18px;white-space:normal}
+#td .desc li{margin:3px 0}
+#td .note{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:14px;white-space:pre-wrap;position:relative}
+#td .note time{display:block;color:var(--muted);font-size:11px;margin-top:4px}
+#td .note .x{position:absolute;top:4px;right:2px}
+#td .td-f{display:flex;gap:8px;margin-top:16px}
+
+/* rings and charts */
+.ringcard{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.ringcard svg{width:132px;height:132px;flex:none}
+.ringcard .rl{flex:1;min-width:150px}
+.bars{display:flex;align-items:flex-end;gap:4px;height:120px;padding-top:6px}
+.bars div{flex:1;background:linear-gradient(180deg,var(--accent),rgba(92,200,245,.25));border-radius:5px 5px 2px 2px;min-height:2px;position:relative}
+.bars div.today{background:linear-gradient(180deg,var(--hud),rgba(92,225,255,.4));box-shadow:0 0 12px rgba(92,225,255,.4)}
+.barlab{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-top:6px;font-family:var(--mono)}
+.chart svg{width:100%;height:150px;display:block}
+
+/* deals */
+.deal{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.deal b{display:block}
+.deal select{padding:4px 8px;font-size:12px;margin-top:8px}
+
+/* plan */
+.plan label{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px;cursor:pointer}
+.plan label:last-child{border-bottom:0}
 .plan label input{width:20px;height:20px;accent-color:var(--good);padding:0;flex:none}
 .plan label .grow{flex:1;min-width:0}
 .plan label.done .grow{color:var(--muted);text-decoration:line-through}
+.plan h3{font-size:14px;margin:14px 0 4px}
+
+/* misc v2 */
+.chat{max-height:360px;overflow:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.msg{padding:10px 12px;border-radius:12px;max-width:85%;white-space:pre-wrap}
+.msg.me{align-self:flex-end;background:var(--accent);color:#06121F}
+.msg.ai{align-self:flex-start;background:var(--card2);border:1px solid var(--line)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal div{aspect-ratio:1;border-radius:6px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted)}
+.cal div.on{background:var(--accent);color:#06121F;font-weight:700}
+.cal div.today{outline:1px solid var(--warn)}
 
 /* login + lock */
 .gate{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px 16px}
 .gate .card{width:100%;max-width:360px;display:flex;flex-direction:column;gap:10px}
 #lock .card{align-items:center;text-align:center;background:transparent;border:0}
-#lock .logo{width:72px;height:72px}
+#lock .logo{width:72px;height:72px;color:var(--hud)}
+#pinTitle{font-family:var(--head);font-size:20px;margin:8px 0 0}
 .dots{display:flex;gap:14px;margin:14px 0 6px}
 .dots i{width:14px;height:14px;border-radius:50%;border:2px solid var(--hud);display:block}
 .dots i.on{background:var(--hud);box-shadow:0 0 10px var(--hud)}
@@ -126,7 +185,7 @@ th:first-child,td:first-child{text-align:left}
 .pad button.fn{font-size:13px;background:transparent;border-color:transparent;color:var(--muted)}
 
 /* boot */
-#boot{position:fixed;inset:0;z-index:20;background:radial-gradient(ellipse at 50% 40%,#0b1a30 0%,#05080F 65%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,3vh,26px);padding:24px 16px calc(24px + env(safe-area-inset-bottom));cursor:pointer;overflow:hidden;transition:opacity .35s}
+#boot{position:fixed;inset:0;z-index:100;background:radial-gradient(ellipse at 50% 40%,#0b1a30 0%,#05080F 65%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,3vh,26px);padding:24px 16px calc(24px + env(safe-area-inset-bottom));cursor:pointer;overflow:hidden;transition:opacity .35s}
 #boot.out{opacity:0;pointer-events:none}
 #boot::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(92,225,255,.035) 0 1px,transparent 1px 4px);pointer-events:none}
 #boot .mono{width:clamp(96px,22vw,150px);height:auto;overflow:visible}
@@ -135,9 +194,11 @@ th:first-child,td:first-child{text-align:left}
 .mono .ring2{fill:none;stroke:rgba(92,225,255,.35);stroke-width:1;opacity:0}
 .mono .sig{fill:none;stroke:#EAF8FF;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;filter:drop-shadow(0 0 4px rgba(92,225,255,.6))}
 .mono .sweep{opacity:0}
-.car .body,.car .win,.car .wheel,.car .hub{fill:none;stroke:var(--hud);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
+.car .body,.car .win,.car .wheel,.car .hub,.car .haunch,.car .lamp{fill:none;stroke:var(--hud);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
 .car .body{stroke-width:3;filter:drop-shadow(0 0 6px rgba(92,225,255,.8))}
-.car .win{stroke-width:2;stroke:rgba(92,225,255,.75)}
+.car .win{stroke-width:2;stroke:rgba(92,225,255,.8)}
+.car .haunch{stroke-width:2;stroke:rgba(92,225,255,.7)}
+.car .lamp{stroke-width:2}
 .car .wheel{stroke-width:3}
 .car .hub{stroke-width:1.5;stroke:rgba(92,225,255,.6)}
 .car .ground{stroke:rgba(92,225,255,.25);stroke-width:1;stroke-dasharray:2 6;opacity:0}
@@ -146,7 +207,9 @@ th:first-child,td:first-child{text-align:left}
 #boot.go .mono .sig{animation:draw .75s .2s ease-in-out forwards}
 #boot.go .mono .sweep{animation:sweep .7s .95s ease-in-out forwards}
 #boot.go .car .body{animation:draw 1.25s 1.25s cubic-bezier(.55,.1,.35,1) forwards}
+#boot.go .car .lamp{animation:draw .35s 2.25s ease-out forwards}
 #boot.go .car .win{animation:draw .45s 2.2s ease-out forwards}
+#boot.go .car .haunch{animation:draw .45s 2.3s ease-out forwards}
 #boot.go .car .wheel{animation:draw .5s 2.3s ease-out forwards}
 #boot.go .car .hub{animation:draw .4s 2.55s ease-out forwards}
 #boot.go .car .ground{animation:fade .6s 1.3s forwards}
@@ -165,21 +228,44 @@ th:first-child,td:first-child{text-align:left}
 .hudrow span{display:block;font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-family:var(--mono)}
 .hudrow small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
 #boot .skip{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom));font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;font-family:var(--mono);margin:0}
-#boot .hello{font-family:var(--mono);font-size:12px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin:0;opacity:0}
+#boot .hello{font-family:var(--mono);font-size:12px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin:0;opacity:0;text-align:center}
 #boot.go .hello{animation:fade .5s .6s forwards}
-/* finished frame: used for skip and reduced motion */
 #boot.still *{animation:none!important}
-#boot.still .mono .ring,#boot.still .mono .sig,#boot.still .car .body,#boot.still .car .win,#boot.still .car .wheel,#boot.still .car .hub{stroke-dashoffset:0}
+#boot.still .mono .ring,#boot.still .mono .sig,#boot.still .car .body,#boot.still .car .win,#boot.still .car .wheel,#boot.still .car .hub,#boot.still .car .haunch,#boot.still .car .lamp{stroke-dashoffset:0}
 #boot.still .mono .ring2,#boot.still .car .ground,#boot.still .hello,#boot.still .hudrow > div{opacity:1}
-@media (prefers-reduced-motion: reduce){#boot *{animation:none!important;transition:none!important}.running-dot{animation:none}}
+@media (prefers-reduced-motion: reduce){#boot *{animation:none!important;transition:none!important}.chip.run .stdot{animation:none}}
 
-@media (max-width:640px){
-  .grid4{grid-template-columns:1fr 1fr}
-  .grid3{grid-template-columns:1fr 1fr}
-  .hudrow{grid-template-columns:1fr 1fr}
-  input[type=number]{width:74px}
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:900px){
+  .side{transform:translateX(-105%);transition:transform .22s ease;width:min(290px,86vw);box-shadow:0 20px 60px rgba(0,0,0,.5);z-index:90}
+  body.menu .side{transform:none}
+  body.menu .scrim{display:block;position:fixed;inset:0;background:rgba(3,6,12,.6);z-index:80}
+  .content{margin-left:0;padding:16px 16px 48px}
+  .topbar{display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:30;background:rgba(10,15,26,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top)) 16px 10px}
+  .topbar svg.logo{width:30px;height:30px;color:var(--hud)}
+  .topbar b{font-family:var(--head);font-size:16px}
+  .topbar .sp{flex:1}
+  .topbar button{padding:8px 10px}
+  .dash{grid-template-columns:minmax(0,1fr)}
+  .phead h1{font-size:26px}
+  .phead > button{display:none}
+}
+@media (max-width:520px){
+  .kpis{gap:10px;margin-bottom:12px}
+  .kpi{padding:12px 14px}
+  .kpi b{font-size:22px}
+  .kpi .lab{font-size:13px}
+  .kpi .sub{margin-top:8px;padding-top:7px;font-size:12px}
+  .phead{margin-bottom:14px}
+  .quick{flex-wrap:wrap}
+  .quick input{flex:1 1 100%}
+  .quick select{flex:1;max-width:none!important}
+  .card{padding:16px}
   .pad{grid-template-columns:repeat(3,68px)}
   .pad button{height:68px}
+  .hudrow{grid-template-columns:1fr 1fr}
+  input[type=number]{width:80px}
+  .grid-auto{grid-template-columns:minmax(0,1fr)}
 }
 </style>
 </head>
@@ -188,15 +274,15 @@ th:first-child,td:first-child{text-align:left}
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <symbol id="jsmark" viewBox="0 0 200 200">
-      <circle cx="100" cy="100" r="88" fill="none" stroke="currentColor" stroke-width="5"/>
-      <path d="M58 70 C78 60 108 58 128 62 M104 62 C104 92 102 118 92 134 C82 150 60 148 56 132 M152 74 C142 60 116 64 120 82 C124 98 152 102 150 122 C148 142 122 146 108 132" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="100" cy="100" r="88" fill="none" stroke="currentColor" stroke-width="6"/>
+      <path d="M58 70 C78 60 108 58 128 62 M104 62 C104 92 102 118 92 134 C82 150 60 148 56 132 M152 74 C142 60 116 64 120 82 C124 98 152 102 150 122 C148 142 122 146 108 132" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
   </defs>
 </svg>
 
 <section id="login" class="gate hide">
   <div class="card">
-    <h2>HQ</h2>
+    <h2 style="font-family:var(--head);margin:0">HQ</h2>
     <p class="muted small" style="margin:0">Private. Sign in once on this device, then your PIN opens it.</p>
     <input id="lEmail" type="email" placeholder="Email" autocomplete="username">
     <input id="lPass" type="password" placeholder="Password" autocomplete="current-password">
@@ -207,8 +293,8 @@ th:first-child,td:first-child{text-align:left}
 
 <section id="lock" class="gate hide">
   <div class="card">
-    <svg class="logo" style="color:var(--hud)"><use href="#jsmark"/></svg>
-    <h2 id="pinTitle" style="margin:8px 0 0">Enter PIN</h2>
+    <svg class="logo"><use href="#jsmark"/></svg>
+    <h2 id="pinTitle">Enter PIN</h2>
     <div class="dots" id="pinDots"><i></i><i></i><i></i><i></i></div>
     <p id="pinMsg" class="small muted" style="min-height:20px;margin:0"></p>
     <div class="pad" id="pinPad"></div>
@@ -236,42 +322,47 @@ th:first-child,td:first-child{text-align:left}
     </g>
   </svg>
   <p class="hello" id="bootHello">Systems online</p>
+  <!-- 911-style side profile, drawn for HQ: frog-eye headlight at the front, one long flyline roof, ducktail lip, rear haunch -->
   <svg class="car" viewBox="0 0 600 222" aria-hidden="true">
-    <line class="ground" x1="10" y1="218" x2="590" y2="218"/>
-    <path class="body" pathLength="1" d="M70 186 L50 184 C40 182 34 172 36 162 C37 153 43 148 54 146 C76 142 96 135 114 128 C128 123 144 121 160 123 C178 125 200 116 222 104 C236 88 252 76 270 66 C286 58 306 55 330 55 C352 55 372 59 392 67 C432 84 474 106 510 126 C528 135 544 141 552 150 C559 158 560 170 556 180 C553 186 546 188 536 188 L496 188 A40 40 0 0 0 416 188 L178 188 A40 40 0 0 0 98 188 Z"/>
-    <path class="win" pathLength="1" d="M236 104 C250 90 266 78 284 70 C300 64 320 62 338 63 L346 104 Z M356 104 L350 64 C366 66 382 72 398 80 C420 90 438 98 452 106 Z"/>
-    <circle class="wheel" pathLength="1" cx="138" cy="186" r="31"/>
-    <circle class="wheel" pathLength="1" cx="456" cy="186" r="31"/>
-    <circle class="hub" pathLength="1" cx="138" cy="186" r="14"/>
-    <circle class="hub" pathLength="1" cx="456" cy="186" r="14"/>
+    <line class="ground" x1="10" y1="203" x2="590" y2="203"/>
+    <path class="body" pathLength="1" d="M70 185 C54 185 44 180 41 170 C38 160 40 152 46 146 C50 136 58 128 72 126 C84 124 92 126 100 127 C120 123 148 115 172 116 C192 117 208 116 224 112 C246 96 266 80 290 70 C312 62 336 60 356 62 C400 68 450 90 492 114 C514 126 532 132 546 134 L560 131 C566 131 567 137 562 139 C568 150 568 166 563 177 C560 183 554 185 546 185 L490 185 A40 40 0 1 0 410 185 L180 185 A40 40 0 1 0 100 185 Z"/>
+    <ellipse class="lamp" pathLength="1" cx="66" cy="134" rx="9" ry="7" transform="rotate(-25 66 134)"/>
+    <path class="win" pathLength="1" d="M250 112 C266 96 282 82 300 75 C320 68 342 67 360 70 C390 76 420 90 450 106 C420 108 310 111 250 112 Z M348 68 L352 110"/>
+    <path class="haunch" pathLength="1" d="M296 154 C338 150 392 128 436 121 C478 115 516 122 548 140"/>
+    <circle class="wheel" pathLength="1" cx="140" cy="168" r="34"/>
+    <circle class="wheel" pathLength="1" cx="450" cy="168" r="34"/>
+    <circle class="hub" pathLength="1" cx="140" cy="168" r="13"/>
+    <circle class="hub" pathLength="1" cx="450" cy="168" r="13"/>
   </svg>
   <div class="hudrow" id="bootHud"></div>
   <p class="skip">Tap to skip</p>
 </section>
 
 <div id="app" class="hide">
-  <header>
-    <svg class="logo" style="color:var(--hud)"><use href="#jsmark"/></svg>
-    <h1>HQ</h1>
-    <span class="sub" id="hdrSub"></span>
-    <button class="ghost sm" id="lockBtn" title="Lock">Lock</button>
-  </header>
-  <main>
-    <section data-tab="today"></section>
-    <section data-tab="tasks" class="hide"></section>
-    <section data-tab="money" class="hide"></section>
-    <section data-tab="outreach" class="hide"></section>
-    <section data-tab="notes" class="hide"></section>
-    <section data-tab="health" class="hide"></section>
-  </main>
-  <nav>
-    <a href="#today" data-nav="today"><i>◎</i>Today</a>
-    <a href="#tasks" data-nav="tasks"><i>☑</i>Tasks</a>
-    <a href="#money" data-nav="money"><i>£</i>Money</a>
-    <a href="#outreach" data-nav="outreach"><i>➚</i>Outreach</a>
-    <a href="#notes" data-nav="notes"><i>✎</i>Notes</a>
-  </nav>
+  <aside class="side" id="side">
+    <div class="brand"><svg><use href="#jsmark"/></svg><div><b>HQ</b><small id="hdrSub"></small></div></div>
+    <a class="nav" href="#today" data-nav="today"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Today<span class="badge" id="navToday"></span></a>
+    <a class="nav" href="#tasks" data-nav="tasks"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>Tasks<span class="badge" id="navTasks"></span></a>
+    <a class="nav" href="#money" data-nav="money"><svg viewBox="0 0 24 24"><path d="M16 6.5A4 4 0 0 0 9 9v3H7m2 0h5M9 12v3c0 1.5-1 2.5-2 3h11"/></svg>Money</a>
+    <a class="nav" href="#pipeline" data-nav="pipeline"><svg viewBox="0 0 24 24"><path d="M4 5h16l-6 7v6l-4 2v-8z"/></svg>Pipeline</a>
+    <a class="nav" href="#outreach" data-nav="outreach"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Outreach</a>
+    <div class="sep"></div>
+    <a class="nav" href="#notes" data-nav="notes"><svg viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M9 12h6M9 16h6"/></svg>Notes</a>
+    <a class="nav" href="#training" data-nav="training"><svg viewBox="0 0 24 24"><path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"/></svg>Training</a>
+    <div class="foot">
+      <button class="ghost sm" id="lockBtn">Lock</button>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+  <div class="topbar">
+    <svg class="logo"><use href="#jsmark"/></svg><b>HQ</b><span class="sp"></span>
+    <button class="ghost sm" id="topAdd" aria-label="Add task">+ Task</button>
+    <button class="ghost sm" id="menuBtn" aria-label="Menu">☰</button>
+  </div>
+  <main class="content" id="page"></main>
 </div>
+<div id="tdBack" class="hide"></div>
+<div id="td" class="hide" role="dialog" aria-label="Task"></div>
 <div class="toast" id="toast" role="status"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -283,7 +374,9 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
 const CHANNELS = [["email","Email"],["linkedin","LinkedIn"],["calls","Calls"],["other","Other"]];
 const PROJECTS = ["ApexLine","Workshop","WasteLine","WasteHub wind-down","Personal admin"];
 const STATUSES = [["todo","To do"],["running","Running"],["waiting","Waiting"],["scheduled","Scheduled"],["done","Done"]];
+const STAGES = ["Lead","Spoken","Demo booked","Demo done","Proposal sent","Won","Building","Live","Lost"];
 const OPEN_STAGES = ["Lead","Spoken","Demo booked","Demo done","Proposal sent"];
+const SIGNED_STAGES = ["Won","Building","Live"];
 const PIN_ITER = 210000, PIN_MAX_FAILS = 5, LOCK_AFTER_MS = 5 * 60 * 1000;
 const $ = (s, el = document) => el.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -294,43 +387,54 @@ const gbp = n => "£" + Math.round(Number(n || 0)).toLocaleString("en-GB");
 const fmtDay = d => new Date(d + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
 const sum = (rows, f) => rows.reduce((a, r) => a + Number(r[f] || 0), 0);
 const store = { get(k){ try { return localStorage.getItem(k); } catch { return null; } }, set(k, v){ try { localStorage.setItem(k, v); } catch {} }, del(k){ try { localStorage.removeItem(k); } catch {} } };
+const canHover = () => matchMedia("(hover: hover) and (pointer: fine)").matches;
 function toast(t){ const el = $("#toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove("show"), 2400); }
 async function q(p){ const { data, error } = await p; if (error) { toast(error.message); throw error; } return data; }
-function show(id){ ["login","lock","boot","app"].forEach(x => $("#" + x).classList.toggle("hide", x !== id)); }
+function show(id){ ["login","lock","boot","app"].forEach(x => $("#" + x).classList.toggle("hide", x !== id)); if (id !== "app") closeTask(); }
 
 /* ---------- state ---------- */
 let ME = null, appStarted = false, hiddenAt = 0;
-const S = { tasks: [], deals: [], invoices: [], cash: [], debts: [], plan: [], settings: { target: 25000, deadline: "2026-12-31", title: "Road to £25k" } };
+const S = { tasks: [], notes: [], deals: [], invoices: [], cash: [], debts: [], plan: [], outreach: [], settings: { target: 25000, deadline: "2026-12-31", title: "Road to £25k" } };
 async function loadAll(){
-  const [tasks, deals, invoices, cash, debts, plan, st] = await Promise.all([
+  const since = addDays(today(), -13);
+  const [tasks, notes, deals, invoices, cash, debts, plan, outreach, st] = await Promise.all([
     q(sb.from("hq_tasks").select("*").order("sort")),
+    q(sb.from("hq_task_notes").select("*").order("created_at")),
     q(sb.from("hq_deals").select("*").order("created_at")),
     q(sb.from("hq_invoices").select("*").order("number")),
     q(sb.from("hq_cash").select("*").order("date", { ascending: false })),
     q(sb.from("hq_debts").select("*").order("created_at")),
     q(sb.from("hq_debt_plan").select("*").order("sort")),
+    q(sb.from("hq_outreach").select("*").gte("day", since)),
     q(sb.from("hq_settings").select("*").limit(1)),
   ]);
-  Object.assign(S, { tasks, deals, invoices, cash, debts, plan });
+  Object.assign(S, { tasks, notes, deals, invoices, cash, debts, plan, outreach });
   if (st && st[0]) S.settings = st[0];
   return S;
 }
 
-/* ---------- money rules (HQ_V3_JARVIS_PLAN.md section 4) ---------- */
+/* ---------- money rules ----------
+   MRR = monthly fees from signed customers (Jack, 18 Nov: George's £199 counts from signing). Each month opens at MRR.
+   Won = contract value signed this month. Cash collected = money banked; only this counts to £25k.
+   Invoiced, not paid = shown apart, never counted as cash. */
 function money(s = S, d = today()){
   const m = d.slice(0, 7);
   const counted = s.cash.filter(c => c.counts);
   const sent = s.invoices.filter(i => i.status === "sent");
   const scheduled = s.invoices.filter(i => i.status === "scheduled");
+  const signed = s.deals.filter(x => SIGNED_STAGES.includes(x.stage));
+  const notLive = signed.filter(x => x.stage !== "Live" && Number(x.monthly));
   const target = Number(s.settings.target || 25000);
   const cashTotal = sum(counted, "amount");
   return {
-    mrr: sum(s.deals.filter(x => x.stage === "Live"), "monthly"),                         // live monthly fees; each month opens here
-    signedMrr: sum(s.deals.filter(x => x.stage === "Won" || x.stage === "Building"), "monthly"), // signed, starts at go-live
+    mrr: sum(signed, "monthly"),
+    liveMrr: sum(s.deals.filter(x => x.stage === "Live"), "monthly"),
+    nextLive: notLive.map(x => x.live_on).filter(Boolean).sort()[0] || null,
+    customers: signed.filter(x => Number(x.monthly)).length,
     won: sum(s.deals.filter(x => x.won_on && x.won_on.slice(0, 7) === m && x.stage !== "Lost"), "value"),
-    cashMonth: sum(counted.filter(c => String(c.date).slice(0, 7) === m), "amount"),      // banked this month
-    cashTotal,                                                                              // banked overall, the only thing that counts to £25k
-    unpaid: sum(sent, "amount"), unpaidCount: sent.length,                                  // invoiced, not paid. Never counted as cash
+    cashMonth: sum(counted.filter(c => String(c.date).slice(0, 7) === m), "amount"),
+    cashTotal,
+    unpaid: sum(sent, "amount"), unpaidCount: sent.length,
     scheduled: sum(scheduled, "amount"),
     pipeline: sum(s.deals.filter(x => OPEN_STAGES.includes(x.stage)), "value"),
     openDeals: s.deals.filter(x => OPEN_STAGES.includes(x.stage)).length,
@@ -340,84 +444,162 @@ function money(s = S, d = today()){
 }
 
 /* ---------- tasks helpers ---------- */
+const ORD = { running: 0, todo: 1, waiting: 2, scheduled: 3, done: 4 };
 const doneDay = t => t.done_at ? iso(t.done_at) : null;
 function todayTasks(s = S, d = today()){
-  const ord = { running: 0, todo: 1, waiting: 2, scheduled: 3, done: 4 };
   return s.tasks.filter(t =>
       (t.status === "done" && doneDay(t) === d) ||
       (t.status !== "done" && t.due && t.due <= d) ||
       (t.status === "running") ||
       (t.status === "waiting" && !t.due))
-    .sort((a, b) => (ord[a.status] - ord[b.status]) || String(a.due_time || "99").localeCompare(String(b.due_time || "99")) || a.sort - b.sort);
+    .sort((a, b) => (ORD[a.status] - ORD[b.status]) || String(a.due_time || "99").localeCompare(String(b.due_time || "99")) || a.sort - b.sort);
 }
 function todayCounts(s = S, d = today()){
-  const open = todayTasks(s, d).filter(t => t.status !== "done");
-  return { open: open.length, calls: open.filter(t => /call|demo/i.test(t.title)).length, done: todayTasks(s, d).length - open.length };
+  const all = todayTasks(s, d), open = all.filter(t => t.status !== "done");
+  return { total: all.length, open: open.length, calls: open.filter(t => /call|demo/i.test(t.title)).length, done: all.length - open.length };
 }
-function dueTxt(t, d = today()){
+function statusChip(t){
+  if (t.status === "running") return `<span class="chip hud run"><span class="stdot"></span>Running</span>`;
+  if (t.status === "waiting") return `<span class="chip warn">Waiting on ${esc(t.waiting_on || "Jack")}</span>`;
+  if (t.status === "scheduled") return `<span class="chip violet">Scheduled</span>`;
+  if (t.status === "done") return `<span class="chip good">Done</span>`;
+  return `<span class="chip">To do</span>`;
+}
+function dueChip(t, d = today()){
   if (!t.due) return "";
   const tm = t.due_time ? " " + String(t.due_time).slice(0, 5) : "";
-  if (t.status !== "done" && t.due < d) { const n = Math.round((new Date(d) - new Date(t.due)) / 864e5); return `<span class="pill bad">Overdue ${n}d</span>`; }
-  if (t.due === d) return `<span class="pill hud">Today${tm}</span>`;
-  if (t.due === addDays(d, 1)) return `<span class="pill">Tomorrow${tm}</span>`;
-  return `<span class="pill">${fmtDay(t.due)}${tm}</span>`;
+  if (t.status !== "done" && t.due < d) { const n = Math.round((new Date(d) - new Date(t.due)) / 864e5); return `<span class="chip bad">Overdue ${n}d</span>`; }
+  if (t.due === d) return `<span class="chip hud">Today${tm}</span>`;
+  if (t.due === addDays(d, 1)) return `<span class="chip">Tomorrow${tm}</span>`;
+  return `<span class="chip">${fmtDay(t.due)}${tm}</span>`;
 }
-function taskRow(t, opts = {}){
-  const sel = `<select class="st s-${t.status}" data-act="status" aria-label="Status">${STATUSES.map(([v, l]) => `<option value="${v}" ${v === t.status ? "selected" : ""}>${v === "waiting" && t.status === "waiting" ? "Waiting on " + esc(t.waiting_on || "Jack") : l}</option>`).join("")}</select>`;
-  return `<li class="task s-${t.status}" data-id="${t.id}">
-    <input type="checkbox" data-act="tick" ${t.status === "done" ? "checked" : ""} aria-label="Done">
-    <div class="grow">
-      <div class="t">${t.status === "running" ? '<span class="running-dot"></span> ' : ""}${esc(t.title)}</div>
-      <div class="meta">${sel}${dueTxt(t)}${opts.project ? `<span class="pill">${esc(t.project)}</span>` : ""}${t.source === "claude" ? '<span class="pill violet">Claude</span>' : ""}</div>
-      ${t.notes ? `<div class="notes">${esc(t.notes)}</div>` : ""}
-    </div>
-    <button class="x" data-act="del" title="Delete task" aria-label="Delete task">✕</button>
-  </li>`;
-}
-function bindTasks(box, rerender){
-  box.addEventListener("change", async e => {
-    const li = e.target.closest("[data-id]"); if (!li) return;
-    const t = S.tasks.find(x => x.id === li.dataset.id); if (!t) return;
-    if (e.target.dataset.act === "tick") {
-      const v = e.target.checked ? { status: "done", done_at: new Date().toISOString() } : { status: "todo", done_at: null };
-      await q(sb.from("hq_tasks").update(v).eq("id", t.id)); Object.assign(t, v);
-      toast(e.target.checked ? "Done: " + t.title : "Back on the list");
-    } else if (e.target.dataset.act === "status") {
-      const st = e.target.value, v = { status: st, done_at: st === "done" ? new Date().toISOString() : null };
-      if (st === "waiting") v.waiting_on = (prompt("Waiting on who?", t.waiting_on || "Jack") || "Jack").trim();
-      await q(sb.from("hq_tasks").update(v).eq("id", t.id)); Object.assign(t, v);
-    }
-    rerender();
-  });
-  box.addEventListener("click", async e => {
-    const b = e.target.closest("[data-act=del]"); if (!b) return;
-    const id = b.closest("[data-id]").dataset.id, t = S.tasks.find(x => x.id === id);
-    if (!confirm("Delete \"" + t.title + "\"?")) return;
-    await q(sb.from("hq_tasks").delete().eq("id", id)); S.tasks = S.tasks.filter(x => x.id !== id); rerender();
-  });
-}
-function addForm(prefix, defaults = {}){
-  return `<div class="addrow">
-    <input id="${prefix}Title" placeholder="Add a task" aria-label="Task title">
-    <div class="row">
-      <select id="${prefix}Proj" aria-label="Project">${PROJECTS.map(p => `<option ${p === (defaults.project || "ApexLine") ? "selected" : ""}>${p}</option>`).join("")}</select>
-      <input id="${prefix}Due" type="date" value="${defaults.due || ""}" aria-label="Due date">
-      <input id="${prefix}Time" type="time" aria-label="Time">
-      <select id="${prefix}Status" aria-label="Status">${STATUSES.filter(s => s[0] !== "done").map(([v, l]) => `<option value="${v}">${l}</option>`).join("")}</select>
-      <button id="${prefix}Add">Add</button>
+const notesFor = id => S.notes.filter(n => n.task_id === id);
+function taskCard(t, opts = {}){
+  const n = notesFor(t.id).length, first = (t.notes || "").split("\n").find(l => l.trim()) || "";
+  return `<div class="tc s-${t.status}" data-id="${t.id}" tabindex="0">
+    <button class="ck" data-act="tick" aria-label="${t.status === "done" ? "Mark not done" : "Mark done"}">${t.status === "done" ? "✓" : ""}</button>
+    <div class="body">
+      <div class="tt">${esc(t.title)}</div>
+      ${first && !opts.compact ? `<div class="peek">${esc(first)}</div>` : ""}
+      <div class="meta">${statusChip(t)}${opts.today && t.due === today() && !t.due_time ? "" : dueChip(t)}${opts.project ? `<span class="chip">${esc(t.project)}</span>` : ""}${n ? `<span class="chip">${n} ${n === 1 ? "note" : "notes"}</span>` : ""}${t.source === "claude" ? '<span class="chip violet">Claude</span>' : ""}</div>
     </div></div>`;
 }
-function bindAdd(prefix, after){
-  const go = async () => {
-    const title = $("#" + prefix + "Title").value.trim(); if (!title) return toast("Type the task first");
-    const status = $("#" + prefix + "Status").value;
-    const row = { title, project: $("#" + prefix + "Proj").value, due: $("#" + prefix + "Due").value || null, due_time: $("#" + prefix + "Time").value || null, status,
-      waiting_on: status === "waiting" ? "Jack" : null, sort: Math.max(0, ...S.tasks.map(t => t.sort || 0)) + 1 };
-    const created = await q(sb.from("hq_tasks").insert(row).select().single());
-    S.tasks.push(created); toast("Added: " + title); after();
+async function setTask(t, v){
+  await q(sb.from("hq_tasks").update(v).eq("id", t.id)); Object.assign(t, v);
+}
+async function toggleDone(t){
+  const v = t.status === "done" ? { status: "todo", done_at: null } : { status: "done", done_at: new Date().toISOString() };
+  await setTask(t, v); toast(v.status === "done" ? "Done: " + t.title : "Back on the list");
+  rerender();
+}
+async function addTask(row){
+  row.sort = Math.max(0, ...S.tasks.map(t => t.sort || 0)) + 1;
+  if (row.status === "waiting" && !row.waiting_on) row.waiting_on = "Jack";
+  const created = await q(sb.from("hq_tasks").insert(row).select().single());
+  S.tasks.push(created); toast("Added: " + row.title); return created;
+}
+
+/* task cards: tick button, click or tap opens the detail card, hover previews it on a laptop */
+const TD = { id: null, pinned: false, hoverT: 0, leaveT: 0, editDesc: false };
+document.addEventListener("click", async e => {
+  const ck = e.target.closest(".tc [data-act=tick]");
+  if (ck) { e.stopPropagation(); const t = S.tasks.find(x => x.id === ck.closest(".tc").dataset.id); if (t) await toggleDone(t); return; }
+  const tc = e.target.closest(".tc");
+  if (tc) { openTask(tc.dataset.id, tc, true); return; }
+  if (!e.target.isConnected) return; // the card redrew itself under this click (e.g. Edit), so it was inside
+  if (TD.id && !e.target.closest("#td") && !e.target.closest("#tdBack")) closeTask();
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && TD.id) return closeTask();
+  const tc = e.target.closest && e.target.closest(".tc");
+  if (tc && e.key === "Enter" && e.target === tc) openTask(tc.dataset.id, tc, true);
+});
+document.addEventListener("mouseover", e => {
+  if (!canHover()) return;
+  const tc = e.target.closest(".tc"), inTd = e.target.closest("#td");
+  if (inTd || (tc && tc.dataset.id === TD.id)) { clearTimeout(TD.leaveT); return; }
+  if (tc) { clearTimeout(TD.hoverT); TD.hoverT = setTimeout(() => { if (!TD.pinned) openTask(tc.dataset.id, tc, false); }, 320); }
+});
+document.addEventListener("mouseout", e => {
+  if (!canHover()) return;
+  const from = e.target.closest(".tc, #td"), to = e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest(".tc, #td");
+  if (from && from.classList.contains("tc")) clearTimeout(TD.hoverT);
+  if (from && from !== to && TD.id && !TD.pinned) { clearTimeout(TD.leaveT); TD.leaveT = setTimeout(() => { if (!TD.pinned) closeTask(); }, 260); }
+});
+$("#td").addEventListener("focusin", () => { TD.pinned = true; });
+$("#tdBack").onclick = () => closeTask();
+function openTask(id, anchor, pin){
+  const t = S.tasks.find(x => x.id === id); if (!t) return;
+  const same = TD.id === id;
+  if (!same) TD.editDesc = false;
+  TD.pinned = (same && TD.pinned) || !!pin; TD.id = id;
+  document.querySelectorAll(".tc.open").forEach(x => x.classList.remove("open"));
+  if (anchor) anchor.classList.add("open");
+  drawTask();
+  const td = $("#td"); td.classList.remove("hide");
+  const sheet = !canHover() || innerWidth < 700;
+  td.classList.toggle("sheet", sheet);
+  $("#tdBack").classList.toggle("hide", !sheet);
+  if (!sheet && anchor) {
+    const r = anchor.getBoundingClientRect(), w = Math.min(390, innerWidth - 24), h = td.offsetHeight;
+    let left = r.right + 12; if (left + w > innerWidth - 12) left = Math.max(12, r.left - w - 12);
+    if (left < 12 || (r.left - w - 12 < 12 && r.right + 12 + w > innerWidth - 12)) left = Math.max(12, Math.min(innerWidth - w - 12, r.left));
+    let top = Math.min(Math.max(12, r.top - 8), innerHeight - h - 12);
+    td.style.left = left + "px"; td.style.top = Math.max(12, top) + "px";
+  }
+}
+function closeTask(){
+  TD.id = null; TD.pinned = false; TD.editDesc = false; clearTimeout(TD.hoverT); clearTimeout(TD.leaveT);
+  const td = $("#td"); if (!td) return; td.classList.add("hide"); td.innerHTML = ""; $("#tdBack").classList.add("hide");
+  document.querySelectorAll(".tc.open").forEach(x => x.classList.remove("open"));
+}
+function fmtDesc(s){
+  if (!s) return '<span class="muted">No description yet.</span>';
+  const out = []; let list = [];
+  const flush = () => { if (list.length) { out.push("<ul>" + list.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>"); list = []; } };
+  s.split("\n").forEach(l => { const m = l.match(/^\s*[-*•]\s+(.*)/); if (m) list.push(m[1]); else { flush(); out.push(esc(l)); } });
+  flush(); return out.join("\n").replace(/\n(<ul>)/g, "$1").replace(/(<\/ul>)\n/g, "$1");
+}
+function drawTask(){
+  const t = S.tasks.find(x => x.id === TD.id); if (!t) return closeTask();
+  const notes = notesFor(t.id);
+  const td = $("#td");
+  td.innerHTML = `<div class="grab"></div>
+    <div class="td-h"><input class="td-title" id="tdTitle" value="${esc(t.title)}" aria-label="Task title"><button class="x" id="tdClose" aria-label="Close">✕</button></div>
+    <div>${statusChip(t)} ${dueChip(t)} ${t.source === "claude" ? '<span class="chip violet">Claude</span>' : ""}</div>
+    <div class="td-meta">
+      <select id="tdStatus" aria-label="Status">${STATUSES.map(([v, l]) => `<option value="${v}" ${v === t.status ? "selected" : ""}>${l}</option>`).join("")}</select>
+      <select id="tdProj" aria-label="Project">${PROJECTS.map(p => `<option ${p === t.project ? "selected" : ""}>${esc(p)}</option>`).join("")}</select>
+      <input id="tdDue" type="date" value="${t.due || ""}" aria-label="Due date">
+      <input id="tdTime" type="time" value="${t.due_time ? String(t.due_time).slice(0, 5) : ""}" aria-label="Time">
+    </div>
+    <h4>Description <button class="x sm" id="tdEditDesc">${TD.editDesc ? "Done" : "Edit"}</button></h4>
+    ${TD.editDesc ? `<textarea id="tdDesc" style="min-height:160px">${esc(t.notes || "")}</textarea>` : `<div class="desc" id="tdDescView">${fmtDesc(t.notes)}</div>`}
+    <h4>Notes <span>${notes.length}</span></h4>
+    <div id="tdNotes">${notes.map(n => `<div class="note">${esc(n.body)}<time>${new Date(n.created_at).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</time><button class="x" data-dnote="${n.id}" aria-label="Delete note">✕</button></div>`).join("") || '<p class="muted small" style="margin:0 0 8px">No notes yet.</p>'}</div>
+    <textarea id="tdNote" placeholder="Add a note (call answers, next step, anything)"></textarea>
+    <div class="td-f"><button id="tdNoteSave">Save note</button><span style="flex:1"></span><button class="ghost" id="tdDone">${t.status === "done" ? "Not done" : "Mark done"}</button><button class="ghost" id="tdDel" aria-label="Delete task">Delete</button></div>`;
+  $("#tdClose").onclick = closeTask;
+  const save = async v => { await setTask(t, v); rerender(); drawTask(); };
+  $("#tdTitle").addEventListener("change", e => { const v = e.target.value.trim(); if (v) save({ title: v }); });
+  $("#tdTitle").addEventListener("keydown", e => { if (e.key === "Enter") e.target.blur(); });
+  $("#tdStatus").onchange = e => { const st = e.target.value, v = { status: st, done_at: st === "done" ? new Date().toISOString() : null }; if (st === "waiting") v.waiting_on = (prompt("Waiting on who?", t.waiting_on || "Jack") || "Jack").trim(); save(v); };
+  $("#tdProj").onchange = e => save({ project: e.target.value });
+  $("#tdDue").onchange = e => save({ due: e.target.value || null });
+  $("#tdTime").onchange = e => save({ due_time: e.target.value || null });
+  $("#tdEditDesc").onclick = async () => {
+    if (TD.editDesc) { const v = $("#tdDesc").value; TD.editDesc = false; await save({ notes: v.trim() ? v : null }); toast("Description saved"); }
+    else { TD.editDesc = true; TD.pinned = true; drawTask(); $("#tdDesc").focus(); }
   };
-  $("#" + prefix + "Add").onclick = go;
-  $("#" + prefix + "Title").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+  $("#tdNoteSave").onclick = async () => {
+    const body = $("#tdNote").value.trim(); if (!body) return toast("Type the note first");
+    const n = await q(sb.from("hq_task_notes").insert({ task_id: t.id, body }).select().single());
+    S.notes.push(n); toast("Note saved"); rerender(); drawTask();
+  };
+  $("#tdNote").addEventListener("keydown", e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) $("#tdNoteSave").click(); });
+  td.querySelectorAll("[data-dnote]").forEach(b => b.onclick = async () => { if (!confirm("Delete this note?")) return; await q(sb.from("hq_task_notes").delete().eq("id", b.dataset.dnote)); S.notes = S.notes.filter(n => n.id !== b.dataset.dnote); rerender(); drawTask(); });
+  $("#tdDone").onclick = async () => { await toggleDone(t); drawTask(); };
+  $("#tdDel").onclick = async () => { if (!confirm("Delete \"" + t.title + "\"?")) return; await q(sb.from("hq_tasks").delete().eq("id", t.id)); S.tasks = S.tasks.filter(x => x.id !== t.id); closeTask(); rerender(); };
 }
 
 /* ---------- auth, PIN, boot ---------- */
@@ -461,6 +643,7 @@ function showLock(mode){
   $("#pinTitle").textContent = mode === "set" ? "Choose a 4 digit PIN" : "Enter PIN";
   $("#pinMsg").textContent = mode === "set" ? "Opens HQ on this device from now on." : "";
   $("#pinForgot").classList.toggle("hide", mode === "set");
+  document.body.classList.remove("menu");
   drawDots(); show("lock");
 }
 function drawDots(){ $("#pinDots").innerHTML = [0,1,2,3].map(i => `<i class="${i < PIN.entry.length ? "on" : ""}"></i>`).join(""); }
@@ -512,7 +695,7 @@ const BOOT = { timer: 0, raf: 0, done: null, ended: false };
 function hudTiles(s){
   const m = money(s), c = todayCounts(s);
   return [
-    { v: m.mrr, label: "MRR", sub: m.signedMrr ? "+" + gbp(m.signedMrr) + " signed, from go-live" : "live monthly fees" },
+    { v: m.mrr, label: "MRR", sub: m.nextLive && !m.liveMrr ? "starts " + fmtDay(m.nextLive) : m.customers + (m.customers === 1 ? " customer" : " customers") },
     { v: m.cashMonth, label: "Cash this month", sub: m.unpaid ? "of " + gbp(m.unpaid) + " invoiced" : "no invoices unpaid" },
     { v: m.pipeline, label: "Pipeline", sub: m.openDeals + " open " + (m.openDeals === 1 ? "deal" : "deals") },
     { v: c.open, label: "Today", sub: c.open + " tasks, " + c.calls + (c.calls === 1 ? " call" : " calls"), plain: true },
@@ -529,12 +712,12 @@ function drawHud(tiles, frac){
     el.children[2].textContent = t.sub;
   });
 }
+function greet(){ const h = new Date().getHours(); return h < 12 ? "Morning" : h < 18 ? "Afternoon" : "Evening"; }
 function unlockAndBoot(){
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const boot = $("#boot");
   BOOT.ended = false; boot.className = ""; show("boot");
-  const h = new Date().getHours();
-  $("#bootHello").textContent = (h < 12 ? "Morning" : h < 18 ? "Afternoon" : "Evening") + " Jack. Systems online.";
+  $("#bootHello").textContent = greet() + " Jack. Systems online.";
   drawHud(hudTiles(S), 0);
   const data = loadAll().catch(() => S);
   let tiles = null; data.then(s => { tiles = hudTiles(s); });
@@ -557,64 +740,96 @@ function unlockAndBoot(){
   BOOT.timer = setTimeout(finish, 3500);
 }
 $("#boot").addEventListener("click", () => BOOT.done && BOOT.done());
-document.addEventListener("keydown", e => { if (!$("#boot").classList.contains("hide") && BOOT.done) BOOT.done(); });
+document.addEventListener("keydown", () => { if (!$("#boot").classList.contains("hide") && BOOT.done) BOOT.done(); });
 
 /* ---------- app shell ---------- */
-const TABS = { today: renderToday, tasks: renderTasks, money: renderMoney, outreach: renderOutreach, notes: renderNotes, health: renderHealth };
+const PAGES = { today: renderToday, tasks: renderTasks, money: renderMoney, pipeline: renderPipeline, outreach: renderOutreach, notes: renderNotes, training: renderHealth };
+const curTab = () => { const t = (location.hash || "#today").slice(1); return PAGES[t] ? t : "today"; };
 function route(){
-  const t = (location.hash || "#today").slice(1);
-  const tab = TABS[t] ? t : "today";
-  document.querySelectorAll("[data-tab]").forEach(s => s.classList.toggle("hide", s.dataset.tab !== tab));
+  const tab = curTab();
   document.querySelectorAll("[data-nav]").forEach(a => a.classList.toggle("on", a.dataset.nav === tab));
-  TABS[tab]($(`[data-tab="${tab}"]`));
+  document.body.classList.remove("menu");
+  PAGES[tab]($("#page"));
 }
+function rerender(){ const tab = curTab(); if (["today","tasks","money","pipeline"].includes(tab)) { const y = scrollY; PAGES[tab]($("#page")); scrollTo(0, y); } navBadges(); }
 function startApp(){
   show("app");
-  if (!appStarted) { window.addEventListener("hashchange", () => { route(); window.scrollTo(0, 0); }); setInterval(() => { if (!document.hidden && appStarted && !$("#app").classList.contains("hide")) refresh(); }, 60000); }
+  if (!appStarted) {
+    window.addEventListener("hashchange", () => { closeTask(); route(); window.scrollTo(0, 0); });
+    setInterval(() => { if (!document.hidden && appStarted && !$("#app").classList.contains("hide")) refresh(); }, 60000);
+  }
   appStarted = true;
-  header(); route();
+  header(); route(); navBadges();
 }
+$("#menuBtn").onclick = () => document.body.classList.toggle("menu");
+$("#scrim").onclick = () => document.body.classList.remove("menu");
+$("#topAdd").onclick = () => { if (curTab() !== "today") location.hash = "today"; setTimeout(() => { const i = $("#qTitle"); if (i) { i.focus(); i.scrollIntoView({ block: "center" }); } }, 60); };
 function header(){
   const dl = S.settings.deadline || "2026-12-31";
   const left = Math.max(0, Math.ceil((new Date(dl + "T23:59:59") - new Date()) / 864e5));
-  $("#hdrSub").textContent = left + " days to " + fmtDay(dl);
+  $("#hdrSub").textContent = left + " DAYS TO " + fmtDay(dl).toUpperCase();
 }
+function navBadges(){ const c = todayCounts(); $("#navToday").textContent = c.open || ""; $("#navTasks").textContent = S.tasks.filter(t => t.status !== "done").length || ""; }
 async function refresh(){
   const active = document.activeElement;
-  if (active && /INPUT|TEXTAREA|SELECT/.test(active.tagName) && active.value) return; // don't wipe something being typed
-  await loadAll().catch(() => {}); header();
-  const tab = (location.hash || "#today").slice(1);
-  if (["today","tasks","money"].includes(tab)) route();
+  if (TD.pinned || (active && /INPUT|TEXTAREA|SELECT/.test(active.tagName) && active.value)) return; // never wipe what's being typed
+  await loadAll().catch(() => {}); header(); rerender();
 }
+function phead(eyebrow, title, action){ return `<div class="phead"><div><div class="eyebrow">${eyebrow}</div><h1>${title}</h1></div>${action || ""}</div>`; }
+const longDate = () => new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+function ring(pct, big, small, color = "var(--hud)"){
+  const r = 54, c = 2 * Math.PI * r, p = Math.max(0, Math.min(100, pct));
+  return `<svg viewBox="0 0 132 132" role="img" aria-label="${Math.round(p)}% ${esc(small)}"><circle cx="66" cy="66" r="${r}" fill="none" stroke="#18233A" stroke-width="11"/><circle cx="66" cy="66" r="${r}" fill="none" stroke="${color}" stroke-width="11" stroke-linecap="round" stroke-dasharray="${(c * p / 100).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 66 66)" style="filter:drop-shadow(0 0 6px rgba(92,225,255,.5))"/><text x="66" y="66" text-anchor="middle" fill="#E7ECF4" font-size="24" font-weight="800" font-family="Plus Jakarta Sans,Inter">${esc(big)}</text><text x="66" y="86" text-anchor="middle" fill="#8B97AD" font-size="11" font-family="Inter">${esc(small)}</text></svg>`;
+}
+function kpi(v, lab, sub, opts = {}){ return `<div class="kpi ${opts.hi ? "hi" : ""}"><b ${opts.k ? `data-k="${opts.k}"` : ""}>${v}</b><div class="lab">${lab}</div><div class="sub ${opts.warn ? "warn" : ""}">${sub}</div></div>`; }
 
-/* ---------- TODAY ---------- */
-function statTiles(){
-  const m = money(), c = todayCounts();
-  return `<div class="stat hud"><b>${gbp(m.mrr)}</b><span>MRR${m.signedMrr ? ", +" + gbp(m.signedMrr) + " signed" : ""}</span></div>
-    <div class="stat hud"><b>${gbp(m.cashMonth)}</b><span>cash this month${m.unpaid ? ", of " + gbp(m.unpaid) + " invoiced" : ", nothing unpaid"}</span></div>
-    <div class="stat hud"><b>${gbp(m.pipeline)}</b><span>pipeline, ${m.openDeals} open</span></div>
-    <div class="stat hud"><b>${c.open}</b><span>tasks today, ${c.calls} ${c.calls === 1 ? "call" : "calls"}</span></div>`;
-}
+/* ---------- TODAY (main screen) ---------- */
 function renderToday(el){
-  const d = today();
-  const list = todayTasks();
-  const ids = new Set(list.map(t => t.id));
+  const d = today(), m = money(), c = todayCounts();
+  const list = todayTasks(), ids = new Set(list.map(t => t.id));
   const soon = S.tasks.filter(t => t.status !== "done" && t.due && t.due > d && t.due <= addDays(d, 7) && !ids.has(t.id)).sort((a, b) => (a.due + (a.due_time || "")).localeCompare(b.due + (b.due_time || "")));
   const out = S.invoices.filter(i => i.status === "sent" || i.status === "scheduled");
-  el.innerHTML = `<div class="card"><h2>${fmtDay(d)}</h2><div class="grid4" id="tStats">${statTiles()}</div></div>
-  <div class="card"><h2>Today <b id="tCount">${todayCounts().done} of ${list.length} done</b></h2>
-    <ul class="list" id="tList">${list.length ? list.map(t => taskRow(t, { project: true })).join("") : '<li class="muted small">Nothing due today.</li>'}</ul>
-    <div style="margin-top:12px">${addForm("t", { due: d })}</div></div>
-  <div class="card"><h2>Coming up, next 7 days</h2><ul class="list" id="tSoon">${soon.length ? soon.map(t => taskRow(t, { project: true })).join("") : '<li class="muted small">Nothing booked in.</li>'}</ul></div>
-  <div class="card"><h2>Money due</h2><ul class="list">${out.length ? out.map(i => `<li><span class="grow"><b>${esc(i.number)}</b> ${esc(i.client)} <span class="muted small">${esc(i.description || "")}</span></span><b class="num">${gbp(i.amount)}</b>${i.status === "sent" ? '<span class="pill warn">Invoiced, not paid</span>' : `<span class="pill violet">${esc(i.trigger || "Scheduled")}${i.due_on ? ", " + fmtDay(i.due_on) : ""}</span>`}</li>`).join("") : '<li class="muted small">No invoices out.</li>'}</ul></div>
-  <div class="card"><h2>Body</h2><div class="row"><input id="tBw" type="number" step="0.1" inputmode="decimal" placeholder="kg" aria-label="Bodyweight kg"><button class="ghost" id="tBwSave">Save weight</button><a href="#health" class="small">Training log</a><span class="muted small" id="tBwLast"></span></div></div>`;
-  const rer = () => renderToday(el);
-  bindTasks($("#tList"), rer); bindTasks($("#tSoon"), rer); bindAdd("t", rer);
-  $("#tBwSave").onclick = async () => {
-    const v = parseFloat($("#tBw").value); if (!v) return toast("Enter a weight");
-    await q(sb.from("hq_body").upsert({ day: d, weight_kg: v }, { onConflict: "owner,day" })); toast("Saved " + v + "kg"); $("#tBwLast").textContent = "Saved " + v + "kg today";
-  };
-  sb.from("hq_body").select("day,weight_kg").order("day", { ascending: false }).limit(1).then(({ data }) => { if (data && data[0] && $("#tBwLast")) $("#tBwLast").textContent = "Last " + data[0].weight_kg + "kg, " + fmtDay(data[0].day); });
+  const open = S.deals.filter(x => OPEN_STAGES.includes(x.stage));
+  const days = Array.from({ length: 14 }, (_, i) => addDays(d, i - 13));
+  const perDay = days.map(x => S.outreach.filter(r => r.day === x).reduce((a, r) => a + Number(r.sent || 0), 0));
+  const mx = Math.max(1, ...perDay), sent14 = perDay.reduce((a, b) => a + b, 0);
+  const dl = S.settings.deadline || "2026-12-31", daysLeft = Math.max(1, Math.ceil((new Date(dl + "T23:59:59") - new Date()) / 864e5));
+  el.innerHTML = phead(longDate(), `Good ${greet().toLowerCase()}, Jack`, `<button id="hAdd">+ Task</button>`) +
+  `<div class="kpis" id="tStats">
+    ${kpi(gbp(m.mrr), "MRR", m.nextLive && !m.liveMrr ? `${m.customers} customer, starts ${fmtDay(m.nextLive)}` : `${m.customers} ${m.customers === 1 ? "customer" : "customers"}`, { hi: true, k: "tmrr" })}
+    ${kpi(gbp(m.cashMonth), "Cash this month", m.unpaid ? `${gbp(m.unpaid)} invoiced, not paid` : "nothing unpaid", { warn: !!m.unpaid })}
+    ${kpi(gbp(m.pipeline), "Pipeline", `${m.openDeals} open ${m.openDeals === 1 ? "deal" : "deals"}`)}
+    ${kpi(`${c.done}<span class="muted" style="font-size:18px">/${c.total}</span>`, "Tasks done today", `${c.open} left, ${c.calls} ${c.calls === 1 ? "call" : "calls"}`)}
+  </div>
+  <div class="dash">
+    <div class="col">
+      <div class="card" id="todayCard"><div class="card-h"><h2>Today</h2><span class="cnt">${c.done} of ${c.total} done</span></div>
+        <div class="quick"><input id="qTitle" placeholder="Add a task for today, press Enter" aria-label="New task"><select id="qProj" aria-label="Project" style="max-width:150px">${PROJECTS.map(p => `<option>${p}</option>`).join("")}</select><button id="qAdd" aria-label="Add">Add</button></div>
+        <div id="tList">${list.length ? list.map(t => taskCard(t, { project: true, today: true })).join("") : '<div class="empty">Nothing due today. Add one above.</div>'}</div>
+      </div>
+      <div class="card"><div class="card-h"><h2>Coming up</h2><a href="#tasks">All tasks</a></div>
+        <div id="tSoon">${soon.length ? soon.map(t => taskCard(t, { project: true, compact: true })).join("") : '<div class="empty">Nothing booked in the next 7 days.</div>'}</div></div>
+    </div>
+    <div class="col">
+      <div class="card"><div class="card-h"><h2>Today's progress</h2></div><div class="ringcard">${ring(c.total ? 100 * c.done / c.total : 0, c.done + "/" + c.total, "tasks done")}<div class="rl"><ul class="lines">
+        <li><span class="grow k">Running</span><b>${list.filter(t => t.status === "running").length}</b></li>
+        <li><span class="grow k">Waiting</span><b>${list.filter(t => t.status === "waiting").length}</b></li>
+        <li><span class="grow k">Calls and demos</span><b>${c.calls}</b></li></ul></div></div></div>
+      <div class="card"><div class="card-h"><h2>${esc(S.settings.title || "Road to £25k")}</h2><a href="#money">Money</a></div><div class="ringcard">${ring(m.pct, m.pct + "%", "of " + gbp(m.target))}<div class="rl"><ul class="lines">
+        <li><span class="grow k">Banked</span><b>${gbp(m.cashTotal)}</b></li>
+        <li><span class="grow k">To go</span><b>${gbp(Math.max(0, m.target - m.cashTotal))}</b></li>
+        <li><span class="grow k">A day, ${daysLeft} days</span><b>${gbp(Math.max(0, m.target - m.cashTotal) / daysLeft)}</b></li></ul></div></div></div>
+      <div class="card"><div class="card-h"><h2>Money due</h2><a href="#money">Invoices</a></div><ul class="lines">${out.length ? out.map(i => `<li><span class="grow"><b>${esc(i.number)}</b> <span class="muted small">${esc(i.client)}</span></span><b class="num">${gbp(i.amount)}</b>${i.status === "sent" ? '<span class="chip warn">Not paid</span>' : `<span class="chip violet">${i.due_on ? fmtDay(i.due_on) : esc(i.trigger || "Later")}</span>`}</li>`).join("") : '<li class="muted small">No invoices out.</li>'}</ul></div>
+      <div class="card"><div class="card-h"><h2>Pipeline</h2><a href="#pipeline">Open</a></div><ul class="lines">${open.length ? open.map(x => `<li><span class="grow"><b>${esc(x.company)}</b><br><span class="muted small">${esc(x.next_step || x.stage)}</span></span><b class="num">${x.value ? gbp(x.value) : "-"}</b></li>`).join("") : '<li class="muted small">No open deals.</li>'}</ul></div>
+      <div class="card"><div class="card-h"><h2>Outreach, 14 days</h2><a href="#outreach">Log</a></div>
+        <div class="bars" aria-label="Messages sent per day">${perDay.map((v, i) => `<div class="${i === 13 ? "today" : ""}" style="height:${Math.max(2, 100 * v / mx)}%" title="${fmtDay(days[i])}: ${v} sent"></div>`).join("")}</div>
+        <div class="barlab"><span>${fmtDay(days[0])}</span><span>${sent14} sent</span><span>Today</span></div></div>
+    </div>
+  </div>`;
+  const add = async () => { const title = $("#qTitle").value.trim(); if (!title) return toast("Type the task first"); await addTask({ title, project: $("#qProj").value, due: d, status: "todo" }); rerender(); setTimeout(() => $("#qTitle") && $("#qTitle").focus(), 0); };
+  $("#qAdd").onclick = add;
+  $("#qTitle").addEventListener("keydown", e => { if (e.key === "Enter") add(); });
+  $("#hAdd").onclick = () => $("#qTitle").focus();
 }
 
 /* ---------- TASKS ---------- */
@@ -623,26 +838,44 @@ function renderTasks(el){
   const d = today();
   const vis = S.tasks.filter(t => TV.show === "all" || t.status !== "done" || doneDay(t) === d);
   const projs = TV.project === "All" ? PROJECTS : [TV.project];
-  const ord = { running: 0, todo: 1, waiting: 2, scheduled: 3, done: 4 };
-  const sortT = (a, b) => (ord[a.status] - ord[b.status]) || String(a.due || "9999").localeCompare(String(b.due || "9999")) || String(a.due_time || "99").localeCompare(String(b.due_time || "99")) || a.sort - b.sort;
-  const open = S.tasks.filter(t => t.status !== "done").length;
-  el.innerHTML = `<div class="card"><h2>Tasks <b>${open} open</b></h2>${addForm("k", { project: TV.project === "All" ? "ApexLine" : TV.project })}</div>
-  <div class="card">
-    <div class="chips" id="kChips" style="margin-bottom:8px">${["All", ...PROJECTS].map(p => `<button data-p="${esc(p)}" class="${TV.project === p ? "on" : ""}">${esc(p)}</button>`).join("")}</div>
-    <div class="chips" style="margin-bottom:12px"><button data-s="open" class="${TV.show === "open" ? "on" : ""}">Open</button><button data-s="all" class="${TV.show === "all" ? "on" : ""}">Include done</button></div>
-    <div id="kList">${projs.map(p => { const items = vis.filter(t => t.project === p).sort(sortT); const n = S.tasks.filter(t => t.project === p && t.status !== "done").length;
-      return `<div class="grp" data-project="${esc(p)}"><h3>${esc(p)} <span class="pill">${n} open</span></h3><ul class="list">${items.length ? items.map(t => taskRow(t)).join("") : '<li class="muted small">Nothing here.</li>'}</ul></div>`; }).join("")}</div>
-  </div>`;
-  const rer = () => renderTasks(el);
-  bindTasks($("#kList"), rer); bindAdd("k", rer);
-  el.querySelectorAll("[data-p]").forEach(b => b.onclick = () => { TV.project = b.dataset.p; rer(); });
-  el.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { TV.show = b.dataset.s; rer(); });
+  const sortT = (a, b) => (ORD[a.status] - ORD[b.status]) || String(a.due || "9999").localeCompare(String(b.due || "9999")) || String(a.due_time || "99").localeCompare(String(b.due_time || "99")) || a.sort - b.sort;
+  const open = S.tasks.filter(t => t.status !== "done");
+  const by = st => open.filter(t => t.status === st).length;
+  el.innerHTML = phead("Everything on the list", "Tasks") +
+  `<div class="kpis">${kpi(open.length, "Open", `${by("todo")} to do, ${by("running")} running`)}${kpi(by("waiting"), "Waiting", "on someone else or you")}${kpi(by("scheduled"), "Scheduled", "calls, demos, deadlines")}${kpi(open.filter(t => t.due && t.due < d).length, "Overdue", "past their due date", { warn: open.some(t => t.due && t.due < d) })}</div>
+  <div class="card" style="margin-bottom:16px"><div class="quick" style="flex-wrap:wrap;margin:0">
+    <input id="kTitle" placeholder="Add a task" aria-label="Task title" style="min-width:200px">
+    <select id="kProj" aria-label="Project">${PROJECTS.map(p => `<option ${p === (TV.project === "All" ? "ApexLine" : TV.project) ? "selected" : ""}>${p}</option>`).join("")}</select>
+    <input id="kDue" type="date" aria-label="Due date"><input id="kTime" type="time" aria-label="Time">
+    <select id="kStatus" aria-label="Status">${STATUSES.filter(s => s[0] !== "done").map(([v, l]) => `<option value="${v}">${l}</option>`).join("")}</select>
+    <button id="kAdd">Add</button></div></div>
+  <div class="row" style="justify-content:space-between;margin-bottom:14px">
+    <div class="chips" id="kChips">${["All", ...PROJECTS].map(p => `<button data-p="${esc(p)}" class="${TV.project === p ? "on" : ""}">${esc(p)}</button>`).join("")}</div>
+    <div class="chips"><button data-s="open" class="${TV.show === "open" ? "on" : ""}">Open</button><button data-s="all" class="${TV.show === "all" ? "on" : ""}">Include done</button></div>
+  </div>
+  <div class="grid-auto" id="kList">${projs.map(p => { const items = vis.filter(t => t.project === p).sort(sortT); const n = open.filter(t => t.project === p).length;
+    return `<div class="card grp" data-project="${esc(p)}"><div class="card-h"><h2>${esc(p)}</h2><span class="cnt">${n} open</span></div>${items.length ? items.map(t => taskCard(t)).join("") : '<div class="empty">Nothing here.</div>'}</div>`; }).join("")}</div>`;
+  const go = async () => {
+    const title = $("#kTitle").value.trim(); if (!title) return toast("Type the task first");
+    await addTask({ title, project: $("#kProj").value, due: $("#kDue").value || null, due_time: $("#kTime").value || null, status: $("#kStatus").value });
+    rerender();
+  };
+  $("#kAdd").onclick = go; $("#kTitle").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+  el.querySelectorAll("[data-p]").forEach(b => b.onclick = () => { TV.project = b.dataset.p; rerender(); });
+  el.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { TV.show = b.dataset.s; rerender(); });
 }
 
 /* ---------- MONEY ---------- */
-function ring(pct){
-  const r = 62, c = 2 * Math.PI * r;
-  return `<svg viewBox="0 0 150 150" role="img" aria-label="${pct}% of target"><circle cx="75" cy="75" r="${r}" fill="none" stroke="#14203a" stroke-width="12"/><circle cx="75" cy="75" r="${r}" fill="none" stroke="var(--hud)" stroke-width="12" stroke-linecap="round" stroke-dasharray="${(c * pct / 100).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 75 75)" style="filter:drop-shadow(0 0 6px rgba(92,225,255,.6))"/><text x="75" y="72" text-anchor="middle" fill="#E8EEF8" font-size="26" font-weight="700" font-family="Inter">${pct}%</text><text x="75" y="94" text-anchor="middle" fill="#8C9AB3" font-size="11" font-family="Inter">of target</text></svg>`;
+function cashChart(d){
+  const m = d.slice(0, 7), first = m + "-01", n = Number(d.slice(8));
+  const byDay = Array.from({ length: n }, (_, i) => { const day = addDays(first, i); return S.cash.filter(c => c.counts && c.date === day).reduce((a, c) => a + Number(c.amount), 0); });
+  let run = 0; const cum = byDay.map(v => (run += v));
+  const max = Math.max(1000, ...cum), W = 600, H = 150;
+  const pts = cum.map((v, i) => [n === 1 ? W : (i / (n - 1)) * W, H - 10 - (v / max) * (H - 24)]);
+  const line = pts.map(p => p.map(x => x.toFixed(1)).join(",")).join(" ");
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Cash banked this month"><defs><linearGradient id="cg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#5CC8F5" stop-opacity=".35"/><stop offset="1" stop-color="#5CC8F5" stop-opacity="0"/></linearGradient></defs>
+    ${[0.25,0.5,0.75].map(f => `<line x1="0" x2="${W}" y1="${H * f}" y2="${H * f}" stroke="#1F2B40" stroke-dasharray="4 6"/>`).join("")}
+    <polygon points="0,${H} ${line} ${W},${H}" fill="url(#cg)"/><polyline points="${line}" fill="none" stroke="#5CC8F5" stroke-width="3" vector-effect="non-scaling-stroke"/></svg>`;
 }
 function renderMoney(el){
   const m = money(), s = S.settings, d = today();
@@ -653,39 +886,44 @@ function renderMoney(el){
   const invBy = n => S.invoices.find(i => i.number === n);
   const debtOf = id => S.debts.find(x => x.id === id);
   const nextNo = "APX" + String(Math.max(0, ...S.invoices.map(i => parseInt(String(i.number).replace(/\D/g, ""), 10) || 0)) + 1).padStart(3, "0");
-  const signed = S.deals.filter(x => ["Won","Building","Live"].includes(x.stage));
-  el.innerHTML = `<div class="card"><h2>This month</h2>
-    <div class="grid4" id="mStats">
-      <div class="stat hud"><b data-k="mrr">${gbp(m.mrr)}</b><span>MRR, the month opens here</span></div>
-      <div class="stat"><b data-k="won">${gbp(m.won)}</b><span>won this month (signed)</span></div>
-      <div class="stat hud"><b data-k="cash">${gbp(m.cashMonth)}</b><span>cash collected this month</span></div>
-      <div class="stat"><b data-k="unpaid" style="color:var(--warn)">${gbp(m.unpaid)}</b><span>invoiced, not paid (${m.unpaidCount})</span></div>
+  const signed = S.deals.filter(x => SIGNED_STAGES.includes(x.stage));
+  el.innerHTML = phead(new Date().toLocaleDateString("en-GB", { month: "long", year: "numeric" }), "Money") +
+  `<div class="kpis" id="mStats">
+    ${kpi(gbp(m.mrr), "MRR", m.nextLive && !m.liveMrr ? "the month opens here, starts " + fmtDay(m.nextLive) : "the month opens here", { hi: true, k: "mrr" })}
+    ${kpi(gbp(m.won), "Won this month", "contract value signed", { k: "won" })}
+    ${kpi(gbp(m.cashMonth), "Cash collected", "banked this month, counts to target", { hi: true, k: "cash" })}
+    ${kpi(gbp(m.unpaid), "Invoiced, not paid", m.unpaidCount + (m.unpaidCount === 1 ? " invoice out" : " invoices out") + (m.scheduled ? ", " + gbp(m.scheduled) + " due on go-live" : ""), { warn: !!m.unpaid, k: "unpaid" })}
+  </div>
+  <div class="dash">
+    <div class="col">
+      <div class="card chart"><div class="card-h"><h2>Cash banked this month</h2><span class="cnt">${gbp(m.cashMonth)}</span></div>${cashChart(d)}<div class="barlab"><span>1st</span><span>Today</span></div></div>
+      <div class="card"><div class="card-h"><h2>Invoices</h2><span class="cnt">${S.invoices.length}</span></div>
+        <ul class="lines" id="mInv">${S.invoices.length ? S.invoices.map(i => `<li data-inv="${i.id}"><div class="grow"><b>${esc(i.number)}</b> ${esc(i.client)}<div class="muted small">${esc(i.description || "")}${i.issued_on ? ", issued " + fmtDay(i.issued_on) : ""}${i.paid_on ? ", paid " + fmtDay(i.paid_on) : ""}${i.status === "scheduled" ? ", " + esc(i.trigger || "scheduled") + (i.due_on ? " (" + fmtDay(i.due_on) + ")" : "") : ""}</div></div>
+          <b class="num">${gbp(i.amount)}</b>
+          ${i.status === "paid" ? '<span class="chip good">Paid</span>' : i.status === "sent" ? `<button class="sm" data-paid="${i.id}">Mark paid</button>` : i.status === "scheduled" ? `<button class="ghost sm" data-issue="${i.id}">Issue</button>` : '<span class="chip">Void</span>'}</li>`).join("") : '<li class="muted small">No invoices yet.</li>'}</ul>
+        <div class="row" style="margin-top:12px"><input id="iNo" value="${nextNo}" style="width:92px" aria-label="Invoice number"><input id="iClient" placeholder="Client" style="flex:1;min-width:130px"><input id="iAmt" type="number" inputmode="decimal" placeholder="£" aria-label="Amount"><select id="iSt" aria-label="Status"><option value="sent">Sent</option><option value="scheduled">Scheduled</option></select><button class="ghost" id="iAdd">Add</button></div></div>
+      <div class="card plan"><div class="card-h"><h2>Payment plan</h2><span class="cnt">tick when paid</span></div>
+        <div id="mPlan">${groups.map(g => { const lines = S.plan.filter(p => (p.funded_by || "Other") === g), inv = invBy(g);
+          return `<h3>When ${esc(g)} lands ${inv ? `<span class="chip ${inv.status === "paid" ? "good" : "warn"}">${gbp(inv.amount)} ${inv.status === "paid" ? "paid" : inv.status === "sent" ? "not paid yet" : "not invoiced yet"}</span>` : ""}</h3>` +
+            lines.map(p => `<label class="${p.done ? "done" : ""}"><input type="checkbox" data-plan="${p.id}" ${p.done ? "checked" : ""}><span class="grow">${esc(p.label)}${p.debt_id && debtOf(p.debt_id) ? ' <span class="chip">debt</span>' : ""}</span><b class="num">${gbp(p.amount)}</b></label>`).join(""); }).join("") || '<p class="muted small">No plan lines yet.</p>'}</div>
+        <div class="row" style="margin-top:12px"><input id="pLabel" placeholder="Line (e.g. Eco-cycle)" style="flex:1;min-width:130px"><input id="pAmt" type="number" inputmode="decimal" placeholder="£" aria-label="Amount"><input id="pFund" placeholder="From APX003" style="width:120px" aria-label="Paid from"><select id="pDebt" aria-label="Pays off debt"><option value="">No debt</option>${S.debts.map(r => `<option value="${r.id}">${esc(r.creditor)}</option>`).join("")}</select><button class="ghost" id="pAdd">Add</button></div></div>
     </div>
-    <p class="muted small" style="margin:10px 0 0">${m.signedMrr ? `Signed monthly fees not live yet: <b>${gbp(m.signedMrr)}</b> a month from go-live. ` : ""}${m.scheduled ? `Due on go-live: <b>${gbp(m.scheduled)}</b>. ` : ""}Only cash collected counts toward ${gbp(m.target)}.</p></div>
-  <div class="card"><h2>${esc(s.title || "Road to £25k")}</h2>
-    <div class="ringwrap">${ring(m.pct)}<div style="flex:1;min-width:180px">
-      <div class="grid2"><div class="stat"><b data-k="banked">${gbp(m.cashTotal)}</b><span>banked toward ${gbp(m.target)}</span></div><div class="stat"><b>${gbp(toGo)}</b><span>to go by ${fmtDay(dl)}</span></div>
-      <div class="stat"><b>${gbp(toGo / daysLeft)}</b><span>a day for ${daysLeft} days</span></div><div class="stat"><b data-k="debts" style="color:var(--bad)">${gbp(m.debtsLeft)}</b><span>debts left</span></div></div>
-    </div></div></div>
-  <div class="card"><h2>Invoices</h2><ul class="list" id="mInv">${S.invoices.length ? S.invoices.map(i => `<li data-inv="${i.id}"><div class="grow"><b>${esc(i.number)}</b> ${esc(i.client)}<div class="muted small">${esc(i.description || "")}${i.issued_on ? ", issued " + fmtDay(i.issued_on) : ""}${i.paid_on ? ", paid " + fmtDay(i.paid_on) : ""}${i.status === "scheduled" ? ", " + esc(i.trigger || "scheduled") + (i.due_on ? " (" + fmtDay(i.due_on) + ")" : "") : ""}</div></div>
-      <b class="num">${gbp(i.amount)}</b>
-      ${i.status === "paid" ? '<span class="pill good">Paid</span>' : i.status === "sent" ? `<span class="pill warn">Not paid</span><button class="sm" data-paid="${i.id}">Mark paid</button>` : i.status === "scheduled" ? `<span class="pill violet">Scheduled</span><button class="ghost sm" data-issue="${i.id}">Issue</button>` : '<span class="pill">Void</span>'}</li>`).join("") : '<li class="muted small">No invoices yet.</li>'}</ul>
-    <div class="row" style="margin-top:10px"><input id="iNo" value="${nextNo}" style="width:90px" aria-label="Invoice number"><input id="iClient" placeholder="Client" style="flex:1;min-width:140px"><input id="iAmt" type="number" inputmode="decimal" placeholder="£"><select id="iSt"><option value="sent">Sent</option><option value="scheduled">Scheduled</option></select><button class="ghost" id="iAdd">Add invoice</button></div></div>
-  <div class="card"><h2>Debts and payment plan</h2>
-    <ul class="list" id="mDebts">${S.debts.length ? S.debts.map(r => { const p = Math.min(100, Math.round(100 * r.paid / r.amount)); return `<li><div class="grow"><b>${esc(r.creditor)}</b> <span class="muted small">${gbp(r.paid)} of ${gbp(r.amount)} paid</span><div class="bar" style="margin-top:6px"><i style="width:${p}%"></i></div>${r.notes ? `<div class="muted small" style="margin-top:4px">${esc(r.notes)}</div>` : ""}</div><button class="ghost sm" data-pay="${r.id}">Pay</button><button class="x" data-edit="${r.id}" title="Edit total">✎</button><button class="x" data-dd="${r.id}" title="Remove">✕</button></li>`; }).join("") : '<li class="muted small">No debts added.</li>'}</ul>
-    <div class="row" style="margin-top:10px"><input id="dWho" placeholder="Who" style="flex:1;min-width:140px"><input id="dAmt" type="number" inputmode="decimal" placeholder="£ owed"><button class="ghost" id="dAdd">Add debt</button></div>
-    <div class="plan" id="mPlan">${groups.map(g => { const lines = S.plan.filter(p => (p.funded_by || "Other") === g), inv = invBy(g);
-      return `<h3>When ${esc(g)} lands${inv ? ` <span class="muted small">(${gbp(inv.amount)}, ${inv.status === "paid" ? "paid" : inv.status === "sent" ? "not paid yet" : "not invoiced yet"})</span>` : ""} <span class="muted small">allocated ${gbp(sum(lines, "amount"))}</span></h3>` +
-        lines.map(p => `<label class="${p.done ? "done" : ""}"><input type="checkbox" data-plan="${p.id}" ${p.done ? "checked" : ""}><span class="grow">${esc(p.label)}${p.debt_id && debtOf(p.debt_id) ? ' <span class="pill">debt</span>' : ""}</span><b class="num">${gbp(p.amount)}</b></label>`).join(""); }).join("")}</div>
-    <div class="row" style="margin-top:10px"><input id="pLabel" placeholder="Plan line (e.g. Eco-cycle)" style="flex:1;min-width:140px"><input id="pAmt" type="number" inputmode="decimal" placeholder="£"><input id="pFund" placeholder="From (APX003)" style="width:120px"><select id="pDebt" aria-label="Pays off debt"><option value="">No debt</option>${S.debts.map(r => `<option value="${r.id}">${esc(r.creditor)}</option>`).join("")}</select><button class="ghost" id="pAdd">Add line</button></div>
-    <p class="muted small" style="margin:8px 0 0">Ticking a line that pays a debt moves that debt's paid amount.</p></div>
-  <div class="card"><h2>Signed work</h2><ul class="list">${signed.length ? signed.map(x => `<li><span class="grow"><b>${esc(x.company)}</b> <span class="muted small">${esc(x.product || "")}${x.won_on ? ", won " + fmtDay(x.won_on) : ""}${x.live_on ? ", live " + fmtDay(x.live_on) : ""}</span></span><span class="pill ${x.stage === "Live" ? "good" : "hud"}">${esc(x.stage)}</span><b class="num">${gbp(x.value)}${Number(x.monthly) ? " + " + gbp(x.monthly) + "/mo" : ""}</b></li>`).join("") : '<li class="muted small">No signed work yet.</li>'}</ul></div>
-  <div class="card"><h2>Bank money in</h2>
-    <div class="row"><input id="mFrom" placeholder="From" style="flex:1;min-width:140px"><input id="mAmt" type="number" inputmode="decimal" placeholder="£"></div>
-    <div class="row" style="margin-top:8px"><input id="mDate" type="date" value="${d}"><select id="mSrc"><option>Custom build</option><option>WasteLine</option><option>WasteHub</option><option>Other</option></select><label class="small"><input id="mCounts" type="checkbox" checked> counts to target</label><button id="mAdd">Bank it</button></div>
-    <ul class="list" id="mCash" style="margin-top:10px">${S.cash.length ? S.cash.slice(0, 30).map(r => `<li><span class="grow">${esc(r.from_who)} <span class="pill">${esc(r.source)}</span>${r.counts ? "" : ' <span class="pill">not counted</span>'}${r.note ? ` <span class="muted small">${esc(r.note)}</span>` : ""}</span><b class="num">${gbp(r.amount)}</b><span class="muted small">${fmtDay(r.date)}</span><button class="x" data-dc="${r.id}">✕</button></li>`).join("") : '<li class="muted small">Nothing banked yet.</li>'}</ul></div>
-  <div class="card"><h2>Target</h2><div class="row"><input id="sTarget" type="number" value="${m.target}" aria-label="Target"><input id="sDeadline" type="date" value="${dl}" aria-label="Deadline"><button class="ghost" id="sSave">Save</button></div></div>`;
-  const rer = async () => { await loadAll(); renderMoney(el); };
+    <div class="col">
+      <div class="card"><div class="card-h"><h2>${esc(s.title || "Road to £25k")}</h2><span class="cnt">${daysLeft} days</span></div><div class="ringcard">${ring(m.pct, m.pct + "%", "of " + gbp(m.target))}<div class="rl"><ul class="lines">
+        <li><span class="grow k">Banked</span><b data-k="banked">${gbp(m.cashTotal)}</b></li><li><span class="grow k">To go</span><b>${gbp(toGo)}</b></li><li><span class="grow k">A day</span><b>${gbp(toGo / daysLeft)}</b></li></ul></div></div></div>
+      <div class="card"><div class="card-h"><h2>Debts</h2><b data-k="debts" style="color:var(--bad)">${gbp(m.debtsLeft)}</b></div>
+        <ul class="lines" id="mDebts">${S.debts.length ? S.debts.map(r => { const p = Math.min(100, Math.round(100 * r.paid / r.amount)); return `<li><div class="grow"><div class="row" style="justify-content:space-between"><b>${esc(r.creditor)}</b><span class="muted small">${gbp(r.paid)} / ${gbp(r.amount)}</span></div><div class="bar" style="margin-top:6px"><i style="width:${p}%"></i></div>${r.notes ? `<div class="muted small" style="margin-top:4px">${esc(r.notes)}</div>` : ""}<div class="row" style="margin-top:6px"><button class="ghost sm" data-pay="${r.id}">Pay</button><button class="x sm" data-edit="${r.id}">Edit total</button><button class="x sm" data-dd="${r.id}">Remove</button></div></div></li>`; }).join("") : '<li class="muted small">No debts added.</li>'}</ul>
+        <div class="row" style="margin-top:10px"><input id="dWho" placeholder="Who" style="flex:1;min-width:120px"><input id="dAmt" type="number" inputmode="decimal" placeholder="£ owed" aria-label="Amount owed"><button class="ghost" id="dAdd">Add</button></div></div>
+      <div class="card"><div class="card-h"><h2>Signed work</h2></div><ul class="lines">${signed.length ? signed.map(x => `<li><span class="grow"><b>${esc(x.company)}</b><br><span class="muted small">${esc(x.product || "")}${x.live_on ? ", live " + fmtDay(x.live_on) : ""}</span></span><span class="num" style="text-align:right"><b>${gbp(x.value)}</b><br><span class="muted small">${Number(x.monthly) ? gbp(x.monthly) + "/mo" : ""}</span></span></li>`).join("") : '<li class="muted small">No signed work yet.</li>'}</ul></div>
+      <div class="card"><div class="card-h"><h2>Bank money in</h2></div>
+        <div class="row"><input id="mFrom" placeholder="From" style="flex:1;min-width:120px"><input id="mAmt" type="number" inputmode="decimal" placeholder="£" aria-label="Amount"></div>
+        <div class="row" style="margin-top:8px"><input id="mDate" type="date" value="${d}" aria-label="Date"><select id="mSrc" aria-label="Source"><option>Custom build</option><option>WasteLine</option><option>WasteHub</option><option>Other</option></select></div>
+        <div class="row" style="margin-top:8px"><label class="small"><input id="mCounts" type="checkbox" checked> counts to target</label><span style="flex:1"></span><button id="mAdd">Bank it</button></div>
+        <ul class="lines" id="mCash" style="margin-top:10px">${S.cash.slice(0, 12).map(r => `<li><span class="grow">${esc(r.from_who)} <span class="muted small">${esc(r.note || r.source)}${r.counts ? "" : ", not counted"}</span></span><b class="num">${gbp(r.amount)}</b><button class="x" data-dc="${r.id}" aria-label="Remove">✕</button></li>`).join("")}</ul></div>
+      <div class="card"><div class="card-h"><h2>Target</h2></div><div class="row"><input id="sTarget" type="number" value="${m.target}" aria-label="Target"><input id="sDeadline" type="date" value="${dl}" aria-label="Deadline"><button class="ghost" id="sSave">Save</button></div></div>
+    </div>
+  </div>`;
+  const rer = async () => { await loadAll(); rerender(); };
   el.querySelectorAll("[data-paid]").forEach(b => b.onclick = async () => { const i = S.invoices.find(x => x.id === b.dataset.paid); if (!confirm(`Mark ${i.number} (${gbp(i.amount)}) paid today? It goes into cash collected.`)) return; await q(sb.rpc("hq_invoice_paid", { p_invoice: i.id })); toast(i.number + " paid, " + gbp(i.amount) + " banked"); rer(); });
   el.querySelectorAll("[data-issue]").forEach(b => b.onclick = async () => { await q(sb.from("hq_invoices").update({ status: "sent", issued_on: d }).eq("id", b.dataset.issue)); toast("Marked as sent"); rer(); });
   $("#iAdd").onclick = async () => { const a = parseFloat($("#iAmt").value), c = $("#iClient").value.trim(), n = $("#iNo").value.trim(); if (!a || !c || !n) return toast("Add number, client and amount"); const st = $("#iSt").value; await q(sb.from("hq_invoices").insert({ number: n, client: c, amount: a, status: st, issued_on: st === "sent" ? d : null })); toast("Invoice " + n + " added"); rer(); };
@@ -705,7 +943,19 @@ function renderMoney(el){
   };
 }
 
-/* ---------- HEALTH (kept from v2, reached from the Today body card) ---------- */
+/* ---------- PIPELINE (simple board; full CRM is Phase 2) ---------- */
+function renderPipeline(el){
+  const m = money();
+  const shown = STAGES.filter(s => s !== "Lost" && S.deals.some(x => x.stage === s));
+  el.innerHTML = phead("Deals by stage", "Pipeline") +
+  `<div class="kpis">${kpi(gbp(m.pipeline), "Pipeline value", m.openDeals + " open deals", { hi: true })}${kpi(gbp(m.won), "Won this month", "signed value")}${kpi(gbp(m.mrr), "MRR", "monthly fees signed")}${kpi(S.deals.filter(x => x.stage === "Demo booked").length, "Demos booked", "next: see Today")}</div>
+  <div class="grid-auto">${shown.map(st => { const ds = S.deals.filter(x => x.stage === st); return `<div class="card"><div class="card-h"><h2>${esc(st)}</h2><span class="cnt">${ds.length}${sum(ds, "value") ? ", " + gbp(sum(ds, "value")) : ""}</span></div>${ds.map(x => `<div class="deal"><b>${esc(x.company)}</b><span class="muted small">${esc([x.contact, x.product].filter(Boolean).join(", "))}</span><div class="row" style="justify-content:space-between;margin-top:6px"><span class="small">${esc(x.next_step || "")}</span><b class="num">${x.value ? gbp(x.value) : ""}${Number(x.monthly) ? " + " + gbp(x.monthly) + "/mo" : ""}</b></div><select data-stage="${x.id}" aria-label="Stage">${STAGES.map(s => `<option ${s === x.stage ? "selected" : ""}>${s}</option>`).join("")}</select></div>`).join("")}</div>`; }).join("") || '<div class="card empty">No deals yet.</div>'}</div>
+  <div class="card" style="margin-top:16px"><div class="card-h"><h2>Add a deal</h2></div><div class="row"><input id="nCo" placeholder="Company" style="flex:1;min-width:140px"><input id="nWho" placeholder="Contact" style="flex:1;min-width:120px"><input id="nVal" type="number" inputmode="decimal" placeholder="£ value" aria-label="Value"><select id="nStage" aria-label="Stage">${OPEN_STAGES.map(s => `<option>${s}</option>`).join("")}</select><button id="nAdd">Add</button></div></div>`;
+  el.querySelectorAll("[data-stage]").forEach(s => s.onchange = async () => { const v = { stage: s.value }; if (s.value === "Won") v.won_on = today(); if (s.value === "Live") v.live_on = today(); await q(sb.from("hq_deals").update(v).eq("id", s.dataset.stage)); await loadAll(); rerender(); });
+  $("#nAdd").onclick = async () => { const c = $("#nCo").value.trim(); if (!c) return toast("Add the company"); await q(sb.from("hq_deals").insert({ company: c, contact: $("#nWho").value.trim() || null, value: parseFloat($("#nVal").value) || null, stage: $("#nStage").value })); await loadAll(); rerender(); toast("Deal added"); };
+}
+
+/* ---------- TRAINING (v2) ---------- */
 async function exercises(){
   const rows = await q(sb.from("hq_sets").select("exercise").order("created_at", { ascending: false }).limit(500));
   return [...new Set(rows.map(r => r.exercise.trim()))];
@@ -722,25 +972,32 @@ function groupSets(sets){
 }
 async function renderHealth(el, day){
   const d = day || renderHealth.day || today(); renderHealth.day = d;
-  el.innerHTML = `<div class="card"><div class="row"><h2 style="margin:0">Training</h2><input id="hDay" type="date" value="${d}" style="margin-left:auto"></div></div>
-  <div class="card"><h2>Add a set</h2>
+  el.innerHTML = phead("Training log", "Training", `<input id="hDay" type="date" value="${d}" aria-label="Day">`) +
+  `<div class="dash"><div class="col">
+  <div class="card"><div class="card-h"><h2>Add a set</h2></div>
     <div class="row"><input id="hEx" list="hExList" placeholder="Exercise (e.g. Bench press)" style="flex:1;min-width:160px"><datalist id="hExList"></datalist></div>
     <div class="row" style="margin-top:8px"><input id="hKg" type="number" step="0.5" inputmode="decimal" placeholder="kg"><input id="hReps" type="number" inputmode="numeric" placeholder="reps"><input id="hCount" type="number" inputmode="numeric" placeholder="sets" value="1"><button id="hAdd">Add</button></div></div>
-  <div class="card"><h2>${fmtDay(d)}</h2><div id="hSets" class="muted small">Loading…</div>
+  <div class="card"><div class="card-h"><h2>${fmtDay(d)}</h2></div><div id="hSets" class="muted small">Loading…</div>
     <div class="row" style="margin-top:10px"><input id="hNotes" placeholder="Session notes (optional)" style="flex:1"><button class="ghost" id="hNotesSave">Save notes</button></div></div>
-  <div class="card"><h2>Last 5 weeks</h2><div class="cal" id="hCal"></div></div>
-  <div class="card"><h2>Best lifts</h2><ul class="list" id="hBest"></ul></div>`;
+  </div><div class="col">
+  <div class="card"><div class="card-h"><h2>Bodyweight</h2></div><div class="row"><input id="tBw" type="number" step="0.1" inputmode="decimal" placeholder="kg" aria-label="Bodyweight kg"><button class="ghost" id="tBwSave">Save</button><span class="muted small" id="tBwLast"></span></div></div>
+  <div class="card"><div class="card-h"><h2>Last 5 weeks</h2></div><div class="cal" id="hCal"></div></div>
+  <div class="card"><div class="card-h"><h2>Best lifts</h2></div><ul class="lines" id="hBest"></ul></div>
+  </div></div>`;
   $("#hDay").onchange = e => renderHealth(el, e.target.value);
+  $("#tBwSave").onclick = async () => { const v = parseFloat($("#tBw").value); if (!v) return toast("Enter a weight"); await q(sb.from("hq_body").upsert({ day: d, weight_kg: v }, { onConflict: "owner,day" })); toast("Saved " + v + "kg"); $("#tBwLast").textContent = "Saved " + v + "kg"; };
   const since = iso(new Date(Date.now() - 34 * 864e5));
-  const [exList, wk, cal, best] = await Promise.all([
+  const [exList, wk, cal, best, bw] = await Promise.all([
     exercises(), workoutFor(d, false),
     q(sb.from("hq_workouts").select("day").gte("day", since)),
     q(sb.from("hq_v_best_lifts").select("*").order("exercise")),
+    q(sb.from("hq_body").select("day,weight_kg").order("day", { ascending: false }).limit(1)),
   ]);
+  if (bw[0]) $("#tBwLast").textContent = "Last " + bw[0].weight_kg + "kg, " + fmtDay(bw[0].day);
   $("#hExList").innerHTML = exList.map(x => `<option value="${esc(x)}">`).join("");
   if (wk) $("#hNotes").value = wk.notes || "";
   const sets = wk ? await q(sb.from("hq_sets").select("*").eq("workout_id", wk.id).order("created_at")) : [];
-  $("#hSets").innerHTML = sets.length ? `<ul class="list">${groupSets(sets).map(g => `<li><div class="grow"><b>${esc(g.ex)}</b><div class="muted small">${g.sets.map(s => `${setTxt(s)} <button class="x" data-del="${s.id}" title="Delete set">✕</button>`).join(" · ")}</div></div></li>`).join("")}</ul>` : "No sets logged for this day.";
+  $("#hSets").innerHTML = sets.length ? `<ul class="lines">${groupSets(sets).map(g => `<li><div class="grow"><b>${esc(g.ex)}</b><div class="muted small">${g.sets.map(s => `${setTxt(s)} <button class="x" data-del="${s.id}" title="Delete set">✕</button>`).join(" · ")}</div></div></li>`).join("")}</ul>` : "No sets logged for this day.";
   $("#hSets").querySelectorAll("[data-del]").forEach(b => b.onclick = async () => { await q(sb.from("hq_sets").delete().eq("id", b.dataset.del)); renderHealth(el, d); });
   $("#hAdd").onclick = async () => {
     const ex = $("#hEx").value.trim(); if (!ex) return toast("Add the exercise name");
@@ -762,18 +1019,22 @@ async function renderHealth(el, day){
 /* ---------- OUTREACH (v2) ---------- */
 function outreachForm(box, rows){
   const by = Object.fromEntries(rows.map(r => [r.channel, r]));
-  box.innerHTML = `<table><tr><th>Channel</th><th>Sent</th><th>Acc.</th><th>Replies</th><th>Pers.</th><th>Demos</th></tr>${CHANNELS.map(([c, label]) => { const r = by[c] || {}; return `<tr data-ch="${c}"><td>${label}</td>${["sent","accepted","replies","personalised","demos"].map(f => `<td><input type="number" inputmode="numeric" min="0" data-f="${f}" value="${r[f] ?? ""}" style="width:52px;padding:8px 6px"></td>`).join("")}</tr>`; }).join("")}</table>`;
+  box.innerHTML = `<table><tr><th>Channel</th><th>Sent</th><th>Acc.</th><th>Replies</th><th>Pers.</th><th>Demos</th></tr>${CHANNELS.map(([c, label]) => { const r = by[c] || {}; return `<tr data-ch="${c}"><td>${label}</td>${["sent","accepted","replies","personalised","demos"].map(f => `<td><input type="number" inputmode="numeric" min="0" data-f="${f}" value="${r[f] ?? ""}" style="width:56px;padding:8px 6px"></td>`).join("")}</tr>`; }).join("")}</table>`;
 }
 async function saveOutreach(box, day){
   const rows = [...box.querySelectorAll("tr[data-ch]")].map(tr => { const o = { day, channel: tr.dataset.ch }; tr.querySelectorAll("input").forEach(i => o[i.dataset.f] = parseInt(i.value || "0", 10)); return o; }).filter(o => o.sent || o.accepted || o.replies || o.personalised || o.demos);
   if (!rows.length) return toast("Nothing to save");
   await q(sb.from("hq_outreach").upsert(rows, { onConflict: "owner,day,channel" }));
-  toast("Outreach saved");
+  toast("Outreach saved"); await loadAll();
 }
 async function renderOutreach(el, day){
   const d = day || renderOutreach.day || today(); renderOutreach.day = d;
-  el.innerHTML = `<div class="card"><div class="row"><h2 style="margin:0">Outreach</h2><input id="oDay" type="date" value="${d}" style="margin-left:auto"></div><div id="oForm" style="margin-top:12px;overflow-x:auto"></div><div class="row" style="margin-top:10px"><button id="oSave">Save</button></div></div>
-  <div class="card"><h2>By week</h2><div id="oWeeks" style="overflow-x:auto"></div></div>`;
+  const t7 = S.outreach.filter(r => r.day > addDays(today(), -7));
+  const tot = f => t7.reduce((a, r) => a + Number(r[f] || 0), 0);
+  el.innerHTML = phead("Last 7 days", "Outreach", `<input id="oDay" type="date" value="${d}" aria-label="Day">`) +
+  `<div class="kpis">${kpi(tot("sent"), "Sent", "all channels")}${kpi(tot("accepted"), "Accepted", tot("sent") ? Math.round(100 * tot("accepted") / tot("sent")) + "% of sent" : "-")}${kpi(tot("replies"), "Replies", tot("sent") ? Math.round(100 * tot("replies") / tot("sent")) + "% of sent" : "-")}${kpi(tot("demos"), "Demos", "booked", { hi: true })}</div>
+  <div class="dash"><div class="col"><div class="card"><div class="card-h"><h2>Log ${fmtDay(d)}</h2></div><div id="oForm" class="tablewrap"></div><div class="row" style="margin-top:12px"><button id="oSave">Save</button></div></div></div>
+  <div class="col"><div class="card"><div class="card-h"><h2>By week</h2></div><div id="oWeeks" class="tablewrap"></div></div></div></div>`;
   $("#oDay").onchange = e => renderOutreach(el, e.target.value);
   const [rows, weeks] = await Promise.all([
     q(sb.from("hq_outreach").select("*").eq("day", d)),
@@ -791,11 +1052,15 @@ async function callAI(payload){
   if (error) throw error; if (data && data.error) throw new Error(data.error); return data;
 }
 async function renderNotes(el){
-  el.innerHTML = `<div class="card"><h2>Brain dump</h2><textarea id="nBody" placeholder="Type or use the mic on your keyboard. Anything: lessons, ideas, frustrations, plans."></textarea>
+  el.innerHTML = phead("Brain dumps, lessons, ideas", "Notes") +
+  `<div class="dash"><div class="col">
+  <div class="card"><div class="card-h"><h2>Brain dump</h2></div><textarea id="nBody" style="min-height:140px" placeholder="Type or use the mic on your keyboard. Anything: lessons, ideas, frustrations, plans."></textarea>
     <div class="row" style="margin-top:8px"><button id="nSum">Save and summarise</button><button class="ghost" id="nSave">Just save</button></div><div id="nResult" class="small" style="margin-top:10px"></div></div>
-  <div class="card"><h2>Ask your notes</h2><div class="chat" id="cLog"></div><div class="row"><input id="cQ" placeholder="e.g. What have I learned about sales this month?" style="flex:1;min-width:160px"><button id="cGo">Ask</button></div></div>
-  <div class="card"><h2>What you've learned</h2><div id="nIns" class="muted small">Loading…</div></div>
-  <div class="card"><h2>Past dumps</h2><ul class="list" id="nList"></ul></div>`;
+  <div class="card"><div class="card-h"><h2>Ask your notes</h2></div><div class="chat" id="cLog"></div><div class="row"><input id="cQ" placeholder="e.g. What have I learned about sales this month?" style="flex:1;min-width:160px"><button id="cGo">Ask</button></div></div>
+  </div><div class="col">
+  <div class="card"><div class="card-h"><h2>What you've learned</h2></div><div id="nIns" class="muted small">Loading…</div></div>
+  <div class="card"><div class="card-h"><h2>Past dumps</h2></div><ul class="lines" id="nList"></ul></div>
+  </div></div>`;
   const drawChat = () => { $("#cLog").innerHTML = chatLog.map(m => `<div class="msg ${m.role === "user" ? "me" : "ai"}">${esc(m.content)}</div>`).join(""); $("#cLog").scrollTop = 1e9; };
   drawChat();
   const [ins, notes] = await Promise.all([
@@ -803,7 +1068,7 @@ async function renderNotes(el){
     q(sb.from("hq_notes").select("*").order("created_at", { ascending: false }).limit(30)),
   ]);
   const kinds = [["lesson","Lessons"],["value","Values"],["idea","Ideas"],["goal","Goals"]];
-  $("#nIns").innerHTML = ins.length ? kinds.map(([k, label]) => { const items = ins.filter(i => i.kind === k); return items.length ? `<h3 style="font-size:13px;margin:10px 0 4px;color:var(--text)">${label}</h3><ul class="list">${items.map(i => `<li><span class="grow" style="color:var(--text)">${esc(i.text)}</span><button class="x" data-di="${i.id}">✕</button></li>`).join("")}</ul>` : ""; }).join("") : "Lessons, values, ideas and goals from your dumps collect here.";
+  $("#nIns").innerHTML = ins.length ? kinds.map(([k, label]) => { const items = ins.filter(i => i.kind === k); return items.length ? `<h3 style="font-size:13px;margin:10px 0 4px;color:var(--text)">${label}</h3><ul class="lines">${items.map(i => `<li><span class="grow" style="color:var(--text)">${esc(i.text)}</span><button class="x" data-di="${i.id}">✕</button></li>`).join("")}</ul>` : ""; }).join("") : "Lessons, values, ideas and goals from your dumps collect here.";
   $("#nList").innerHTML = notes.length ? notes.map(n => `<li><div class="grow"><div class="muted small">${new Date(n.created_at).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</div><div>${esc(n.summary || n.body.slice(0, 220) + (n.body.length > 220 ? "…" : ""))}</div></div><button class="x" data-dn="${n.id}">✕</button></li>`).join("") : `<li class="muted small">No dumps yet.</li>`;
   el.querySelectorAll("[data-di]").forEach(b => b.onclick = async () => { await q(sb.from("hq_insights").delete().eq("id", b.dataset.di)); renderNotes(el); });
   el.querySelectorAll("[data-dn]").forEach(b => b.onclick = async () => { if (!confirm("Delete this dump?")) return; await q(sb.from("hq_notes").delete().eq("id", b.dataset.dn)); renderNotes(el); });
