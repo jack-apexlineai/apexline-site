@@ -18,6 +18,8 @@ function $$(sel, root){ return Array.prototype.slice.call((root || view).querySe
 function buzz(ms){ try { if (navigator.vibrate) navigator.vibrate(ms || 25); } catch (e) {} }
 function toast(t){ var d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(function(){ d.remove(); }, 2600); }
 
+/* Nothing is read out unless the person taps a speaker (Jack, 18 Nov). quiet() is where auto speech used to be. */
+function quiet(){}
 var talkTimer = null;
 function speak(text, lang){
   CS.say(text, lang);
@@ -85,14 +87,14 @@ function render(isBack){
     b.addEventListener('click', function(){ if (busy) return; var v = b.getAttribute('data-lang-set'); if (v === (ctx.lang || 'en')) return; buzz(); ctx.lang = v; render(false); });
   });
   if (out.bind) out.bind($('.screen'));
-  if (out.talk) setTimeout(function(){ speak(out.talk, out.lang); }, 180);
+  if (out.talk) setTimeout(function(){ quiet(out.talk, out.lang); }, 180);
 }
 backBtn.innerHTML = ic('arrow-left');
 homeBtn.innerHTML = ic('home');
 backBtn.addEventListener('click', back);
 homeBtn.addEventListener('click', function(){ if (!busy) { ctx = { op: ctx.op }; go(hub, null, { reset: true }); } });
 function paintMute(){ muteBtn.innerHTML = ic(CS.muted ? 'volume-off' : 'volume-2'); muteBtn.classList.toggle('off', CS.muted); }
-muteBtn.addEventListener('click', function(){ CS.setMuted(!CS.muted); paintMute(); if (!CS.muted) speak('Sound is on'); });
+muteBtn.addEventListener('click', function(){ CS.setMuted(!CS.muted); paintMute(); if (!CS.muted) quiet('Sound is on'); });
 paintMute();
 
 function onTap(root, sel, fn){
@@ -147,7 +149,7 @@ function pinPad(){
           paint();
           if (typed.length === 4 && (k === 'ok' || k !== 'x')) {
             if (typed === CS.PIN) { busy = true; setTimeout(function(){ busy = false; ctx = { op: o }; go(hub, null, { replace: true }); afterLogin(); }, 120); }
-            else { r.querySelector('#pdots').classList.add('shake'); speak('That PIN is not right. Try again.'); setTimeout(function(){ typed = ''; paint(); var pd = r.querySelector('#pdots'); if (pd) pd.classList.remove('shake'); }, 500); }
+            else { r.querySelector('#pdots').classList.add('shake'); quiet('That PIN is not right. Try again.'); setTimeout(function(){ typed = ''; paint(); var pd = r.querySelector('#pdots'); if (pd) pd.classList.remove('shake'); }, 500); }
           }
         });
       });
@@ -383,7 +385,7 @@ function defect(){
         d.severity = el.dataset.sev;
         c.defects = c.defects.filter(function(x){ return x.idx !== c.idx; });
         c.defects.push(d); c.pending = null;
-        if (d.severity === 'serious') speak('Serious. ' + ctx.machine.name + ' will be marked do not use.');
+        if (d.severity === 'serious') quiet('Serious. ' + ctx.machine.name + ' will be marked do not use.');
         nextItem(true);
       });
     }
@@ -524,7 +526,7 @@ function swpStep(i){
         if (CS.activeLocks(mid).some(function(l){ return l.op === ctx.op.id; })) return;
         S = CS.load(); if (!CS.lockOn(mid, ctx.op.id, 'Isolation: ' + p.title)) return;
         el.classList.add('on'); el.innerHTML = ic('lock-check') + esc(U ? U.lockOn(CS.machine(mid).name) : 'Your lock is on ' + CS.machine(mid).name);
-        speak(U ? U.lockSay : 'Your lock is on. The office can see it.', lg);
+        quiet(U ? U.lockSay : 'Your lock is on. The office can see it.', lg);
       });
     }
   };
@@ -743,7 +745,7 @@ function voice(arg){
           if (!err && ta.value.trim()) setTimeout(function(){ if (!busy && stack[stack.length - 1].fn === voice) tidyB.click(); }, 500);
         });
       });
-      onTap(r, '[data-sample]', function(){ stop(); ta.value = sampleFor(a); sync(); stEl.textContent = 'Sample words loaded. Tap Tidy it up.'; speak(ta.value); });
+      onTap(r, '[data-sample]', function(){ stop(); ta.value = sampleFor(a); sync(); stEl.textContent = 'Sample words loaded. Tap Tidy it up.'; quiet(ta.value); });
       tidyB.addEventListener('click', function(){
         if (busy || tidyB.disabled) return; buzz(); stop(); sync();
         go(voiceCard, a);
@@ -781,7 +783,7 @@ function voiceCard(a){
         (!a.fromCheck ? '<div class="mpick">' + siteMs.map(function(x){ return '<button class="' + (m && m.id === x.id ? 'on' : '') + '" data-pm="' + x.id + '">' + esc(x.name) + '</button>'; }).join('') + '</div>' : '') + '</div>' : '') +
       row(c.kind === 'nearmiss' ? 'What happened' : c.kind === 'fix' ? 'What was done' : 'The defect', esc(c.text), c.text) + sevRow +
       row(c.kind === 'fix' ? 'Next' : 'Action', esc(c.action), c.action, 'vact') + '</div>' +
-      '<button class="replay wide" data-say="' + esc(rb) + '">' + ic('volume') + 'Read it all out again</button>' +
+      '<button class="replay wide" data-say="' + esc(rb) + '">' + ic('volume') + 'Read it all out</button>' +
       '<div class="twin"><button class="bigbtn ghost" data-again>' + ic('microphone') + 'Say it again</button><button class="bigbtn' + (c.severity === 'serious' ? ' red' : '') + '" data-ok' + (c.kind !== 'fix' && !m ? ' disabled' : '') + '>' + ic('check') + 'Confirm</button></div>',
     talk: rb,
     bind: function(r){
@@ -851,7 +853,7 @@ function swpQuiz(qi){
           });
         } else {
           sw.tries = (sw.tries || 0) + 1; sw.wrongAt = qi;
-          burst('bad', function(){ go(swpQuiz, qi, { replace: true }); setTimeout(function(){ speak((U ? U.notQuiteSay : 'Not quite. Listen again.') + ' ' + stepS, lg); }, 250); });
+          burst('bad', function(){ go(swpQuiz, qi, { replace: true }); setTimeout(function(){ quiet((U ? U.notQuiteSay : 'Not quite. Listen again.') + ' ' + stepS, lg); }, 250); });
         }
       });
     }
@@ -878,7 +880,7 @@ function tbtView(){
         box.classList.remove('pulse'); box.classList.add('signed'); buzz(40);
         box.innerHTML = ic('circle-check') + 'Signed<small>' + esc(ctx.op.first + ' ' + ctx.op.last) + ' · ' + CS.hm(CS.now()) + '</small>';
         S = CS.load(); CS.signTbt(ctx.op.id);
-        speak('Thank you. You have signed the toolbox talk.');
+        quiet('Thank you. You have signed the toolbox talk.');
       });
     }
   };
@@ -927,15 +929,15 @@ function permitStart(did){
       '<button class="bigbtn yellow" data-issue' + (all ? '' : ' disabled') + '>' + ic('shield-lock') + 'Issue permit and lock on</button>',
     talk: talk,
     bind: function(r){
-      onTap(r, '[data-pt]', function(el){ var i = +el.dataset.pt; P.done[i] = !P.done[i]; if (P.done[i]) speak(pts[i]); go(permitStart, did, { replace: true }); });
-      onTap(r, '[data-try]', function(){ P.tried = !P.tried; if (P.tried) speak('Nothing moved. Good.'); go(permitStart, did, { replace: true }); });
+      onTap(r, '[data-pt]', function(el){ var i = +el.dataset.pt; P.done[i] = !P.done[i]; if (P.done[i]) quiet(pts[i]); go(permitStart, did, { replace: true }); });
+      onTap(r, '[data-try]', function(){ P.tried = !P.tried; if (P.tried) quiet('Nothing moved. Good.'); go(permitStart, did, { replace: true }); });
       var b = $('[data-issue]', r);
       b.addEventListener('click', function(){
         if (busy || b.disabled || P.saved) return;
         P.saved = true; b.disabled = true; buzz(40);
         S = CS.load();
         var pr = CS.raisePermit({ machine: m.id, job: d.title || d.note, defect: did, points: pts.map(function(t){ return { t: t, done: true }; }) }, ctx.op.id);
-        burst('ok', function(){ stack.length -= 1; go(permitView, pr.id, { replace: true }); speak('Permit ' + pr.id.split('-').join(' ') + ' issued. Your lock is on. The office can see it.'); });
+        burst('ok', function(){ stack.length -= 1; go(permitView, pr.id, { replace: true }); quiet('Permit ' + pr.id.split('-').join(' ') + ' issued. Your lock is on. The office can see it.'); });
       });
     }
   };
@@ -963,16 +965,16 @@ function permitView(pid){
     talk: talk,
     bind: function(r){
       var ta = $('#pnote', r); if (ta) ta.addEventListener('input', function(){ ctx.pnote = ta.value; });
-      onTap(r, '[data-psample]', function(){ ta.value = ctx.pnote = 'Ram seals replaced. Ran it empty three times, returns fully. Guards back on.'; speak(ta.value); });
-      onTap(r, '[data-join]', function(el){ el.disabled = true; S = CS.load(); CS.joinPermit(p.id, me.id); burst('ok', function(){ go(permitView, p.id, { replace: true }); speak('Your lock is on the group box.'); }); });
-      onTap(r, '[data-myoff]', function(el){ el.disabled = true; S = CS.load(); CS.lockOff(el.dataset.myoff, me.id); burst('ok', function(){ go(permitView, p.id, { replace: true }); speak('Your lock is off the box.'); }); });
+      onTap(r, '[data-psample]', function(){ ta.value = ctx.pnote = 'Ram seals replaced. Ran it empty three times, returns fully. Guards back on.'; quiet(ta.value); });
+      onTap(r, '[data-join]', function(el){ el.disabled = true; S = CS.load(); CS.joinPermit(p.id, me.id); burst('ok', function(){ go(permitView, p.id, { replace: true }); quiet('Your lock is on the group box.'); }); });
+      onTap(r, '[data-myoff]', function(el){ el.disabled = true; S = CS.load(); CS.lockOff(el.dataset.myoff, me.id); burst('ok', function(){ go(permitView, p.id, { replace: true }); quiet('Your lock is off the box.'); }); });
       var cb = $('[data-close]', r);
       if (cb) cb.addEventListener('click', function(){
         if (busy || cb.disabled) return; cb.disabled = true; buzz(40);
         S = CS.load();
         if (!CS.closePermit(p.id, me.id, (ta && ta.value) || '')) { cb.disabled = false; return toast('Someone still has a lock on'); }
         ctx.pnote = '';
-        burst('ok', function(){ go(permitView, p.id, { replace: true }); speak(m.name + ' is handed back. Do a pre shift check before use.'); });
+        burst('ok', function(){ go(permitView, p.id, { replace: true }); quiet(m.name + ' is handed back. Do a pre shift check before use.'); });
       });
     }
   };
