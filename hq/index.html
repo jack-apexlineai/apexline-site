@@ -76,6 +76,7 @@ button:disabled{opacity:.5}
 .lines li{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);min-width:0}
 .lines li:last-child{border-bottom:0}
 .lines .grow{flex:1;min-width:0;overflow-wrap:anywhere}
+.lines .grow.pname{overflow-wrap:normal}
 .lines .k{color:var(--muted)}
 .chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
 .chip.good{color:var(--good);border-color:rgba(52,211,153,.35)}
@@ -512,6 +513,8 @@ function money(s = S, d = today()){
   const notLive = signed.filter(x => x.stage !== "Live" && Number(x.monthly));
   const target = Number(s.settings.target || 25000);
   const cashTotal = sum(counted, "amount");
+  const pipe = s.deals.filter(inPipe).sort((a, b) => (Number(b.value || 0) - Number(a.value || 0)) || String(a.next_date || "9999").localeCompare(String(b.next_date || "9999")));
+  const wonDeals = s.deals.filter(x => dealStatus(x) === "Won");
   return {
     mrr: sum(signed, "monthly"),
     liveMrr: sum(s.deals.filter(x => x.stage === "Live"), "monthly"),
@@ -522,8 +525,9 @@ function money(s = S, d = today()){
     cashTotal,
     unpaid: sum(sent, "amount"), unpaidCount: sent.length,
     scheduled: sum(scheduled, "amount"),
-    pipeline: sum(s.deals.filter(isOpen), "value"),
-    openDeals: s.deals.filter(x => isOpen(x) && Number(x.value)).length,
+    pipeline: sum(pipe, "value"), pipeMonthly: sum(pipe, "monthly"), pipeDeals: pipe,
+    openDeals: pipe.length, pipeTbc: pipe.filter(x => !Number(x.value)).length,
+    wonDeals, wonValue: sum(wonDeals, "value"), wonMonthly: sum(wonDeals, "monthly"),
     debtsLeft: s.debts.reduce((a, r) => a + Math.max(0, Number(r.amount) - Number(r.paid)), 0),
     target, pct: Math.min(100, Math.round(100 * cashTotal / (target || 1))),
   };
@@ -536,6 +540,25 @@ const STAGE_FROM = { "Call booked": "Demo booked", "Proposal Sent": "Proposal se
 const daysBetween = (a, b) => Math.round((new Date(String(b).slice(0, 10) + "T12:00:00") - new Date(String(a).slice(0, 10) + "T12:00:00")) / 864e5);
 function dealStatus(x){ return x.status || ({ "Demo booked": "Call booked", "Demo done": "Hot", "Proposal sent": "Proposal Sent", Won: "Won", Building: "Won", Live: "Won", Lost: "Lost", Spoken: "Warm" }[x.stage] || "Cold"); }
 function isOpen(x){ return !["Won","Renewal","Lost"].includes(dealStatus(x)); }
+/* Pipeline = open deals not yet won: any open deal with a value, plus every Hot, Call booked or Proposal Sent deal (value TBC until priced). */
+const PIPE_STATUSES = ["Hot","Call booked","Proposal Sent"];
+function inPipe(x){ return isOpen(x) && (Number(x.value) > 0 || Number(x.monthly) > 0 || PIPE_STATUSES.includes(dealStatus(x))); }
+const PIPE_LAB = "Pipeline: open deals not yet won";
+function cashSub(m, s = S){
+  if (m.unpaid) return `${gbp(m.unpaid)} invoiced, not paid`;
+  const sch = s.invoices.filter(i => i.status === "scheduled");
+  if (sch.length === 1) return `${esc(sch[0].number)} ${gbp(sch[0].amount)} due ${sch[0].trigger ? esc(sch[0].trigger) : fmtDay(sch[0].due_on)}`;
+  return sch.length ? `${gbp(m.scheduled)} scheduled` : "nothing unpaid";
+}
+function pipeSub(m){ return `${m.openDeals} ${m.openDeals === 1 ? "deal" : "deals"}${m.pipeTbc ? `, ${m.pipeTbc} value TBC` : ""}${m.pipeMonthly ? `, + ${gbp(m.pipeMonthly)}/mo` : ""}`; }
+function valTxt(x){ return Number(x.value) ? gbp(x.value) + (Number(x.monthly) ? ` + ${gbp(x.monthly)}/mo` : "") : (Number(x.monthly) ? gbp(x.monthly) + "/mo" : "TBC"); }
+function pipeCard(m, id){
+  const row = x => `<li class="dcrow" data-deal="${x.id}"><span class="grow pname"><b>${esc(x.company)}</b> <span class="muted small">${esc(x.contact || "")}</span><span class="muted small" style="display:block;margin-top:2px">${esc(dealStatus(x))}${x.next_date ? ", next " + fmtDay(x.next_date) : ""}</span></span><b class="num" style="white-space:nowrap">${valTxt(x)}</b></li>`;
+  return `<div class="card" id="${id}"><div class="card-h"><h2>Pipeline</h2><span class="cnt">open deals not yet won</span></div>
+    <ul class="lines">${m.pipeDeals.length ? m.pipeDeals.map(row).join("") : '<li class="muted small">No open deals.</li>'}
+    <li class="pipetot"><span class="grow"><b>Pipeline total</b></span><b class="num" style="color:var(--hud)">${gbp(m.pipeline)}${m.pipeMonthly ? ` + ${gbp(m.pipeMonthly)}/mo` : ""}</b></li></ul>
+    ${m.wonDeals.length ? `<div class="eyebrow" style="margin:14px 0 2px">Won, not in the pipeline</div><ul class="lines">${m.wonDeals.map(x => `<li class="dcrow" data-deal="${x.id}"><span class="grow pname"><b>${esc(x.company)}</b> <span class="muted small">${esc(x.contact || "")}</span></span><b class="num" style="color:var(--good);white-space:nowrap">${valTxt(x)}</b></li>`).join("")}</ul>` : ""}</div>`;
+}
 function followUps(s = S, d = today()){
   const act = s.deals.filter(x => x.next_date && !["Lost","Uncontacted"].includes(dealStatus(x)));
   const by = (a, b) => String(a.next_date).localeCompare(String(b.next_date)) || String(a.company).localeCompare(String(b.company));
@@ -837,8 +860,8 @@ function hudTiles(s){
   const m = money(s), c = todayCounts(s);
   return [
     { v: m.mrr, label: "MRR", sub: m.nextLive && !m.liveMrr ? "starts " + fmtDay(m.nextLive) : m.customers + (m.customers === 1 ? " customer" : " customers") },
-    { v: m.cashMonth, label: "Cash this month", sub: m.unpaid ? "of " + gbp(m.unpaid) + " invoiced" : "no invoices unpaid" },
-    { v: m.pipeline, label: "Pipeline", sub: m.openDeals + " open " + (m.openDeals === 1 ? "deal" : "deals") },
+    { v: m.cashMonth, label: "Cash this month", sub: m.unpaid ? gbp(m.unpaid) + " not paid yet" : "collected" },
+    { v: m.pipeline, label: "Pipeline", sub: "open, not yet won" },
     { v: c.open, label: "Today", sub: c.open + " tasks, " + c.calls + (c.calls === 1 ? " call" : " calls"), plain: true },
   ];
 }
@@ -939,8 +962,8 @@ function renderToday(el){
   el.innerHTML = phead(longDate(), `Good ${greet().toLowerCase()}, Jack`, `<button id="hAdd">+ Task</button>`) +
   `<div class="kpis" id="tStats">
     ${kpi(gbp(m.mrr), "MRR", m.nextLive && !m.liveMrr ? `${m.customers} customer, starts ${fmtDay(m.nextLive)}` : `${m.customers} ${m.customers === 1 ? "customer" : "customers"}`, { hi: true, k: "tmrr" })}
-    ${kpi(gbp(m.cashMonth), "Cash this month", m.unpaid ? `${gbp(m.unpaid)} invoiced, not paid` : "nothing unpaid", { warn: !!m.unpaid })}
-    ${kpi(gbp(m.pipeline), "Pipeline", `${m.openDeals} open ${m.openDeals === 1 ? "deal" : "deals"}`)}
+    ${kpi(gbp(m.cashMonth), "Cash this month", cashSub(m), { warn: !!m.unpaid, k: "tcash" })}
+    ${kpi(gbp(m.pipeline), PIPE_LAB, pipeSub(m), { k: "tpipe" })}
     ${kpi(`${c.done}<span class="muted" style="font-size:18px">/${c.total}</span>`, "Tasks done today", `${c.open} left, ${c.calls} ${c.calls === 1 ? "call" : "calls"}`)}
   </div>
   <div class="dash">
@@ -963,6 +986,7 @@ function renderToday(el){
         <li><span class="grow k">To go</span><b>${gbp(Math.max(0, m.target - m.cashTotal))}</b></li>
         <li><span class="grow k">A day, ${daysLeft} days</span><b>${gbp(Math.max(0, m.target - m.cashTotal) / daysLeft)}</b></li></ul></div></div></div>
       <div class="card"><div class="card-h"><h2>Money due</h2><a href="#money">Invoices</a></div><ul class="lines">${out.length ? out.map(i => `<li><span class="grow"><b>${esc(i.number)}</b> <span class="muted small">${esc(i.client)}</span></span><b class="num">${gbp(i.amount)}</b>${i.status === "sent" ? '<span class="chip warn">Not paid</span>' : `<span class="chip violet">${i.due_on ? fmtDay(i.due_on) : esc(i.trigger || "Later")}</span>`}</li>`).join("") : '<li class="muted small">No invoices out.</li>'}</ul></div>
+      ${pipeCard(m, "tPipe")}
       <div class="card"><div class="card-h"><h2>Follow-ups due</h2><a href="#crm">CRM</a></div><ul class="lines" id="tFu">${fu.due.length ? fu.due.slice(0, 6).map(fuRow).join("") + (fu.due.length > 6 ? `<li class="muted small">+${fu.due.length - 6} more in the CRM</li>` : "") : '<li class="muted small">Nothing due today.</li>'}</ul></div>
       <div class="card"><div class="card-h"><h2>Outreach, 14 days</h2><a href="#outreach">Log</a></div>
         <div class="bars" aria-label="Messages sent per day">${perDay.map((v, i) => `<div class="${i === 13 ? "today" : ""}" style="height:${Math.max(2, 100 * v / mx)}%" title="${fmtDay(days[i])}: ${v} sent"></div>`).join("")}</div>
@@ -1105,7 +1129,7 @@ function renderCRM(el){
   const toCall = S.deals.filter(x => dealStatus(x) === "Uncontacted").length;
   el.innerHTML = phead("Every lead, one place", "CRM", `<button id="cAddBtn">+ Deal</button>`) +
   `<div class="kpis">
-    ${kpi(gbp(m.pipeline), "Pipeline", `${m.openDeals} open ${m.openDeals === 1 ? "deal" : "deals"} with a value`, { hi: true, k: "pipe" })}
+    ${kpi(gbp(m.pipeline), PIPE_LAB, pipeSub(m), { hi: true, k: "pipe" })}
     ${kpi(hot, "Hot and booked", "calls booked, proposals out", { k: "hot" })}
     ${kpi(f.due.length, "Follow-ups due", f.due.length ? "oldest " + fmtDay(f.due[0].next_date) : "all clear", { warn: !!f.due.length, k: "fudue" })}
     ${kpi(toCall, "To call", "uncontacted leads", { k: "tocall" })}
@@ -1114,7 +1138,7 @@ function renderCRM(el){
     <div class="col"><div class="card"><div class="card-h"><h2>Follow-ups due</h2><span class="cnt">${f.due.length} due, ${f.soon.length} this week</span></div>
       <ul class="lines" id="fuList">${f.due.length ? f.due.map(fuRow).join("") : '<li class="muted small">Nothing due. Nice.</li>'}</ul>
       ${f.soon.length ? `<div class="eyebrow" style="margin:16px 0 2px">Next 7 days</div><ul class="lines" id="fuSoon">${f.soon.map(fuRow).join("")}</ul>` : ""}</div></div>
-    <div class="col"><div class="card"><div class="card-h"><h2>By status</h2><span class="cnt">${S.deals.length} leads</span></div>${statusBars(S.deals)}</div>
+    <div class="col">${pipeCard(m, "cPipe")}<div class="card"><div class="card-h"><h2>By status</h2><span class="cnt">${S.deals.length} leads</span></div>${statusBars(S.deals)}</div>
       <div class="card hide" id="cAdd"><div class="card-h"><h2>New deal</h2></div>
         <div class="row"><input id="nCo" placeholder="Company" style="flex:1 1 100%"><input id="nWho" placeholder="Lead name" style="flex:1;min-width:120px"><input id="nPhone" placeholder="Phone" style="flex:1;min-width:120px"></div>
         <div class="row" style="margin-top:8px"><select id="nStatus" aria-label="Status">${CRM_STATUSES.map(s => `<option ${s === "Cold" ? "selected" : ""}>${s}</option>`).join("")}</select><input id="nVal" type="number" inputmode="decimal" placeholder="£ value" aria-label="Value"><input id="nNext" type="date" aria-label="Follow-up date"><button id="nAdd">Add</button></div></div>
