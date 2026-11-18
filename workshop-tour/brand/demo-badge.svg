@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Demo Truck Services">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A86A6"/><stop offset="1" stop-color="#17566D"/></linearGradient></defs>
+  <rect x="4" y="4" width="112" height="112" rx="26" fill="url(#g)"/>
+  <rect x="4" y="4" width="112" height="112" rx="26" fill="none" stroke="#ffffff" stroke-opacity=".18" stroke-width="2"/>
+  <g fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M24 70V44h40v26M64 52h14l10 11v7H64"/>
+    <circle cx="38" cy="74" r="6.5" fill="#17566D"/><circle cx="76" cy="74" r="6.5" fill="#17566D"/>
+  </g>
+  <text x="60" y="102" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" letter-spacing="3" fill="#ffffff">DTS</text>
+</svg>

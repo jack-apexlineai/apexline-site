@@ -1,0 +1,86 @@
+/* Self-serve tour: the email gate, the welcome choice and the guided tour. */
+
+/* ---------- gate and welcome ---------- */
+.tgate { position: fixed; inset: 0; z-index: 2147483000; display: grid; place-items: center; padding: 16px;
+  background: radial-gradient(1200px 600px at 50% -10%, rgba(31,111,139,.35), transparent 60%), #0E1622; overflow-y: auto; }
+.tg-card { width: 100%; max-width: 460px; background: #fff; color: #142033; border-radius: 18px; padding: 28px 26px 22px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.45); font-family: Inter, system-ui, -apple-system, Arial, sans-serif; }
+.tg-badge { display: block; width: 56px; height: 56px; margin-bottom: 14px; }
+.tg-kick { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #1F6F8B; margin-bottom: 6px; }
+.tg-h { font-size: 23px; line-height: 1.25; font-weight: 800; margin: 0 0 8px; letter-spacing: -.01em; }
+.tg-p { font-size: 15px; line-height: 1.5; color: #4A5568; margin: 0 0 18px; }
+.tg-f { display: block; margin-bottom: 12px; min-width: 0; }
+.tg-f span { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #2D3748; }
+.tg-f em { font-style: normal; font-weight: 500; color: #8A94A6; margin-left: 4px; }
+.tg-f input { width: 100%; box-sizing: border-box; font: inherit; font-size: 16px; padding: 11px 12px; border: 1.5px solid #CBD3DF;
+  border-radius: 10px; background: #fff; color: #142033; outline: none; }
+.tg-f input:focus { border-color: #1F6F8B; box-shadow: 0 0 0 3px rgba(31,111,139,.18); }
+.tg-f input[aria-invalid="true"] { border-color: #C53030; }
+.tg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tg-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.tg-err { min-height: 18px; font-size: 13.5px; color: #C53030; font-weight: 600; margin: -2px 0 8px; }
+.tg-go, .tg-alt { display: block; width: 100%; font: inherit; font-size: 16px; font-weight: 700; border-radius: 12px; padding: 14px 16px;
+  cursor: pointer; border: 0; text-align: center; }
+.tg-go { background: #1F6F8B; color: #fff; }
+.tg-go:hover { background: #185A72; }
+.tg-alt { background: #EEF2F7; color: #142033; }
+.tg-alt:hover { background: #E2E8F0; }
+.tg-go:focus-visible, .tg-alt:focus-visible { outline: 3px solid rgba(31,111,139,.45); outline-offset: 2px; }
+.tg-small { font-size: 12.5px; color: #718096; margin: 12px 0 0; line-height: 1.45; }
+.tg-choice { display: grid; gap: 10px; }
+.tg-choice b { display: block; font-size: 16px; }
+.tg-choice span { display: block; font-size: 13px; font-weight: 500; opacity: .8; margin-top: 3px; }
+@media (max-width: 420px) {
+  .tg-card { padding: 22px 18px 18px; border-radius: 16px; }
+  .tg-row { grid-template-columns: 1fr; gap: 0; }
+  .tg-h { font-size: 21px; }
+}
+
+/* ---------- the tour ---------- */
+.tr-spot { position: fixed; z-index: 2147482990; border-radius: 12px; pointer-events: none;
+  box-shadow: 0 0 0 3px rgba(255,255,255,.9), 0 0 0 9999px rgba(8,12,20,.58);
+  transition: left .25s ease, top .25s ease, width .25s ease, height .25s ease; }
+.tr-spot.none { box-shadow: 0 0 0 9999px rgba(8,12,20,.58); width: 0 !important; height: 0 !important; left: 50% !important; top: 50% !important; }
+.tr-card { position: fixed; z-index: 2147482999; width: 360px; max-width: calc(100vw - 16px); box-sizing: border-box;
+  background: #fff; color: #142033; border-radius: 16px; padding: 16px 18px 16px; box-shadow: 0 20px 60px rgba(0,0,0,.4);
+  font-family: Inter, system-ui, -apple-system, Arial, sans-serif; transition: opacity .15s; }
+.tr-card.busy { opacity: .55; pointer-events: none; }
+.tr-card.center { left: 50% !important; top: 50% !important; transform: translate(-50%, -50%); }
+.tr-card.end { width: 420px; }
+.tr-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.tr-n { font-size: 12.5px; font-weight: 700; color: #1F6F8B; letter-spacing: .02em; }
+.tr-skip { font: inherit; font-size: 13px; color: #718096; background: none; border: 0; padding: 4px 2px; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.tr-bar { height: 4px; border-radius: 4px; background: #E2E8F0; overflow: hidden; margin-bottom: 12px; }
+.tr-bar i { display: block; height: 100%; background: #1F6F8B; border-radius: 4px; transition: width .3s; }
+.tr-h { font-size: 18px; line-height: 1.3; font-weight: 800; margin: 0 0 6px; }
+.tr-p { font-size: 14.5px; line-height: 1.5; color: #3B4658; margin: 0 0 14px; }
+.tr-btns { display: flex; gap: 8px; justify-content: flex-end; }
+.tr-back, .tr-next { font: inherit; font-size: 15px; font-weight: 700; border-radius: 10px; padding: 10px 16px; cursor: pointer; border: 0; }
+.tr-back { background: #EEF2F7; color: #142033; }
+.tr-back[disabled] { opacity: .4; cursor: default; }
+.tr-next { background: #1F6F8B; color: #fff; min-width: 96px; }
+.tr-cta { display: grid; gap: 8px; margin: 0 0 12px; }
+.tr-book, .tr-wa { display: block; text-align: center; text-decoration: none; font-size: 15.5px; font-weight: 700; border-radius: 12px; padding: 13px 14px; }
+.tr-book { background: #1F6F8B; color: #fff; }
+.tr-wa { background: #E8F7EE; color: #146C3A; border: 1.5px solid #9AD8B1; }
+.tr-card.end .tr-next { background: #EEF2F7; color: #142033; }
+.tr-back:focus-visible, .tr-next:focus-visible, .tr-book:focus-visible, .tr-wa:focus-visible, .tr-skip:focus-visible { outline: 3px solid rgba(31,111,139,.45); outline-offset: 2px; }
+html[data-theme="dark"] .tr-card { background: #18212F; color: #EDF2F7; }
+html[data-theme="dark"] .tr-p { color: #C3CCD9; }
+html[data-theme="dark"] .tr-back, html[data-theme="dark"] .tr-card.end .tr-next { background: #263244; color: #EDF2F7; }
+html[data-theme="dark"] .tr-bar { background: #2D3A4D; }
+html[data-theme="dark"] .tr-n { color: #6CC3E0; }
+html[data-theme="dark"] .tr-wa { background: #14301F; color: #8BE0AB; border-color: #2F6B45; }
+
+/* on a phone: the card is a sheet along the bottom */
+@media (max-width: 760px) {
+  .tr-card, .tr-card.end { left: 8px !important; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); top: auto !important; width: auto; max-width: none;
+    transform: none !important; padding: 14px 16px; max-height: 52vh; overflow-y: auto; }
+  .tr-h { font-size: 17px; }
+  .tr-p { font-size: 14px; margin-bottom: 12px; }
+  .tr-btns .tr-back, .tr-btns .tr-next { flex: 1; }
+  .tr-card.attop, .tr-card.end.attop { top: calc(8px + env(safe-area-inset-top)) !important; bottom: auto; }
+}
+
+/* the Tour button in the demo bar */
+.tourbtn { font-weight: 700; }
