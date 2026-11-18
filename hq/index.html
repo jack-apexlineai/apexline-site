@@ -248,6 +248,10 @@ button.chip{cursor:pointer}
 .car .rimDlo{stroke:rgba(234,246,255,.16);stroke-width:1}
 .car .rimDoor{stroke:rgba(234,246,255,.10);stroke-width:1}
 .car .rimHaunch{stroke:rgba(255,255,255,.35);stroke-width:6}
+.car .rimTrace{stroke:#FFFFFF;stroke-width:1.15;filter:url(#rimGlow)}
+.car .rimMain{stroke:#FFFFFF;stroke-width:1.6}
+#boot.go .car .rimTrace{animation:draw .8s var(--d,1.6s) ease-out forwards}
+#boot.go .car .rimMain{animation:draw 1.6s 1.3s cubic-bezier(.45,.05,.3,1) forwards}
 .car .glint{fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round;vector-effect:non-scaling-stroke;stroke-dasharray:.05 2;stroke-dashoffset:.05;opacity:0;filter:url(#rimGlow)}
 .car .shell,.car .tyre,.car .arch,.car .hubring,.car .neck,.car .floor{opacity:0}
 #boot.go .mono .ring{animation:draw .6s ease-out forwards}
@@ -285,7 +289,7 @@ button.chip{cursor:pointer}
 #boot.still .mono .ring,#boot.still .mono .sig,#boot.still .car .rim{stroke-dashoffset:0}
 #boot.still .mono .ring2,#boot.still .car .shell,#boot.still .car .tyre,#boot.still .car .arch,#boot.still .car .hubring,#boot.still .car .neck,#boot.still .car .floor,#boot.still .hello,#boot.still .hudrow > div{opacity:1}
 #boot.still .car .glint{opacity:0}
-@media (prefers-reduced-motion: reduce){#boot *{animation:none!important;transition:none!important}.chip.run .stdot{animation:none}}
+@media (prefers-reduced-motion: reduce){#boot *{animation:none!important;transition:none!important}.car .rim{stroke-dashoffset:0}.chip.run .stdot{animation:none}}
 
 @media (max-width:1100px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:900px){
@@ -378,6 +382,10 @@ button.chip{cursor:pointer}
   <!-- 911 GT-style side profile in studio rim light, drawn for HQ (own artwork, after Jack's reference look) -->
   <svg class="car" viewBox="0 0 600 200" aria-hidden="true">
   <defs>
+    <linearGradient id="gTrace" gradientUnits="userSpaceOnUse" x1="262" y1="0" x2="1760" y2="0">
+      <stop offset="0" stop-color="#EAF6FF" stop-opacity=".35"/><stop offset=".25" stop-color="#FFFFFF" stop-opacity=".95"/>
+      <stop offset=".6" stop-color="#FFFFFF" stop-opacity="1"/><stop offset="1" stop-color="#EAF6FF" stop-opacity=".45"/>
+    </linearGradient>
     <linearGradient id="gRoof" gradientUnits="userSpaceOnUse" x1="700" y1="0" x2="1600" y2="0">
       <stop offset="0" stop-color="#EAF6FF" stop-opacity="0"/><stop offset=".18" stop-color="#EAF6FF" stop-opacity=".55"/>
       <stop offset=".32" stop-color="#FFFFFF" stop-opacity="1"/><stop offset=".62" stop-color="#FFFFFF" stop-opacity=".9"/>
@@ -397,23 +405,30 @@ button.chip{cursor:pointer}
     <filter id="rimGlow" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
     <filter id="soft" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
   </defs>
-  <ellipse class="floor" cx="300" cy="190" rx="285" ry="8" fill="url(#floorGlow)"/>
+  
   <g transform="scale(.38) translate(-250 -400)">
-    <circle class="tyre" cx="1422" cy="776" r="108"/><circle class="tyre" cx="560" cy="782" r="108"/>
-    <path class="shell" d="M268 712 C280 680 320 650 380 622 C420 604 470 596 520 592 C600 584 660 578 712 574 C790 530 870 482 940 460 C1010 442 1120 436 1200 448 C1330 466 1450 510 1560 548 C1610 562 1660 580 1690 598 C1725 616 1736 640 1738 668 L1742 752 C1744 768 1736 780 1718 782 L1550 786 C1548 720 1500 650 1422 650 C1344 650 1296 720 1294 788 L688 796 C686 726 638 656 560 656 C482 656 434 726 432 798 L306 808 C286 813 268 812 264 798 C260 770 262 735 268 712 Z"/>
-    <path class="arch" d="M1294 788 C1296 720 1344 650 1422 650 C1500 650 1548 720 1550 786 M432 798 C434 726 482 656 560 656 C638 656 686 726 688 796"/>
-    <circle class="hubring" cx="1422" cy="776" r="68"/><circle class="hubring" cx="560" cy="782" r="68"/>
-    <path class="shell wingshell" d="M1512 484 C1580 468 1660 452 1736 440 C1748 438 1756 444 1754 454 C1752 462 1744 466 1734 468 C1660 478 1586 492 1516 500 C1504 501 1502 488 1512 484 Z M1748 436 L1756 432 L1760 500 L1752 504 Z"/>
-    <path class="neck" d="M1676 468 C1668 500 1664 528 1672 552 C1678 572 1688 588 1696 602 M1700 466 C1694 500 1694 532 1704 560 C1710 578 1716 592 1722 612"/>
-    <path class="rim rimHaunch" pathLength="1" d="M1288 594 C1360 570 1446 566 1528 582" filter="url(#soft)"/>
-    <path class="rim rimDoor" pathLength="1" d="M760 590 C980 584 1240 578 1500 572"/>
-    <path class="rim rimDlo" pathLength="1" d="M768 572 C850 516 930 484 1000 474 C1100 466 1200 470 1290 488 C1380 506 1460 530 1532 552"/>
-    <path class="rim rimMirror" pathLength="1" d="M842 574 C846 550 870 536 898 538 C910 540 916 550 912 562"/>
-    <path class="rim rimLamp" pathLength="1" d="M458 600 C420 614 386 644 362 684"/>
-    <path class="rim rimNose" pathLength="1" d="M268 712 C280 680 320 650 380 622 C420 604 470 596 520 592 C600 584 660 578 712 574"/>
-    <path class="rim rimRoof" pathLength="1" d="M712 574 C790 530 870 482 940 460 C1010 442 1120 436 1200 448 C1330 466 1450 510 1560 548"/>
-    <path class="rim rimWing" pathLength="1" d="M1512 484 C1580 468 1660 452 1736 440 C1748 438 1756 444 1754 454 M1756 432 L1760 500"/>
-    <path class="glint" pathLength="1" d="M712 574 C790 530 870 482 940 460 C1010 442 1120 436 1200 448 C1330 466 1450 510 1560 548"/>
+    <path class="rim rimTrace rimMain" pathLength="1" d="M860 524 C866 520 882 510 894 503 C906 495 920 486 930 480 C939 473 944 468 950 464 C957 460 962 458 971 456 C980 454 994 451 1008 449 C1021 447 1039 446 1054 445 C1070 444 1087 444 1098 444 C1110 445 1115 445 1124 446 C1134 446 1139 446 1154 448 C1168 450 1186 451 1210 456 C1233 460 1262 466 1292 473 C1323 480 1362 491 1390 499 C1418 506 1444 514 1460 519 C1476 524 1480 526 1488 528 C1497 531 1502 534 1510 537 C1517 540 1527 543 1532 545 C1538 548 1541 549 1544 551 C1546 553 1545 556 1546 558 C1546 562 1547 566 1546 569 C1546 571 1547 573 1545 574 C1543 576 1541 576 1534 576 C1528 576 1519 575 1509 575 C1499 575 1487 574 1477 573 C1467 572 1458 572 1452 572 C1445 571 1442 570 1439 569 C1436 568 1436 566 1433 565 C1430 564 1426 563 1419 562 C1412 562 1393 562 1388 562"/>
+    <path class="rim rimTrace" pathLength="1" style="--d:1.55s" d="M268 742 C268 739 267 730 268 724 C270 719 274 715 278 711 C283 707 290 704 296 700 C302 697 308 694 314 691 C319 688 325 685 329 682 C334 678 337 675 340 672 C343 669 345 666 350 662 C354 659 361 654 368 648 C376 642 387 634 395 628 C403 622 411 616 418 612 C424 608 425 607 432 605 C439 603 447 602 458 600 C470 599 489 597 500 597 C510 596 519 596 524 597 C529 598 528 599 528 600 C529 602 528 603 527 605 C526 607 523 611 522 612"/>
+    <path class="rim rimTrace" pathLength="1" style="--d:1.73s" d="M558 598 C561 597 572 595 578 594 C584 592 590 590 597 588 C604 586 616 583 620 582"/>
+    <path class="rim rimTrace" pathLength="1" style="--d:1.77s" d="M622 582 C627 582 643 581 652 580 C660 579 665 579 673 578 C681 578 694 578 698 578"/>
+    <path class="rim rimTrace" pathLength="1" style="--d:1.83s" d="M780 580 C774 580 750 579 742 579 C733 578 729 578 727 577 C724 576 725 575 726 574 C726 573 724 573 727 570 C731 567 733 565 748 556 C763 548 791 533 817 520 C843 507 881 487 902 478 C922 468 932 463 940 460 C947 458 944 460 945 460 C946 461 948 462 948 462"/>
+    <path class="rim rimTrace" pathLength="1" style="--d:1.90s" d="M840 560 C843 558 852 553 858 550 C864 547 872 544 878 542 C884 541 889 540 894 539 C899 539 906 540 908 540"/>
+    <path class="rim rimTrace" pathLength="1" style="--d:2.18s" d="M1312 578 C1314 578 1321 577 1326 576 C1331 574 1338 569 1340 568"/>
+    <path class="rim rimTrace" pathLength="1" style="--d:2.19s" d="M1330 578 C1332 578 1336 579 1340 580 C1346 580 1357 580 1360 580"/>
+    <path class="rim rimTrace" pathLength="1" style="--d:2.30s" d="M1506 518 C1506 514 1506 500 1506 494 C1507 488 1507 485 1509 482 C1511 480 1513 479 1518 478 C1522 477 1531 476 1534 476"/>
+    <path class="rim rimTrace" pathLength="1" style="--d:2.31s" d="M1524 488 C1528 487 1542 482 1550 480 C1559 477 1569 474 1575 473 C1581 472 1584 473 1586 473 C1587 473 1586 476 1586 476"/>
+    <path class="rim rimTrace" pathLength="1" style="--d:2.31s" d="M1528 522 L1568 522"/>
+    <path class="rim rimTrace" pathLength="1" style="--d:2.35s" d="M1588 470 C1593 468 1608 462 1616 459 C1623 456 1629 454 1634 452 C1638 450 1638 448 1640 445 C1642 443 1642 439 1643 436 C1644 434 1643 431 1648 430 C1653 429 1658 429 1674 428 C1688 428 1727 428 1738 428"/>
+    <path class="rim rimTrace" pathLength="1" style="--d:2.35s" d="M1600 546 C1602 545 1606 544 1610 542 C1613 540 1617 538 1621 536 C1625 533 1628 532 1631 530 C1633 527 1635 525 1637 521 C1639 517 1640 512 1641 508 C1642 503 1642 499 1642 495 C1643 491 1644 488 1644 486"/>
+    <path class="rim rimTrace" pathLength="1" style="--d:2.36s" d="M1608 486 C1610 485 1618 483 1622 481 C1627 479 1632 477 1634 474 C1637 472 1639 469 1640 466 C1640 462 1640 454 1640 452"/>
+    <path class="rim rimTrace" pathLength="1" style="--d:2.38s" d="M1650 604 C1651 604 1654 603 1658 602 C1661 601 1665 600 1668 600 C1672 599 1677 600 1679 600 C1682 600 1684 601 1684 602 C1685 604 1686 605 1685 606 C1684 608 1682 609 1680 610 C1677 612 1672 613 1668 613 C1665 614 1658 614 1656 614"/>
+    <path class="rim rimTrace" pathLength="1" style="--d:2.39s" d="M1658 640 C1661 640 1671 639 1676 638 C1680 637 1684 634 1686 632 C1689 630 1690 627 1691 624 C1691 621 1691 619 1691 617 C1690 615 1690 613 1689 612 C1688 611 1688 611 1687 611 C1686 611 1684 612 1684 612"/>
+    <path class="rim rimTrace" pathLength="1" style="--d:2.39s" d="M1658 632 C1660 632 1665 632 1669 632 C1673 632 1677 632 1680 632 C1684 631 1688 629 1690 628"/>
+    <path class="rim rimTrace" pathLength="1" style="--d:2.41s" d="M1694 628 C1695 629 1698 632 1700 634 C1703 636 1707 640 1710 642 C1714 645 1720 648 1723 650 C1727 652 1730 654 1732 656 C1734 659 1734 662 1735 666 C1735 670 1734 678 1734 680"/>
+    <path class="rim rimTrace" pathLength="1" style="--d:2.42s" d="M1712 486 L1750 486"/>
+    <path class="rim rimTrace" pathLength="1" style="--d:2.43s" d="M1724 688 C1725 695 1728 722 1729 732 C1730 743 1732 746 1733 750 C1734 753 1737 752 1738 752"/>
+    <path class="rim rimTrace" pathLength="1" style="--d:2.44s" d="M1742 428 C1744 428 1749 427 1752 429 C1754 431 1755 434 1756 442 C1758 451 1758 472 1758 478"/>
+    <path class="glint" pathLength="1" d="M860 524 C866 520 882 510 894 503 C906 495 920 486 930 480 C939 473 944 468 950 464 C957 460 962 458 971 456 C980 454 994 451 1008 449 C1021 447 1039 446 1054 445 C1070 444 1087 444 1098 444 C1110 445 1115 445 1124 446 C1134 446 1139 446 1154 448 C1168 450 1186 451 1210 456 C1233 460 1262 466 1292 473 C1323 480 1362 491 1390 499 C1418 506 1444 514 1460 519 C1476 524 1480 526 1488 528 C1497 531 1502 534 1510 537 C1517 540 1527 543 1532 545 C1538 548 1541 549 1544 551 C1546 553 1545 556 1546 558 C1546 562 1547 566 1546 569 C1546 571 1547 573 1545 574 C1543 576 1541 576 1534 576 C1528 576 1519 575 1509 575 C1499 575 1487 574 1477 573 C1467 572 1458 572 1452 572 C1445 571 1442 570 1439 569 C1436 568 1436 566 1433 565 C1430 564 1426 563 1419 562 C1412 562 1393 562 1388 562"/>
   </g>
 </svg>
   <div class="hudrow" id="bootHud"></div>
