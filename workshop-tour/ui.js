@@ -474,6 +474,8 @@
     function edge() {
       raf = 0;
       if (!held || !moving) return;
+      /* the card was re-drawn or the mouse let go somewhere we never heard about: stop scrolling for good */
+      if (!held.isConnected || !O.dragging) { stop(held); return; }
       var top = 0, bot = window.innerHeight, dy = 0;
       document.querySelectorAll('.dbar,.topbar').forEach(function (b) { var r = b.getBoundingClientRect(); if (r.height && r.top < 120) top = Math.max(top, r.bottom); });
       if (ly < top + 60) dy = -Math.ceil((top + 60 - ly) / 4);
