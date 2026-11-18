@@ -4,161 +4,708 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#0A101C">
+<meta name="theme-color" content="#05080F">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>HQ</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0A101C;--card:#111a2b;--card2:#16213a;--line:#24314d;--text:#EEF2F8;--muted:#9AA7BD;--brand:#3B82F6;--good:#22C55E;--warn:#F59E0B;--bad:#EF4444;--r:14px}
+:root{--bg:#05080F;--card:#0B1220;--card2:#0F1A2E;--line:#1C2A44;--text:#E8EEF8;--muted:#8C9AB3;--hud:#5CE1FF;--brand:#3B82F6;--good:#2BD67B;--warn:#F5B544;--bad:#F2545B;--violet:#A78BFA;--r:14px;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace}
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
-a{color:var(--brand)}
-header{position:sticky;top:0;z-index:5;background:rgba(10,16,28,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:12px}
-header h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.2px}
-header .sub{color:var(--muted);font-size:13px;margin-left:auto}
-header button{margin-left:8px}
-main{max-width:860px;margin:0 auto;padding:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
-.card h2{font-size:15px;margin:0 0 10px;font-weight:600}
+a{color:var(--hud)}
+.num{font-variant-numeric:tabular-nums}
+header{position:sticky;top:0;z-index:5;background:rgba(5,8,15,.9);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:10px}
+header h1{font-size:16px;margin:0;font-weight:700;letter-spacing:2px;font-family:var(--mono)}
+header .logo{width:28px;height:28px;flex:none}
+header .sub{color:var(--muted);font-size:12px;margin-left:auto;font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+main{max-width:900px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px;min-width:0}
+.card h2{font-size:13px;margin:0 0 12px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);font-family:var(--mono)}
+.card h2 b{color:var(--text)}
 .muted{color:var(--muted)}
 .small{font-size:13px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.stat{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px}
-.stat b{display:block;font-size:22px;font-weight:700}
-.stat span{color:var(--muted);font-size:12px}
-input,select,textarea{background:#0d1526;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;min-width:0}
+.stat{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
+.stat b{display:block;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat span{color:var(--muted);font-size:12px;display:block}
+.stat.hud{border-color:rgba(92,225,255,.25)}
+.stat.hud b{color:var(--hud)}
+input,select,textarea{background:#08101e;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;min-width:0;max-width:100%}
 input:focus,select:focus,textarea:focus{outline:2px solid var(--brand);outline-offset:0}
 textarea{width:100%;min-height:140px;resize:vertical}
 input[type=number]{width:90px}
+input[type=date],input[type=time]{min-height:42px}
 button{background:var(--brand);color:#fff;border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:600;cursor:pointer}
 button.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
 button.x{background:transparent;color:var(--muted);padding:4px 8px;border:0;font-weight:500}
+button.sm{padding:6px 10px;font-size:13px}
 button:disabled{opacity:.5}
-nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:#0b1222;border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom)}
-nav a{flex:1;text-align:center;padding:10px 4px 12px;color:var(--muted);text-decoration:none;font-size:12px;font-weight:600}
-nav a.on{color:var(--brand)}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:#070c18;border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom)}
+nav a{flex:1;text-align:center;padding:10px 2px 12px;color:var(--muted);text-decoration:none;font-size:12px;font-weight:600;min-width:0}
+nav a.on{color:var(--hud)}
 nav a i{display:block;font-style:normal;font-size:18px;line-height:1.2}
 .list{list-style:none;margin:0;padding:0}
-.list li{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}
+.list li{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);min-width:0}
 .list li:last-child{border-bottom:0}
-.list li .grow{flex:1;min-width:0}
-.pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--card2);border:1px solid var(--line);color:var(--muted)}
+.list li .grow{flex:1;min-width:0;overflow-wrap:anywhere}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--card2);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.pill.good{color:var(--good);border-color:rgba(43,214,123,.35)}
+.pill.warn{color:var(--warn);border-color:rgba(245,181,68,.35)}
+.pill.bad{color:var(--bad);border-color:rgba(242,84,91,.35)}
+.pill.hud{color:var(--hud);border-color:rgba(92,225,255,.35)}
+.pill.violet{color:var(--violet);border-color:rgba(167,139,250,.35)}
 .bar{height:8px;background:var(--card2);border-radius:99px;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--good)}
-.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-.cal div{aspect-ratio:1;border-radius:6px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted)}
-.cal div.on{background:var(--brand);color:#fff;font-weight:700}
-.cal div.today{outline:1px solid var(--warn)}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{text-align:right;padding:6px 4px;border-bottom:1px solid var(--line)}
 th:first-child,td:first-child{text-align:left}
-.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#0f1b33;border:1px solid var(--line);padding:10px 14px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#0f1b33;border:1px solid var(--line);padding:10px 14px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:30;max-width:90vw}
 .toast.show{opacity:1}
 .chat{max-height:360px;overflow:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
 .msg{padding:10px 12px;border-radius:12px;max-width:85%;white-space:pre-wrap}
 .msg.me{align-self:flex-end;background:var(--brand)}
 .msg.ai{align-self:flex-start;background:var(--card2);border:1px solid var(--line)}
 .hide{display:none!important}
-#login{max-width:380px;margin:12vh auto;padding:0 16px}
-#login .card{display:flex;flex-direction:column;gap:10px}
-@media (max-width:520px){.grid3{grid-template-columns:1fr 1fr}input[type=number]{width:74px}}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal div{aspect-ratio:1;border-radius:6px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted)}
+.cal div.on{background:var(--brand);color:#fff;font-weight:700}
+.cal div.today{outline:1px solid var(--warn)}
+
+/* tasks */
+.task{align-items:flex-start!important}
+.task input[type=checkbox]{width:22px;height:22px;margin:2px 0 0;accent-color:var(--good);flex:none;padding:0}
+.task .t{font-weight:500}
+.task.s-done .t{text-decoration:line-through;color:var(--muted)}
+.task .meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:4px}
+.task .notes{color:var(--muted);font-size:12px;margin-top:3px}
+.task select.st{padding:2px 6px;font-size:11px;font-weight:600;border-radius:999px;background:var(--card2);min-height:0}
+.task select.st.s-running{color:var(--hud)}
+.task select.st.s-waiting{color:var(--warn)}
+.task select.st.s-scheduled{color:var(--violet)}
+.task select.st.s-done{color:var(--good)}
+.running-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--hud);box-shadow:0 0 8px var(--hud);animation:pulse 1.4s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.addrow{display:grid;grid-template-columns:1fr;gap:8px}
+.addrow .row>*{flex:1 1 120px}
+.grp h3{font-size:14px;margin:4px 0 6px;display:flex;align-items:center;gap:8px}
+.grp + .grp{margin-top:14px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{background:var(--card2);border:1px solid var(--line);color:var(--muted);padding:6px 10px;font-size:12px}
+.chips button.on{color:var(--hud);border-color:rgba(92,225,255,.4)}
+
+/* money */
+.ringwrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.ringwrap svg{width:150px;height:150px;flex:none}
+.plan h3{font-size:13px;margin:12px 0 4px;color:var(--text)}
+.plan label{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.plan label input{width:20px;height:20px;accent-color:var(--good);padding:0;flex:none}
+.plan label .grow{flex:1;min-width:0}
+.plan label.done .grow{color:var(--muted);text-decoration:line-through}
+
+/* login + lock */
+.gate{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px 16px}
+.gate .card{width:100%;max-width:360px;display:flex;flex-direction:column;gap:10px}
+#lock .card{align-items:center;text-align:center;background:transparent;border:0}
+#lock .logo{width:72px;height:72px}
+.dots{display:flex;gap:14px;margin:14px 0 6px}
+.dots i{width:14px;height:14px;border-radius:50%;border:2px solid var(--hud);display:block}
+.dots i.on{background:var(--hud);box-shadow:0 0 10px var(--hud)}
+.dots.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.pad{display:grid;grid-template-columns:repeat(3,72px);gap:14px;margin-top:10px}
+.pad button{height:72px;border-radius:50%;background:rgba(92,225,255,.06);border:1px solid rgba(92,225,255,.25);color:var(--text);font-size:24px;font-weight:500;font-family:var(--mono)}
+.pad button:active{background:rgba(92,225,255,.2)}
+.pad button.blank{visibility:hidden}
+.pad button.fn{font-size:13px;background:transparent;border-color:transparent;color:var(--muted)}
+
+/* boot */
+#boot{position:fixed;inset:0;z-index:20;background:radial-gradient(ellipse at 50% 40%,#0b1a30 0%,#05080F 65%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,3vh,26px);padding:24px 16px calc(24px + env(safe-area-inset-bottom));cursor:pointer;overflow:hidden;transition:opacity .35s}
+#boot.out{opacity:0;pointer-events:none}
+#boot::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(92,225,255,.035) 0 1px,transparent 1px 4px);pointer-events:none}
+#boot .mono{width:clamp(96px,22vw,150px);height:auto;overflow:visible}
+#boot .car{width:min(560px,92vw);height:auto;overflow:visible}
+.mono .ring{fill:none;stroke:var(--hud);stroke-width:2.5;stroke-dasharray:1;stroke-dashoffset:1;filter:drop-shadow(0 0 6px rgba(92,225,255,.7))}
+.mono .ring2{fill:none;stroke:rgba(92,225,255,.35);stroke-width:1;opacity:0}
+.mono .sig{fill:none;stroke:#EAF8FF;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;filter:drop-shadow(0 0 4px rgba(92,225,255,.6))}
+.mono .sweep{opacity:0}
+.car .body,.car .win,.car .wheel,.car .hub{fill:none;stroke:var(--hud);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
+.car .body{stroke-width:3;filter:drop-shadow(0 0 6px rgba(92,225,255,.8))}
+.car .win{stroke-width:2;stroke:rgba(92,225,255,.75)}
+.car .wheel{stroke-width:3}
+.car .hub{stroke-width:1.5;stroke:rgba(92,225,255,.6)}
+.car .ground{stroke:rgba(92,225,255,.25);stroke-width:1;stroke-dasharray:2 6;opacity:0}
+#boot.go .mono .ring{animation:draw .6s ease-out forwards}
+#boot.go .mono .ring2{animation:fade .5s .35s forwards}
+#boot.go .mono .sig{animation:draw .75s .2s ease-in-out forwards}
+#boot.go .mono .sweep{animation:sweep .7s .95s ease-in-out forwards}
+#boot.go .car .body{animation:draw 1.25s 1.25s cubic-bezier(.55,.1,.35,1) forwards}
+#boot.go .car .win{animation:draw .45s 2.2s ease-out forwards}
+#boot.go .car .wheel{animation:draw .5s 2.3s ease-out forwards}
+#boot.go .car .hub{animation:draw .4s 2.55s ease-out forwards}
+#boot.go .car .ground{animation:fade .6s 1.3s forwards}
+#boot.go .hudrow > div{animation:rise .5s ease-out forwards}
+#boot.go .hudrow > div:nth-child(1){animation-delay:1.25s}
+#boot.go .hudrow > div:nth-child(2){animation-delay:1.35s}
+#boot.go .hudrow > div:nth-child(3){animation-delay:1.45s}
+#boot.go .hudrow > div:nth-child(4){animation-delay:1.55s}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes fade{to{opacity:1}}
+@keyframes sweep{0%{opacity:1;transform:translateX(0)}100%{opacity:1;transform:translateX(300px)}}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.hudrow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;width:min(720px,100%)}
+.hudrow > div{opacity:0;border:1px solid rgba(92,225,255,.25);background:rgba(92,225,255,.04);border-radius:10px;padding:10px 12px;min-width:0}
+.hudrow b{display:block;font-family:var(--mono);font-size:clamp(18px,4.6vw,26px);color:var(--hud);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:0 0 12px rgba(92,225,255,.45)}
+.hudrow span{display:block;font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-family:var(--mono)}
+.hudrow small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+#boot .skip{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom));font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;font-family:var(--mono);margin:0}
+#boot .hello{font-family:var(--mono);font-size:12px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin:0;opacity:0}
+#boot.go .hello{animation:fade .5s .6s forwards}
+/* finished frame: used for skip and reduced motion */
+#boot.still *{animation:none!important}
+#boot.still .mono .ring,#boot.still .mono .sig,#boot.still .car .body,#boot.still .car .win,#boot.still .car .wheel,#boot.still .car .hub{stroke-dashoffset:0}
+#boot.still .mono .ring2,#boot.still .car .ground,#boot.still .hello,#boot.still .hudrow > div{opacity:1}
+@media (prefers-reduced-motion: reduce){#boot *{animation:none!important;transition:none!important}.running-dot{animation:none}}
+
+@media (max-width:640px){
+  .grid4{grid-template-columns:1fr 1fr}
+  .grid3{grid-template-columns:1fr 1fr}
+  .hudrow{grid-template-columns:1fr 1fr}
+  input[type=number]{width:74px}
+  .pad{grid-template-columns:repeat(3,68px)}
+  .pad button{height:68px}
+}
 </style>
 </head>
 <body>
 
-<section id="login" class="hide">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="jsmark" viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r="88" fill="none" stroke="currentColor" stroke-width="5"/>
+      <path d="M58 70 C78 60 108 58 128 62 M104 62 C104 92 102 118 92 134 C82 150 60 148 56 132 M152 74 C142 60 116 64 120 82 C124 98 152 102 150 122 C148 142 122 146 108 132" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<section id="login" class="gate hide">
   <div class="card">
     <h2>HQ</h2>
-    <p class="muted small">Private. Sign in with your HQ account.</p>
+    <p class="muted small" style="margin:0">Private. Sign in once on this device, then your PIN opens it.</p>
     <input id="lEmail" type="email" placeholder="Email" autocomplete="username">
     <input id="lPass" type="password" placeholder="Password" autocomplete="current-password">
     <button id="lGo">Sign in</button>
-    <p id="lErr" class="small" style="color:var(--bad)"></p>
+    <p id="lErr" class="small" style="color:var(--bad);margin:0"></p>
   </div>
 </section>
 
+<section id="lock" class="gate hide">
+  <div class="card">
+    <svg class="logo" style="color:var(--hud)"><use href="#jsmark"/></svg>
+    <h2 id="pinTitle" style="margin:8px 0 0">Enter PIN</h2>
+    <div class="dots" id="pinDots"><i></i><i></i><i></i><i></i></div>
+    <p id="pinMsg" class="small muted" style="min-height:20px;margin:0"></p>
+    <div class="pad" id="pinPad"></div>
+    <button class="x small" id="pinForgot" style="margin-top:14px">Forgot PIN? Sign in with password</button>
+  </div>
+</section>
+
+<section id="boot" class="hide" aria-label="HQ starting. Tap to skip.">
+  <svg class="mono" viewBox="0 0 200 200" aria-hidden="true">
+    <defs>
+      <linearGradient id="sweepG" x1="0" x2="1" y1="0" y2="0">
+        <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+        <stop offset=".5" stop-color="#fff" stop-opacity=".9"/>
+        <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+      </linearGradient>
+      <clipPath id="monoClip"><circle cx="100" cy="100" r="86"/></clipPath>
+    </defs>
+    <circle class="ring" cx="100" cy="100" r="88" pathLength="1" transform="rotate(-90 100 100)"/>
+    <circle class="ring2" cx="100" cy="100" r="80"/>
+    <path class="sig" pathLength="1" d="M58 70 C78 60 108 58 128 62 C118 61 106 61 104 62 C104 92 102 118 92 134 C82 150 60 148 56 132 C70 118 120 96 152 74 C142 60 116 64 120 82 C124 98 152 102 150 122 C148 142 122 146 108 132"/>
+    <g clip-path="url(#monoClip)">
+      <g transform="rotate(18 100 100)">
+        <rect class="sweep" x="-150" y="-40" width="70" height="280" fill="url(#sweepG)" style="mix-blend-mode:screen"/>
+      </g>
+    </g>
+  </svg>
+  <p class="hello" id="bootHello">Systems online</p>
+  <svg class="car" viewBox="0 0 600 222" aria-hidden="true">
+    <line class="ground" x1="10" y1="218" x2="590" y2="218"/>
+    <path class="body" pathLength="1" d="M70 186 L50 184 C40 182 34 172 36 162 C37 153 43 148 54 146 C76 142 96 135 114 128 C128 123 144 121 160 123 C178 125 200 116 222 104 C236 88 252 76 270 66 C286 58 306 55 330 55 C352 55 372 59 392 67 C432 84 474 106 510 126 C528 135 544 141 552 150 C559 158 560 170 556 180 C553 186 546 188 536 188 L496 188 A40 40 0 0 0 416 188 L178 188 A40 40 0 0 0 98 188 Z"/>
+    <path class="win" pathLength="1" d="M236 104 C250 90 266 78 284 70 C300 64 320 62 338 63 L346 104 Z M356 104 L350 64 C366 66 382 72 398 80 C420 90 438 98 452 106 Z"/>
+    <circle class="wheel" pathLength="1" cx="138" cy="186" r="31"/>
+    <circle class="wheel" pathLength="1" cx="456" cy="186" r="31"/>
+    <circle class="hub" pathLength="1" cx="138" cy="186" r="14"/>
+    <circle class="hub" pathLength="1" cx="456" cy="186" r="14"/>
+  </svg>
+  <div class="hudrow" id="bootHud"></div>
+  <p class="skip">Tap to skip</p>
+</section>
+
 <div id="app" class="hide">
-  <header><h1>HQ</h1><span class="sub" id="hdrSub"></span><button class="ghost small" id="signOut">Sign out</button></header>
+  <header>
+    <svg class="logo" style="color:var(--hud)"><use href="#jsmark"/></svg>
+    <h1>HQ</h1>
+    <span class="sub" id="hdrSub"></span>
+    <button class="ghost sm" id="lockBtn" title="Lock">Lock</button>
+  </header>
   <main>
     <section data-tab="today"></section>
-    <section data-tab="health" class="hide"></section>
+    <section data-tab="tasks" class="hide"></section>
     <section data-tab="money" class="hide"></section>
     <section data-tab="outreach" class="hide"></section>
     <section data-tab="notes" class="hide"></section>
+    <section data-tab="health" class="hide"></section>
   </main>
   <nav>
     <a href="#today" data-nav="today"><i>◎</i>Today</a>
-    <a href="#health" data-nav="health"><i>▲</i>Health</a>
+    <a href="#tasks" data-nav="tasks"><i>☑</i>Tasks</a>
     <a href="#money" data-nav="money"><i>£</i>Money</a>
     <a href="#outreach" data-nav="outreach"><i>➚</i>Outreach</a>
     <a href="#notes" data-nav="notes"><i>✎</i>Notes</a>
   </nav>
 </div>
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
+/* The anon key is public by design (it only identifies the project). All hq_ data sits behind owner-only RLS. No secret keys here. */
 const SB_URL = "https://iyxsehwyvriujaixnwow.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5eHNlaHd5dnJpdWphaXhud293Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxMDMyMjUsImV4cCI6MjEwODY3OTIyNX0.ml5pPjC3HkCawtkDs0NdeK_Iubdj82j80hjFMFEBWNU";
 const sb = supabase.createClient(SB_URL, SB_KEY);
 const CHANNELS = [["email","Email"],["linkedin","LinkedIn"],["calls","Calls"],["other","Other"]];
+const PROJECTS = ["ApexLine","Workshop","WasteLine","WasteHub wind-down","Personal admin"];
+const STATUSES = [["todo","To do"],["running","Running"],["waiting","Waiting"],["scheduled","Scheduled"],["done","Done"]];
+const OPEN_STAGES = ["Lead","Spoken","Demo booked","Demo done","Proposal sent"];
+const PIN_ITER = 210000, PIN_MAX_FAILS = 5, LOCK_AFTER_MS = 5 * 60 * 1000;
 const $ = (s, el = document) => el.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const iso = d => { const x = new Date(d); x.setMinutes(x.getMinutes() - x.getTimezoneOffset()); return x.toISOString().slice(0,10); };
 const today = () => iso(new Date());
-const gbp = n => "£" + Number(n || 0).toLocaleString("en-GB", { maximumFractionDigits: 0 });
+const addDays = (d, n) => iso(new Date(new Date(d + "T12:00:00").getTime() + n * 864e5));
+const gbp = n => "£" + Math.round(Number(n || 0)).toLocaleString("en-GB");
 const fmtDay = d => new Date(d + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
-function toast(t){ const el = $("#toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove("show"), 2200); }
+const sum = (rows, f) => rows.reduce((a, r) => a + Number(r[f] || 0), 0);
+const store = { get(k){ try { return localStorage.getItem(k); } catch { return null; } }, set(k, v){ try { localStorage.setItem(k, v); } catch {} }, del(k){ try { localStorage.removeItem(k); } catch {} } };
+function toast(t){ const el = $("#toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove("show"), 2400); }
 async function q(p){ const { data, error } = await p; if (error) { toast(error.message); throw error; } return data; }
+function show(id){ ["login","lock","boot","app"].forEach(x => $("#" + x).classList.toggle("hide", x !== id)); }
 
-/* ---------- auth ---------- */
-async function boot(){
-  const { data } = await sb.auth.getSession();
-  if (data.session) start(); else { $("#login").classList.remove("hide"); $("#app").classList.add("hide"); }
+/* ---------- state ---------- */
+let ME = null, appStarted = false, hiddenAt = 0;
+const S = { tasks: [], deals: [], invoices: [], cash: [], debts: [], plan: [], settings: { target: 25000, deadline: "2026-12-31", title: "Road to £25k" } };
+async function loadAll(){
+  const [tasks, deals, invoices, cash, debts, plan, st] = await Promise.all([
+    q(sb.from("hq_tasks").select("*").order("sort")),
+    q(sb.from("hq_deals").select("*").order("created_at")),
+    q(sb.from("hq_invoices").select("*").order("number")),
+    q(sb.from("hq_cash").select("*").order("date", { ascending: false })),
+    q(sb.from("hq_debts").select("*").order("created_at")),
+    q(sb.from("hq_debt_plan").select("*").order("sort")),
+    q(sb.from("hq_settings").select("*").limit(1)),
+  ]);
+  Object.assign(S, { tasks, deals, invoices, cash, debts, plan });
+  if (st && st[0]) S.settings = st[0];
+  return S;
 }
+
+/* ---------- money rules (HQ_V3_JARVIS_PLAN.md section 4) ---------- */
+function money(s = S, d = today()){
+  const m = d.slice(0, 7);
+  const counted = s.cash.filter(c => c.counts);
+  const sent = s.invoices.filter(i => i.status === "sent");
+  const scheduled = s.invoices.filter(i => i.status === "scheduled");
+  const target = Number(s.settings.target || 25000);
+  const cashTotal = sum(counted, "amount");
+  return {
+    mrr: sum(s.deals.filter(x => x.stage === "Live"), "monthly"),                         // live monthly fees; each month opens here
+    signedMrr: sum(s.deals.filter(x => x.stage === "Won" || x.stage === "Building"), "monthly"), // signed, starts at go-live
+    won: sum(s.deals.filter(x => x.won_on && x.won_on.slice(0, 7) === m && x.stage !== "Lost"), "value"),
+    cashMonth: sum(counted.filter(c => String(c.date).slice(0, 7) === m), "amount"),      // banked this month
+    cashTotal,                                                                              // banked overall, the only thing that counts to £25k
+    unpaid: sum(sent, "amount"), unpaidCount: sent.length,                                  // invoiced, not paid. Never counted as cash
+    scheduled: sum(scheduled, "amount"),
+    pipeline: sum(s.deals.filter(x => OPEN_STAGES.includes(x.stage)), "value"),
+    openDeals: s.deals.filter(x => OPEN_STAGES.includes(x.stage)).length,
+    debtsLeft: s.debts.reduce((a, r) => a + Math.max(0, Number(r.amount) - Number(r.paid)), 0),
+    target, pct: Math.min(100, Math.round(100 * cashTotal / (target || 1))),
+  };
+}
+
+/* ---------- tasks helpers ---------- */
+const doneDay = t => t.done_at ? iso(t.done_at) : null;
+function todayTasks(s = S, d = today()){
+  const ord = { running: 0, todo: 1, waiting: 2, scheduled: 3, done: 4 };
+  return s.tasks.filter(t =>
+      (t.status === "done" && doneDay(t) === d) ||
+      (t.status !== "done" && t.due && t.due <= d) ||
+      (t.status === "running") ||
+      (t.status === "waiting" && !t.due))
+    .sort((a, b) => (ord[a.status] - ord[b.status]) || String(a.due_time || "99").localeCompare(String(b.due_time || "99")) || a.sort - b.sort);
+}
+function todayCounts(s = S, d = today()){
+  const open = todayTasks(s, d).filter(t => t.status !== "done");
+  return { open: open.length, calls: open.filter(t => /call|demo/i.test(t.title)).length, done: todayTasks(s, d).length - open.length };
+}
+function dueTxt(t, d = today()){
+  if (!t.due) return "";
+  const tm = t.due_time ? " " + String(t.due_time).slice(0, 5) : "";
+  if (t.status !== "done" && t.due < d) { const n = Math.round((new Date(d) - new Date(t.due)) / 864e5); return `<span class="pill bad">Overdue ${n}d</span>`; }
+  if (t.due === d) return `<span class="pill hud">Today${tm}</span>`;
+  if (t.due === addDays(d, 1)) return `<span class="pill">Tomorrow${tm}</span>`;
+  return `<span class="pill">${fmtDay(t.due)}${tm}</span>`;
+}
+function taskRow(t, opts = {}){
+  const sel = `<select class="st s-${t.status}" data-act="status" aria-label="Status">${STATUSES.map(([v, l]) => `<option value="${v}" ${v === t.status ? "selected" : ""}>${v === "waiting" && t.status === "waiting" ? "Waiting on " + esc(t.waiting_on || "Jack") : l}</option>`).join("")}</select>`;
+  return `<li class="task s-${t.status}" data-id="${t.id}">
+    <input type="checkbox" data-act="tick" ${t.status === "done" ? "checked" : ""} aria-label="Done">
+    <div class="grow">
+      <div class="t">${t.status === "running" ? '<span class="running-dot"></span> ' : ""}${esc(t.title)}</div>
+      <div class="meta">${sel}${dueTxt(t)}${opts.project ? `<span class="pill">${esc(t.project)}</span>` : ""}${t.source === "claude" ? '<span class="pill violet">Claude</span>' : ""}</div>
+      ${t.notes ? `<div class="notes">${esc(t.notes)}</div>` : ""}
+    </div>
+    <button class="x" data-act="del" title="Delete task" aria-label="Delete task">✕</button>
+  </li>`;
+}
+function bindTasks(box, rerender){
+  box.addEventListener("change", async e => {
+    const li = e.target.closest("[data-id]"); if (!li) return;
+    const t = S.tasks.find(x => x.id === li.dataset.id); if (!t) return;
+    if (e.target.dataset.act === "tick") {
+      const v = e.target.checked ? { status: "done", done_at: new Date().toISOString() } : { status: "todo", done_at: null };
+      await q(sb.from("hq_tasks").update(v).eq("id", t.id)); Object.assign(t, v);
+      toast(e.target.checked ? "Done: " + t.title : "Back on the list");
+    } else if (e.target.dataset.act === "status") {
+      const st = e.target.value, v = { status: st, done_at: st === "done" ? new Date().toISOString() : null };
+      if (st === "waiting") v.waiting_on = (prompt("Waiting on who?", t.waiting_on || "Jack") || "Jack").trim();
+      await q(sb.from("hq_tasks").update(v).eq("id", t.id)); Object.assign(t, v);
+    }
+    rerender();
+  });
+  box.addEventListener("click", async e => {
+    const b = e.target.closest("[data-act=del]"); if (!b) return;
+    const id = b.closest("[data-id]").dataset.id, t = S.tasks.find(x => x.id === id);
+    if (!confirm("Delete \"" + t.title + "\"?")) return;
+    await q(sb.from("hq_tasks").delete().eq("id", id)); S.tasks = S.tasks.filter(x => x.id !== id); rerender();
+  });
+}
+function addForm(prefix, defaults = {}){
+  return `<div class="addrow">
+    <input id="${prefix}Title" placeholder="Add a task" aria-label="Task title">
+    <div class="row">
+      <select id="${prefix}Proj" aria-label="Project">${PROJECTS.map(p => `<option ${p === (defaults.project || "ApexLine") ? "selected" : ""}>${p}</option>`).join("")}</select>
+      <input id="${prefix}Due" type="date" value="${defaults.due || ""}" aria-label="Due date">
+      <input id="${prefix}Time" type="time" aria-label="Time">
+      <select id="${prefix}Status" aria-label="Status">${STATUSES.filter(s => s[0] !== "done").map(([v, l]) => `<option value="${v}">${l}</option>`).join("")}</select>
+      <button id="${prefix}Add">Add</button>
+    </div></div>`;
+}
+function bindAdd(prefix, after){
+  const go = async () => {
+    const title = $("#" + prefix + "Title").value.trim(); if (!title) return toast("Type the task first");
+    const status = $("#" + prefix + "Status").value;
+    const row = { title, project: $("#" + prefix + "Proj").value, due: $("#" + prefix + "Due").value || null, due_time: $("#" + prefix + "Time").value || null, status,
+      waiting_on: status === "waiting" ? "Jack" : null, sort: Math.max(0, ...S.tasks.map(t => t.sort || 0)) + 1 };
+    const created = await q(sb.from("hq_tasks").insert(row).select().single());
+    S.tasks.push(created); toast("Added: " + title); after();
+  };
+  $("#" + prefix + "Add").onclick = go;
+  $("#" + prefix + "Title").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+}
+
+/* ---------- auth, PIN, boot ---------- */
+async function init(){
+  const { data } = await sb.auth.getSession();
+  if (!data.session) return showLogin();
+  ME = data.session.user;
+  const row = await pinRow();
+  showLock(row ? "enter" : "set");
+}
+function showLogin(msg){ show("login"); $("#lErr").textContent = msg || ""; }
 $("#lGo").onclick = async () => {
-  $("#lErr").textContent = "";
-  const { error } = await sb.auth.signInWithPassword({ email: $("#lEmail").value.trim(), password: $("#lPass").value });
+  $("#lErr").textContent = ""; $("#lGo").disabled = true;
+  const { data, error } = await sb.auth.signInWithPassword({ email: $("#lEmail").value.trim(), password: $("#lPass").value });
+  $("#lGo").disabled = false;
   if (error) { $("#lErr").textContent = error.message; return; }
-  $("#login").classList.add("hide"); start();
+  ME = data.user; $("#lPass").value = ""; store.del("hq.pinFails");
+  const row = await pinRow();
+  if (row) unlockAndBoot(); else showLock("set");
 };
 $("#lPass").addEventListener("keydown", e => { if (e.key === "Enter") $("#lGo").click(); });
-$("#signOut").onclick = async () => { await sb.auth.signOut(); location.reload(); };
+async function signOut(msg){ try { await sb.auth.signOut(); } catch {} ME = null; appStarted = false; showLogin(msg); }
 
-/* ---------- routing ---------- */
-const TABS = { today: renderToday, health: renderHealth, money: renderMoney, outreach: renderOutreach, notes: renderNotes };
+async function pinRow(){ const r = await q(sb.from("hq_pin").select("*").limit(1)); return r[0] || null; }
+const b64e = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+const b64d = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function pinDerive(pin, salt, iter){
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(pin + ":" + ME.id), "PBKDF2", false, ["deriveBits"]);
+  return b64e(await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations: iter }, key, 256));
+}
+async function pinMake(pin){ const salt = crypto.getRandomValues(new Uint8Array(16)); return `pbkdf2-sha256$${PIN_ITER}$${b64e(salt)}$${await pinDerive(pin, salt, PIN_ITER)}`; }
+async function pinCheck(pin, stored){
+  const [, iter, salt, hash] = String(stored).split("$");
+  const got = await pinDerive(pin, b64d(salt), Number(iter));
+  let diff = got.length ^ hash.length; for (let i = 0; i < Math.min(got.length, hash.length); i++) diff |= got.charCodeAt(i) ^ hash.charCodeAt(i);
+  return diff === 0;
+}
+const PIN = { mode: "enter", entry: "", first: "", busy: false };
+function showLock(mode){
+  PIN.mode = mode; PIN.entry = ""; PIN.first = "";
+  $("#pinTitle").textContent = mode === "set" ? "Choose a 4 digit PIN" : "Enter PIN";
+  $("#pinMsg").textContent = mode === "set" ? "Opens HQ on this device from now on." : "";
+  $("#pinForgot").classList.toggle("hide", mode === "set");
+  drawDots(); show("lock");
+}
+function drawDots(){ $("#pinDots").innerHTML = [0,1,2,3].map(i => `<i class="${i < PIN.entry.length ? "on" : ""}"></i>`).join(""); }
+function pinFail(msg){ PIN.entry = ""; drawDots(); $("#pinMsg").textContent = msg; const d = $("#pinDots"); d.classList.remove("shake"); void d.offsetWidth; d.classList.add("shake"); }
+$("#pinPad").innerHTML = ["1","2","3","4","5","6","7","8","9","","0","del"].map(k => k === "" ? `<button class="blank" tabindex="-1" aria-hidden="true"></button>` : k === "del" ? `<button class="fn" data-k="del" aria-label="Delete">Delete</button>` : `<button data-k="${k}">${k}</button>`).join("");
+$("#pinPad").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (b) pinKey(b.dataset.k); });
+document.addEventListener("keydown", e => {
+  if ($("#lock").classList.contains("hide")) return;
+  if (/^[0-9]$/.test(e.key)) pinKey(e.key); else if (e.key === "Backspace") pinKey("del");
+});
+$("#pinForgot").onclick = () => signOut("Sign in with your password, then choose a PIN if you want a new one.");
+async function pinKey(k){
+  if (PIN.busy) return;
+  if (k === "del") { PIN.entry = PIN.entry.slice(0, -1); return drawDots(); }
+  if (PIN.entry.length >= 4) return;
+  PIN.entry += k; drawDots();
+  if (PIN.entry.length < 4) return;
+  PIN.busy = true;
+  try {
+    if (PIN.mode === "set") {
+      if (!PIN.first) { PIN.first = PIN.entry; PIN.entry = ""; $("#pinTitle").textContent = "Confirm PIN"; $("#pinMsg").textContent = ""; drawDots(); return; }
+      if (PIN.first !== PIN.entry) { PIN.first = ""; $("#pinTitle").textContent = "Choose a 4 digit PIN"; return pinFail("Didn't match. Try again."); }
+      const pin_hash = await pinMake(PIN.entry);
+      await q(sb.from("hq_pin").upsert({ owner: ME.id, pin_hash }, { onConflict: "owner" }));
+      store.del("hq.pinFails"); toast("PIN set"); unlockAndBoot();
+    } else {
+      const row = await pinRow();
+      if (!row) return showLock("set");
+      if (await pinCheck(PIN.entry, row.pin_hash)) { store.del("hq.pinFails"); unlockAndBoot(); }
+      else {
+        const fails = Number(store.get("hq.pinFails") || 0) + 1; store.set("hq.pinFails", String(fails));
+        if (fails >= PIN_MAX_FAILS) { store.del("hq.pinFails"); return signOut("Too many wrong PINs. Sign in with your password."); }
+        pinFail(`Wrong PIN. ${PIN_MAX_FAILS - fails} ${PIN_MAX_FAILS - fails === 1 ? "try" : "tries"} left.`);
+      }
+    }
+  } catch (err) { pinFail("Couldn't check the PIN: " + (err.message || err)); }
+  finally { PIN.busy = false; }
+}
+$("#lockBtn").onclick = () => showLock("enter");
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) { hiddenAt = Date.now(); return; }
+  if (!ME || !appStarted || $("#app").classList.contains("hide")) return;
+  if (hiddenAt && Date.now() - hiddenAt > LOCK_AFTER_MS) return showLock("enter");
+  refresh();
+});
+
+/* boot: monogram + sweep, car draws while the HUD counts up. Tap skips. Reduced motion shows the finished frame. */
+const BOOT = { timer: 0, raf: 0, done: null, ended: false };
+function hudTiles(s){
+  const m = money(s), c = todayCounts(s);
+  return [
+    { v: m.mrr, label: "MRR", sub: m.signedMrr ? "+" + gbp(m.signedMrr) + " signed, from go-live" : "live monthly fees" },
+    { v: m.cashMonth, label: "Cash this month", sub: m.unpaid ? "of " + gbp(m.unpaid) + " invoiced" : "no invoices unpaid" },
+    { v: m.pipeline, label: "Pipeline", sub: m.openDeals + " open " + (m.openDeals === 1 ? "deal" : "deals") },
+    { v: c.open, label: "Today", sub: c.open + " tasks, " + c.calls + (c.calls === 1 ? " call" : " calls"), plain: true },
+  ];
+}
+function drawHud(tiles, frac){
+  // tiles are built once per boot so their fade-in runs once; each frame only the numbers change
+  const box = $("#bootHud"), e = 1 - Math.pow(1 - frac, 3);
+  if (box.children.length !== tiles.length) box.innerHTML = tiles.map(() => `<div><span></span><b></b><small></small></div>`).join("");
+  tiles.forEach((t, i) => {
+    const el = box.children[i];
+    el.children[0].textContent = t.label;
+    el.children[1].textContent = t.plain ? Math.round(t.v * e) : gbp(t.v * e);
+    el.children[2].textContent = t.sub;
+  });
+}
+function unlockAndBoot(){
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const boot = $("#boot");
+  BOOT.ended = false; boot.className = ""; show("boot");
+  const h = new Date().getHours();
+  $("#bootHello").textContent = (h < 12 ? "Morning" : h < 18 ? "Afternoon" : "Evening") + " Jack. Systems online.";
+  drawHud(hudTiles(S), 0);
+  const data = loadAll().catch(() => S);
+  let tiles = null; data.then(s => { tiles = hudTiles(s); });
+  const finish = () => {
+    if (BOOT.ended) return; BOOT.ended = true;
+    clearTimeout(BOOT.timer); cancelAnimationFrame(BOOT.raf);
+    boot.classList.add("still");
+    data.then(s => { drawHud(hudTiles(s), 1); boot.classList.add("out"); setTimeout(() => { boot.className = "hide"; startApp(); }, reduce ? 0 : 320); });
+  };
+  BOOT.done = finish;
+  if (reduce) { boot.classList.add("still"); data.then(s => drawHud(hudTiles(s), 1)); BOOT.timer = setTimeout(finish, 1200); return; }
+  void boot.offsetWidth; boot.classList.add("go");
+  const t0 = performance.now(), countStart = 1250, countLen = 1750;
+  const tick = now => {
+    const el = now - t0;
+    if (el >= countStart && tiles) drawHud(tiles, Math.min(1, (el - countStart) / countLen));
+    if (el < countStart + countLen) BOOT.raf = requestAnimationFrame(tick);
+  };
+  BOOT.raf = requestAnimationFrame(tick);
+  BOOT.timer = setTimeout(finish, 3500);
+}
+$("#boot").addEventListener("click", () => BOOT.done && BOOT.done());
+document.addEventListener("keydown", e => { if (!$("#boot").classList.contains("hide") && BOOT.done) BOOT.done(); });
+
+/* ---------- app shell ---------- */
+const TABS = { today: renderToday, tasks: renderTasks, money: renderMoney, outreach: renderOutreach, notes: renderNotes, health: renderHealth };
 function route(){
   const t = (location.hash || "#today").slice(1);
   const tab = TABS[t] ? t : "today";
   document.querySelectorAll("[data-tab]").forEach(s => s.classList.toggle("hide", s.dataset.tab !== tab));
   document.querySelectorAll("[data-nav]").forEach(a => a.classList.toggle("on", a.dataset.nav === tab));
   TABS[tab]($(`[data-tab="${tab}"]`));
-  window.scrollTo(0, 0);
 }
-async function start(){
-  $("#app").classList.remove("hide");
-  window.addEventListener("hashchange", route);
-  const s = await settings();
-  const left = Math.max(0, Math.ceil((new Date(s.deadline + "T23:59:59") - new Date()) / 864e5));
-  $("#hdrSub").textContent = left + " days to " + fmtDay(s.deadline);
-  route();
+function startApp(){
+  show("app");
+  if (!appStarted) { window.addEventListener("hashchange", () => { route(); window.scrollTo(0, 0); }); setInterval(() => { if (!document.hidden && appStarted && !$("#app").classList.contains("hide")) refresh(); }, 60000); }
+  appStarted = true;
+  header(); route();
+}
+function header(){
+  const dl = S.settings.deadline || "2026-12-31";
+  const left = Math.max(0, Math.ceil((new Date(dl + "T23:59:59") - new Date()) / 864e5));
+  $("#hdrSub").textContent = left + " days to " + fmtDay(dl);
+}
+async function refresh(){
+  const active = document.activeElement;
+  if (active && /INPUT|TEXTAREA|SELECT/.test(active.tagName) && active.value) return; // don't wipe something being typed
+  await loadAll().catch(() => {}); header();
+  const tab = (location.hash || "#today").slice(1);
+  if (["today","tasks","money"].includes(tab)) route();
 }
 
-/* ---------- shared data ---------- */
-async function settings(){
-  const rows = await q(sb.from("hq_settings").select("*").limit(1));
-  return rows[0] || { target: 25000, deadline: "2026-12-31", title: "Road to £25k" };
+/* ---------- TODAY ---------- */
+function statTiles(){
+  const m = money(), c = todayCounts();
+  return `<div class="stat hud"><b>${gbp(m.mrr)}</b><span>MRR${m.signedMrr ? ", +" + gbp(m.signedMrr) + " signed" : ""}</span></div>
+    <div class="stat hud"><b>${gbp(m.cashMonth)}</b><span>cash this month${m.unpaid ? ", of " + gbp(m.unpaid) + " invoiced" : ", nothing unpaid"}</span></div>
+    <div class="stat hud"><b>${gbp(m.pipeline)}</b><span>pipeline, ${m.openDeals} open</span></div>
+    <div class="stat hud"><b>${c.open}</b><span>tasks today, ${c.calls} ${c.calls === 1 ? "call" : "calls"}</span></div>`;
 }
-async function cashTotal(){
-  const rows = await q(sb.from("hq_cash").select("amount,counts"));
-  return rows.filter(r => r.counts).reduce((a, r) => a + Number(r.amount), 0);
+function renderToday(el){
+  const d = today();
+  const list = todayTasks();
+  const ids = new Set(list.map(t => t.id));
+  const soon = S.tasks.filter(t => t.status !== "done" && t.due && t.due > d && t.due <= addDays(d, 7) && !ids.has(t.id)).sort((a, b) => (a.due + (a.due_time || "")).localeCompare(b.due + (b.due_time || "")));
+  const out = S.invoices.filter(i => i.status === "sent" || i.status === "scheduled");
+  el.innerHTML = `<div class="card"><h2>${fmtDay(d)}</h2><div class="grid4" id="tStats">${statTiles()}</div></div>
+  <div class="card"><h2>Today <b id="tCount">${todayCounts().done} of ${list.length} done</b></h2>
+    <ul class="list" id="tList">${list.length ? list.map(t => taskRow(t, { project: true })).join("") : '<li class="muted small">Nothing due today.</li>'}</ul>
+    <div style="margin-top:12px">${addForm("t", { due: d })}</div></div>
+  <div class="card"><h2>Coming up, next 7 days</h2><ul class="list" id="tSoon">${soon.length ? soon.map(t => taskRow(t, { project: true })).join("") : '<li class="muted small">Nothing booked in.</li>'}</ul></div>
+  <div class="card"><h2>Money due</h2><ul class="list">${out.length ? out.map(i => `<li><span class="grow"><b>${esc(i.number)}</b> ${esc(i.client)} <span class="muted small">${esc(i.description || "")}</span></span><b class="num">${gbp(i.amount)}</b>${i.status === "sent" ? '<span class="pill warn">Invoiced, not paid</span>' : `<span class="pill violet">${esc(i.trigger || "Scheduled")}${i.due_on ? ", " + fmtDay(i.due_on) : ""}</span>`}</li>`).join("") : '<li class="muted small">No invoices out.</li>'}</ul></div>
+  <div class="card"><h2>Body</h2><div class="row"><input id="tBw" type="number" step="0.1" inputmode="decimal" placeholder="kg" aria-label="Bodyweight kg"><button class="ghost" id="tBwSave">Save weight</button><a href="#health" class="small">Training log</a><span class="muted small" id="tBwLast"></span></div></div>`;
+  const rer = () => renderToday(el);
+  bindTasks($("#tList"), rer); bindTasks($("#tSoon"), rer); bindAdd("t", rer);
+  $("#tBwSave").onclick = async () => {
+    const v = parseFloat($("#tBw").value); if (!v) return toast("Enter a weight");
+    await q(sb.from("hq_body").upsert({ day: d, weight_kg: v }, { onConflict: "owner,day" })); toast("Saved " + v + "kg"); $("#tBwLast").textContent = "Saved " + v + "kg today";
+  };
+  sb.from("hq_body").select("day,weight_kg").order("day", { ascending: false }).limit(1).then(({ data }) => { if (data && data[0] && $("#tBwLast")) $("#tBwLast").textContent = "Last " + data[0].weight_kg + "kg, " + fmtDay(data[0].day); });
 }
+
+/* ---------- TASKS ---------- */
+const TV = { show: "open", project: "All" };
+function renderTasks(el){
+  const d = today();
+  const vis = S.tasks.filter(t => TV.show === "all" || t.status !== "done" || doneDay(t) === d);
+  const projs = TV.project === "All" ? PROJECTS : [TV.project];
+  const ord = { running: 0, todo: 1, waiting: 2, scheduled: 3, done: 4 };
+  const sortT = (a, b) => (ord[a.status] - ord[b.status]) || String(a.due || "9999").localeCompare(String(b.due || "9999")) || String(a.due_time || "99").localeCompare(String(b.due_time || "99")) || a.sort - b.sort;
+  const open = S.tasks.filter(t => t.status !== "done").length;
+  el.innerHTML = `<div class="card"><h2>Tasks <b>${open} open</b></h2>${addForm("k", { project: TV.project === "All" ? "ApexLine" : TV.project })}</div>
+  <div class="card">
+    <div class="chips" id="kChips" style="margin-bottom:8px">${["All", ...PROJECTS].map(p => `<button data-p="${esc(p)}" class="${TV.project === p ? "on" : ""}">${esc(p)}</button>`).join("")}</div>
+    <div class="chips" style="margin-bottom:12px"><button data-s="open" class="${TV.show === "open" ? "on" : ""}">Open</button><button data-s="all" class="${TV.show === "all" ? "on" : ""}">Include done</button></div>
+    <div id="kList">${projs.map(p => { const items = vis.filter(t => t.project === p).sort(sortT); const n = S.tasks.filter(t => t.project === p && t.status !== "done").length;
+      return `<div class="grp" data-project="${esc(p)}"><h3>${esc(p)} <span class="pill">${n} open</span></h3><ul class="list">${items.length ? items.map(t => taskRow(t)).join("") : '<li class="muted small">Nothing here.</li>'}</ul></div>`; }).join("")}</div>
+  </div>`;
+  const rer = () => renderTasks(el);
+  bindTasks($("#kList"), rer); bindAdd("k", rer);
+  el.querySelectorAll("[data-p]").forEach(b => b.onclick = () => { TV.project = b.dataset.p; rer(); });
+  el.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { TV.show = b.dataset.s; rer(); });
+}
+
+/* ---------- MONEY ---------- */
+function ring(pct){
+  const r = 62, c = 2 * Math.PI * r;
+  return `<svg viewBox="0 0 150 150" role="img" aria-label="${pct}% of target"><circle cx="75" cy="75" r="${r}" fill="none" stroke="#14203a" stroke-width="12"/><circle cx="75" cy="75" r="${r}" fill="none" stroke="var(--hud)" stroke-width="12" stroke-linecap="round" stroke-dasharray="${(c * pct / 100).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 75 75)" style="filter:drop-shadow(0 0 6px rgba(92,225,255,.6))"/><text x="75" y="72" text-anchor="middle" fill="#E8EEF8" font-size="26" font-weight="700" font-family="Inter">${pct}%</text><text x="75" y="94" text-anchor="middle" fill="#8C9AB3" font-size="11" font-family="Inter">of target</text></svg>`;
+}
+function renderMoney(el){
+  const m = money(), s = S.settings, d = today();
+  const dl = s.deadline || "2026-12-31";
+  const daysLeft = Math.max(1, Math.ceil((new Date(dl + "T23:59:59") - new Date()) / 864e5));
+  const toGo = Math.max(0, m.target - m.cashTotal);
+  const groups = [...new Set(S.plan.map(p => p.funded_by || "Other"))];
+  const invBy = n => S.invoices.find(i => i.number === n);
+  const debtOf = id => S.debts.find(x => x.id === id);
+  const nextNo = "APX" + String(Math.max(0, ...S.invoices.map(i => parseInt(String(i.number).replace(/\D/g, ""), 10) || 0)) + 1).padStart(3, "0");
+  const signed = S.deals.filter(x => ["Won","Building","Live"].includes(x.stage));
+  el.innerHTML = `<div class="card"><h2>This month</h2>
+    <div class="grid4" id="mStats">
+      <div class="stat hud"><b data-k="mrr">${gbp(m.mrr)}</b><span>MRR, the month opens here</span></div>
+      <div class="stat"><b data-k="won">${gbp(m.won)}</b><span>won this month (signed)</span></div>
+      <div class="stat hud"><b data-k="cash">${gbp(m.cashMonth)}</b><span>cash collected this month</span></div>
+      <div class="stat"><b data-k="unpaid" style="color:var(--warn)">${gbp(m.unpaid)}</b><span>invoiced, not paid (${m.unpaidCount})</span></div>
+    </div>
+    <p class="muted small" style="margin:10px 0 0">${m.signedMrr ? `Signed monthly fees not live yet: <b>${gbp(m.signedMrr)}</b> a month from go-live. ` : ""}${m.scheduled ? `Due on go-live: <b>${gbp(m.scheduled)}</b>. ` : ""}Only cash collected counts toward ${gbp(m.target)}.</p></div>
+  <div class="card"><h2>${esc(s.title || "Road to £25k")}</h2>
+    <div class="ringwrap">${ring(m.pct)}<div style="flex:1;min-width:180px">
+      <div class="grid2"><div class="stat"><b data-k="banked">${gbp(m.cashTotal)}</b><span>banked toward ${gbp(m.target)}</span></div><div class="stat"><b>${gbp(toGo)}</b><span>to go by ${fmtDay(dl)}</span></div>
+      <div class="stat"><b>${gbp(toGo / daysLeft)}</b><span>a day for ${daysLeft} days</span></div><div class="stat"><b data-k="debts" style="color:var(--bad)">${gbp(m.debtsLeft)}</b><span>debts left</span></div></div>
+    </div></div></div>
+  <div class="card"><h2>Invoices</h2><ul class="list" id="mInv">${S.invoices.length ? S.invoices.map(i => `<li data-inv="${i.id}"><div class="grow"><b>${esc(i.number)}</b> ${esc(i.client)}<div class="muted small">${esc(i.description || "")}${i.issued_on ? ", issued " + fmtDay(i.issued_on) : ""}${i.paid_on ? ", paid " + fmtDay(i.paid_on) : ""}${i.status === "scheduled" ? ", " + esc(i.trigger || "scheduled") + (i.due_on ? " (" + fmtDay(i.due_on) + ")" : "") : ""}</div></div>
+      <b class="num">${gbp(i.amount)}</b>
+      ${i.status === "paid" ? '<span class="pill good">Paid</span>' : i.status === "sent" ? `<span class="pill warn">Not paid</span><button class="sm" data-paid="${i.id}">Mark paid</button>` : i.status === "scheduled" ? `<span class="pill violet">Scheduled</span><button class="ghost sm" data-issue="${i.id}">Issue</button>` : '<span class="pill">Void</span>'}</li>`).join("") : '<li class="muted small">No invoices yet.</li>'}</ul>
+    <div class="row" style="margin-top:10px"><input id="iNo" value="${nextNo}" style="width:90px" aria-label="Invoice number"><input id="iClient" placeholder="Client" style="flex:1;min-width:140px"><input id="iAmt" type="number" inputmode="decimal" placeholder="£"><select id="iSt"><option value="sent">Sent</option><option value="scheduled">Scheduled</option></select><button class="ghost" id="iAdd">Add invoice</button></div></div>
+  <div class="card"><h2>Debts and payment plan</h2>
+    <ul class="list" id="mDebts">${S.debts.length ? S.debts.map(r => { const p = Math.min(100, Math.round(100 * r.paid / r.amount)); return `<li><div class="grow"><b>${esc(r.creditor)}</b> <span class="muted small">${gbp(r.paid)} of ${gbp(r.amount)} paid</span><div class="bar" style="margin-top:6px"><i style="width:${p}%"></i></div>${r.notes ? `<div class="muted small" style="margin-top:4px">${esc(r.notes)}</div>` : ""}</div><button class="ghost sm" data-pay="${r.id}">Pay</button><button class="x" data-edit="${r.id}" title="Edit total">✎</button><button class="x" data-dd="${r.id}" title="Remove">✕</button></li>`; }).join("") : '<li class="muted small">No debts added.</li>'}</ul>
+    <div class="row" style="margin-top:10px"><input id="dWho" placeholder="Who" style="flex:1;min-width:140px"><input id="dAmt" type="number" inputmode="decimal" placeholder="£ owed"><button class="ghost" id="dAdd">Add debt</button></div>
+    <div class="plan" id="mPlan">${groups.map(g => { const lines = S.plan.filter(p => (p.funded_by || "Other") === g), inv = invBy(g);
+      return `<h3>When ${esc(g)} lands${inv ? ` <span class="muted small">(${gbp(inv.amount)}, ${inv.status === "paid" ? "paid" : inv.status === "sent" ? "not paid yet" : "not invoiced yet"})</span>` : ""} <span class="muted small">allocated ${gbp(sum(lines, "amount"))}</span></h3>` +
+        lines.map(p => `<label class="${p.done ? "done" : ""}"><input type="checkbox" data-plan="${p.id}" ${p.done ? "checked" : ""}><span class="grow">${esc(p.label)}${p.debt_id && debtOf(p.debt_id) ? ' <span class="pill">debt</span>' : ""}</span><b class="num">${gbp(p.amount)}</b></label>`).join(""); }).join("")}</div>
+    <div class="row" style="margin-top:10px"><input id="pLabel" placeholder="Plan line (e.g. Eco-cycle)" style="flex:1;min-width:140px"><input id="pAmt" type="number" inputmode="decimal" placeholder="£"><input id="pFund" placeholder="From (APX003)" style="width:120px"><select id="pDebt" aria-label="Pays off debt"><option value="">No debt</option>${S.debts.map(r => `<option value="${r.id}">${esc(r.creditor)}</option>`).join("")}</select><button class="ghost" id="pAdd">Add line</button></div>
+    <p class="muted small" style="margin:8px 0 0">Ticking a line that pays a debt moves that debt's paid amount.</p></div>
+  <div class="card"><h2>Signed work</h2><ul class="list">${signed.length ? signed.map(x => `<li><span class="grow"><b>${esc(x.company)}</b> <span class="muted small">${esc(x.product || "")}${x.won_on ? ", won " + fmtDay(x.won_on) : ""}${x.live_on ? ", live " + fmtDay(x.live_on) : ""}</span></span><span class="pill ${x.stage === "Live" ? "good" : "hud"}">${esc(x.stage)}</span><b class="num">${gbp(x.value)}${Number(x.monthly) ? " + " + gbp(x.monthly) + "/mo" : ""}</b></li>`).join("") : '<li class="muted small">No signed work yet.</li>'}</ul></div>
+  <div class="card"><h2>Bank money in</h2>
+    <div class="row"><input id="mFrom" placeholder="From" style="flex:1;min-width:140px"><input id="mAmt" type="number" inputmode="decimal" placeholder="£"></div>
+    <div class="row" style="margin-top:8px"><input id="mDate" type="date" value="${d}"><select id="mSrc"><option>Custom build</option><option>WasteLine</option><option>WasteHub</option><option>Other</option></select><label class="small"><input id="mCounts" type="checkbox" checked> counts to target</label><button id="mAdd">Bank it</button></div>
+    <ul class="list" id="mCash" style="margin-top:10px">${S.cash.length ? S.cash.slice(0, 30).map(r => `<li><span class="grow">${esc(r.from_who)} <span class="pill">${esc(r.source)}</span>${r.counts ? "" : ' <span class="pill">not counted</span>'}${r.note ? ` <span class="muted small">${esc(r.note)}</span>` : ""}</span><b class="num">${gbp(r.amount)}</b><span class="muted small">${fmtDay(r.date)}</span><button class="x" data-dc="${r.id}">✕</button></li>`).join("") : '<li class="muted small">Nothing banked yet.</li>'}</ul></div>
+  <div class="card"><h2>Target</h2><div class="row"><input id="sTarget" type="number" value="${m.target}" aria-label="Target"><input id="sDeadline" type="date" value="${dl}" aria-label="Deadline"><button class="ghost" id="sSave">Save</button></div></div>`;
+  const rer = async () => { await loadAll(); renderMoney(el); };
+  el.querySelectorAll("[data-paid]").forEach(b => b.onclick = async () => { const i = S.invoices.find(x => x.id === b.dataset.paid); if (!confirm(`Mark ${i.number} (${gbp(i.amount)}) paid today? It goes into cash collected.`)) return; await q(sb.rpc("hq_invoice_paid", { p_invoice: i.id })); toast(i.number + " paid, " + gbp(i.amount) + " banked"); rer(); });
+  el.querySelectorAll("[data-issue]").forEach(b => b.onclick = async () => { await q(sb.from("hq_invoices").update({ status: "sent", issued_on: d }).eq("id", b.dataset.issue)); toast("Marked as sent"); rer(); });
+  $("#iAdd").onclick = async () => { const a = parseFloat($("#iAmt").value), c = $("#iClient").value.trim(), n = $("#iNo").value.trim(); if (!a || !c || !n) return toast("Add number, client and amount"); const st = $("#iSt").value; await q(sb.from("hq_invoices").insert({ number: n, client: c, amount: a, status: st, issued_on: st === "sent" ? d : null })); toast("Invoice " + n + " added"); rer(); };
+  el.querySelectorAll("[data-plan]").forEach(c => c.onchange = async () => { await q(sb.rpc("hq_plan_tick", { p_line: c.dataset.plan, p_done: c.checked })); rer(); });
+  $("#pAdd").onclick = async () => { const a = parseFloat($("#pAmt").value), l = $("#pLabel").value.trim(); if (!a || !l) return toast("Add the line and amount"); await q(sb.from("hq_debt_plan").insert({ label: l, amount: a, funded_by: $("#pFund").value.trim() || null, debt_id: $("#pDebt").value || null, sort: S.plan.length + 1 })); rer(); };
+  $("#mAdd").onclick = async () => { const a = parseFloat($("#mAmt").value), f = $("#mFrom").value.trim(); if (!a || !f) return toast("Add who and how much"); await q(sb.from("hq_cash").insert({ from_who: f, amount: Math.round(a), date: $("#mDate").value, source: $("#mSrc").value, counts: $("#mCounts").checked })); toast("Banked " + gbp(a)); rer(); };
+  $("#dAdd").onclick = async () => { const a = parseFloat($("#dAmt").value), w = $("#dWho").value.trim(); if (!a || !w) return toast("Add who and how much"); await q(sb.from("hq_debts").insert({ creditor: w, amount: a })); rer(); };
+  el.querySelectorAll("[data-pay]").forEach(b => b.onclick = async () => { const r = S.debts.find(x => x.id === b.dataset.pay); const v = parseFloat(prompt("Payment to " + r.creditor + " (£)") || ""); if (!v) return; await q(sb.from("hq_debts").update({ paid: Number(r.paid) + v }).eq("id", r.id)); toast("Paid " + gbp(v)); rer(); });
+  el.querySelectorAll("[data-edit]").forEach(b => b.onclick = async () => { const r = S.debts.find(x => x.id === b.dataset.edit); const v = parseFloat(prompt("Total owed to " + r.creditor + " (£)", r.amount) || ""); if (!v) return; await q(sb.from("hq_debts").update({ amount: v }).eq("id", r.id)); rer(); });
+  el.querySelectorAll("[data-dd]").forEach(b => b.onclick = async () => { if (!confirm("Remove this debt?")) return; await q(sb.from("hq_debts").delete().eq("id", b.dataset.dd)); rer(); });
+  el.querySelectorAll("[data-dc]").forEach(b => b.onclick = async () => { if (!confirm("Remove this payment?")) return; await q(sb.from("hq_cash").delete().eq("id", b.dataset.dc)); rer(); });
+  $("#sSave").onclick = async () => {
+    const rows = await q(sb.from("hq_settings").select("id").limit(1));
+    const v = { target: parseInt($("#sTarget").value, 10), deadline: $("#sDeadline").value };
+    await q(rows[0] ? sb.from("hq_settings").update(v).eq("id", rows[0].id) : sb.from("hq_settings").insert({ ...v, title: "Road to £25k" }));
+    toast("Target saved"); await rer(); header();
+  };
+}
+
+/* ---------- HEALTH (kept from v2, reached from the Today body card) ---------- */
 async function exercises(){
   const rows = await q(sb.from("hq_sets").select("exercise").order("created_at", { ascending: false }).limit(500));
   return [...new Set(rows.map(r => r.exercise.trim()))];
@@ -168,64 +715,27 @@ async function workoutFor(day, create){
   if (rows[0] || !create) return rows[0] || null;
   return (await q(sb.from("hq_workouts").insert({ day }).select().single()));
 }
-
-/* ---------- TODAY ---------- */
-async function renderToday(el){
-  const d = today();
-  el.innerHTML = `<div class="card"><h2>${fmtDay(d)}</h2><div class="grid3" id="tStats"></div></div>
-  <div class="card"><h2>Bodyweight</h2><div class="row"><input id="tBw" type="number" step="0.1" inputmode="decimal" placeholder="kg"><button id="tBwSave">Save</button><span class="muted small" id="tBwLast"></span></div></div>
-  <div class="card"><h2>Training today</h2><div id="tTrain" class="muted small">Loading…</div><div class="row" style="margin-top:10px"><a href="#health"><button>Log training</button></a></div></div>
-  <div class="card"><h2>Outreach today</h2><div id="tOut"></div><div class="row" style="margin-top:10px"><button id="tOutSave">Save outreach</button></div></div>`;
-  const [s, cash, bw, wk, out] = await Promise.all([
-    settings(), cashTotal(),
-    q(sb.from("hq_body").select("day,weight_kg").order("day", { ascending: false }).limit(1)),
-    workoutFor(d, false),
-    q(sb.from("hq_outreach").select("*").eq("day", d)),
-  ]);
-  const pct = Math.min(100, Math.round(100 * cash / (s.target || 25000)));
-  $("#tStats").innerHTML = `<div class="stat"><b>${gbp(cash)}</b><span>of ${gbp(s.target)} (${pct}%)</span></div>
-    <div class="stat"><b>${out.reduce((a, r) => a + r.sent, 0)}</b><span>outreach sent today</span></div>
-    <div class="stat"><b>${bw[0] ? bw[0].weight_kg + "kg" : "-"}</b><span>last bodyweight</span></div>`;
-  if (bw[0]) $("#tBwLast").textContent = "Last: " + bw[0].weight_kg + "kg on " + fmtDay(bw[0].day);
-  $("#tBwSave").onclick = async () => {
-    const v = parseFloat($("#tBw").value); if (!v) return toast("Enter a weight");
-    await q(sb.from("hq_body").upsert({ day: d, weight_kg: v }, { onConflict: "owner,day" }));
-    toast("Saved " + v + "kg"); renderToday(el);
-  };
-  if (wk) {
-    const sets = await q(sb.from("hq_sets").select("*").eq("workout_id", wk.id).order("created_at"));
-    $("#tTrain").innerHTML = sets.length ? groupSets(sets).map(g => `<div><b>${esc(g.ex)}</b>: ${g.sets.map(s => setTxt(s)).join(", ")}</div>`).join("") : "Session started, no sets yet.";
-  } else $("#tTrain").textContent = "Nothing logged yet today.";
-  outreachForm($("#tOut"), out);
-  $("#tOutSave").onclick = () => saveOutreach($("#tOut"), d).then(() => renderToday(el));
-}
 function setTxt(s){ return (s.weight_kg != null ? Number(s.weight_kg) + "kg" : "BW") + (s.reps != null ? " × " + s.reps : ""); }
 function groupSets(sets){
   const m = new Map(); sets.forEach(s => { const k = s.exercise.trim(); if (!m.has(k)) m.set(k, []); m.get(k).push(s); });
   return [...m].map(([ex, sets]) => ({ ex, sets }));
 }
-
-/* ---------- HEALTH ---------- */
 async function renderHealth(el, day){
   const d = day || renderHealth.day || today(); renderHealth.day = d;
   el.innerHTML = `<div class="card"><div class="row"><h2 style="margin:0">Training</h2><input id="hDay" type="date" value="${d}" style="margin-left:auto"></div></div>
   <div class="card"><h2>Add a set</h2>
-    <div class="row"><input id="hEx" list="hExList" placeholder="Exercise (e.g. Bench press)" style="flex:1;min-width:180px"><datalist id="hExList"></datalist></div>
-    <div class="row" style="margin-top:8px"><input id="hKg" type="number" step="0.5" inputmode="decimal" placeholder="kg"><input id="hReps" type="number" inputmode="numeric" placeholder="reps"><input id="hCount" type="number" inputmode="numeric" placeholder="sets" value="1"><button id="hAdd">Add</button></div>
-    <p class="muted small" style="margin:8px 0 0">"sets" adds that many identical sets in one go.</p>
-  </div>
+    <div class="row"><input id="hEx" list="hExList" placeholder="Exercise (e.g. Bench press)" style="flex:1;min-width:160px"><datalist id="hExList"></datalist></div>
+    <div class="row" style="margin-top:8px"><input id="hKg" type="number" step="0.5" inputmode="decimal" placeholder="kg"><input id="hReps" type="number" inputmode="numeric" placeholder="reps"><input id="hCount" type="number" inputmode="numeric" placeholder="sets" value="1"><button id="hAdd">Add</button></div></div>
   <div class="card"><h2>${fmtDay(d)}</h2><div id="hSets" class="muted small">Loading…</div>
     <div class="row" style="margin-top:10px"><input id="hNotes" placeholder="Session notes (optional)" style="flex:1"><button class="ghost" id="hNotesSave">Save notes</button></div></div>
   <div class="card"><h2>Last 5 weeks</h2><div class="cal" id="hCal"></div></div>
-  <div class="card"><h2>Best lifts</h2><ul class="list" id="hBest"></ul></div>
-  <div class="card"><h2>Bodyweight</h2><div id="hBw"></div></div>`;
+  <div class="card"><h2>Best lifts</h2><ul class="list" id="hBest"></ul></div>`;
   $("#hDay").onchange = e => renderHealth(el, e.target.value);
   const since = iso(new Date(Date.now() - 34 * 864e5));
-  const [exList, wk, cal, best, bw] = await Promise.all([
+  const [exList, wk, cal, best] = await Promise.all([
     exercises(), workoutFor(d, false),
     q(sb.from("hq_workouts").select("day").gte("day", since)),
     q(sb.from("hq_v_best_lifts").select("*").order("exercise")),
-    q(sb.from("hq_body").select("day,weight_kg").order("day", { ascending: false }).limit(60)),
   ]);
   $("#hExList").innerHTML = exList.map(x => `<option value="${esc(x)}">`).join("");
   if (wk) $("#hNotes").value = wk.notes || "";
@@ -247,54 +757,12 @@ async function renderHealth(el, day){
   const start = new Date(Date.now() - 34 * 864e5);
   $("#hCal").innerHTML = Array.from({ length: 35 }, (_, i) => { const x = iso(new Date(start.getTime() + i * 864e5)); return `<div class="${trained.has(x) ? "on" : ""} ${x === today() ? "today" : ""}" title="${x}">${Number(x.slice(8))}</div>`; }).join("");
   $("#hBest").innerHTML = best.length ? best.map(b => `<li><span class="grow">${esc(b.exercise)}</span><b>${Number(b.weight_kg)}kg${b.reps ? " × " + b.reps : ""}</b><span class="muted small">${fmtDay(b.day)}</span></li>`).join("") : `<li class="muted small">Your best lift per exercise shows here once you log sets.</li>`;
-  $("#hBw").innerHTML = bw.length ? spark(bw.slice().reverse().map(r => Number(r.weight_kg))) + `<p class="muted small" style="margin:6px 0 0">Latest ${bw[0].weight_kg}kg (${fmtDay(bw[0].day)}), ${bw.length} entries.</p>` : `<p class="muted small">Log bodyweight on the Today tab.</p>`;
-}
-function spark(vals){
-  if (vals.length < 2) return `<p class="small">${vals[0]}kg</p>`;
-  const w = 600, h = 120, min = Math.min(...vals) - 0.5, max = Math.max(...vals) + 0.5;
-  const pts = vals.map((v, i) => `${(i / (vals.length - 1)) * w},${h - ((v - min) / (max - min)) * h}`).join(" ");
-  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:120px" role="img" aria-label="Bodyweight trend"><polyline fill="none" stroke="#3B82F6" stroke-width="3" points="${pts}"/></svg>`;
 }
 
-/* ---------- MONEY ---------- */
-async function renderMoney(el){
-  const [s, cash, debts] = await Promise.all([
-    settings(),
-    q(sb.from("hq_cash").select("*").order("date", { ascending: false }).limit(50)),
-    q(sb.from("hq_debts").select("*").order("created_at")),
-  ]);
-  const landed = cash.filter(r => r.counts).reduce((a, r) => a + Number(r.amount), 0);
-  const pct = Math.min(100, Math.round(100 * landed / (s.target || 25000)));
-  const owed = debts.reduce((a, r) => a + Number(r.amount) - Number(r.paid), 0);
-  el.innerHTML = `<div class="card"><h2>${esc(s.title || "Road to £25k")}</h2>
-    <div class="grid3"><div class="stat"><b>${gbp(landed)}</b><span>banked toward target</span></div><div class="stat"><b>${gbp(s.target)}</b><span>target by ${fmtDay(s.deadline)}</span></div><div class="stat"><b>${gbp(owed)}</b><span>debts left</span></div></div>
-    <div class="bar" style="margin-top:12px"><i style="width:${pct}%"></i></div><p class="muted small" style="margin:6px 0 0">${pct}% there, ${gbp(Math.max(0, s.target - landed))} to go.</p></div>
-  <div class="card"><h2>Bank money in</h2>
-    <div class="row"><input id="mFrom" placeholder="From (e.g. George)" style="flex:1;min-width:150px"><input id="mAmt" type="number" inputmode="decimal" placeholder="£"></div>
-    <div class="row" style="margin-top:8px"><input id="mDate" type="date" value="${today()}"><select id="mSrc"><option>WasteLine</option><option>Custom build</option><option>WasteHub</option><option>Other</option></select><label class="small"><input id="mCounts" type="checkbox" checked> counts to target</label><button id="mAdd">Bank it</button></div></div>
-  <div class="card"><h2>Debts</h2><ul class="list" id="mDebts"></ul>
-    <div class="row" style="margin-top:10px"><input id="dWho" placeholder="Who (e.g. Ben Lukey)" style="flex:1;min-width:150px"><input id="dAmt" type="number" inputmode="decimal" placeholder="£ owed"><button class="ghost" id="dAdd">Add debt</button></div></div>
-  <div class="card"><h2>Money in</h2><ul class="list" id="mCash"></ul></div>
-  <div class="card"><h2>Target</h2><div class="row"><input id="sTarget" type="number" value="${s.target}"><input id="sDeadline" type="date" value="${s.deadline}"><button class="ghost" id="sSave">Save</button></div></div>`;
-  $("#mDebts").innerHTML = debts.length ? debts.map(r => { const p = Math.min(100, Math.round(100 * r.paid / r.amount)); return `<li><div class="grow"><b>${esc(r.creditor)}</b> <span class="muted small">${gbp(r.paid)} of ${gbp(r.amount)} paid</span><div class="bar" style="margin-top:6px"><i style="width:${p}%"></i></div></div><button class="ghost small" data-pay="${r.id}">Pay</button><button class="x" data-dd="${r.id}">✕</button></li>`; }).join("") : `<li class="muted small">No debts added.</li>`;
-  $("#mCash").innerHTML = cash.length ? cash.map(r => `<li><span class="grow">${esc(r.from_who)} <span class="pill">${esc(r.source)}</span>${r.counts ? "" : ' <span class="pill">not counted</span>'}</span><b>${gbp(r.amount)}</b><span class="muted small">${fmtDay(r.date)}</span><button class="x" data-dc="${r.id}">✕</button></li>`).join("") : `<li class="muted small">Nothing banked yet.</li>`;
-  $("#mAdd").onclick = async () => { const a = parseFloat($("#mAmt").value), f = $("#mFrom").value.trim(); if (!a || !f) return toast("Add who and how much"); await q(sb.from("hq_cash").insert({ from_who: f, amount: Math.round(a), date: $("#mDate").value, source: $("#mSrc").value, counts: $("#mCounts").checked })); toast("Banked " + gbp(a)); renderMoney(el); };
-  $("#dAdd").onclick = async () => { const a = parseFloat($("#dAmt").value), w = $("#dWho").value.trim(); if (!a || !w) return toast("Add who and how much"); await q(sb.from("hq_debts").insert({ creditor: w, amount: a })); renderMoney(el); };
-  el.querySelectorAll("[data-pay]").forEach(b => b.onclick = async () => { const r = debts.find(x => x.id === b.dataset.pay); const v = parseFloat(prompt("Payment to " + r.creditor + " (£)") || ""); if (!v) return; await q(sb.from("hq_debts").update({ paid: Number(r.paid) + v }).eq("id", r.id)); toast("Paid " + gbp(v)); renderMoney(el); });
-  el.querySelectorAll("[data-dd]").forEach(b => b.onclick = async () => { if (!confirm("Remove this debt?")) return; await q(sb.from("hq_debts").delete().eq("id", b.dataset.dd)); renderMoney(el); });
-  el.querySelectorAll("[data-dc]").forEach(b => b.onclick = async () => { if (!confirm("Remove this payment?")) return; await q(sb.from("hq_cash").delete().eq("id", b.dataset.dc)); renderMoney(el); });
-  $("#sSave").onclick = async () => {
-    const rows = await q(sb.from("hq_settings").select("id").limit(1));
-    const v = { target: parseInt($("#sTarget").value, 10), deadline: $("#sDeadline").value };
-    await q(rows[0] ? sb.from("hq_settings").update(v).eq("id", rows[0].id) : sb.from("hq_settings").insert({ ...v, title: "Road to £25k" }));
-    toast("Target saved"); renderMoney(el);
-  };
-}
-
-/* ---------- OUTREACH ---------- */
+/* ---------- OUTREACH (v2) ---------- */
 function outreachForm(box, rows){
   const by = Object.fromEntries(rows.map(r => [r.channel, r]));
-  box.innerHTML = `<table><tr><th>Channel</th><th>Sent</th><th>Accepted</th><th>Replies</th><th>Personalised</th><th>Demos</th></tr>${CHANNELS.map(([c, label]) => { const r = by[c] || {}; return `<tr data-ch="${c}"><td>${label}</td>${["sent","accepted","replies","personalised","demos"].map(f => `<td><input type="number" inputmode="numeric" min="0" data-f="${f}" value="${r[f] ?? ""}" style="width:64px"></td>`).join("")}</tr>`; }).join("")}</table>`;
+  box.innerHTML = `<table><tr><th>Channel</th><th>Sent</th><th>Acc.</th><th>Replies</th><th>Pers.</th><th>Demos</th></tr>${CHANNELS.map(([c, label]) => { const r = by[c] || {}; return `<tr data-ch="${c}"><td>${label}</td>${["sent","accepted","replies","personalised","demos"].map(f => `<td><input type="number" inputmode="numeric" min="0" data-f="${f}" value="${r[f] ?? ""}" style="width:52px;padding:8px 6px"></td>`).join("")}</tr>`; }).join("")}</table>`;
 }
 async function saveOutreach(box, day){
   const rows = [...box.querySelectorAll("tr[data-ch]")].map(tr => { const o = { day, channel: tr.dataset.ch }; tr.querySelectorAll("input").forEach(i => o[i.dataset.f] = parseInt(i.value || "0", 10)); return o; }).filter(o => o.sent || o.accepted || o.replies || o.personalised || o.demos);
@@ -313,10 +781,10 @@ async function renderOutreach(el, day){
   ]);
   outreachForm($("#oForm"), rows);
   $("#oSave").onclick = () => saveOutreach($("#oForm"), d).then(() => renderOutreach(el, d));
-  $("#oWeeks").innerHTML = weeks.length ? `<table><tr><th>Week of</th><th>Channel</th><th>Sent</th><th>Accept %</th><th>Reply %</th><th>Demos</th></tr>${weeks.map(w => `<tr><td>${fmtDay(w.week)}</td><td>${esc((CHANNELS.find(c => c[0] === w.channel) || [0, w.channel])[1])}</td><td>${w.sent}</td><td>${w.accept_pct ?? "-"}</td><td>${w.reply_pct ?? "-"}</td><td>${w.demos}</td></tr>`).join("")}</table>` : `<p class="muted small">Weekly totals show here once you log a day.</p>`;
+  $("#oWeeks").innerHTML = weeks.length ? `<table><tr><th>Week of</th><th>Channel</th><th>Sent</th><th>Acc %</th><th>Reply %</th><th>Demos</th></tr>${weeks.map(w => `<tr><td>${fmtDay(w.week)}</td><td>${esc((CHANNELS.find(c => c[0] === w.channel) || [0, w.channel])[1])}</td><td>${w.sent}</td><td>${w.accept_pct ?? "-"}</td><td>${w.reply_pct ?? "-"}</td><td>${w.demos}</td></tr>`).join("")}</table>` : `<p class="muted small">Weekly totals show here once you log a day.</p>`;
 }
 
-/* ---------- NOTES ---------- */
+/* ---------- NOTES (v2) ---------- */
 const chatLog = [];
 async function callAI(payload){
   const { data, error } = await sb.functions.invoke("hq-ai", { body: payload });
@@ -325,7 +793,7 @@ async function callAI(payload){
 async function renderNotes(el){
   el.innerHTML = `<div class="card"><h2>Brain dump</h2><textarea id="nBody" placeholder="Type or use the mic on your keyboard. Anything: lessons, ideas, frustrations, plans."></textarea>
     <div class="row" style="margin-top:8px"><button id="nSum">Save and summarise</button><button class="ghost" id="nSave">Just save</button></div><div id="nResult" class="small" style="margin-top:10px"></div></div>
-  <div class="card"><h2>Ask your notes</h2><div class="chat" id="cLog"></div><div class="row"><input id="cQ" placeholder="e.g. What have I learned about sales this month?" style="flex:1;min-width:180px"><button id="cGo">Ask</button></div></div>
+  <div class="card"><h2>Ask your notes</h2><div class="chat" id="cLog"></div><div class="row"><input id="cQ" placeholder="e.g. What have I learned about sales this month?" style="flex:1;min-width:160px"><button id="cGo">Ask</button></div></div>
   <div class="card"><h2>What you've learned</h2><div id="nIns" class="muted small">Loading…</div></div>
   <div class="card"><h2>Past dumps</h2><ul class="list" id="nList"></ul></div>`;
   const drawChat = () => { $("#cLog").innerHTML = chatLog.map(m => `<div class="msg ${m.role === "user" ? "me" : "ai"}">${esc(m.content)}</div>`).join(""); $("#cLog").scrollTop = 1e9; };
@@ -361,7 +829,8 @@ async function renderNotes(el){
   $("#cQ").addEventListener("keydown", e => { if (e.key === "Enter") $("#cGo").click(); });
 }
 
-boot();
+window.HQ = { money, todayTasks, todayCounts, S };
+init();
 </script>
 </body>
 </html>
