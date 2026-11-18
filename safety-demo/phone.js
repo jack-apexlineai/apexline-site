@@ -19,13 +19,13 @@ function buzz(ms){ try { if (navigator.vibrate) navigator.vibrate(ms || 25); } c
 function toast(t){ var d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(function(){ d.remove(); }, 2600); }
 
 var talkTimer = null;
-function speak(text){
-  CS.say(text);
+function speak(text, lang){
+  CS.say(text, lang);
   $$('.say,.replay').forEach(function(b){ b.classList.add('talking'); });
   clearInterval(talkTimer);
   var started = CS.now();
   talkTimer = setInterval(function(){
-    var on = window.speechSynthesis && speechSynthesis.speaking;
+    var on = CS.speaking();
     if ((!on && CS.now() - started > 600) || CS.now() - started > 20000 || CS.muted) {
       $$('.say,.replay').forEach(function(b){ b.classList.remove('talking'); });
       clearInterval(talkTimer);
@@ -34,9 +34,19 @@ function speak(text){
 }
 
 /* The same speaker icon, next to every piece of text that matters. Tap it as often as you like. */
-function spk(text, cls){ return '<span class="spk' + (cls ? ' ' + cls : '') + '" role="button" tabindex="0" aria-label="Read this out" data-say="' + esc(text) + '">' + ic('volume') + '</span>'; }
-function askHead(title, talk){
-  return '<div class="ask"><h1>' + esc(title) + '</h1><button class="say" data-say="' + esc(talk || title) + '" aria-label="Read it out">' + ic('volume') + '</button></div>';
+function langAttr(lang){ return lang && lang !== 'en' ? ' data-lang="' + lang + '"' : ''; }
+function spk(text, cls, lang){ return '<span class="spk' + (cls ? ' ' + cls : '') + '" role="button" tabindex="0" aria-label="Read this out" data-say="' + esc(text) + '"' + langAttr(lang) + '>' + ic('volume') + '</span>'; }
+function askHead(title, talk, lang){
+  return '<div class="ask"><h1>' + esc(title) + '</h1><button class="say" data-say="' + esc(talk || title) + '"' + langAttr(lang) + ' aria-label="Read it out">' + ic('volume') + '</button></div>';
+}
+/* Demo language pack: Polish on the LOTOTO procedure only. */
+function LP(){ return ctx.lang === 'pl' && ctx.swp && ctx.swp.p.id === 'lototo' && window.CS_PL ? window.CS_PL : null; }
+function langBar(){
+  if (!ctx.swp || ctx.swp.p.id !== 'lototo' || !window.CS_PL) return '';
+  var pl = !!LP();
+  return '<div class="langbar"><span class="lbl">' + ic('language') + 'Demo: language pack</span><div class="seg" role="group" aria-label="Language">' +
+    '<button type="button" data-lang-set="en" class="' + (pl ? '' : 'on') + '" aria-pressed="' + !pl + '">English</button>' +
+    '<button type="button" data-lang-set="pl" class="' + (pl ? 'on' : '') + '" aria-pressed="' + pl + '" lang="pl">Polski</button></div></div>';
 }
 function crumbs(){
   var h = '<div class="crumbs">';
@@ -68,11 +78,14 @@ function render(isBack){
   backBtn.hidden = stack.length < 2;
   homeBtn.hidden = !ctx.op || top.fn === hub || top.fn === who;
   $$('[data-say]').forEach(function(b){
-    b.addEventListener('click', function(e){ e.stopPropagation(); e.preventDefault(); buzz(); speak(b.getAttribute('data-say')); });
-    b.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); speak(b.getAttribute('data-say')); } });
+    b.addEventListener('click', function(e){ e.stopPropagation(); e.preventDefault(); buzz(); speak(b.getAttribute('data-say'), b.getAttribute('data-lang')); });
+    b.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); speak(b.getAttribute('data-say'), b.getAttribute('data-lang')); } });
+  });
+  $$('[data-lang-set]').forEach(function(b){
+    b.addEventListener('click', function(){ if (busy) return; var v = b.getAttribute('data-lang-set'); if (v === (ctx.lang || 'en')) return; buzz(); ctx.lang = v; render(false); });
   });
   if (out.bind) out.bind($('.screen'));
-  if (out.talk) setTimeout(function(){ speak(out.talk); }, 180);
+  if (out.talk) setTimeout(function(){ speak(out.talk, out.lang); }, 180);
 }
 backBtn.innerHTML = ic('arrow-left');
 homeBtn.innerHTML = ic('home');
@@ -331,7 +344,7 @@ function item(){
         if (c.answers[c.idx] !== undefined && c.answers.length > c.idx) { /* already answered this one */ }
         var ok = el.dataset.a === '1';
         c.answers[c.idx] = ok;
-        if (window.speechSynthesis) speechSynthesis.cancel();
+        CS.stop();
         burst(ok ? 'ok' : 'bad', function(){
           if (!ok) return go(defect, null, { replace: true });
           nextItem(true);
@@ -403,9 +416,9 @@ function sigPad(r, onDraw){
   cv.addEventListener('pointerup', function(){ drawing = false; if (drawn) onDraw(cv.toDataURL('image/png')); });
   $('.clr', wrap).addEventListener('click', function(){ g.clearRect(0, 0, cv.width, cv.height); drawn = false; onDraw(null); });
 }
-function sigBlock(){
-  return '<button class="sigtoggle" data-sigt>' + ic('signature') + 'Add your finger signature <span style="color:var(--muted);font-weight:600">(optional)</span></button>' +
-    '<div class="sigpad" hidden><canvas></canvas><span class="line"></span><span class="hint">Sign here with your finger</span><button class="clr" type="button">Clear</button></div>';
+function sigBlock(U){
+  return '<button class="sigtoggle" data-sigt>' + ic('signature') + (U ? U.sigToggle : 'Add your finger signature') + ' <span style="color:var(--muted);font-weight:600">' + (U ? U.optional : '(optional)') + '</span></button>' +
+    '<div class="sigpad" hidden><canvas></canvas><span class="line"></span><span class="hint">' + (U ? U.sigHint : 'Sign here with your finger') + '</span><button class="clr" type="button">' + (U ? U.clear : 'Clear') + '</button></div>';
 }
 function bindSig(r, holder){
   var t = $('[data-sigt]', r), pad = $('.sigpad', r), ready = false;
@@ -480,48 +493,52 @@ function swpList(){
 function bakerFor(){ return CS.MACHINES.filter(function(m){ return m.site === ctx.op.site && m.kind === ctx.swp.p.machineKind; })[0]; }
 function swpStep(i){
   var p = ctx.swp.p, st = p.steps[i], n = p.steps.length;
+  var L = LP(), U = L && L.ui, lg = L ? L.code : null, T = L ? L.swp.lototo : null;
+  var sTitle = T ? T.title : p.title, sT = T ? T.steps[i].t : st.t, sS = T ? T.steps[i].s : st.s, word = U ? U.step : 'Step';
   var prog = p.steps.map(function(_, k){ return '<i class="' + (k < i ? 'ok' : k === i ? 'cur' : '') + '"></i>'; }).join('');
-  var talk = 'Step ' + (i + 1) + '. ' + st.t + '. ' + st.s;
+  var talk = word + ' ' + (i + 1) + '. ' + sT + '. ' + sS;
   var lockBtn = '';
   if (st.lockAction) {
     var bm = bakerFor();
     if (bm && !CS.canIsolate(ctx.op.id, bm.id).ok) {
       var why = CS.canIsolate(ctx.op.id, bm.id).why;
-      lockBtn = '<div class="noauthcard">' + ic('hand-stop') + '<div><b>You are not authorised to lock off ' + esc(bm.name) + '</b><small>' + esc(why) + ' Listen and learn the steps, but an authorised person does the isolation.</small></div>' + spk('You are not authorised to lock off ' + bm.name + '. ' + why) + '</div>';
+      if (U) why = U.noAuthWhy(bm.name, /not done/.test(why));
+      var naT = U ? U.noAuth(bm.name) : 'You are not authorised to lock off ' + bm.name, naL = U ? U.noAuthLearn : 'Listen and learn the steps, but an authorised person does the isolation.';
+      lockBtn = '<div class="noauthcard">' + ic('hand-stop') + '<div><b>' + esc(naT) + '</b><small>' + esc(why) + ' ' + esc(naL) + '</small></div>' + spk(naT + '. ' + why, '', lg) + '</div>';
     } else if (bm) {
       var has = CS.activeLocks(bm.id).some(function(l){ return l.op === ctx.op.id; });
-      lockBtn = '<button class="lockrec' + (has ? ' on' : '') + '" data-lock="' + bm.id + '">' + ic(has ? 'lock-check' : 'lock') + (has ? 'Your lock is on ' + esc(bm.name) : 'Tap when your lock is on ' + esc(bm.name)) + '</button>';
+      lockBtn = '<button class="lockrec' + (has ? ' on' : '') + '" data-lock="' + bm.id + '">' + ic(has ? 'lock-check' : 'lock') + esc(has ? (U ? U.lockOn(bm.name) : 'Your lock is on ' + bm.name) : (U ? U.lockTap(bm.name) : 'Tap when your lock is on ' + bm.name)) + '</button>';
     }
   }
   return {
-    html: '<div class="swphead">' + ic(p.icon).replace('class="ic ', 'style="font-size:26px;color:var(--brand-hi)" class="ic ') + '<span class="tt">' + esc(p.title) + '</span><span class="code">' + (i + 1) + '/' + n + '</span></div>' +
+    html: langBar() + '<div class="swphead"' + (lg ? ' lang="' + lg + '"' : '') + '>' + ic(p.icon).replace('class="ic ', 'style="font-size:26px;color:var(--brand-hi)" class="ic ') + '<span class="tt">' + esc(sTitle) + '</span><span class="code">' + (i + 1) + '/' + n + '</span></div>' +
       '<div class="prog">' + prog + '</div>' +
-      '<div class="step' + (st.lockAction ? ' lockstep' : '') + '"><span class="stepno">' + (i + 1) + '</span><div class="bigic">' + ic(st.i) + '</div><h2>' + esc(st.t) + spk('Step ' + (i + 1) + '. ' + st.t) + '</h2><p>' + esc(st.s) + spk(st.s) + '</p>' + lockBtn + '</div>' +
-      '<div class="navrow"><button class="rep" data-rep>' + ic('repeat') + 'Repeat</button><button class="nxt" data-next>' + (i === n - 1 ? 'Finish' : 'Next') + ic('arrow-right') + '</button></div>',
-    talk: talk,
+      '<div class="step' + (st.lockAction ? ' lockstep' : '') + '"' + (lg ? ' lang="' + lg + '"' : '') + '><span class="stepno">' + (i + 1) + '</span><div class="bigic">' + ic(st.i) + '</div><h2>' + esc(sT) + spk(word + ' ' + (i + 1) + '. ' + sT, '', lg) + '</h2><p>' + esc(sS) + spk(sS, '', lg) + '</p>' + lockBtn + '</div>' +
+      '<div class="navrow"><button class="rep" data-rep>' + ic('repeat') + (U ? U.repeat : 'Repeat') + '</button><button class="nxt" data-next>' + (i === n - 1 ? (U ? U.finish : 'Finish') : (U ? U.next : 'Next')) + ic('arrow-right') + '</button></div>',
+    talk: talk, lang: lg,
     bind: function(r){
-      onTap(r, '[data-rep]', function(){ speak(talk); });
+      onTap(r, '[data-rep]', function(){ speak(talk, lg); });
       onTap(r, '[data-next]', function(){ if (i < n - 1) go(swpStep, i + 1); else { ctx.swp.q = 0; ctx.swp.tries = 0; ctx.swp.right = 0; go(swpQuiz, 0); } });
       onTap(r, '[data-lock]', function(el){
         var mid = el.dataset.lock;
         if (CS.activeLocks(mid).some(function(l){ return l.op === ctx.op.id; })) return;
         S = CS.load(); if (!CS.lockOn(mid, ctx.op.id, 'Isolation: ' + p.title)) return;
-        el.classList.add('on'); el.innerHTML = ic('lock-check') + 'Your lock is on ' + esc(CS.machine(mid).name);
-        speak('Your lock is on. The office can see it.');
+        el.classList.add('on'); el.innerHTML = ic('lock-check') + esc(U ? U.lockOn(CS.machine(mid).name) : 'Your lock is on ' + CS.machine(mid).name);
+        speak(U ? U.lockSay : 'Your lock is on. The office can see it.', lg);
       });
     }
   };
 }
 function swpSign(){
-  var sw = ctx.swp, p = sw.p;
+  var sw = ctx.swp, p = sw.p, L = LP(), U = L && L.ui, lg = L ? L.code : null;
   return {
-    html: '<div class="swphead">' + ic(p.icon).replace('class="ic ', 'style="font-size:26px;color:var(--brand-hi)" class="ic ') + '<span class="tt">' + esc(p.title) + '</span><span class="code">' + esc(p.code) + '</span></div>' +
-      (sw.quiz ? '<div class="quizok">' + ic('circle-check') + '<span>You answered ' + sw.quiz.right + ' of ' + sw.quiz.of + ' picture questions' + (sw.quiz.tries > 1 ? ', after another listen' : ' first time') + '</span></div>' : '') +
-      askHead('Do you understand?', 'Do you understand this procedure? If yes, tap the big box to sign. If not, play it again or ask your supervisor.') +
-      '<button class="signbox pulse" data-sign>' + ic('hand-finger') + 'I understand<small>Tap to sign · ' + esc(ctx.op.first + ' ' + ctx.op.last) + '</small></button>' +
-      sigBlock() +
-      '<button class="bigbtn ghost" data-again>' + ic('repeat') + 'Play it again from the start</button>',
-    talk: 'Do you understand this procedure? If yes, tap the big box to sign.',
+    html: langBar() + '<div' + (lg ? ' lang="' + lg + '"' : '') + '><div class="swphead">' + ic(p.icon).replace('class="ic ', 'style="font-size:26px;color:var(--brand-hi)" class="ic ') + '<span class="tt">' + esc(L ? L.swp.lototo.title : p.title) + '</span><span class="code">' + esc(p.code) + '</span></div>' +
+      (sw.quiz ? '<div class="quizok">' + ic('circle-check') + '<span>' + (U ? esc(U.quizOk(sw.quiz.right, sw.quiz.of, sw.quiz.tries)) : 'You answered ' + sw.quiz.right + ' of ' + sw.quiz.of + ' picture questions' + (sw.quiz.tries > 1 ? ', after another listen' : ' first time')) + '</span></div>' : '') +
+      askHead(U ? U.understand : 'Do you understand?', U ? U.understandSay : 'Do you understand this procedure? If yes, tap the big box to sign. If not, play it again or ask your supervisor.', lg) +
+      '<button class="signbox pulse" data-sign>' + ic('hand-finger') + (U ? U.iUnderstand : 'I understand') + '<small>' + (U ? U.tapToSign : 'Tap to sign') + ' · ' + esc(ctx.op.first + ' ' + ctx.op.last) + '</small></button>' +
+      sigBlock(U) +
+      '<button class="bigbtn ghost" data-again>' + ic('repeat') + (U ? U.again : 'Play it again from the start') + '</button></div>',
+    talk: U ? U.understandTalk : 'Do you understand this procedure? If yes, tap the big box to sign.', lang: lg,
     bind: function(r){
       bindSig(r, sw);
       onTap(r, '[data-again]', function(){ go(swpStep, 0); });
@@ -530,24 +547,24 @@ function swpSign(){
         if (busy || sw.saved) return;
         sw.saved = true; buzz(40);
         box.classList.remove('pulse'); box.classList.add('signed');
-        box.innerHTML = ic('circle-check') + 'Signed<small>' + esc(ctx.op.first + ' ' + ctx.op.last) + ' · ' + CS.hm(CS.now()) + '</small>';
+        box.innerHTML = ic('circle-check') + (U ? U.signed : 'Signed') + '<small>' + esc(ctx.op.first + ' ' + ctx.op.last) + ' · ' + CS.hm(CS.now()) + '</small>';
         S = CS.load();
-        var rec = CS.signSwp(p.id, ctx.op.id, sw.sig, sw.quiz || null);
+        var rec = CS.signSwp(p.id, ctx.op.id, sw.sig, sw.quiz || null, lg);
         burst('ok', function(){ go(swpDone, rec, { replace: true }); });
       });
     }
   };
 }
 function swpDone(rec){
-  var p = ctx.swp.p;
+  var p = ctx.swp.p, L = rec && rec.lang === 'pl' ? LP() : null, U = L && L.ui, lg = L ? L.code : null;
   stack = [stack[0], stack[1], stack[stack.length - 1]];
   return {
-    html: '<div class="done"><div class="disc"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><h1>Signed, ' + esc(ctx.op.first) + '</h1>' +
-      '<div class="meta">You understand<br><b>' + esc(p.title) + '</b></div>' +
+    html: '<div class="done"' + (lg ? ' lang="' + lg + '"' : '') + '><div class="disc"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><h1>' + (U ? U.doneTitle : 'Signed') + ', ' + esc(ctx.op.first) + '</h1>' +
+      '<div class="meta">' + (U ? U.doneMeta : 'You understand') + '<br><b>' + esc(L ? L.swp.lototo.title : p.title) + '</b></div>' +
       '<div class="stamp">' + ic('clock') + CS.hm(rec.at) + ' · ' + CS.dayLabel(rec.at) + '</div>' +
-      '<div class="stamp">' + ic('file-text') + esc(p.code + ' · ' + p.ver) + '</div></div>' +
-      '<div class="twin"><button class="bigbtn ghost" data-list>' + ic('file-text') + 'More</button><button class="bigbtn" data-home>' + ic('home') + 'Home</button></div>',
-    talk: 'Thank you ' + ctx.op.first + '. You have signed the procedure.',
+      '<div class="stamp">' + ic('file-text') + esc(p.code + ' · ' + p.ver) + (L ? ' · Polski' : '') + '</div></div>' +
+      '<div class="twin"><button class="bigbtn ghost" data-list>' + ic('file-text') + (U ? U.more : 'More') + '</button><button class="bigbtn" data-home>' + ic('home') + (U ? U.home : 'Home') + '</button></div>',
+    talk: U ? U.doneSay : 'Thank you. You have signed the procedure.', lang: lg,
     bind: function(r){
       onTap(r, '[data-home]', function(){ ctx = { op: ctx.op }; go(hub, null, { reset: true }); });
       onTap(r, '[data-list]', function(){ stack = [stack[0], stack[1]]; go(swpList); });
@@ -681,7 +698,7 @@ function listen(onText, onEnd){
   rec.onresult = function(e){ var t = ''; for (var i = 0; i < e.results.length; i++) t += e.results[i][0].transcript; onText(t, e.results[e.results.length - 1].isFinal); };
   rec.onerror = function(e){ onEnd(e && e.error === 'not-allowed' ? 'blocked' : 'nohear'); };
   rec.onend = function(){ onEnd(''); };
-  try { if (window.speechSynthesis) speechSynthesis.cancel(); rec.start(); } catch (e) { onEnd('nostart'); return null; }
+  try { CS.stop(); rec.start(); } catch (e) { onEnd('nostart'); return null; }
   return rec;
 }
 var VK = {
@@ -813,13 +830,15 @@ function swpQuiz(qi){
   var sw = ctx.swp, qs = CS.QUIZ[sw.p.id] || [];
   if (!qs.length) return swpSign();
   var q = qs[qi], wrong = sw.wrongAt === qi;
+  var L = LP(), U = L && L.ui, lg = L ? L.code : null, LQ = L ? L.swp.lototo.quiz[qi] : null;
+  var qq = LQ ? LQ.q : q.q, qsay = LQ ? LQ.say : q.say, stepS = L ? L.swp.lototo.steps[q.step].s : sw.p.steps[q.step].s;
   return {
-    html: '<div class="swphead">' + ic(sw.p.icon).replace('class="ic ', 'style="font-size:26px;color:var(--brand-hi)" class="ic ') + '<span class="tt">Quick check</span><span class="code">' + (qi + 1) + '/' + qs.length + '</span></div>' +
-      askHead(q.q, q.say) +
-      (wrong ? '<div class="unsure">' + ic('repeat') + '<div><b>Not quite. Listen to this step again</b><small>' + esc(sw.p.steps[q.step].s) + '</small></div>' + spk(sw.p.steps[q.step].s) + '</div>' : '') +
-      '<div class="quiz">' + q.a.map(function(o, i){ return '<button class="qo" data-q="' + i + '">' + ic(o.i) + '<b>' + esc(o.t) + '</b>' + spk(o.t, 'onbtn') + '</button>'; }).join('') + '</div>' +
-      '<div class="honest">' + ic('shield-check') + '<span>A signature shows they were given it. A picture question shows they took it in.</span></div>',
-    talk: q.say,
+    html: langBar() + '<div' + (lg ? ' lang="' + lg + '"' : '') + '><div class="swphead">' + ic(sw.p.icon).replace('class="ic ', 'style="font-size:26px;color:var(--brand-hi)" class="ic ') + '<span class="tt">' + (U ? U.quick : 'Quick check') + '</span><span class="code">' + (qi + 1) + '/' + qs.length + '</span></div>' +
+      askHead(qq, qsay, lg) +
+      (wrong ? '<div class="unsure">' + ic('repeat') + '<div><b>' + (U ? U.notQuite : 'Not quite. Listen to this step again') + '</b><small>' + esc(stepS) + '</small></div>' + spk(stepS, '', lg) + '</div>' : '') +
+      '<div class="quiz">' + q.a.map(function(o, i){ var t = LQ ? LQ.a[i] : o.t; return '<button class="qo" data-q="' + i + '">' + ic(o.i) + '<b>' + esc(t) + '</b>' + spk(t, 'onbtn', lg) + '</button>'; }).join('') + '</div>' +
+      '<div class="honest">' + ic('shield-check') + '<span>' + (U ? U.honest : 'A signature shows they were given it. A picture question shows they took it in.') + '</span></div></div>',
+    talk: qsay, lang: lg,
     bind: function(r){
       onTap(r, '[data-q]', function(el){
         var o = q.a[+el.dataset.q];
@@ -832,7 +851,7 @@ function swpQuiz(qi){
           });
         } else {
           sw.tries = (sw.tries || 0) + 1; sw.wrongAt = qi;
-          burst('bad', function(){ go(swpQuiz, qi, { replace: true }); setTimeout(function(){ speak('Not quite. Listen again. ' + sw.p.steps[q.step].s); }, 250); });
+          burst('bad', function(){ go(swpQuiz, qi, { replace: true }); setTimeout(function(){ speak((U ? U.notQuiteSay : 'Not quite. Listen again.') + ' ' + stepS, lg); }, 250); });
         }
       });
     }

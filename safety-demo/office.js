@@ -73,7 +73,7 @@ function openPhoneView(){
 }
 function closePhoneView(){
   if (!phoneMask) return;
-  try { var w = phoneMask.querySelector('iframe').contentWindow; if (w.speechSynthesis) w.speechSynthesis.cancel(); } catch (e) {}
+  try { var w = phoneMask.querySelector('iframe').contentWindow; if (w.CS && w.CS.stop) w.CS.stop(); else if (w.speechSynthesis) w.speechSynthesis.cancel(); } catch (e) {}
   phoneMask.remove(); phoneMask = null;
   document.body.classList.remove('phoneopen');
   document.removeEventListener('keydown', phoneKey);
@@ -263,7 +263,7 @@ function pageSign(){
     '<section class="panel"><div class="ph"><h2>' + ic('signature') + 'Sign-off log</h2><span class="sp"></span>' +
     CS.SWPS.map(function(p){ return '<button class="chip' + (swpF === p.id ? ' on' : '') + '" data-swpf="' + p.id + '" style="margin-left:6px">' + esc(p.title) + '</button>'; }).join('') + '</div>' +
     '<div class="tw"><table class="t"><thead><tr><th>Who</th><th>Site</th><th>Procedure</th><th>Signed</th><th>Understood</th><th>How</th></tr></thead><tbody>' +
-    (log.length ? log.map(function(s){ var o = CS.op(s.op), p = CS.byId(CS.SWPS, s.swp); return '<tr data-new-sign="' + s.id + '"><td><span class="who">' + CS.avatar(o, 'sm') + esc(o.first + ' ' + o.last) + '</span></td><td>' + esc(CS.site(o.site).name) + '</td><td>' + esc(p.title) + ' <small style="color:var(--muted)">' + esc(s.ver || p.ver) + '</small></td><td>' + CS.hm(s.at) + ' · ' + CS.dayLabel(s.at) + '</td><td>' + (s.quiz ? '<span class="pill ' + (s.quiz.tries > 1 ? 'amber' : 'ok') + '">' + ic('circle-check') + s.quiz.right + ' of ' + s.quiz.of + (s.quiz.tries > 1 ? ', 2nd listen' : ', first time') + '</span>' : '<span style="color:var(--muted)">Before picture checks</span>') + '</td><td>' + (s.sig ? '<img src="' + s.sig + '" alt="Signature" style="height:30px;background:#fff;border-radius:6px;padding:2px 6px">' : '<span class="pill ok">' + ic('hand-finger') + 'Tap to sign, after listening</span>') + '</td></tr>'; }).join('') : '<tr><td colspan="6" class="empty">No sign-offs yet</td></tr>') +
+    (log.length ? log.map(function(s){ var o = CS.op(s.op), p = CS.byId(CS.SWPS, s.swp); return '<tr data-new-sign="' + s.id + '"><td><span class="who">' + CS.avatar(o, 'sm') + esc(o.first + ' ' + o.last) + '</span></td><td>' + esc(CS.site(o.site).name) + '</td><td>' + esc(p.title) + ' <small style="color:var(--muted)">' + esc(s.ver || p.ver) + (s.lang === 'pl' ? ' · in Polish' : '') + '</small></td><td>' + CS.hm(s.at) + ' · ' + CS.dayLabel(s.at) + '</td><td>' + (s.quiz ? '<span class="pill ' + (s.quiz.tries > 1 ? 'amber' : 'ok') + '">' + ic('circle-check') + s.quiz.right + ' of ' + s.quiz.of + (s.quiz.tries > 1 ? ', 2nd listen' : ', first time') + '</span>' : '<span style="color:var(--muted)">Before picture checks</span>') + '</td><td>' + (s.sig ? '<img src="' + s.sig + '" alt="Signature" style="height:30px;background:#fff;border-radius:6px;padding:2px 6px">' : '<span class="pill ok">' + ic('hand-finger') + 'Tap to sign, after listening</span>') + '</td></tr>'; }).join('') : '<tr><td colspan="6" class="empty">No sign-offs yet</td></tr>') +
     '</tbody></table></div></section>';
 }
 function pageRec(){

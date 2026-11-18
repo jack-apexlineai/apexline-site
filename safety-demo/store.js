@@ -448,9 +448,9 @@ function lockOff(lid, oid){
   persist({ type: 'lockoff', machine: l.machine, op: oid });
   return true;
 }
-function signSwp(swpId, oid, sig, quiz){
+function signSwp(swpId, oid, sig, quiz, lang){
   if (hasSigned(swpId, oid) && byId(SWPS, swpId).isNew && state.signoffs.some(function(x){ return x.swp === swpId && x.op === oid && now() - x.at < 5000; })) return null;
-  var s = { id: uid('s'), swp: swpId, op: oid, at: now(), sig: sig || null, ver: byId(SWPS, swpId).ver, quiz: quiz || null };
+  var s = { id: uid('s'), swp: swpId, op: oid, at: now(), sig: sig || null, ver: byId(SWPS, swpId).ver, quiz: quiz || null, lang: lang || null };
   state.signoffs.push(s);
   addEvent('sign', null, oid, op(oid).first + ' signed ' + byId(SWPS, swpId).title + '.');
   persist({ type: 'sign', swp: swpId, op: oid });
@@ -542,24 +542,103 @@ function avatar(o, cls){ return '<span class="av ' + (cls || '') + '" style="--c
 /* Speech. en-GB voice, cancels anything already playing. */
 var muted = false;
 try { muted = localStorage.getItem(KEY + '-mute') === '1'; } catch (e) {}
-function voice(){
+function voice(lang){
   if (!window.speechSynthesis) return null;
   var vs = speechSynthesis.getVoices() || [];
+  if (lang && !/^en/i.test(lang)) { var lv = vs.filter(function(v){ return v.lang && v.lang.slice(0, 2).toLowerCase() === lang.slice(0, 2).toLowerCase(); }); return lv[0] || null; }
   var gb = vs.filter(function(v){ return /en[-_]GB/i.test(v.lang); });
   var pref = gb.filter(function(v){ return /Daniel|Serena|Kate|Arthur|Google UK English|Martha|Libby|Ryan|Sonia/i.test(v.name); });
   return pref[0] || gb[0] || null;
 }
-function say(text){
-  if (!window.speechSynthesis || muted || !text) return;
+/* Browser voice, only for words that were not recorded. done() runs when it ends. */
+function ttsSay(text, done, lang){
+  if (!window.speechSynthesis) return done();
+  var fin = false, end = function(){ if (!fin) { fin = true; clearTimeout(guard); done(); } };
+  var guard = setTimeout(end, 1500 + text.length * 90);
   try {
-    speechSynthesis.cancel();
     var u = new SpeechSynthesisUtterance(text);
-    u.lang = 'en-GB'; u.rate = 0.95; u.pitch = 1;
-    try { var v = voice(); if (v) u.voice = v; } catch (e2) {}
+    u.lang = lang || 'en-GB'; u.rate = 0.95; u.pitch = 1;
+    try { var v = voice(lang); if (v) u.voice = v; } catch (e2) {}
+    u.onend = end; u.onerror = end;
     speechSynthesis.speak(u);
-  } catch (e) {}
+  } catch (e) { end(); }
 }
-function setMuted(m){ muted = !!m; try { localStorage.setItem(KEY + '-mute', muted ? '1' : '0'); } catch (e) {} if (muted && window.speechSynthesis) speechSynthesis.cancel(); }
+
+/* Recorded narration. One audio element, reused, so phones that need a tap
+   to allow sound only need it once. A new line always stops the one playing. */
+var REC = window.CS_AUDIO || {}, VO = window.CSVoice || null;
+var AUDIO_DIR = 'audio/';
+var player = null, unlocked = false, token = 0, talking = false;
+var SILENT = 'data:audio/wav;base64,UklGRsQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+function getPlayer(){
+  if (!player) { player = new Audio(); player.preload = 'auto'; player.setAttribute('playsinline', ''); }
+  return player;
+}
+function unlock(){
+  if (unlocked) return;
+  unlocked = true;
+  var p = getPlayer();
+  if (p.src) return;
+  p.src = SILENT;
+  try { var pr = p.play(); if (pr && pr.then) pr.then(function(){ if (p.src === SILENT) p.pause(); }, function(){ unlocked = false; }); } catch (e) { unlocked = false; }
+}
+['pointerdown', 'touchend', 'keydown'].forEach(function(ev){ document.addEventListener(ev, unlock, true); });
+
+function recorded(s){ return VO && REC[VO.hash(s)] ? AUDIO_DIR + VO.hash(s) + '.mp3' : null; }
+/* Turn a line into steps: recorded clips, and runs of unrecorded sentences joined for the browser voice. */
+function plan(text){
+  var parts = VO ? VO.split(text) : [String(text)], q = [];
+  parts.forEach(function(s){
+    var f = recorded(s), last = q[q.length - 1];
+    if (f) q.push({ f: f, s: s });
+    else if (last && !last.f) last.s += ' ' + s;
+    else q.push({ s: s });
+  });
+  return q;
+}
+var warm = {};
+function prefetch(url){ if (warm[url]) return; warm[url] = 1; try { var a = new Audio(); a.preload = 'auto'; a.src = url; } catch (e) {} }
+
+function stop(){
+  token++; talking = false;
+  if (player) { try { player.onended = player.onerror = null; player.pause(); } catch (e) {} }
+  if (window.speechSynthesis) { try { speechSynthesis.cancel(); } catch (e) {} }
+}
+/* lang: 'pl' etc. for a language pack line; only matters if the browser voice has to step in. */
+function say(text, lang){
+  stop();
+  var tl = lang === 'pl' ? 'pl-PL' : null;
+  if (muted || !text) return;
+  var my = token, q = plan(text);
+  window.__lastSay = { text: String(text), lang: lang || 'en', steps: q.map(function(x){ return x.f ? 'mp3' : 'tts'; }) };
+  if (!q.length) return;
+  talking = true;
+  q.forEach(function(x){ if (x.f) prefetch(x.f); });
+  function next(i){
+    if (my !== token) return;
+    if (i >= q.length) { talking = false; return; }
+    var it = q[i];
+    if (!it.f) return ttsSay(it.s, function(){ next(i + 1); }, tl);
+    var p = getPlayer(), moved = false;
+    var go = function(){ if (!moved) { moved = true; next(i + 1); } };
+    p.onended = go;
+    p.onerror = function(){ if (my === token && !moved) { moved = true; ttsSay(it.s, function(){ next(i + 1); }, tl); } };
+    p.src = it.f;
+    try {
+      var pr = p.play();
+      if (pr && pr.catch) pr.catch(function(err){
+        if (my !== token || moved) return;
+        /* Sound not allowed yet (no tap on the page): stay quiet rather than fall back. */
+        if (err && err.name === 'NotAllowedError') { moved = true; talking = false; return; }
+        if (err && err.name === 'AbortError') return;
+        moved = true; ttsSay(it.s, function(){ next(i + 1); }, tl);
+      });
+    } catch (e) { moved = true; ttsSay(it.s, function(){ next(i + 1); }, tl); }
+  }
+  next(0);
+}
+function speaking(){ return talking || !!(window.speechSynthesis && speechSynthesis.speaking); }
+function setMuted(m){ muted = !!m; try { localStorage.setItem(KEY + '-mute', muted ? '1' : '0'); } catch (e) {} if (muted) stop(); }
 if (window.speechSynthesis && speechSynthesis.addEventListener) speechSynthesis.addEventListener('voiceschanged', function(){});
 
 window.CS = {
@@ -572,6 +651,6 @@ window.CS = {
   openDefects: openDefects, activeLocks: activeLocks, checksToday: checksToday, doNotUse: doNotUse, status: status,
   saveCheck: saveCheck, lockOn: lockOn, lockOff: lockOff, signSwp: signSwp, hasSigned: hasSigned, fixDefect: fixDefect,
   hm: hm, dayLabel: dayLabel, since: since, ago: ago, esc: esc, initials: initials, avatar: avatar, isToday: isToday,
-  say: say, setMuted: setMuted, get muted(){ return muted; }
+  say: say, stop: stop, speaking: speaking, recorded: recorded, audioEl: function(){ return player; }, setMuted: setMuted, get muted(){ return muted; }
 };
 })();
