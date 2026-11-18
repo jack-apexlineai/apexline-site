@@ -44,6 +44,7 @@ button:disabled{opacity:.5}
 .side a.nav svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .side a.nav:hover{background:rgba(255,255,255,.04)}
 .side a.nav.on{background:rgba(92,200,245,.1);color:#fff;box-shadow:inset 3px 0 0 var(--accent)}
+.side a.nav .badge:empty{display:none}
 .side a.nav .badge{margin-left:auto;font-size:11px;font-weight:700;background:var(--card2);border-radius:99px;padding:1px 8px;color:var(--muted)}
 .side .sep{height:1px;background:var(--line);margin:12px 6px}
 .side .foot{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding:12px 4px 0}
@@ -133,6 +134,41 @@ th:first-child,td:first-child{text-align:left}
 #td .note time{display:block;color:var(--muted);font-size:11px;margin-top:4px}
 #td .note .x{position:absolute;top:4px;right:2px}
 #td .td-f{display:flex;gap:8px;margin-top:16px}
+
+/* CRM board and deal cards */
+.board{display:flex;align-items:flex-start;gap:14px;overflow-x:auto;padding-bottom:10px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+@media (hover: hover) and (pointer: fine){.board{scroll-snap-type:none}}
+.bcol{flex:0 0 250px;background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:14px;padding:12px;scroll-snap-align:start;min-width:0}
+.bcol h3{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:14px;margin:2px 2px 10px;font-family:var(--head)}
+.dc{--st:var(--muted);display:block;padding:11px 12px;border:1px solid var(--line);border-left:3px solid var(--st);border-radius:12px;background:var(--card2);margin-bottom:8px;cursor:pointer;min-width:0;transition:border-color .15s,background .15s}
+.dc:hover,.dc.open{border-color:rgba(92,200,245,.45);border-left-color:var(--st);background:#19263F}
+.dc b{display:block;font-size:14px;overflow-wrap:anywhere}
+.dc .who{color:var(--muted);font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dc .meta{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.dcrow{cursor:pointer}
+.dcrow:hover b{color:var(--accent)}
+.sbar{display:grid;grid-template-columns:104px 1fr 34px;gap:10px;align-items:center;margin:7px 0;font-size:13px}
+.sbar .fb{height:10px;background:#0B1322;border-radius:99px;overflow:hidden}
+.sbar .fb i{display:block;height:100%;border-radius:99px}
+.funnel .sbar{grid-template-columns:96px 1fr 46px}
+.tl{list-style:none;margin:6px 0 0 6px;padding:0;border-left:2px solid var(--line)}
+.tl li{position:relative;padding:0 0 14px 16px;font-size:14px}
+.tl li::before{content:"";position:absolute;left:-7px;top:4px;width:12px;height:12px;border-radius:50%;background:#0F1828;border:2px solid var(--accent)}
+.tl li.in::before{border-color:var(--good)}
+.tl li.note::before{border-color:var(--warn)}
+.tl .when{color:var(--muted);font-size:12px}
+.tl .words{display:block;font-style:italic;color:#C3CCDA;margin-top:4px}
+.tl .out{display:block;color:var(--muted);font-size:13px;margin-top:3px}
+.btnrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+a.btn,button.btn,label.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:10px;border:1px solid var(--line);color:var(--text);text-decoration:none;font-size:13px;font-weight:600;background:rgba(255,255,255,.03)}
+a.btn:hover,button.btn:hover,label.btn:hover{border-color:var(--accent)}
+.path{font-family:var(--mono);font-size:12px;color:#C3CCDA;background:#0B1322;border:1px solid var(--line);border-radius:8px;padding:3px 8px;overflow-wrap:anywhere;cursor:copy}
+#td label.f{display:flex;flex-direction:column;gap:4px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;font-family:var(--mono)}
+.callc{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--card2);margin-bottom:10px}
+.callc h3{font-family:var(--head);font-size:16px;margin:4px 0 6px}
+.callc .sum{white-space:pre-wrap;font-size:14px;color:#D5DDEA;line-height:1.5}
+.callc details summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:13px;margin-top:6px}
+button.chip{cursor:pointer}
 
 /* rings and charts */
 .ringcard{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
@@ -251,6 +287,7 @@ th:first-child,td:first-child{text-align:left}
   .phead > button{display:none}
 }
 @media (max-width:520px){
+  .bcol{flex-basis:82vw}
   .kpis{gap:10px;margin-bottom:12px}
   .kpi{padding:12px 14px}
   .kpi b{font-size:22px}
@@ -343,8 +380,9 @@ th:first-child,td:first-child{text-align:left}
     <div class="brand"><svg><use href="#jsmark"/></svg><div><b>HQ</b><small id="hdrSub"></small></div></div>
     <a class="nav" href="#today" data-nav="today"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Today<span class="badge" id="navToday"></span></a>
     <a class="nav" href="#tasks" data-nav="tasks"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>Tasks<span class="badge" id="navTasks"></span></a>
+    <a class="nav" href="#crm" data-nav="crm"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.8c1.6.8 2.7 2.5 3 5.2"/></svg>CRM<span class="badge" id="navCrm"></span></a>
+    <a class="nav" href="#calls" data-nav="calls"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z"/></svg>Calls</a>
     <a class="nav" href="#money" data-nav="money"><svg viewBox="0 0 24 24"><path d="M16 6.5A4 4 0 0 0 9 9v3H7m2 0h5M9 12v3c0 1.5-1 2.5-2 3h11"/></svg>Money</a>
-    <a class="nav" href="#pipeline" data-nav="pipeline"><svg viewBox="0 0 24 24"><path d="M4 5h16l-6 7v6l-4 2v-8z"/></svg>Pipeline</a>
     <a class="nav" href="#outreach" data-nav="outreach"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Outreach</a>
     <div class="sep"></div>
     <a class="nav" href="#notes" data-nav="notes"><svg viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M9 12h6M9 16h6"/></svg>Notes</a>
@@ -394,10 +432,10 @@ function show(id){ ["login","lock","boot","app"].forEach(x => $("#" + x).classLi
 
 /* ---------- state ---------- */
 let ME = null, appStarted = false, hiddenAt = 0;
-const S = { tasks: [], notes: [], deals: [], invoices: [], cash: [], debts: [], plan: [], outreach: [], settings: { target: 25000, deadline: "2026-12-31", title: "Road to £25k" } };
+const S = { tasks: [], notes: [], touches: [], calls: [], assets: [], li: [], deals: [], invoices: [], cash: [], debts: [], plan: [], outreach: [], settings: { target: 25000, deadline: "2026-12-31", title: "Road to £25k" } };
 async function loadAll(){
   const since = addDays(today(), -13);
-  const [tasks, notes, deals, invoices, cash, debts, plan, outreach, st] = await Promise.all([
+  const [tasks, notes, deals, invoices, cash, debts, plan, outreach, st, touches, calls, assets, li] = await Promise.all([
     q(sb.from("hq_tasks").select("*").order("sort")),
     q(sb.from("hq_task_notes").select("*").order("created_at")),
     q(sb.from("hq_deals").select("*").order("created_at")),
@@ -407,8 +445,12 @@ async function loadAll(){
     q(sb.from("hq_debt_plan").select("*").order("sort")),
     q(sb.from("hq_outreach").select("*").gte("day", since)),
     q(sb.from("hq_settings").select("*").limit(1)),
+    q(sb.from("hq_touches").select("*").order("at", { ascending: false })),
+    q(sb.from("hq_calls").select("*").order("call_at", { ascending: false })),
+    q(sb.from("hq_assets").select("*").order("created_at")),
+    q(sb.from("hq_li").select("*").order("sent_on")),
   ]);
-  Object.assign(S, { tasks, notes, deals, invoices, cash, debts, plan, outreach });
+  Object.assign(S, { tasks, notes, deals, invoices, cash, debts, plan, outreach, touches, calls, assets, li });
   if (st && st[0]) S.settings = st[0];
   return S;
 }
@@ -436,11 +478,40 @@ function money(s = S, d = today()){
     cashTotal,
     unpaid: sum(sent, "amount"), unpaidCount: sent.length,
     scheduled: sum(scheduled, "amount"),
-    pipeline: sum(s.deals.filter(x => OPEN_STAGES.includes(x.stage)), "value"),
-    openDeals: s.deals.filter(x => OPEN_STAGES.includes(x.stage)).length,
+    pipeline: sum(s.deals.filter(isOpen), "value"),
+    openDeals: s.deals.filter(x => isOpen(x) && Number(x.value)).length,
     debtsLeft: s.debts.reduce((a, r) => a + Math.max(0, Number(r.amount) - Number(r.paid)), 0),
     target, pct: Math.min(100, Math.round(100 * cashTotal / (target || 1))),
   };
+}
+
+/* ---------- CRM helpers ---------- */
+const CRM_STATUSES = ["Uncontacted","Cold","Warm","Hot","Call booked","Proposal Sent","Won","Lost"];
+const STC = { Uncontacted: "#6B7A93", Cold: "#60A5FA", Warm: "#FBBF24", Hot: "#FB923C", "Call booked": "#A78BFA", "Proposal Sent": "#5CE1FF", Won: "#34D399", Renewal: "#34D399", Lost: "#F87171" };
+const STAGE_FROM = { "Call booked": "Demo booked", "Proposal Sent": "Proposal sent", Hot: "Spoken", Warm: "Spoken", Cold: "Lead", Uncontacted: "Lead", Lost: "Lost" };
+const daysBetween = (a, b) => Math.round((new Date(String(b).slice(0, 10) + "T12:00:00") - new Date(String(a).slice(0, 10) + "T12:00:00")) / 864e5);
+function dealStatus(x){ return x.status || ({ "Demo booked": "Call booked", "Demo done": "Hot", "Proposal sent": "Proposal Sent", Won: "Won", Building: "Won", Live: "Won", Lost: "Lost", Spoken: "Warm" }[x.stage] || "Cold"); }
+function isOpen(x){ return !["Won","Renewal","Lost"].includes(dealStatus(x)); }
+function followUps(s = S, d = today()){
+  const act = s.deals.filter(x => x.next_date && !["Lost","Uncontacted"].includes(dealStatus(x)));
+  const by = (a, b) => String(a.next_date).localeCompare(String(b.next_date)) || String(a.company).localeCompare(String(b.company));
+  return { due: act.filter(x => x.next_date <= d).sort(by), soon: act.filter(x => x.next_date > d && x.next_date <= addDays(d, 7)).sort(by) };
+}
+function sinceTxt(x, d = today()){ if (!x.last_contact) return "no contact yet"; const n = daysBetween(x.last_contact, d); return n <= 0 ? "spoke today" : n + (n === 1 ? " day" : " days") + " since contact"; }
+function fuChip(x, d = today()){
+  if (!x.next_date) return "";
+  const n = daysBetween(x.next_date, d), tm = x.next_time ? " " + String(x.next_time).slice(0, 5) : "";
+  if (n > 0) return `<span class="chip bad">${n}d overdue</span>`;
+  if (n === 0) return `<span class="chip hud">Today${tm}</span>`;
+  return `<span class="chip">${fmtDay(x.next_date)}${tm}</span>`;
+}
+function dealCard(x){
+  const st = dealStatus(x);
+  return `<div class="dc" data-deal="${x.id}" tabindex="0" style="--st:${STC[st] || "#6B7A93"}"><b>${esc(x.company)}</b><div class="who">${esc([x.contact, x.role].filter(Boolean).join(", ")) || "&nbsp;"}</div><div class="meta">${Number(x.value) ? `<span class="chip good">${gbp(x.value)}${Number(x.monthly) ? " + " + gbp(x.monthly) + "/mo" : ""}</span>` : ""}${st !== "Uncontacted" && st !== "Lost" ? fuChip(x) : ""}${x.product ? `<span class="chip">${esc(x.product)}</span>` : ""}</div></div>`;
+}
+function fuRow(x){
+  const nx = x.next_step || "";
+  return `<li class="dcrow" data-deal="${x.id}"><div class="grow"><b>${esc(x.company)}</b> <span class="muted small">${esc(x.contact || "")}</span><div class="muted small" style="margin-top:2px">${esc(nx.slice(0, 150))}${nx.length > 150 ? "…" : ""}</div></div><div style="text-align:right;flex:none">${fuChip(x)}<div class="muted small" style="margin-top:4px;white-space:nowrap">${sinceTxt(x)}</div></div></li>`;
 }
 
 /* ---------- tasks helpers ---------- */
@@ -500,42 +571,45 @@ async function addTask(row){
 }
 
 /* task cards: tick button, click or tap opens the detail card, hover previews it on a laptop */
-const TD = { id: null, pinned: false, hoverT: 0, leaveT: 0, editDesc: false };
+const TD = { kind: "task", id: null, pinned: false, hoverT: 0, leaveT: 0, editDesc: false };
 document.addEventListener("click", async e => {
   const ck = e.target.closest(".tc [data-act=tick]");
   if (ck) { e.stopPropagation(); const t = S.tasks.find(x => x.id === ck.closest(".tc").dataset.id); if (t) await toggleDone(t); return; }
   const tc = e.target.closest(".tc");
-  if (tc) { openTask(tc.dataset.id, tc, true); return; }
+  if (tc) { openCard("task", tc.dataset.id, tc, true); return; }
+  const dd = e.target.closest("[data-deal]");
+  if (dd && !e.target.closest("#td")) { if (e.target.closest("a")) return; openCard("deal", dd.dataset.deal, dd.matches(".dc, .dcrow") ? dd : null, true); return; }
   if (!e.target.isConnected) return; // the card redrew itself under this click (e.g. Edit), so it was inside
   if (TD.id && !e.target.closest("#td") && !e.target.closest("#tdBack")) closeTask();
 });
 document.addEventListener("keydown", e => {
   if (e.key === "Escape" && TD.id) return closeTask();
-  const tc = e.target.closest && e.target.closest(".tc");
-  if (tc && e.key === "Enter" && e.target === tc) openTask(tc.dataset.id, tc, true);
+  const tc = e.target.closest && e.target.closest(".tc, .dc");
+  if (tc && e.key === "Enter" && e.target === tc) openCard(tc.classList.contains("dc") ? "deal" : "task", tc.dataset.id || tc.dataset.deal, tc, true);
 });
 document.addEventListener("mouseover", e => {
   if (!canHover()) return;
-  const tc = e.target.closest(".tc"), inTd = e.target.closest("#td");
-  if (inTd || (tc && tc.dataset.id === TD.id)) { clearTimeout(TD.leaveT); return; }
-  if (tc) { clearTimeout(TD.hoverT); TD.hoverT = setTimeout(() => { if (!TD.pinned) openTask(tc.dataset.id, tc, false); }, 320); }
+  const tc = e.target.closest(".tc, .dc"), inTd = e.target.closest("#td");
+  const kid = tc && (tc.dataset.id || tc.dataset.deal);
+  if (inTd || (tc && kid === TD.id)) { clearTimeout(TD.leaveT); return; }
+  if (tc) { clearTimeout(TD.hoverT); clearTimeout(TD.leaveT); TD.hoverT = setTimeout(() => { if (!TD.pinned) openCard(tc.classList.contains("dc") ? "deal" : "task", kid, tc, false); }, 320); } // moving card to card: keep the open one until the next shows
 });
 document.addEventListener("mouseout", e => {
   if (!canHover()) return;
-  const from = e.target.closest(".tc, #td"), to = e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest(".tc, #td");
-  if (from && from.classList.contains("tc")) clearTimeout(TD.hoverT);
-  if (from && from !== to && TD.id && !TD.pinned) { clearTimeout(TD.leaveT); TD.leaveT = setTimeout(() => { if (!TD.pinned) closeTask(); }, 260); }
+  const from = e.target.closest(".tc, .dc, #td"), to = e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest(".tc, .dc, #td");
+  if (from && from.matches(".tc, .dc")) clearTimeout(TD.hoverT);
+  if (from && from !== to && !(to && to.matches(".tc, .dc")) && TD.id && !TD.pinned) { clearTimeout(TD.leaveT); TD.leaveT = setTimeout(() => { if (!TD.pinned) closeTask(); }, 260); }
 });
 $("#td").addEventListener("focusin", () => { TD.pinned = true; });
 $("#tdBack").onclick = () => closeTask();
-function openTask(id, anchor, pin){
-  const t = S.tasks.find(x => x.id === id); if (!t) return;
-  const same = TD.id === id;
+function openCard(kind, id, anchor, pin){
+  if (!(kind === "deal" ? S.deals : S.tasks).some(x => x.id === id)) return;
+  const same = TD.id === id && TD.kind === kind;
   if (!same) TD.editDesc = false;
-  TD.pinned = (same && TD.pinned) || !!pin; TD.id = id;
-  document.querySelectorAll(".tc.open").forEach(x => x.classList.remove("open"));
+  TD.pinned = (same && TD.pinned) || !!pin; TD.id = id; TD.kind = kind;
+  document.querySelectorAll(".tc.open, .dc.open").forEach(x => x.classList.remove("open"));
   if (anchor) anchor.classList.add("open");
-  drawTask();
+  drawCard();
   const td = $("#td"); td.classList.remove("hide");
   const sheet = !canHover() || innerWidth < 700;
   td.classList.toggle("sheet", sheet);
@@ -546,15 +620,17 @@ function openTask(id, anchor, pin){
     if (left < 12 || (r.left - w - 12 < 12 && r.right + 12 + w > innerWidth - 12)) left = Math.max(12, Math.min(innerWidth - w - 12, r.left));
     let top = Math.min(Math.max(12, r.top - 8), innerHeight - h - 12);
     td.style.left = left + "px"; td.style.top = Math.max(12, top) + "px";
-  }
+  } else if (!sheet) { td.style.left = Math.max(12, innerWidth - Math.min(390, innerWidth - 24) - 24) + "px"; td.style.top = "24px"; }
 }
+const openTask = (id, anchor, pin) => openCard("task", id, anchor, pin);
+function drawCard(){ return TD.kind === "deal" ? drawDeal() : drawTask(); }
 function closeTask(){
   TD.id = null; TD.pinned = false; TD.editDesc = false; clearTimeout(TD.hoverT); clearTimeout(TD.leaveT);
   const td = $("#td"); if (!td) return; td.classList.add("hide"); td.innerHTML = ""; $("#tdBack").classList.add("hide");
-  document.querySelectorAll(".tc.open").forEach(x => x.classList.remove("open"));
+  document.querySelectorAll(".tc.open, .dc.open").forEach(x => x.classList.remove("open"));
 }
-function fmtDesc(s){
-  if (!s) return '<span class="muted">No description yet.</span>';
+function fmtDesc(s, empty = "No description yet."){
+  if (!s) return '<span class="muted">' + empty + '</span>';
   const out = []; let list = [];
   const flush = () => { if (list.length) { out.push("<ul>" + list.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>"); list = []; } };
   s.split("\n").forEach(l => { const m = l.match(/^\s*[-*•]\s+(.*)/); if (m) list.push(m[1]); else { flush(); out.push(esc(l)); } });
@@ -743,15 +819,15 @@ $("#boot").addEventListener("click", () => BOOT.done && BOOT.done());
 document.addEventListener("keydown", () => { if (!$("#boot").classList.contains("hide") && BOOT.done) BOOT.done(); });
 
 /* ---------- app shell ---------- */
-const PAGES = { today: renderToday, tasks: renderTasks, money: renderMoney, pipeline: renderPipeline, outreach: renderOutreach, notes: renderNotes, training: renderHealth };
-const curTab = () => { const t = (location.hash || "#today").slice(1); return PAGES[t] ? t : "today"; };
+const PAGES = { today: renderToday, tasks: renderTasks, crm: renderCRM, calls: renderCalls, money: renderMoney, outreach: renderOutreach, notes: renderNotes, training: renderHealth };
+const curTab = () => { let t = (location.hash || "#today").slice(1); if (t === "pipeline") t = "crm"; return PAGES[t] ? t : "today"; };
 function route(){
   const tab = curTab();
   document.querySelectorAll("[data-nav]").forEach(a => a.classList.toggle("on", a.dataset.nav === tab));
   document.body.classList.remove("menu");
   PAGES[tab]($("#page"));
 }
-function rerender(){ const tab = curTab(); if (["today","tasks","money","pipeline"].includes(tab)) { const y = scrollY; PAGES[tab]($("#page")); scrollTo(0, y); } navBadges(); }
+function rerender(){ const tab = curTab(); if (["today","tasks","money","crm","calls"].includes(tab)) { const y = scrollY; PAGES[tab]($("#page")); scrollTo(0, y); } navBadges(); }
 function startApp(){
   show("app");
   if (!appStarted) {
@@ -769,7 +845,7 @@ function header(){
   const left = Math.max(0, Math.ceil((new Date(dl + "T23:59:59") - new Date()) / 864e5));
   $("#hdrSub").textContent = left + " DAYS TO " + fmtDay(dl).toUpperCase();
 }
-function navBadges(){ const c = todayCounts(); $("#navToday").textContent = c.open || ""; $("#navTasks").textContent = S.tasks.filter(t => t.status !== "done").length || ""; }
+function navBadges(){ const c = todayCounts(); $("#navCrm").textContent = followUps().due.length || ""; $("#navToday").textContent = c.open || ""; $("#navTasks").textContent = S.tasks.filter(t => t.status !== "done").length || ""; }
 async function refresh(){
   const active = document.activeElement;
   if (TD.pinned || (active && /INPUT|TEXTAREA|SELECT/.test(active.tagName) && active.value)) return; // never wipe what's being typed
@@ -789,7 +865,7 @@ function renderToday(el){
   const list = todayTasks(), ids = new Set(list.map(t => t.id));
   const soon = S.tasks.filter(t => t.status !== "done" && t.due && t.due > d && t.due <= addDays(d, 7) && !ids.has(t.id)).sort((a, b) => (a.due + (a.due_time || "")).localeCompare(b.due + (b.due_time || "")));
   const out = S.invoices.filter(i => i.status === "sent" || i.status === "scheduled");
-  const open = S.deals.filter(x => OPEN_STAGES.includes(x.stage));
+  const fu = followUps();
   const days = Array.from({ length: 14 }, (_, i) => addDays(d, i - 13));
   const perDay = days.map(x => S.outreach.filter(r => r.day === x).reduce((a, r) => a + Number(r.sent || 0), 0));
   const mx = Math.max(1, ...perDay), sent14 = perDay.reduce((a, b) => a + b, 0);
@@ -820,7 +896,7 @@ function renderToday(el){
         <li><span class="grow k">To go</span><b>${gbp(Math.max(0, m.target - m.cashTotal))}</b></li>
         <li><span class="grow k">A day, ${daysLeft} days</span><b>${gbp(Math.max(0, m.target - m.cashTotal) / daysLeft)}</b></li></ul></div></div></div>
       <div class="card"><div class="card-h"><h2>Money due</h2><a href="#money">Invoices</a></div><ul class="lines">${out.length ? out.map(i => `<li><span class="grow"><b>${esc(i.number)}</b> <span class="muted small">${esc(i.client)}</span></span><b class="num">${gbp(i.amount)}</b>${i.status === "sent" ? '<span class="chip warn">Not paid</span>' : `<span class="chip violet">${i.due_on ? fmtDay(i.due_on) : esc(i.trigger || "Later")}</span>`}</li>`).join("") : '<li class="muted small">No invoices out.</li>'}</ul></div>
-      <div class="card"><div class="card-h"><h2>Pipeline</h2><a href="#pipeline">Open</a></div><ul class="lines">${open.length ? open.map(x => `<li><span class="grow"><b>${esc(x.company)}</b><br><span class="muted small">${esc(x.next_step || x.stage)}</span></span><b class="num">${x.value ? gbp(x.value) : "-"}</b></li>`).join("") : '<li class="muted small">No open deals.</li>'}</ul></div>
+      <div class="card"><div class="card-h"><h2>Follow-ups due</h2><a href="#crm">CRM</a></div><ul class="lines" id="tFu">${fu.due.length ? fu.due.slice(0, 6).map(fuRow).join("") + (fu.due.length > 6 ? `<li class="muted small">+${fu.due.length - 6} more in the CRM</li>` : "") : '<li class="muted small">Nothing due today.</li>'}</ul></div>
       <div class="card"><div class="card-h"><h2>Outreach, 14 days</h2><a href="#outreach">Log</a></div>
         <div class="bars" aria-label="Messages sent per day">${perDay.map((v, i) => `<div class="${i === 13 ? "today" : ""}" style="height:${Math.max(2, 100 * v / mx)}%" title="${fmtDay(days[i])}: ${v} sent"></div>`).join("")}</div>
         <div class="barlab"><span>${fmtDay(days[0])}</span><span>${sent14} sent</span><span>Today</span></div></div>
@@ -943,16 +1019,161 @@ function renderMoney(el){
   };
 }
 
-/* ---------- PIPELINE (simple board; full CRM is Phase 2) ---------- */
-function renderPipeline(el){
-  const m = money();
-  const shown = STAGES.filter(s => s !== "Lost" && S.deals.some(x => x.stage === s));
-  el.innerHTML = phead("Deals by stage", "Pipeline") +
-  `<div class="kpis">${kpi(gbp(m.pipeline), "Pipeline value", m.openDeals + " open deals", { hi: true })}${kpi(gbp(m.won), "Won this month", "signed value")}${kpi(gbp(m.mrr), "MRR", "monthly fees signed")}${kpi(S.deals.filter(x => x.stage === "Demo booked").length, "Demos booked", "next: see Today")}</div>
-  <div class="grid-auto">${shown.map(st => { const ds = S.deals.filter(x => x.stage === st); return `<div class="card"><div class="card-h"><h2>${esc(st)}</h2><span class="cnt">${ds.length}${sum(ds, "value") ? ", " + gbp(sum(ds, "value")) : ""}</span></div>${ds.map(x => `<div class="deal"><b>${esc(x.company)}</b><span class="muted small">${esc([x.contact, x.product].filter(Boolean).join(", "))}</span><div class="row" style="justify-content:space-between;margin-top:6px"><span class="small">${esc(x.next_step || "")}</span><b class="num">${x.value ? gbp(x.value) : ""}${Number(x.monthly) ? " + " + gbp(x.monthly) + "/mo" : ""}</b></div><select data-stage="${x.id}" aria-label="Stage">${STAGES.map(s => `<option ${s === x.stage ? "selected" : ""}>${s}</option>`).join("")}</select></div>`).join("")}</div>`; }).join("") || '<div class="card empty">No deals yet.</div>'}</div>
-  <div class="card" style="margin-top:16px"><div class="card-h"><h2>Add a deal</h2></div><div class="row"><input id="nCo" placeholder="Company" style="flex:1;min-width:140px"><input id="nWho" placeholder="Contact" style="flex:1;min-width:120px"><input id="nVal" type="number" inputmode="decimal" placeholder="£ value" aria-label="Value"><select id="nStage" aria-label="Stage">${OPEN_STAGES.map(s => `<option>${s}</option>`).join("")}</select><button id="nAdd">Add</button></div></div>`;
-  el.querySelectorAll("[data-stage]").forEach(s => s.onchange = async () => { const v = { stage: s.value }; if (s.value === "Won") v.won_on = today(); if (s.value === "Live") v.live_on = today(); await q(sb.from("hq_deals").update(v).eq("id", s.dataset.stage)); await loadAll(); rerender(); });
-  $("#nAdd").onclick = async () => { const c = $("#nCo").value.trim(); if (!c) return toast("Add the company"); await q(sb.from("hq_deals").insert({ company: c, contact: $("#nWho").value.trim() || null, value: parseFloat($("#nVal").value) || null, stage: $("#nStage").value })); await loadAll(); rerender(); toast("Deal added"); };
+/* ---------- CRM (Supabase is the home, Notion is the archive) ---------- */
+const CV = { q: "", showAll: {} };
+function statusBars(deals){
+  const mx = Math.max(1, ...CRM_STATUSES.map(st => deals.filter(x => dealStatus(x) === st).length));
+  return CRM_STATUSES.map(st => { const n = deals.filter(x => dealStatus(x) === st).length; return `<div class="sbar"><span>${st}</span><span class="fb"><i style="width:${100 * n / mx}%;background:${STC[st]}"></i></span><b class="num" style="text-align:right">${n}</b></div>`; }).join("");
+}
+function renderCRM(el){
+  const m = money(), f = followUps(), d = today();
+  const qq = CV.q.trim().toLowerCase();
+  const match = x => !qq || [x.company, x.contact, x.role, x.vertical, x.notes, x.next_step, x.phone, x.email, x.product].some(v => String(v || "").toLowerCase().includes(qq));
+  const deals = S.deals.filter(match);
+  const sortD = (a, b) => String(a.next_date || "9999").localeCompare(String(b.next_date || "9999")) || String(a.company).localeCompare(String(b.company));
+  const hot = S.deals.filter(x => ["Hot","Call booked","Proposal Sent"].includes(dealStatus(x))).length;
+  const toCall = S.deals.filter(x => dealStatus(x) === "Uncontacted").length;
+  el.innerHTML = phead("Every lead, one place", "CRM", `<button id="cAddBtn">+ Deal</button>`) +
+  `<div class="kpis">
+    ${kpi(gbp(m.pipeline), "Pipeline", `${m.openDeals} open ${m.openDeals === 1 ? "deal" : "deals"} with a value`, { hi: true, k: "pipe" })}
+    ${kpi(hot, "Hot and booked", "calls booked, proposals out", { k: "hot" })}
+    ${kpi(f.due.length, "Follow-ups due", f.due.length ? "oldest " + fmtDay(f.due[0].next_date) : "all clear", { warn: !!f.due.length, k: "fudue" })}
+    ${kpi(toCall, "To call", "uncontacted leads", { k: "tocall" })}
+  </div>
+  <div class="dash">
+    <div class="col"><div class="card"><div class="card-h"><h2>Follow-ups due</h2><span class="cnt">${f.due.length} due, ${f.soon.length} this week</span></div>
+      <ul class="lines" id="fuList">${f.due.length ? f.due.map(fuRow).join("") : '<li class="muted small">Nothing due. Nice.</li>'}</ul>
+      ${f.soon.length ? `<div class="eyebrow" style="margin:16px 0 2px">Next 7 days</div><ul class="lines" id="fuSoon">${f.soon.map(fuRow).join("")}</ul>` : ""}</div></div>
+    <div class="col"><div class="card"><div class="card-h"><h2>By status</h2><span class="cnt">${S.deals.length} leads</span></div>${statusBars(S.deals)}</div>
+      <div class="card hide" id="cAdd"><div class="card-h"><h2>New deal</h2></div>
+        <div class="row"><input id="nCo" placeholder="Company" style="flex:1 1 100%"><input id="nWho" placeholder="Lead name" style="flex:1;min-width:120px"><input id="nPhone" placeholder="Phone" style="flex:1;min-width:120px"></div>
+        <div class="row" style="margin-top:8px"><select id="nStatus" aria-label="Status">${CRM_STATUSES.map(s => `<option ${s === "Cold" ? "selected" : ""}>${s}</option>`).join("")}</select><input id="nVal" type="number" inputmode="decimal" placeholder="£ value" aria-label="Value"><input id="nNext" type="date" aria-label="Follow-up date"><button id="nAdd">Add</button></div></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px"><div class="card-h"><h2>Board</h2><input id="cSearch" type="search" placeholder="Search company, name, notes" value="${esc(CV.q)}" aria-label="Search deals" style="max-width:260px;padding:8px 12px;flex:1"></div>
+    <div class="board" id="board">${CRM_STATUSES.map(st => {
+      const ds = deals.filter(x => dealStatus(x) === st).sort(sortD);
+      const lim = (st === "Uncontacted" || st === "Lost") && !CV.showAll[st] && !qq ? 6 : Infinity;
+      return `<div class="bcol" data-status="${st}"><h3><span><span class="stdot" style="color:${STC[st]}"></span> ${st}</span><span class="chip">${ds.length}${sum(ds, "value") ? ", " + gbp(sum(ds, "value")) : ""}</span></h3>${ds.slice(0, lim).map(dealCard).join("") || '<div class="empty small">None</div>'}${ds.length > lim ? `<button class="ghost sm" data-more="${st}" style="width:100%">Show all ${ds.length}</button>` : ""}</div>`;
+    }).join("")}</div></div>`;
+  $("#cAddBtn").onclick = () => { $("#cAdd").classList.remove("hide"); $("#nCo").focus(); };
+  $("#nAdd").onclick = async () => {
+    const c = $("#nCo").value.trim(); if (!c) return toast("Add the company");
+    const st = $("#nStatus").value;
+    const row = await q(sb.from("hq_deals").insert({ company: c, contact: $("#nWho").value.trim() || null, phone: $("#nPhone").value.trim() || null, status: st, stage: STAGE_FROM[st] || "Won", value: parseFloat($("#nVal").value) || null, next_date: $("#nNext").value || null, won_on: st === "Won" ? d : null }).select().single());
+    S.deals.push(row); toast("Deal added"); rerender();
+  };
+  const srch = $("#cSearch");
+  srch.addEventListener("input", () => { CV.q = srch.value; const pos = srch.selectionStart; rerender(); const n = $("#cSearch"); if (n) { n.focus(); n.setSelectionRange(pos, pos); } });
+  el.querySelectorAll("[data-more]").forEach(b => b.onclick = () => { CV.showAll[b.dataset.more] = true; rerender(); });
+}
+async function setDeal(x, v){ await q(sb.from("hq_deals").update(v).eq("id", x.id)); Object.assign(x, v); rerender(); drawDeal(); }
+function drawDeal(){
+  const x = S.deals.find(d => d.id === TD.id); if (!x) return closeTask();
+  const st = dealStatus(x), d = today();
+  const tl = S.touches.filter(t => t.deal_id === x.id).sort((a, b) => String(b.at).localeCompare(String(a.at)) || String(b.created_at || "").localeCompare(String(a.created_at || "")));
+  const calls = S.calls.filter(c => c.deal_id === x.id);
+  const assets = S.assets.filter(a => a.deal_id === x.id);
+  const td = $("#td");
+  td.innerHTML = `<div class="grab"></div>
+    <div class="td-h"><input class="td-title" id="tdTitle" value="${esc(x.company)}" aria-label="Company"><button class="x" id="tdClose" aria-label="Close">✕</button></div>
+    <div class="muted small">${esc([x.contact, x.role].filter(Boolean).join(", "))}${x.vertical ? `<br>${esc(x.vertical)}` : ""}</div>
+    <div style="margin-top:8px"><span class="chip" style="color:${STC[st]};border-color:${STC[st]}66">${esc(st)}</span> ${fuChip(x)} <span class="chip">${sinceTxt(x)}</span>${x.channel ? ` <span class="chip">${esc(x.channel)}</span>` : ""}</div>
+    <div class="btnrow">${x.phone ? `<a class="btn" href="tel:${esc(String(x.phone).replace(/\s/g, ""))}">Call ${esc(x.phone)}</a>` : ""}${x.email ? `<a class="btn" href="mailto:${esc(x.email)}">Email</a>` : ""}${x.linkedin ? `<a class="btn" href="${esc(x.linkedin)}" target="_blank" rel="noopener">LinkedIn</a>` : ""}${x.notion_url ? `<a class="btn" href="${esc(x.notion_url)}" target="_blank" rel="noopener">Notion</a>` : ""}</div>
+    <div class="td-meta">
+      <label class="f">Status<select id="dStatus">${CRM_STATUSES.concat(st === "Renewal" ? ["Renewal"] : []).map(s => `<option ${s === st ? "selected" : ""}>${s}</option>`).join("")}</select></label>
+      <label class="f">Follow-up<input id="dNextDate" type="date" value="${x.next_date || ""}"></label>
+      <label class="f">Value £<input id="dVal" type="number" inputmode="decimal" value="${x.value != null ? Number(x.value) : ""}"></label>
+      <label class="f">Monthly £<input id="dMon" type="number" inputmode="decimal" value="${Number(x.monthly) || ""}"></label>
+    </div>
+    <label class="f" style="display:flex;flex-direction:column;gap:4px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;font-family:var(--mono)">Next action<textarea id="dNext" style="min-height:70px;font-size:14px;text-transform:none;letter-spacing:0;font-family:Inter,system-ui,sans-serif;color:var(--text)">${esc(x.next_step || "")}</textarea></label>
+    <h4>Notes <button class="x sm" id="tdEditDesc">${TD.editDesc ? "Done" : "Edit"}</button></h4>
+    ${TD.editDesc ? `<textarea id="tdDesc" style="min-height:160px">${esc(x.notes || "")}</textarea>` : `<div class="desc" id="tdDescView">${fmtDesc(x.notes, "No notes yet.")}</div>`}
+    ${calls.length ? `<h4>Calls <span>${calls.length}</span></h4>${calls.map(c => `<div class="note"><b>${esc(c.title)}</b><time>${ukTime(c.call_at, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}${c.outcome ? " · " + esc(c.outcome) : ""}</time><div class="btnrow" style="margin-top:6px">${c.recording_url ? `<a class="btn" target="_blank" rel="noopener" href="${esc(c.recording_url)}">Recording</a>` : ""}${c.notes_url ? `<a class="btn" target="_blank" rel="noopener" href="${esc(c.notes_url)}">Gemini notes</a>` : ""}<a class="btn" href="#calls">All calls</a></div></div>`).join("")}` : ""}
+    ${assets.length ? `<h4>Sales assets <span>${assets.length}</span></h4>${assets.map(a => `<div class="small" style="margin:4px 0">${a.url ? `<a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.title)}</a>` : `${esc(a.title)} <span class="path" data-copy="${esc(a.path || "")}">${esc(a.path || "")}</span>`}</div>`).join("")}` : ""}
+    <h4>Timeline <span>${tl.length}</span></h4>
+    <div class="row" style="margin-bottom:8px"><select id="tlCh" aria-label="Channel" style="flex:1;padding:8px">${["Note","Call","WhatsApp","Email","LinkedIn","Meeting"].map(c => `<option>${c}</option>`).join("")}</select><select id="tlDir" aria-label="Direction" style="flex:1;padding:8px"><option value="out">I sent / I called</option><option value="in">They replied</option></select></div>
+    <textarea id="tlText" placeholder="What happened, or a note"></textarea>
+    <div class="td-f" style="margin-top:8px"><button id="tlSave">Add to timeline</button></div>
+    <ul class="tl" id="dTl" style="margin-top:14px">${tl.map(t => `<li class="${t.direction === "in" ? "in" : t.direction === "note" ? "note" : ""}"><span class="when">${fmtDay(String(t.at).slice(0, 10))} · ${esc(t.channel || "")} ${t.direction === "in" ? "in" : t.direction === "out" ? "out" : ""}</span><div>${esc(t.summary)}</div>${t.their_words ? `<span class="words">${esc(t.their_words)}</span>` : ""}${t.outcome ? `<span class="out">${esc(t.outcome)}</span>` : ""}</li>`).join("") || '<li class="note"><span class="muted small">Nothing logged yet.</span></li>'}</ul>
+    <div class="td-f"><span style="flex:1"></span><button class="ghost" id="dDel">Delete deal</button></div>`;
+  $("#tdClose").onclick = closeTask;
+  $("#tdTitle").addEventListener("change", e => { const v = e.target.value.trim(); if (v) setDeal(x, { company: v }); });
+  $("#tdTitle").addEventListener("keydown", e => { if (e.key === "Enter") e.target.blur(); });
+  $("#dStatus").onchange = e => {
+    const s2 = e.target.value, v = { status: s2 };
+    if (s2 === "Won") { if (!x.won_on) v.won_on = d; if (!["Building","Live","Won"].includes(x.stage)) v.stage = "Won"; }
+    else v.stage = STAGE_FROM[s2] || x.stage;
+    setDeal(x, v); toast(x.company + ": " + s2);
+  };
+  $("#dNextDate").onchange = e => setDeal(x, { next_date: e.target.value || null });
+  $("#dVal").onchange = e => setDeal(x, { value: e.target.value === "" ? null : parseFloat(e.target.value) });
+  $("#dMon").onchange = e => setDeal(x, { monthly: parseFloat(e.target.value) || 0 });
+  $("#dNext").onchange = e => { setDeal(x, { next_step: e.target.value.trim() || null }); toast("Next action saved"); };
+  $("#tdEditDesc").onclick = async () => {
+    if (TD.editDesc) { const v = $("#tdDesc").value; TD.editDesc = false; await setDeal(x, { notes: v.trim() ? v : null }); toast("Notes saved"); }
+    else { TD.editDesc = true; TD.pinned = true; drawDeal(); $("#tdDesc").focus(); }
+  };
+  $("#tlSave").onclick = async () => {
+    const text = $("#tlText").value.trim(); if (!text) return toast("Type what happened first");
+    const ch = $("#tlCh").value, dir = ch === "Note" ? "note" : $("#tlDir").value;
+    const t = await q(sb.from("hq_touches").insert({ deal_id: x.id, at: d, channel: ch, direction: dir, summary: text }).select().single());
+    S.touches.push(t); toast("Added to the timeline");
+    if (ch !== "Note" && x.last_contact !== d) await setDeal(x, { last_contact: d }); else { rerender(); drawDeal(); }
+  };
+  $("#dDel").onclick = async () => { if (!confirm("Delete " + x.company + " and its timeline?")) return; await q(sb.from("hq_deals").delete().eq("id", x.id)); S.deals = S.deals.filter(y => y.id !== x.id); closeTask(); rerender(); };
+}
+
+/* ---------- CALLS and sales assets ---------- */
+const ukTime = (t, opts) => new Date(t).toLocaleString("en-GB", { timeZone: "Europe/London", ...opts }) + " UK";
+const BASE_PATH = "~/Desktop/Operating System/apexlineai.com/";
+document.addEventListener("click", e => {
+  const c = e.target.closest("[data-copy]"); if (!c || !c.dataset.copy) return;
+  const v = BASE_PATH + c.dataset.copy;
+  (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(() => toast("Path copied"), () => toast(v));
+});
+const ASSET_KINDS = [["proposal","Proposals"],["invoice","Invoices"],["demo","Demo links"],["call plan","Call plans and scripts"],["recording","Recordings"],["other","Other"]];
+function renderCalls(el){
+  const calls = S.calls.slice().sort((a, b) => String(b.call_at).localeCompare(String(a.call_at)));
+  const deal = id => S.deals.find(x => x.id === id);
+  const m = today().slice(0, 7);
+  el.innerHTML = phead("Every sales call and the kit that goes with it", "Calls and assets", `<button id="kcAddBtn">+ Call</button>`) +
+  `<div class="kpis">
+    ${kpi(calls.length, "Calls logged", calls.filter(c => String(c.call_at).slice(0, 7) === m).length + " this month", { k: "calls" })}
+    ${kpi(calls.filter(c => c.recording_url).length, "With a recording", "links to Drive, files stay there")}
+    ${kpi(calls.filter(c => /^won/i.test(c.outcome || "")).length, "Won on the call", "", { hi: true })}
+    ${kpi(S.assets.length, "Sales assets", "proposals, invoices, demos, plans", { k: "assets" })}
+  </div>
+  <div class="dash"><div class="col">
+    <div class="card"><div class="card-h"><h2>Calls</h2><span class="cnt">newest first</span></div><div id="callList">${calls.map(c => { const dl = deal(c.deal_id); const sm = c.summary || ""; const short = sm.split("\n")[0];
+      return `<div class="callc"><div class="row" style="justify-content:space-between"><span class="eyebrow">${ukTime(c.call_at, { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}${c.duration ? " · " + esc(c.duration) : ""}</span>${c.outcome ? `<span class="chip ${/^won/i.test(c.outcome) ? "good" : ""}">${esc(c.outcome)}</span>` : ""}</div>
+        <h3>${esc(c.title)}</h3>${dl ? `<button class="chip hud" data-deal="${dl.id}">${esc(dl.company)}</button>` : ""}
+        ${short ? `<div class="sum" style="margin-top:8px">${esc(short)}</div>` : ""}${sm.includes("\n") ? `<details><summary>Full summary</summary><div class="sum" style="margin-top:6px">${esc(sm.slice(short.length).trim())}</div></details>` : ""}
+        <div class="btnrow">${c.recording_url ? `<a class="btn" target="_blank" rel="noopener" href="${esc(c.recording_url)}">▶ Recording</a>` : ""}${c.notes_url ? `<a class="btn" target="_blank" rel="noopener" href="${esc(c.notes_url)}">Gemini notes</a>` : ""}${c.transcript_url && c.transcript_url !== c.notes_url ? `<a class="btn" target="_blank" rel="noopener" href="${esc(c.transcript_url)}">Transcript</a>` : ""}</div>
+        ${c.transcript_path || c.review_path ? `<div class="small muted" style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">On the Mac: ${c.transcript_path ? `<span class="path" data-copy="${esc(c.transcript_path)}" title="Copy path">${esc(c.transcript_path)}</span>` : ""}${c.review_path ? `<span class="path" data-copy="${esc(c.review_path)}" title="Copy path">${esc(c.review_path)}</span>` : ""}</div>` : ""}</div>`; }).join("") || '<div class="empty">No calls logged yet.</div>'}</div></div>
+    <div class="card hide" id="kcAdd"><div class="card-h"><h2>Log a call</h2></div>
+      <div class="row"><select id="kcDeal" aria-label="Deal" style="flex:1 1 100%"><option value="">No deal</option>${S.deals.filter(x => dealStatus(x) !== "Uncontacted").sort((a, b) => a.company.localeCompare(b.company)).map(x => `<option value="${x.id}">${esc(x.company)}</option>`).join("")}</select>
+      <input id="kcTitle" placeholder="Title (e.g. Demo with Tristan)" style="flex:1 1 100%"><input id="kcAt" type="datetime-local" aria-label="When"><input id="kcDur" placeholder="Length (e.g. 45m)" style="width:140px"></div>
+      <div class="row" style="margin-top:8px"><input id="kcRec" placeholder="Recording link" style="flex:1;min-width:160px"><input id="kcNotes" placeholder="Notes or transcript link" style="flex:1;min-width:160px"></div>
+      <textarea id="kcSum" placeholder="Summary" style="margin-top:8px"></textarea>
+      <div class="row" style="margin-top:8px"><input id="kcOut" placeholder="Outcome (e.g. Won, Proposal next)" style="flex:1"><button id="kcSave">Save call</button></div></div>
+  </div><div class="col">
+    <div class="card"><div class="card-h"><h2>Sales assets</h2><span class="cnt">${S.assets.length}</span></div><div id="assetList">${ASSET_KINDS.map(([k, label]) => { const items = S.assets.filter(a => a.kind === k); return items.length ? `<div class="eyebrow" style="margin:12px 0 4px">${label}</div><ul class="lines">${items.map(a => { const dl = deal(a.deal_id); return `<li><div class="grow">${a.url ? `<a href="${esc(a.url)}" target="_blank" rel="noopener"><b>${esc(a.title)}</b></a>` : `<b>${esc(a.title)}</b>`}${dl ? ` <button class="chip" data-deal="${dl.id}">${esc(dl.company)}</button>` : ""}${a.notes ? `<div class="muted small">${esc(a.notes)}</div>` : ""}${a.path ? `<div style="margin-top:4px"><span class="path" data-copy="${esc(a.path)}" title="Copy path">${esc(a.path)}</span></div>` : ""}</div><button class="x" data-dasset="${a.id}" aria-label="Remove">✕</button></li>`; }).join("")}</ul>` : ""; }).join("") || '<div class="empty">No assets yet.</div>'}</div>
+      <div class="row" style="margin-top:12px"><input id="aTitle" placeholder="Title" style="flex:1 1 100%"><select id="aKind" aria-label="Kind">${ASSET_KINDS.map(([k, l]) => `<option value="${k}">${l}</option>`).join("")}</select><input id="aUrl" placeholder="Link or file path" style="flex:1;min-width:140px"><button class="ghost" id="aAdd">Add</button></div></div>
+  </div></div>`;
+  $("#kcAddBtn").onclick = () => { $("#kcAdd").classList.remove("hide"); $("#kcAdd").scrollIntoView({ block: "center" }); $("#kcTitle").focus(); };
+  $("#kcSave").onclick = async () => {
+    const title = $("#kcTitle").value.trim(), at = $("#kcAt").value; if (!title || !at) return toast("Add a title and when it was");
+    const row = await q(sb.from("hq_calls").insert({ deal_id: $("#kcDeal").value || null, title, call_at: new Date(at).toISOString(), duration: $("#kcDur").value.trim() || null, recording_url: $("#kcRec").value.trim() || null, notes_url: $("#kcNotes").value.trim() || null, summary: $("#kcSum").value.trim() || null, outcome: $("#kcOut").value.trim() || null }).select().single());
+    S.calls.push(row); toast("Call logged"); rerender();
+  };
+  $("#aAdd").onclick = async () => {
+    const t = $("#aTitle").value.trim(), u = $("#aUrl").value.trim(); if (!t) return toast("Add a title");
+    const isUrl = /^https?:\/\//i.test(u);
+    const row = await q(sb.from("hq_assets").insert({ title: t, kind: $("#aKind").value, url: isUrl ? u : null, path: !isUrl && u ? u : null }).select().single());
+    S.assets.push(row); toast("Asset added"); rerender();
+  };
+  el.querySelectorAll("[data-dasset]").forEach(b => b.onclick = async () => { if (!confirm("Remove this asset?")) return; await q(sb.from("hq_assets").delete().eq("id", b.dataset.dasset)); S.assets = S.assets.filter(a => a.id !== b.dataset.dasset); rerender(); });
 }
 
 /* ---------- TRAINING (v2) ---------- */
@@ -1027,19 +1248,90 @@ async function saveOutreach(box, day){
   await q(sb.from("hq_outreach").upsert(rows, { onConflict: "owner,day,channel" }));
   toast("Outreach saved"); await loadAll();
 }
+/* ---------- OUTREACH: LinkedIn funnel (same maths as LinkedIn/linkedin_stats.py) + daily log ---------- */
+const pyRound = x => { const f = Math.floor(x), r = x - f; return r > 0.5 ? f + 1 : r < 0.5 ? f : (f % 2 === 0 ? f : f + 1); };
+const pct = (a, b) => b ? `${a}/${b} (${pyRound(100 * a / b)}%)` : `${a}/0`;
+function liStats(rows, d = today()){
+  const age = x => x ? daysBetween(x, d) : -1;
+  const sumUp = rs => { const old = rs.filter(r => age(r.sent_on) >= 3), acc = old.filter(r => r.status === "accepted"), dmd = rs.filter(r => r.dm1_date), dmo = dmd.filter(r => age(r.dm1_date) >= 3), rep = dmo.filter(r => r.dm1_reply_date || r.fu1_reply_date);
+    return { sent: rs.length, old: old.length, acc: acc.length, dmd: dmd.length, dmo: dmo.length, rep: rep.length, out: rs.filter(r => r.outcome).length }; };
+  const grp = key => { const g = new Map(); rows.forEach(r => { const k = key(r); if (!g.has(k)) g.set(k, []); g.get(k).push(r); }); return [...g].sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0).map(([k, rs]) => ({ k, ...sumUp(rs) })); };
+  return {
+    all: sumUp(rows),
+    byBatch: grp(r => `${r.batch} / ${r.request_variant}`), byType: grp(r => r.type || ""), byStyle: grp(r => r.dm1_style || "(no DM yet)"),
+    due: rows.filter(r => r.dm1_date && !r.dm1_reply_date && !r.fu1_date && age(r.dm1_date) >= 4),
+    needDm: rows.filter(r => r.status === "accepted" && !r.dm1_date),
+    accepted: rows.filter(r => r.status === "accepted").length,
+    replied: rows.filter(r => r.dm1_reply_date || r.fu1_reply_date).length,
+    fuSent: rows.filter(r => r.fu1_date).length,
+  };
+}
+function liTable(title, groups){
+  return `<div class="eyebrow" style="margin:14px 0 4px">${title}</div><div class="tablewrap"><table><tr><th>Group</th><th>Sent</th><th>Accepted 3d+</th><th>DMed</th><th>Replied 3d+</th><th>Outcome</th></tr>${groups.map(g => `<tr><td>${esc(g.k)}</td><td>${g.sent}</td><td>${pct(g.acc, g.old)}</td><td>${g.dmd}</td><td>${pct(g.rep, g.dmo)}</td><td>${g.out}</td></tr>`).join("")}</table></div>`;
+}
+function parseCSV(text){
+  const rows = []; let row = [], cur = "", inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQ) { if (c === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else inQ = false; } else cur += c; }
+    else if (c === '"') inQ = true;
+    else if (c === ",") { row.push(cur); cur = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(cur); rows.push(row); row = []; cur = ""; }
+    else cur += c;
+  }
+  if (cur !== "" || row.length) { row.push(cur); rows.push(row); }
+  const head = rows.shift() || [];
+  return rows.filter(r => r.some(v => v.trim())).map(r => Object.fromEntries(head.map((h, i) => [h.trim(), (r[i] || "").trim()])));
+}
+function liRowsFromCsv(recs){
+  const n = v => v ? v : null;
+  return recs.map(r => ({ sent_on: n(r.date), name: r.name, role: n(r.role), company: n(r.company), area: n(r.area), type: n(r.type), profile_url: r.profile_url || "name:" + r.name, status: n(r.status), batch: n(r.batch), request_variant: n(r.request_variant), accepted_date: n(r.accepted_date), dm1_date: n(r.dm1_date), dm1_style: n(r.dm1_style), dm1_reply_date: n(r.dm1_reply_date), reply_summary: n(r.reply_summary), fu1_date: n(r.fu1_date), fu1_reply_date: n(r.fu1_reply_date), outcome: n(r.outcome) })).filter(r => r.name);
+}
 async function renderOutreach(el, day){
   const d = day || renderOutreach.day || today(); renderOutreach.day = d;
+  const L = liStats(S.li), a = L.all;
+  const accR = a.old ? 100 * a.acc / a.old : 0, repR = a.dmo ? 100 * a.rep / a.dmo : 0;
   const t7 = S.outreach.filter(r => r.day > addDays(today(), -7));
-  const tot = f => t7.reduce((a, r) => a + Number(r[f] || 0), 0);
-  el.innerHTML = phead("Last 7 days", "Outreach", `<input id="oDay" type="date" value="${d}" aria-label="Day">`) +
-  `<div class="kpis">${kpi(tot("sent"), "Sent", "all channels")}${kpi(tot("accepted"), "Accepted", tot("sent") ? Math.round(100 * tot("accepted") / tot("sent")) + "% of sent" : "-")}${kpi(tot("replies"), "Replies", tot("sent") ? Math.round(100 * tot("replies") / tot("sent")) + "% of sent" : "-")}${kpi(tot("demos"), "Demos", "booked", { hi: true })}</div>
-  <div class="dash"><div class="col"><div class="card"><div class="card-h"><h2>Log ${fmtDay(d)}</h2></div><div id="oForm" class="tablewrap"></div><div class="row" style="margin-top:12px"><button id="oSave">Save</button></div></div></div>
-  <div class="col"><div class="card"><div class="card-h"><h2>By week</h2></div><div id="oWeeks" class="tablewrap"></div></div></div></div>`;
+  const tot = f => t7.reduce((s2, r) => s2 + Number(r[f] || 0), 0);
+  const fmax = Math.max(1, a.sent);
+  const fbar = (label, n, col) => `<div class="sbar"><span>${label}</span><span class="fb"><i style="width:${100 * n / fmax}%;background:${col}"></i></span><b class="num" style="text-align:right">${n}</b></div>`;
+  const lastLi = S.li.reduce((mx, r) => [r.sent_on, r.dm1_date, r.fu1_date, r.accepted_date].reduce((m2, v) => v && v > m2 ? v : m2, mx), "");
+  el.innerHTML = phead("LinkedIn funnel and the daily log", "Outreach", `<label class="btn" style="cursor:pointer">Update from CSV<input id="liFile" type="file" accept=".csv,text/csv" class="hide"></label>`) +
+  `<div class="kpis" id="liKpis">
+    ${kpi(a.sent, "Requests sent", S.li.length ? "since " + fmtDay(S.li.map(r => r.sent_on).filter(Boolean).sort()[0]) : "no log yet", { k: "lisent" })}
+    ${kpi(L.accepted, "Accepted", pct(a.acc, a.old) + " of 3 day+ requests", { k: "liacc" })}
+    ${kpi(a.dmd, "First DMs sent", L.fuSent + " follow-ups sent", { k: "lidm" })}
+    ${kpi(L.replied, "Replied", pct(a.rep, a.dmo) + " of 3 day+ DMs", { hi: true, k: "lirep" })}
+  </div>
+  <div class="dash"><div class="col">
+    <div class="card"><div class="card-h"><h2>LinkedIn funnel</h2><span class="cnt">${lastLi ? "last activity " + fmtDay(lastLi) : ""}</span></div>
+      <div class="ringcard" style="justify-content:space-around">${ring(accR, Math.round(accR) + "%", "accept rate")}${ring(repR, Math.round(repR) + "%", "reply rate", "var(--good)")}</div>
+      <div class="funnel" style="margin-top:12px">${fbar("Sent", a.sent, "var(--accent)")}${fbar("Accepted", L.accepted, "#60A5FA")}${fbar("DMed", a.dmd, "var(--violet)")}${fbar("Replied", L.replied, "var(--good)")}${fbar("Outcome", a.out, "var(--warn)")}</div>
+      ${liTable("By batch and request variant", L.byBatch)}${liTable("By role type", L.byType)}${liTable("By first DM style", L.byStyle)}
+      <p class="muted small" style="margin:10px 0 0">Acceptance counts requests at least 3 days old; reply rate counts first DMs at least 3 days old. Same maths as linkedin_stats.py.</p></div>
+  </div><div class="col">
+    <div class="card"><div class="card-h"><h2>Due a follow-up</h2><span class="cnt">${L.due.length}</span></div><ul class="lines" id="liDue">${L.due.map(r => `<li><div class="grow"><b>${esc(r.name)}</b> <span class="muted small">${esc(r.company || "")}</span><div class="muted small">First DM ${fmtDay(r.dm1_date)}, ${daysBetween(r.dm1_date, today())} days, no reply</div></div>${r.profile_url && !r.profile_url.startsWith("name:") ? `<a class="btn" target="_blank" rel="noopener" href="${esc(r.profile_url)}">Open</a>` : ""}</li>`).join("") || '<li class="muted small">Nobody due. Follow-ups go 4+ days after a first DM with no reply.</li>'}</ul></div>
+    <div class="card"><div class="card-h"><h2>Accepted, no DM yet</h2><span class="cnt">${L.needDm.length}</span></div><ul class="lines" id="liNeed">${L.needDm.map(r => `<li><div class="grow"><b>${esc(r.name)}</b> <span class="muted small">${esc(r.company || "")}</span></div>${r.profile_url && !r.profile_url.startsWith("name:") ? `<a class="btn" target="_blank" rel="noopener" href="${esc(r.profile_url)}">Open</a>` : ""}</li>`).join("") || '<li class="muted small">Everyone who accepted has had a first DM.</li>'}</ul></div>
+    <div class="card"><div class="card-h"><h2>Replies</h2></div><ul class="lines">${S.li.filter(r => r.dm1_reply_date || r.fu1_reply_date).map(r => `<li><div class="grow"><b>${esc(r.name)}</b> <span class="muted small">${esc(r.company || "")}</span>${r.reply_summary ? `<div class="small" style="margin-top:2px">${esc(r.reply_summary)}</div>` : ""}${r.outcome ? `<span class="chip good" style="margin-top:4px">${esc(r.outcome)}</span>` : ""}</div></li>`).join("") || '<li class="muted small">No replies yet.</li>'}</ul></div>
+    <div class="card"><div class="card-h"><h2>Daily log, last 7 days</h2></div><div class="row small muted" style="margin-bottom:10px">${tot("sent")} sent · ${tot("accepted")} accepted · ${tot("replies")} replies · ${tot("demos")} demos</div>
+      <div class="row" style="margin-bottom:8px"><input id="oDay" type="date" value="${d}" aria-label="Day"></div><div id="oForm" class="tablewrap"></div><div class="row" style="margin-top:12px"><button id="oSave">Save</button></div>
+      <div class="eyebrow" style="margin:16px 0 4px">By week</div><div id="oWeeks" class="tablewrap"></div></div>
+  </div></div>`;
+  $("#liFile").onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      const rows = liRowsFromCsv(parseCSV(await f.text()));
+      if (!rows.length) return toast("No rows found in that file");
+      await q(sb.from("hq_li").upsert(rows, { onConflict: "owner,profile_url" }));
+      await loadAll(); toast(`LinkedIn log updated: ${rows.length} rows`); renderOutreach(el, d);
+    } catch (err) { toast("Couldn't read that CSV: " + (err.message || err)); }
+  };
   $("#oDay").onchange = e => renderOutreach(el, e.target.value);
   const [rows, weeks] = await Promise.all([
     q(sb.from("hq_outreach").select("*").eq("day", d)),
     q(sb.from("hq_v_outreach_week").select("*").order("week", { ascending: false }).limit(40)),
   ]);
+  if (!$("#oForm")) return;
   outreachForm($("#oForm"), rows);
   $("#oSave").onclick = () => saveOutreach($("#oForm"), d).then(() => renderOutreach(el, d));
   $("#oWeeks").innerHTML = weeks.length ? `<table><tr><th>Week of</th><th>Channel</th><th>Sent</th><th>Acc %</th><th>Reply %</th><th>Demos</th></tr>${weeks.map(w => `<tr><td>${fmtDay(w.week)}</td><td>${esc((CHANNELS.find(c => c[0] === w.channel) || [0, w.channel])[1])}</td><td>${w.sent}</td><td>${w.accept_pct ?? "-"}</td><td>${w.reply_pct ?? "-"}</td><td>${w.demos}</td></tr>`).join("")}</table>` : `<p class="muted small">Weekly totals show here once you log a day.</p>`;
@@ -1094,7 +1386,7 @@ async function renderNotes(el){
   $("#cQ").addEventListener("keydown", e => { if (e.key === "Enter") $("#cGo").click(); });
 }
 
-window.HQ = { money, todayTasks, todayCounts, S };
+window.HQ = { money, todayTasks, todayCounts, liStats, followUps, parseCSV, S };
 init();
 </script>
 </body>
