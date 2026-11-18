@@ -170,6 +170,8 @@ a.btn:hover,button.btn:hover,label.btn:hover{border-color:var(--accent)}
 .callc details summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:13px;margin-top:6px}
 button.chip{cursor:pointer}
 
+.postprev{white-space:pre-wrap;font-size:14px;line-height:1.5;color:#C3CCDA;background:#0B1322;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:4px;max-height:9.5em;overflow:hidden;position:relative;-webkit-mask-image:linear-gradient(180deg,#000 70%,transparent);mask-image:linear-gradient(180deg,#000 70%,transparent)}
+
 /* rings and charts */
 .ringcard{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
 .ringcard svg{width:132px;height:132px;flex:none}
@@ -230,25 +232,37 @@ button.chip{cursor:pointer}
 .mono .ring2{fill:none;stroke:rgba(92,225,255,.35);stroke-width:1;opacity:0}
 .mono .sig{fill:none;stroke:#EAF8FF;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;filter:drop-shadow(0 0 4px rgba(92,225,255,.6))}
 .mono .sweep{opacity:0}
-.car .body,.car .win,.car .wheel,.car .hub,.car .haunch,.car .lamp{fill:none;stroke:var(--hud);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
-.car .body{stroke-width:3;filter:drop-shadow(0 0 6px rgba(92,225,255,.8))}
-.car .win{stroke-width:2;stroke:rgba(92,225,255,.8)}
-.car .haunch{stroke-width:2;stroke:rgba(92,225,255,.7)}
-.car .lamp{stroke-width:2}
-.car .wheel{stroke-width:3}
-.car .hub{stroke-width:1.5;stroke:rgba(92,225,255,.6)}
-.car .ground{stroke:rgba(92,225,255,.25);stroke-width:1;stroke-dasharray:2 6;opacity:0}
+.car .shell{fill:url(#bodyFill);stroke:rgba(234,246,255,.10);stroke-width:1;vector-effect:non-scaling-stroke}
+.car .wingshell{stroke:rgba(234,246,255,.14)}
+.car .tyre{fill:#020409;stroke:rgba(234,246,255,.05);stroke-width:1;vector-effect:non-scaling-stroke}
+.car .arch{fill:none;stroke:rgba(234,246,255,.14);stroke-width:1;vector-effect:non-scaling-stroke}
+.car .hubring{fill:none;stroke:rgba(234,246,255,.05);stroke-width:1;vector-effect:non-scaling-stroke}
+.car .neck{fill:none;stroke:rgba(234,246,255,.22);stroke-width:1.2;vector-effect:non-scaling-stroke}
+.car .rim{fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:1}
+.car .rimRoof{stroke:url(#gRoof);stroke-width:2.4;filter:url(#rimGlow)}
+.car .rimNose{stroke:url(#gNose);stroke-width:2;filter:url(#rimGlow)}
+.car .rimWing{stroke:url(#gWing);stroke-width:1.6;filter:url(#rimGlow)}
+.car .rimLamp{stroke:rgba(255,255,255,.55);stroke-width:1.4}
+.car .rimMirror{stroke:rgba(255,255,255,.45);stroke-width:1.3}
+.car .rimDlo{stroke:rgba(234,246,255,.16);stroke-width:1}
+.car .rimDoor{stroke:rgba(234,246,255,.10);stroke-width:1}
+.car .rimHaunch{stroke:rgba(255,255,255,.35);stroke-width:6}
+.car .glint{fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round;vector-effect:non-scaling-stroke;stroke-dasharray:.05 2;stroke-dashoffset:.05;opacity:0;filter:url(#rimGlow)}
+.car .shell,.car .tyre,.car .arch,.car .hubring,.car .neck,.car .floor{opacity:0}
 #boot.go .mono .ring{animation:draw .6s ease-out forwards}
 #boot.go .mono .ring2{animation:fade .5s .35s forwards}
 #boot.go .mono .sig{animation:draw .75s .2s ease-in-out forwards}
 #boot.go .mono .sweep{animation:sweep .7s .95s ease-in-out forwards}
-#boot.go .car .body{animation:draw 1.25s 1.25s cubic-bezier(.55,.1,.35,1) forwards}
-#boot.go .car .lamp{animation:draw .35s 2.25s ease-out forwards}
-#boot.go .car .win{animation:draw .45s 2.2s ease-out forwards}
-#boot.go .car .haunch{animation:draw .45s 2.3s ease-out forwards}
-#boot.go .car .wheel{animation:draw .5s 2.3s ease-out forwards}
-#boot.go .car .hub{animation:draw .4s 2.55s ease-out forwards}
-#boot.go .car .ground{animation:fade .6s 1.3s forwards}
+#boot.go .car .shell,#boot.go .car .tyre,#boot.go .car .arch,#boot.go .car .hubring,#boot.go .car .neck{animation:fade .8s 1.2s ease-out forwards}
+#boot.go .car .floor{animation:fade 1s 1.6s forwards}
+#boot.go .car .rimRoof{animation:draw 1.3s 1.35s cubic-bezier(.45,.05,.3,1) forwards}
+#boot.go .car .rimNose{animation:draw .9s 1.6s ease-out forwards}
+#boot.go .car .rimDlo,#boot.go .car .rimDoor{animation:draw .7s 2s ease-out forwards}
+#boot.go .car .rimLamp,#boot.go .car .rimMirror{animation:draw .45s 2.15s ease-out forwards}
+#boot.go .car .rimWing{animation:draw .55s 2.25s ease-out forwards}
+#boot.go .car .rimHaunch{animation:draw .8s 2.3s ease-out forwards}
+#boot.go .car .glint{animation:glint 1.4s 1.5s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes glint{0%{opacity:0;stroke-dashoffset:.05}15%{opacity:1}85%{opacity:1}100%{opacity:0;stroke-dashoffset:-1}}
 #boot.go .hudrow > div{animation:rise .5s ease-out forwards}
 #boot.go .hudrow > div:nth-child(1){animation-delay:1.25s}
 #boot.go .hudrow > div:nth-child(2){animation-delay:1.35s}
@@ -267,8 +281,9 @@ button.chip{cursor:pointer}
 #boot .hello{font-family:var(--mono);font-size:12px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin:0;opacity:0;text-align:center}
 #boot.go .hello{animation:fade .5s .6s forwards}
 #boot.still *{animation:none!important}
-#boot.still .mono .ring,#boot.still .mono .sig,#boot.still .car .body,#boot.still .car .win,#boot.still .car .wheel,#boot.still .car .hub,#boot.still .car .haunch,#boot.still .car .lamp{stroke-dashoffset:0}
-#boot.still .mono .ring2,#boot.still .car .ground,#boot.still .hello,#boot.still .hudrow > div{opacity:1}
+#boot.still .mono .ring,#boot.still .mono .sig,#boot.still .car .rim{stroke-dashoffset:0}
+#boot.still .mono .ring2,#boot.still .car .shell,#boot.still .car .tyre,#boot.still .car .arch,#boot.still .car .hubring,#boot.still .car .neck,#boot.still .car .floor,#boot.still .hello,#boot.still .hudrow > div{opacity:1}
+#boot.still .car .glint{opacity:0}
 @media (prefers-reduced-motion: reduce){#boot *{animation:none!important;transition:none!important}.chip.run .stdot{animation:none}}
 
 @media (max-width:1100px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -359,18 +374,47 @@ button.chip{cursor:pointer}
     </g>
   </svg>
   <p class="hello" id="bootHello">Systems online</p>
-  <!-- 911-style side profile, drawn for HQ: frog-eye headlight at the front, one long flyline roof, ducktail lip, rear haunch -->
-  <svg class="car" viewBox="0 0 600 222" aria-hidden="true">
-    <line class="ground" x1="10" y1="203" x2="590" y2="203"/>
-    <path class="body" pathLength="1" d="M70 185 C54 185 44 180 41 170 C38 160 40 152 46 146 C50 136 58 128 72 126 C84 124 92 126 100 127 C120 123 148 115 172 116 C192 117 208 116 224 112 C246 96 266 80 290 70 C312 62 336 60 356 62 C400 68 450 90 492 114 C514 126 532 132 546 134 L560 131 C566 131 567 137 562 139 C568 150 568 166 563 177 C560 183 554 185 546 185 L490 185 A40 40 0 1 0 410 185 L180 185 A40 40 0 1 0 100 185 Z"/>
-    <ellipse class="lamp" pathLength="1" cx="66" cy="134" rx="9" ry="7" transform="rotate(-25 66 134)"/>
-    <path class="win" pathLength="1" d="M250 112 C266 96 282 82 300 75 C320 68 342 67 360 70 C390 76 420 90 450 106 C420 108 310 111 250 112 Z M348 68 L352 110"/>
-    <path class="haunch" pathLength="1" d="M296 154 C338 150 392 128 436 121 C478 115 516 122 548 140"/>
-    <circle class="wheel" pathLength="1" cx="140" cy="168" r="34"/>
-    <circle class="wheel" pathLength="1" cx="450" cy="168" r="34"/>
-    <circle class="hub" pathLength="1" cx="140" cy="168" r="13"/>
-    <circle class="hub" pathLength="1" cx="450" cy="168" r="13"/>
-  </svg>
+  <!-- 911 GT-style side profile in studio rim light, drawn for HQ (own artwork, after Jack's reference look) -->
+  <svg class="car" viewBox="0 0 600 200" aria-hidden="true">
+  <defs>
+    <linearGradient id="gRoof" gradientUnits="userSpaceOnUse" x1="700" y1="0" x2="1600" y2="0">
+      <stop offset="0" stop-color="#EAF6FF" stop-opacity="0"/><stop offset=".18" stop-color="#EAF6FF" stop-opacity=".55"/>
+      <stop offset=".32" stop-color="#FFFFFF" stop-opacity="1"/><stop offset=".62" stop-color="#FFFFFF" stop-opacity=".9"/>
+      <stop offset=".9" stop-color="#EAF6FF" stop-opacity=".25"/><stop offset="1" stop-color="#EAF6FF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="gNose" gradientUnits="userSpaceOnUse" x1="262" y1="0" x2="720" y2="0">
+      <stop offset="0" stop-color="#EAF6FF" stop-opacity=".15"/><stop offset=".28" stop-color="#FFFFFF" stop-opacity=".95"/>
+      <stop offset=".55" stop-color="#FFFFFF" stop-opacity=".7"/><stop offset="1" stop-color="#EAF6FF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="gWing" gradientUnits="userSpaceOnUse" x1="1500" y1="0" x2="1760" y2="0">
+      <stop offset="0" stop-color="#EAF6FF" stop-opacity=".1"/><stop offset=".5" stop-color="#FFFFFF" stop-opacity=".85"/><stop offset="1" stop-color="#EAF6FF" stop-opacity=".5"/>
+    </linearGradient>
+    <linearGradient id="bodyFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0E1626"/><stop offset=".55" stop-color="#070B14"/><stop offset="1" stop-color="#04060B"/>
+    </linearGradient>
+    <radialGradient id="floorGlow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#9FD8FF" stop-opacity=".16"/><stop offset="1" stop-color="#9FD8FF" stop-opacity="0"/></radialGradient>
+    <filter id="rimGlow" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="soft" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
+  </defs>
+  <ellipse class="floor" cx="300" cy="190" rx="285" ry="8" fill="url(#floorGlow)"/>
+  <g transform="scale(.38) translate(-250 -400)">
+    <circle class="tyre" cx="1422" cy="776" r="108"/><circle class="tyre" cx="560" cy="782" r="108"/>
+    <path class="shell" d="M268 712 C280 680 320 650 380 622 C420 604 470 596 520 592 C600 584 660 578 712 574 C790 530 870 482 940 460 C1010 442 1120 436 1200 448 C1330 466 1450 510 1560 548 C1610 562 1660 580 1690 598 C1725 616 1736 640 1738 668 L1742 752 C1744 768 1736 780 1718 782 L1550 786 C1548 720 1500 650 1422 650 C1344 650 1296 720 1294 788 L688 796 C686 726 638 656 560 656 C482 656 434 726 432 798 L306 808 C286 813 268 812 264 798 C260 770 262 735 268 712 Z"/>
+    <path class="arch" d="M1294 788 C1296 720 1344 650 1422 650 C1500 650 1548 720 1550 786 M432 798 C434 726 482 656 560 656 C638 656 686 726 688 796"/>
+    <circle class="hubring" cx="1422" cy="776" r="68"/><circle class="hubring" cx="560" cy="782" r="68"/>
+    <path class="shell wingshell" d="M1512 484 C1580 468 1660 452 1736 440 C1748 438 1756 444 1754 454 C1752 462 1744 466 1734 468 C1660 478 1586 492 1516 500 C1504 501 1502 488 1512 484 Z M1748 436 L1756 432 L1760 500 L1752 504 Z"/>
+    <path class="neck" d="M1676 468 C1668 500 1664 528 1672 552 C1678 572 1688 588 1696 602 M1700 466 C1694 500 1694 532 1704 560 C1710 578 1716 592 1722 612"/>
+    <path class="rim rimHaunch" pathLength="1" d="M1288 594 C1360 570 1446 566 1528 582" filter="url(#soft)"/>
+    <path class="rim rimDoor" pathLength="1" d="M760 590 C980 584 1240 578 1500 572"/>
+    <path class="rim rimDlo" pathLength="1" d="M768 572 C850 516 930 484 1000 474 C1100 466 1200 470 1290 488 C1380 506 1460 530 1532 552"/>
+    <path class="rim rimMirror" pathLength="1" d="M842 574 C846 550 870 536 898 538 C910 540 916 550 912 562"/>
+    <path class="rim rimLamp" pathLength="1" d="M458 600 C420 614 386 644 362 684"/>
+    <path class="rim rimNose" pathLength="1" d="M268 712 C280 680 320 650 380 622 C420 604 470 596 520 592 C600 584 660 578 712 574"/>
+    <path class="rim rimRoof" pathLength="1" d="M712 574 C790 530 870 482 940 460 C1010 442 1120 436 1200 448 C1330 466 1450 510 1560 548"/>
+    <path class="rim rimWing" pathLength="1" d="M1512 484 C1580 468 1660 452 1736 440 C1748 438 1756 444 1754 454 M1756 432 L1760 500"/>
+    <path class="glint" pathLength="1" d="M712 574 C790 530 870 482 940 460 C1010 442 1120 436 1200 448 C1330 466 1450 510 1560 548"/>
+  </g>
+</svg>
   <div class="hudrow" id="bootHud"></div>
   <p class="skip">Tap to skip</p>
 </section>
@@ -517,8 +561,29 @@ function fuRow(x){
 /* ---------- tasks helpers ---------- */
 const ORD = { running: 0, todo: 1, waiting: 2, scheduled: 3, done: 4 };
 const doneDay = t => t.done_at ? iso(t.done_at) : null;
+/* LinkedIn post reminders (LinkedIn/POSTING_SCHEDULE.md): kept out of the normal lists, shown as "Next LinkedIn post" */
+const isPost = t => t.kind === "li_post";
+function nextPost(s = S){ return s.tasks.filter(t => isPost(t) && t.status !== "done").sort((a, b) => (String(a.due) + (a.due_time || "")).localeCompare(String(b.due) + (b.due_time || "")))[0] || null; }
+function weekStart(d){ const wd = (new Date(d + "T12:00:00").getDay() + 6) % 7; return addDays(d, -wd); }
+function postsThisWeek(s = S, d = today()){
+  const ws = weekStart(d), we = addDays(ws, 6);
+  const wk = s.tasks.filter(t => isPost(t) && ((t.due >= ws && t.due <= we) || (t.status === "done" && doneDay(t) >= ws && doneDay(t) <= we)));
+  return { done: wk.filter(t => t.status === "done" && doneDay(t) >= ws && doneDay(t) <= we).length, planned: wk.length, list: wk.sort((a, b) => (String(a.due) + (a.due_time || "")).localeCompare(String(b.due) + (b.due_time || ""))) };
+}
+function postBody(t){ const n = t.notes || "", i = n.indexOf("\n\n"); return (i >= 0 ? n.slice(i + 2) : n).split(/\n\nVisual:/)[0].trim(); }
+function postCard(t){
+  if (!t) return '<div class="empty">No posts scheduled. Add the next ones to LinkedIn/POSTING_SCHEDULE.md.</div>';
+  const when = t.due ? `${t.due === today() ? "Today" : fmtDay(t.due)}${t.due_time ? " " + String(t.due_time).slice(0, 5) + " UK" : ""}` : "";
+  return taskCard(t, { compact: true }) + `<div class="postprev" id="postPrev">${esc(postBody(t))}</div>
+    <div class="btnrow"><button class="sm" id="postDone" data-post="${t.id}">Mark posted</button><button class="btn" id="postCopy" data-post="${t.id}">Copy text</button><span class="muted small" style="align-self:center">${esc(when)}, from the content bank. Claude posts only on your "post it".</span></div>`;
+}
+function bindPostCard(){
+  const b = $("#postDone"), c = $("#postCopy");
+  if (b) b.onclick = async () => { const t = S.tasks.find(x => x.id === b.dataset.post); await setTask(t, { status: "done", done_at: new Date().toISOString() }); toast("Posted: " + t.title.replace(/^LinkedIn post: /, "")); rerender(); };
+  if (c) c.onclick = () => { const t = S.tasks.find(x => x.id === c.dataset.post); (navigator.clipboard ? navigator.clipboard.writeText(postBody(t)) : Promise.reject()).then(() => toast("Post text copied"), () => toast("Copy failed, open the card to select it")); };
+}
 function todayTasks(s = S, d = today()){
-  return s.tasks.filter(t =>
+  return s.tasks.filter(t => !isPost(t)).filter(t =>
       (t.status === "done" && doneDay(t) === d) ||
       (t.status !== "done" && t.due && t.due <= d) ||
       (t.status === "running") ||
@@ -845,7 +910,7 @@ function header(){
   const left = Math.max(0, Math.ceil((new Date(dl + "T23:59:59") - new Date()) / 864e5));
   $("#hdrSub").textContent = left + " DAYS TO " + fmtDay(dl).toUpperCase();
 }
-function navBadges(){ const c = todayCounts(); $("#navCrm").textContent = followUps().due.length || ""; $("#navToday").textContent = c.open || ""; $("#navTasks").textContent = S.tasks.filter(t => t.status !== "done").length || ""; }
+function navBadges(){ const c = todayCounts(); $("#navCrm").textContent = followUps().due.length || ""; $("#navToday").textContent = c.open || ""; $("#navTasks").textContent = S.tasks.filter(t => t.status !== "done" && !isPost(t)).length || ""; }
 async function refresh(){
   const active = document.activeElement;
   if (TD.pinned || (active && /INPUT|TEXTAREA|SELECT/.test(active.tagName) && active.value)) return; // never wipe what's being typed
@@ -863,7 +928,8 @@ function kpi(v, lab, sub, opts = {}){ return `<div class="kpi ${opts.hi ? "hi" :
 function renderToday(el){
   const d = today(), m = money(), c = todayCounts();
   const list = todayTasks(), ids = new Set(list.map(t => t.id));
-  const soon = S.tasks.filter(t => t.status !== "done" && t.due && t.due > d && t.due <= addDays(d, 7) && !ids.has(t.id)).sort((a, b) => (a.due + (a.due_time || "")).localeCompare(b.due + (b.due_time || "")));
+  const np = nextPost(), pw = postsThisWeek();
+  const soon = S.tasks.filter(t => !isPost(t) && t.status !== "done" && t.due && t.due > d && t.due <= addDays(d, 7) && !ids.has(t.id)).sort((a, b) => (a.due + (a.due_time || "")).localeCompare(b.due + (b.due_time || "")));
   const out = S.invoices.filter(i => i.status === "sent" || i.status === "scheduled");
   const fu = followUps();
   const days = Array.from({ length: 14 }, (_, i) => addDays(d, i - 13));
@@ -883,6 +949,7 @@ function renderToday(el){
         <div class="quick"><input id="qTitle" placeholder="Add a task for today, press Enter" aria-label="New task"><select id="qProj" aria-label="Project" style="max-width:150px">${PROJECTS.map(p => `<option>${p}</option>`).join("")}</select><button id="qAdd" aria-label="Add">Add</button></div>
         <div id="tList">${list.length ? list.map(t => taskCard(t, { project: true, today: true })).join("") : '<div class="empty">Nothing due today. Add one above.</div>'}</div>
       </div>
+      <div class="card" id="postCardWrap"><div class="card-h"><h2>Next LinkedIn post</h2><span class="cnt" id="postsWeek">${pw.done} of 3 to 5 this week</span></div>${postCard(np)}</div>
       <div class="card"><div class="card-h"><h2>Coming up</h2><a href="#tasks">All tasks</a></div>
         <div id="tSoon">${soon.length ? soon.map(t => taskCard(t, { project: true, compact: true })).join("") : '<div class="empty">Nothing booked in the next 7 days.</div>'}</div></div>
     </div>
@@ -899,9 +966,11 @@ function renderToday(el){
       <div class="card"><div class="card-h"><h2>Follow-ups due</h2><a href="#crm">CRM</a></div><ul class="lines" id="tFu">${fu.due.length ? fu.due.slice(0, 6).map(fuRow).join("") + (fu.due.length > 6 ? `<li class="muted small">+${fu.due.length - 6} more in the CRM</li>` : "") : '<li class="muted small">Nothing due today.</li>'}</ul></div>
       <div class="card"><div class="card-h"><h2>Outreach, 14 days</h2><a href="#outreach">Log</a></div>
         <div class="bars" aria-label="Messages sent per day">${perDay.map((v, i) => `<div class="${i === 13 ? "today" : ""}" style="height:${Math.max(2, 100 * v / mx)}%" title="${fmtDay(days[i])}: ${v} sent"></div>`).join("")}</div>
-        <div class="barlab"><span>${fmtDay(days[0])}</span><span>${sent14} sent</span><span>Today</span></div></div>
+        <div class="barlab"><span>${fmtDay(days[0])}</span><span>${sent14} sent</span><span>Today</span></div>
+        <div class="row small" style="margin-top:12px;justify-content:space-between" id="tPosts"><span class="muted">LinkedIn posts this week</span><b class="${pw.done >= 3 ? "" : "num"}" style="color:${pw.done >= 3 ? "var(--good)" : "var(--text)"}">${pw.done} of 3 to 5</b></div></div>
     </div>
   </div>`;
+  bindPostCard();
   const add = async () => { const title = $("#qTitle").value.trim(); if (!title) return toast("Type the task first"); await addTask({ title, project: $("#qProj").value, due: d, status: "todo" }); rerender(); setTimeout(() => $("#qTitle") && $("#qTitle").focus(), 0); };
   $("#qAdd").onclick = add;
   $("#qTitle").addEventListener("keydown", e => { if (e.key === "Enter") add(); });
@@ -912,10 +981,11 @@ function renderToday(el){
 const TV = { show: "open", project: "All" };
 function renderTasks(el){
   const d = today();
-  const vis = S.tasks.filter(t => TV.show === "all" || t.status !== "done" || doneDay(t) === d);
+  const np = nextPost();
+  const vis = S.tasks.filter(t => !isPost(t) || (np && t.id === np.id) || (t.status === "done" && TV.show === "all")).filter(t => TV.show === "all" || t.status !== "done" || doneDay(t) === d);
   const projs = TV.project === "All" ? PROJECTS : [TV.project];
   const sortT = (a, b) => (ORD[a.status] - ORD[b.status]) || String(a.due || "9999").localeCompare(String(b.due || "9999")) || String(a.due_time || "99").localeCompare(String(b.due_time || "99")) || a.sort - b.sort;
-  const open = S.tasks.filter(t => t.status !== "done");
+  const open = S.tasks.filter(t => t.status !== "done" && (!isPost(t) || (np && t.id === np.id)));
   const by = st => open.filter(t => t.status === st).length;
   el.innerHTML = phead("Everything on the list", "Tasks") +
   `<div class="kpis">${kpi(open.length, "Open", `${by("todo")} to do, ${by("running")} running`)}${kpi(by("waiting"), "Waiting", "on someone else or you")}${kpi(by("scheduled"), "Scheduled", "calls, demos, deadlines")}${kpi(open.filter(t => t.due && t.due < d).length, "Overdue", "past their due date", { warn: open.some(t => t.due && t.due < d) })}</div>
@@ -1310,6 +1380,9 @@ async function renderOutreach(el, day){
       ${liTable("By batch and request variant", L.byBatch)}${liTable("By role type", L.byType)}${liTable("By first DM style", L.byStyle)}
       <p class="muted small" style="margin:10px 0 0">Acceptance counts requests at least 3 days old; reply rate counts first DMs at least 3 days old. Same maths as linkedin_stats.py.</p></div>
   </div><div class="col">
+    <div class="card" id="liPosts"><div class="card-h"><h2>LinkedIn posts</h2><b class="num" data-k="liposts">${postsThisWeek().done} of 3 to 5</b></div>
+      <p class="muted small" style="margin:-6px 0 8px">posted this week. Varied times, weekdays 07:30 to 18:00 UK.</p>
+      <ul class="lines">${postsThisWeek().list.map(t => `<li><span class="grow">${esc(t.title.replace(/^LinkedIn post: /, ""))}<div class="muted small">${fmtDay(t.due)}${t.due_time ? " " + String(t.due_time).slice(0, 5) : ""}</div></span>${t.status === "done" ? '<span class="chip good">Posted</span>' : dueChip(t)}</li>`).join("") || '<li class="muted small">Nothing planned this week.</li>'}</ul></div>
     <div class="card"><div class="card-h"><h2>Due a follow-up</h2><span class="cnt">${L.due.length}</span></div><ul class="lines" id="liDue">${L.due.map(r => `<li><div class="grow"><b>${esc(r.name)}</b> <span class="muted small">${esc(r.company || "")}</span><div class="muted small">First DM ${fmtDay(r.dm1_date)}, ${daysBetween(r.dm1_date, today())} days, no reply</div></div>${r.profile_url && !r.profile_url.startsWith("name:") ? `<a class="btn" target="_blank" rel="noopener" href="${esc(r.profile_url)}">Open</a>` : ""}</li>`).join("") || '<li class="muted small">Nobody due. Follow-ups go 4+ days after a first DM with no reply.</li>'}</ul></div>
     <div class="card"><div class="card-h"><h2>Accepted, no DM yet</h2><span class="cnt">${L.needDm.length}</span></div><ul class="lines" id="liNeed">${L.needDm.map(r => `<li><div class="grow"><b>${esc(r.name)}</b> <span class="muted small">${esc(r.company || "")}</span></div>${r.profile_url && !r.profile_url.startsWith("name:") ? `<a class="btn" target="_blank" rel="noopener" href="${esc(r.profile_url)}">Open</a>` : ""}</li>`).join("") || '<li class="muted small">Everyone who accepted has had a first DM.</li>'}</ul></div>
     <div class="card"><div class="card-h"><h2>Replies</h2></div><ul class="lines">${S.li.filter(r => r.dm1_reply_date || r.fu1_reply_date).map(r => `<li><div class="grow"><b>${esc(r.name)}</b> <span class="muted small">${esc(r.company || "")}</span>${r.reply_summary ? `<div class="small" style="margin-top:2px">${esc(r.reply_summary)}</div>` : ""}${r.outcome ? `<span class="chip good" style="margin-top:4px">${esc(r.outcome)}</span>` : ""}</div></li>`).join("") || '<li class="muted small">No replies yet.</li>'}</ul></div>
