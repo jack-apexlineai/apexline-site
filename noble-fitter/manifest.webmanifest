@@ -1,0 +1,18 @@
+{
+  "id": "/noble-fitter/",
+  "name": "Noble Fitter",
+  "short_name": "Noble Fitter",
+  "description": "Fitter app for Noble Commercial Truck Services. Trial version with sample jobs.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F5F6F8",
+  "theme_color": "#FFFFFF",
+  "lang": "en-GB",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
