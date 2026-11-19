@@ -243,7 +243,7 @@ function paint(){
     '<h2 class="tr-h">' + esc(s.title) + '</h2>' +
     '<p class="tr-p">' + esc(s.body) + '</p>' + (s.body2 ? '<p class="tr-p">' + esc(s.body2) + '</p>' : '') +
     '<div class="tr-btns"><button type="button" class="tr-back" data-tr="back"' + (run.i === 0 ? ' disabled' : '') + '>Back</button>' +
-    '<button type="button" class="tr-next" data-tr="' + (last ? 'skip' : 'next') + '">' + (last ? 'Done' : run.i === n - 2 ? 'Finish' : 'Next') + '</button></div>';
+    '<button type="button" class="tr-next" data-tr="' + (last ? 'skip' : 'next') + '">' + (last ? 'Done' : 'Next') + '</button></div>';
   card.querySelectorAll('[data-tr]').forEach(function(b){
     var a = b.getAttribute('data-tr');
     b.onclick = a === 'next' ? next : a === 'back' ? back : stop;
