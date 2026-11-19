@@ -10,7 +10,7 @@
 <title>HQ</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;600&family=Cormorant+Garamond:ital,wght@1,600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0A0F1A;--side:#0C1320;--card:#111A2A;--card2:#16213A;--line:#1F2B40;--text:#E7ECF4;--muted:#8B97AD;--accent:#5CC8F5;--hud:#5CE1FF;--good:#34D399;--warn:#FBBF24;--bad:#F87171;--violet:#A78BFA;--r:16px;--sideW:236px;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--head:"Plus Jakarta Sans",Inter,system-ui,sans-serif}
 *{box-sizing:border-box}
@@ -231,7 +231,7 @@ button.chip{cursor:pointer}
 #boot .car{width:min(560px,92vw);height:auto;overflow:visible}
 .mono .ring{fill:none;stroke:var(--hud);stroke-width:2.5;stroke-dasharray:1;stroke-dashoffset:1;filter:drop-shadow(0 0 6px rgba(92,225,255,.7))}
 .mono .ring2{fill:none;stroke:rgba(92,225,255,.35);stroke-width:1;opacity:0}
-.mono .sig{fill:none;stroke:#EAF8FF;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;filter:drop-shadow(0 0 4px rgba(92,225,255,.6))}
+.mono .sig{fill:#F4FBFF;fill-opacity:0;stroke:#F4FBFF;stroke-width:1.1;stroke-dasharray:420;stroke-dashoffset:420;filter:drop-shadow(0 0 5px rgba(160,230,255,.45))}
 .mono .sweep{opacity:0}
 .car .shell{fill:url(#bodyFill);stroke:rgba(234,246,255,.10);stroke-width:1;vector-effect:non-scaling-stroke}
 .car .wingshell{stroke:rgba(234,246,255,.14)}
@@ -256,7 +256,8 @@ button.chip{cursor:pointer}
 .car .shell,.car .tyre,.car .arch,.car .hubring,.car .neck,.car .floor{opacity:0}
 #boot.go .mono .ring{animation:draw .6s ease-out forwards}
 #boot.go .mono .ring2{animation:fade .5s .35s forwards}
-#boot.go .mono .sig{animation:draw .75s .2s ease-in-out forwards}
+#boot.go .mono .sig{animation:draw .8s .2s ease-in-out forwards,sigfill .45s .8s ease-out forwards}
+@keyframes sigfill{to{fill-opacity:1}}
 #boot.go .mono .sweep{animation:sweep .7s .95s ease-in-out forwards}
 #boot.go .car .shell,#boot.go .car .tyre,#boot.go .car .arch,#boot.go .car .hubring,#boot.go .car .neck{animation:fade .8s 1.2s ease-out forwards}
 #boot.go .car .floor{animation:fade 1s 1.6s forwards}
@@ -286,7 +287,8 @@ button.chip{cursor:pointer}
 #boot .hello{font-family:var(--mono);font-size:12px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin:0;opacity:0;text-align:center}
 #boot.go .hello{animation:fade .5s .6s forwards}
 #boot.still *{animation:none!important}
-#boot.still .mono .ring,#boot.still .mono .sig,#boot.still .car .rim{stroke-dashoffset:0}
+#boot.still .mono .ring,#boot.still .mono .sig,#boot.still .car .rim,.mono .sig{stroke-dashoffset:0}.mono .sig{fill-opacity:1}
+#boot.still .mono .sig{fill-opacity:1}
 #boot.still .mono .ring2,#boot.still .car .shell,#boot.still .car .tyre,#boot.still .car .arch,#boot.still .car .hubring,#boot.still .car .neck,#boot.still .car .floor,#boot.still .hello,#boot.still .hudrow > div{opacity:1}
 #boot.still .car .glint{opacity:0}
 @media (prefers-reduced-motion: reduce){#boot *{animation:none!important;transition:none!important}.car .rim{stroke-dashoffset:0}.chip.run .stdot{animation:none}}
@@ -332,7 +334,7 @@ button.chip{cursor:pointer}
   <defs>
     <symbol id="jsmark" viewBox="0 0 200 200">
       <circle cx="100" cy="100" r="88" fill="none" stroke="currentColor" stroke-width="6"/>
-      <path d="M58 70 C78 60 108 58 128 62 M104 62 C104 92 102 118 92 134 C82 150 60 148 56 132 M152 74 C142 60 116 64 120 82 C124 98 152 102 150 122 C148 142 122 146 108 132" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="100" y="130" text-anchor="middle" fill="#F4FBFF" font-family="'Cormorant Garamond', Garamond, 'Times New Roman', serif" font-style="italic" font-weight="600" font-size="104" letter-spacing="-9">JS</text>
     </symbol>
   </defs>
 </svg>
@@ -371,7 +373,7 @@ button.chip{cursor:pointer}
     </defs>
     <circle class="ring" cx="100" cy="100" r="88" pathLength="1" transform="rotate(-90 100 100)"/>
     <circle class="ring2" cx="100" cy="100" r="80"/>
-    <path class="sig" pathLength="1" d="M58 70 C78 60 108 58 128 62 C118 61 106 61 104 62 C104 92 102 118 92 134 C82 150 60 148 56 132 C70 118 120 96 152 74 C142 60 116 64 120 82 C124 98 152 102 150 122 C148 142 122 146 108 132"/>
+    <text class="sig" x="100" y="128" text-anchor="middle" font-family="'Cormorant Garamond', Garamond, 'Times New Roman', serif" font-style="italic" font-weight="600" font-size="96" letter-spacing="-8">JS</text>
     <g clip-path="url(#monoClip)">
       <g transform="rotate(18 100 100)">
         <rect class="sweep" x="-150" y="-40" width="70" height="280" fill="url(#sweepG)" style="mix-blend-mode:screen"/>
