@@ -263,7 +263,8 @@ function pageSign(){
     tops.map(function(o){ var a = CS.state.tbt.filter(function(x){ return x.op === o.id && x.tbt === T.id; })[0]; return '<div class="tb' + (a ? ' ok' : '') + '">' + CS.avatar(o, 'sm') + '<span><b>' + esc(o.first + ' ' + o.last) + '</b><small>' + (a ? 'Signed ' + CS.hm(a.at) : 'Not signed yet') + '</small></span>' + ic(a ? 'circle-check' : 'clock') + '</div>'; }).join('') + '</div></section>' : '';
   return filters() + '<div class="swpcards">' + cards + '</div>' + tbt +
     '<section class="panel"><div class="ph"><h2>' + ic('signature') + 'Sign-off log</h2><span class="sp"></span>' +
-    CS.SWPS.map(function(p){ return '<button class="chip' + (swpF === p.id ? ' on' : '') + '" data-swpf="' + p.id + '" style="margin-left:6px">' + esc(p.title) + '</button>'; }).join('') + '</div>' +
+    CS.SWPS.map(function(p){ return '<button class="chip' + (swpF === p.id ? ' on' : '') + '" data-swpf="' + p.id + '" style="margin-left:6px">' + esc(p.title) + '</button>'; }).join('') +
+    '<button class="smallbtn pri" data-brief="' + swpF + '" style="margin-left:6px">' + ic('file-search') + 'Briefing record</button></div>' +
     '<div class="tw"><table class="t"><thead><tr><th>Who</th><th>Site</th><th>Procedure</th><th>Signed</th><th>Understood</th><th>How</th></tr></thead><tbody>' +
     (log.length ? log.map(function(s){ var o = CS.op(s.op), p = CS.byId(CS.SWPS, s.swp); return '<tr data-new-sign="' + s.id + '"><td><span class="who">' + CS.avatar(o, 'sm') + esc(o.first + ' ' + o.last) + '</span></td><td>' + esc(CS.site(o.site).name) + '</td><td>' + esc(p.title) + ' <small style="color:var(--muted)">' + esc(s.ver || p.ver) + (s.lang === 'pl' ? ' · in Polish' : '') + '</small></td><td>' + CS.hm(s.at) + ' · ' + CS.dayLabel(s.at) + '</td><td>' + (s.quiz ? '<span class="pill ' + (s.quiz.tries > 1 ? 'amber' : 'ok') + '">' + ic('circle-check') + s.quiz.right + ' of ' + s.quiz.of + (s.quiz.tries > 1 ? ', 2nd listen' : ', first time') + '</span>' : '<span style="color:var(--muted)">Before picture checks</span>') + '</td><td>' + (s.sig ? '<img src="' + s.sig + '" alt="Signature" style="height:30px;background:#fff;border-radius:6px;padding:2px 6px">' : '<span class="pill ok">' + ic('hand-finger') + 'Tap to sign, after listening</span>') + '</td></tr>'; }).join('') : '<tr><td colspan="6" class="empty">No sign-offs yet</td></tr>') +
     '</tbody></table></div></section>';
@@ -295,6 +296,7 @@ function render(changed){
   $$('[data-rec]', view).forEach(function(b){ b.addEventListener('click', function(){ record(b.dataset.rec); }); });
   $$('[data-nm]', view).forEach(function(b){ b.addEventListener('click', function(){ var n = CS.byId(CS.state.nearmisses, b.dataset.nm); if (n) { n.open = false; CS.persist({ type: 'nm' }); } render(); toast('Near miss marked reviewed', 'green', 'check'); }); });
   $$('[data-audit]', view).forEach(function(b){ b.addEventListener('click', function(){ audit(b.dataset.audit); }); });
+  $$('[data-brief]', view).forEach(function(b){ b.addEventListener('click', function(){ briefing(b.dataset.brief); }); });
   var asel = view.querySelector('#auditSel'); if (asel) view.querySelector('[data-auditgo]').addEventListener('click', function(){ audit(asel.value); });
   (changed || []).forEach(function(c){
     $$('[data-m="' + c.id + '"],[data-mrow="' + c.id + '"]', view).forEach(function(el){ el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); if (c.tone) el.classList.add(c.tone); setTimeout(function(){ el.classList.remove('flash', 'red', 'green'); }, 2500); });
@@ -393,6 +395,31 @@ function audit(mid){
     '<h4>Check log</h4><table><thead><tr><th>When</th><th>Check</th><th>Who</th><th>Result</th></tr></thead><tbody>' +
     rows.map(function(r){ return '<tr><td>' + T(r.at) + '</td><td>' + CS.byId(CS.CHECK_TYPES, r.type).name + '</td><td>' + nm(r.op) + '</td><td class="' + (r.ok ? 'res-ok' : 'res-bad') + '">' + (r.ok ? 'All OK' : esc(r.note)) + '</td></tr>'; }).join('') + '</tbody></table>' +
     '<div class="rf"><span>Coastal Recycling · Audit pack · ' + esc(m.name) + '</span><span>Demo, sample data. Earlier days are made up for the demo · Built by ApexLine</span></div></article></div>';
+  $$('[data-close]', layer).forEach(function(b){ b.addEventListener('click', closeLayer); });
+  layer.querySelector('[data-print]').addEventListener('click', function(){ window.print(); });
+}
+
+/* ---------- briefing record ----------
+   Who was briefed on a procedure, when, which version, in which language, and how they did on the
+   picture check. One click from the Sign-offs tab, for an auditor (ISO 45001), HSE or the insurer. */
+function briefing(sid){
+  var p = CS.byId(CS.SWPS, sid); if (!p) return;
+  var ops = CS.OPS.filter(function(o){ return siteF === 'all' || o.site === siteF; });
+  var signs = CS.state.signoffs.filter(function(x){ return x.swp === sid && ops.indexOf(CS.op(x.op)) >= 0; }).sort(function(a, b){ return b.at - a.at; });
+  var latest = {}; signs.forEach(function(x){ if (!latest[x.op]) latest[x.op] = x; });
+  var miss = ops.filter(function(o){ return !latest[o.id]; });
+  var first = signs.filter(function(x){ return x.quiz && x.quiz.tries <= 1; }).length, again = signs.filter(function(x){ return x.quiz && x.quiz.tries > 1; }).length;
+  var pl = signs.filter(function(x){ return x.lang === 'pl'; }).length;
+  var T = function(t){ return CS.dShort(t) + ' ' + CS.hm(t); };
+  var nm = function(o){ return esc(o.first + ' ' + o.last); };
+  layer.innerHTML = '<div class="recwrap"><div class="recbar"><button class="smallbtn" data-close>' + ic('arrow-left') + 'Back</button><span class="sp"></span><span class="linknote" style="color:#cfd6d2">' + ic('file-search') + 'Built in one click from the sign-offs</span><button class="smallbtn" data-print style="background:var(--brand);color:#fff;border-color:var(--brand)">' + ic('printer') + 'Print or save as PDF</button></div>' +
+    '<article class="rec brief"><div class="rh"><img src="coastal-logo.svg" alt="Coastal Recycling"><div class="ti"><b>Briefing record: ' + esc(p.title) + '</b><small>' + esc(p.code + ' · ' + p.ver) + ' · to ' + CS.dayLabel(CS.now()) + '</small></div></div>' +
+    '<div class="meta"><div><small>Procedure</small><b>' + esc(p.title) + '</b><br>' + esc(p.code + ' · ' + p.ver) + '</div><div><small>Sites</small><b>' + esc(siteF === 'all' ? CS.SITES.map(function(x){ return x.name; }).join(' and ') : CS.site(siteF).name) + '</b></div><div><small>Signed</small><b>' + Object.keys(latest).length + ' of ' + ops.length + '</b><br>' + miss.length + ' still to sign</div>' +
+    '<div><small>Picture check</small><b>' + first + ' first time</b><br>' + again + ' after a second listen</div><div><small>Language</small><b>' + (signs.length - pl) + ' English, ' + pl + ' Polish</b></div><div><small>How</small><b>Read out, then tap to sign</b></div></div>' +
+    '<h4>Who has been briefed</h4><table><thead><tr><th>Who</th><th>Site</th><th>Signed</th><th>Version</th><th>Language</th><th>Picture check</th></tr></thead><tbody>' +
+    (signs.length ? signs.map(function(x){ var o = CS.op(x.op); return '<tr><td><b>' + nm(o) + '</b><br>' + esc(o.role) + '</td><td>' + esc(CS.site(o.site).name) + '</td><td>' + T(x.at) + '</td><td>' + esc(x.ver || p.ver) + '</td><td>' + (x.lang === 'pl' ? 'Polish' : 'English') + '</td><td class="' + (x.quiz && x.quiz.tries <= 1 ? 'res-ok' : '') + '">' + (x.quiz ? x.quiz.right + ' of ' + x.quiz.of + (x.quiz.tries > 1 ? ', after a second listen' : ', first time') : 'Before picture checks') + '</td></tr>'; }).join('') : '<tr><td colspan="6">No sign-offs yet</td></tr>') + '</tbody></table>' +
+    '<h4>Not briefed yet</h4><table><tbody>' + (miss.length ? miss.map(function(o){ return '<tr><td><b>' + nm(o) + '</b></td><td>' + esc(o.role) + '</td><td>' + esc(CS.site(o.site).name) + '</td><td class="res-bad">Not signed</td></tr>'; }).join('') : '<tr><td>Everyone has signed</td></tr>') + '</tbody></table>' +
+    '<div class="rf"><span>Coastal Recycling · Briefing record · ' + esc(p.code) + '</span><span>Demo, sample data · Built by ApexLine</span></div></article></div>';
   $$('[data-close]', layer).forEach(function(b){ b.addEventListener('click', closeLayer); });
   layer.querySelector('[data-print]').addEventListener('click', function(){ window.print(); });
 }

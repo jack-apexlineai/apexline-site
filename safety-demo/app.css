@@ -731,3 +731,5 @@ body.phone,body.office,body.landing{background:var(--bg)}
 .tourlink{display:inline-flex;align-items:center;gap:8px;margin:0 0 34px;color:var(--brand-hi);font-weight:800;font-size:15px;text-decoration:none;border-bottom:1px solid var(--brand-m);padding-bottom:3px}
 .tourlink:hover{border-color:var(--brand-hi)}
 .tourlink .ic{font-size:17px}
+/* toolbox talk tiles: keep the avatar round (it was stretching) */
+.tb .av{flex:0 0 auto}
