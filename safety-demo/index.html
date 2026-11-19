@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=5">
+<link rel="stylesheet" href="app.css?v=6">
 </head>
 <body class="landing">
 <div class="lwrap">
@@ -18,6 +18,7 @@
   <section class="hero">
     <h1>Plant checks and isolations.<br><em>Read out loud. Signed with a tap.</em></h1>
     <p>Every operative does their pre-shift, running and post-shift checks on a phone, hears each SWP step by step, and signs with one tap. The office sees every machine, every defect and every lock across Kenbury Wood and Deep Moor, live.</p>
+    <a class="tourlink" href="office.html?tour=1"><span id="i4"></span>Take the guided tour</a>
   </section>
   <div class="lbtns">
     <a class="lbtn pri" href="phone.html" id="opBtn"><span id="i1"></span><span><b>Operative (phone)</b><small>Log in with a PIN. Your machines, checks, locks and training. Speak a defect, hear every step.</small></span></a>
@@ -37,6 +38,7 @@
 document.getElementById('i1').innerHTML = ic('device-mobile');
 document.getElementById('i2').innerHTML = ic('layout-dashboard');
 document.getElementById('i3').innerHTML = ic('activity');
+document.getElementById('i4').innerHTML = ic('player-play');
 document.getElementById('f1').innerHTML = ic('volume-2');
 document.getElementById('f2').innerHTML = ic('microphone');
 document.getElementById('f3').innerHTML = ic('lock');

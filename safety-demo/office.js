@@ -33,17 +33,19 @@ var PSTEPS = [
   ['Sign the LOTOTO procedure', 'Procedures, pick the isolation one. Listen to each step, then tap the big box to sign.']
 ];
 var phoneMask = null, phoneFit = null;
-function phoneKey(e){ if (e.key === 'Escape') closePhoneView(); }
+function phoneKey(e){ if (e.key === 'Escape' && !document.documentElement.classList.contains('touring')) closePhoneView(); }
 function phoneSize(){
   if (!phoneMask) return;
-  var s = Math.max(0.4, Math.min(1, (window.innerHeight - 40) / 824));
+  /* fit the height, and the width on a narrow screen; during the guided tour on a phone, leave room for the tour card */
+  var narrow = window.innerWidth <= 760, touring = document.documentElement.classList.contains('touring');
+  var s = Math.max(0.4, Math.min(1, (window.innerHeight - (narrow && touring ? 250 : 40)) / 824, narrow ? (window.innerWidth - 24) / 414 : 1));
   phoneMask.querySelector('.pframe').style.transform = 'scale(' + s + ')';
   var sz = phoneMask.querySelector('.psizer');
   sz.style.width = Math.round(414 * s) + 'px';
   sz.style.height = Math.round(824 * s) + 'px';
 }
-function openPhoneView(){
-  if (window.innerWidth <= 760) { location.href = 'phone.html'; return; }
+function openPhoneView(inline){
+  if (window.innerWidth <= 760 && inline !== true) { location.href = 'phone.html'; return; }
   if (phoneMask) return;
   phoneMask = document.createElement('div');
   phoneMask.className = 'pmask';
@@ -63,7 +65,7 @@ function openPhoneView(){
   document.body.classList.add('phoneopen');
   phoneSize();
   document.getElementById('pmClose').addEventListener('click', closePhoneView);
-  phoneMask.addEventListener('click', function(e){ if (e.target === phoneMask || e.target.classList.contains('pmwrap')) closePhoneView(); });
+  phoneMask.addEventListener('click', function(e){ if ((e.target === phoneMask || e.target.classList.contains('pmwrap')) && !document.documentElement.classList.contains('touring')) closePhoneView(); });
   document.addEventListener('keydown', phoneKey);
   var f = phoneMask.querySelector('iframe');
   f.addEventListener('load', function(){ try { f.contentWindow.document.addEventListener('keydown', phoneKey); } catch (e) {} });
@@ -422,6 +424,15 @@ window.addEventListener('storage', function(e){
     toast(x.text, tone, icon);
   });
 });
+
+/* Hooks for the guided tour (tour.js). */
+window.CSO = {
+  openPhone: function(){ openPhoneView(true); },
+  closePhone: closePhoneView,
+  phoneFrame: function(){ return phoneMask ? phoneMask.querySelector('iframe') : null; },
+  fit: phoneSize,
+  tab: function(t){ closeLayer(); tab = t; siteF = 'all'; render(); window.scrollTo(0, 0); }
+};
 
 /* Keep the lock timers and ages fresh. */
 setInterval(function(){ if (!layer.innerHTML) render(); }, 30000);

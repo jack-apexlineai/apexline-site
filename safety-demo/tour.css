@@ -1,0 +1,40 @@
+/* Guided tour: spotlight, caption card, Next and Back. Matches the calm demo look. */
+.tr-spot{position:fixed;z-index:2147482990;border-radius:14px;pointer-events:none;
+  box-shadow:0 0 0 2px rgba(255,255,255,.85),0 0 0 9999px rgba(3,6,5,.62);
+  transition:left .25s ease,top .25s ease,width .25s ease,height .25s ease}
+.tr-spot.none{box-shadow:0 0 0 9999px rgba(3,6,5,.62);width:0!important;height:0!important;left:50%!important;top:50%!important}
+.tr-card{position:fixed;z-index:2147482999;width:340px;max-width:calc(100vw - 16px);box-sizing:border-box;
+  background:var(--card2);color:var(--ink);border:1px solid var(--line2);border-radius:16px;padding:16px 18px;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);font-family:var(--font);transition:opacity .15s;left:16px;top:16px}
+.tr-card.busy{opacity:.6;pointer-events:none}
+.tr-card.center{left:50%!important;top:50%!important;transform:translate(-50%,-50%)}
+.tr-card.end{width:420px}
+.tr-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.tr-n{font-size:12px;font-weight:800;color:var(--brand-hi);letter-spacing:.03em}
+.tr-skip{font:inherit;font-size:12.5px;color:var(--muted);background:none;border:0;padding:4px 2px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.tr-bar{height:4px;border-radius:4px;background:var(--line2);overflow:hidden;margin-bottom:12px}
+.tr-bar i{display:block;height:100%;background:var(--brand);border-radius:4px;transition:width .3s}
+.tr-h{font-size:18px;line-height:1.25;font-weight:800;margin:0 0 6px}
+.tr-p{font-size:14px;line-height:1.5;color:var(--ink2);margin:0 0 12px}
+.tr-card.end .tr-h{font-size:21px}
+.tr-card.end .tr-p{font-size:15px}
+.tr-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+.tr-back,.tr-next{font:inherit;font-size:14.5px;font-weight:800;border-radius:10px;padding:10px 16px;cursor:pointer;border:0}
+.tr-back{background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line2)}
+.tr-back[disabled]{opacity:.4;cursor:default}
+.tr-next{background:var(--brand);color:#fff;min-width:96px}
+.tr-back:focus-visible,.tr-next:focus-visible,.tr-skip:focus-visible{outline:3px solid var(--brand-hi);outline-offset:2px}
+/* during the tour the phone view is clean: no side panel, no close button (Skip tour closes) */
+html.touring .pmsteps,html.touring .pmx{display:none}
+/* the button in the office top bar: always shows its words */
+.otop .tourbtn span{display:inline!important}
+/* on a phone the card is a sheet along the bottom, and the phone sits at the top */
+@media (max-width:760px){
+  .tr-card,.tr-card.end{left:8px!important;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));top:auto!important;width:auto;max-width:none;
+    transform:none!important;padding:14px 16px;max-height:46vh;overflow-y:auto}
+  .tr-h,.tr-card.end .tr-h{font-size:17px}
+  .tr-p,.tr-card.end .tr-p{font-size:14px;margin-bottom:10px}
+  .tr-btns .tr-back,.tr-btns .tr-next{flex:1}
+  html.touring .pmwrap{align-items:flex-start;padding:10px 12px}
+  .pmwrap{padding:12px}
+}

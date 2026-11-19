@@ -677,3 +677,57 @@ body.phoneopen{overflow:hidden}
 .langbar .seg{display:flex;background:rgba(0,0,0,.25);border-radius:10px;padding:3px;flex:0 0 auto}
 .langbar .seg button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:14px;font-weight:800;padding:7px 12px;border-radius:8px;cursor:pointer;min-height:36px}
 .langbar .seg button.on{background:var(--brand);color:#fff}
+
+/* ============ Calm look (19 Nov): no hazard tape, flat surfaces, one accent (Coastal green) ============
+   Status colours keep their meaning: green ready, amber attention, red do not use.
+   Locks use a soft gold as text and outline only, never big yellow blocks. */
+:root{ --hivis:#E2B93B; --hivis-l:rgba(226,185,59,.10); --line:#1E2926; --line2:#273632; --card:#111816; --card2:#141C1A; }
+button:focus-visible,a:focus-visible{outline-color:var(--brand-hi)}
+.stripe.hazard,.iso .stripe{display:none}
+.hazard{background:none}
+body.phone,body.office,body.landing{background:var(--bg)}
+.badge-demo{color:var(--muted);background:transparent;border-color:var(--line2)}
+.badge-demo::before{background:var(--muted)}
+/* flat cards, no gradients or glows */
+.tile,.item,.step,.kpi,.mc,.swpc,.lbtn,.pk,.act,.qo{background:var(--card)}
+.tile.hi,.act.hi{background:var(--card);border-color:var(--brand-m)}
+.tile.dnu,.mc.red{background:var(--card)}
+.todo.red,.pt.on{background:var(--card)}
+.item .bigic,.step .bigic{background:var(--brand-l)}
+.step.lockstep .bigic{color:var(--hivis);background:var(--hivis-l)}
+.padlock{background:var(--hivis-l)}
+.vbox{background:var(--card)}
+.yn .y,.yn .n,.ask .say,.navrow .nxt,.bigbtn.yellow{box-shadow:none}
+.yn .y{background:#1FA858}.yn .n{background:#DE3B30}
+.signbox{background:var(--brand-l)}
+.lbtn.pri{background:var(--brand)}
+/* isolation: outline and text, not solid yellow */
+.iso{border-color:var(--line);background:var(--bg2)}
+.iso .count,.pill.lock,.otabs button .cnt,.mc .lk,.flag.lock{background:var(--hivis-l);color:var(--hivis);box-shadow:inset 0 0 0 1px rgba(226,185,59,.35)}
+.otabs button .cnt{background:var(--card2);color:var(--ink2);box-shadow:inset 0 0 0 1px var(--line2)}
+.lockrow .pl{background:var(--hivis-l);color:var(--hivis);box-shadow:inset 0 0 0 1px rgba(226,185,59,.4)}
+.lockrow .pl b{background:var(--card)}
+.lockcard{background:var(--card);border-width:1px}
+.step .lockrec{background:var(--hivis-l);color:var(--hivis);box-shadow:inset 0 0 0 1px rgba(226,185,59,.45)}
+.ptwhead,.ptw{background:var(--card)}
+.gbox{border-style:solid;border-width:1px}
+.otoast div{border-left-color:var(--brand)}
+/* "new" and "today" tags in the accent, not yellow */
+.tile .newtag,.act .newtag{background:var(--brand);color:#fff}
+.swpc.new .h .ic{color:var(--brand-hi)}
+.swpc.new .bar i{background:var(--brand-hi)}
+.pinhint{color:var(--muted)}
+/* landing: one calm call to action */
+.both{background:var(--card);border-color:var(--line2)}
+.both .ic{color:var(--brand-hi)}
+.both button{background:var(--brand);color:#fff}
+.langbar{border-style:solid}
+/* phone width: nothing wider than the screen (grid columns and panel headers may shrink and wrap) */
+.grid2>*{min-width:0}
+@media (max-width:700px){ .ph{flex-wrap:wrap} .lockrow .info{min-width:0;flex:1} .lockrow .info b,.lockrow .info small{overflow-wrap:anywhere} }
+/* landing: headline on two lines, and the guided tour link */
+.hero h1{font-size:clamp(38px,6.2vw,64px)}
+.hero p{margin-bottom:22px}
+.tourlink{display:inline-flex;align-items:center;gap:8px;margin:0 0 34px;color:var(--brand-hi);font-weight:800;font-size:15px;text-decoration:none;border-bottom:1px solid var(--brand-m);padding-bottom:3px}
+.tourlink:hover{border-color:var(--brand-hi)}
+.tourlink .ic{font-size:17px}
