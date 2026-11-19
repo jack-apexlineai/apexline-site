@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Command</title>
+  <meta name="description" content="John's daily command centre: plan, reminders, ticks, ads and money.">
+  <meta name="theme-color" content="#0d0c0b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Command">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="css/app.css">
+  <script src="config.js"></script>
+  <script>
+    // Set the theme before the first paint (dark unless he picked otherwise), so there is no white flash.
+    (function () { var t = 'dark'; try { var s = JSON.parse(localStorage.getItem('command.v1')); if (s && s.settings && s.settings.theme) t = s.settings.theme; } catch (e) {} if (t !== 'auto') document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="app">
+    <aside class="sidebar" aria-label="Main">
+      <div class="brand">
+        <div class="brand-mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5c.5 3.5 5.5 6 5.5 11a5.5 5.5 0 01-11 0c0-2.5 1.2-4 2.5-5.2.3 1.7 1 2.7 2 3.2-.3-3.4.2-6.5 1-9z"/></svg></div>
+        <div><strong>Command</strong><small>John's daily HQ</small></div>
+      </div>
+      <nav id="sidebar-nav" class="side-nav"></nav>
+      <div class="side-foot">
+        <span class="pill pill-warn">Sample data</span>
+        <small>Connect your accounts in Settings when Jack switches on your login.</small>
+      </div>
+    </aside>
+    <div class="topbar">
+      <div class="brand sm"><div class="brand-mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5c.5 3.5 5.5 6 5.5 11a5.5 5.5 0 01-11 0c0-2.5 1.2-4 2.5-5.2.3 1.7 1 2.7 2 3.2-.3-3.4.2-6.5 1-9z"/></svg></div><strong>Command</strong></div>
+      <span class="pill pill-warn">Sample data</span>
+    </div>
+    <main id="main" tabindex="-1"></main>
+    <nav id="tabbar" class="tabbar" aria-label="Main"></nav>
+  </div>
+  <div id="toasts" aria-live="polite"></div>
+  <div id="sheet-root"></div>
+  <noscript><p style="padding:24px">Command needs JavaScript switched on.</p></noscript>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
