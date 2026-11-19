@@ -2,7 +2,7 @@
 import { esc } from './util.js';
 import { icon } from './icons.js';
 
-export const bus = { render: () => {}, go: () => {}, perfect: () => {} };
+export const bus = { render: () => {}, go: () => {}, perfect: () => {}, tour: () => {} };
 export const $ = (s, el = document) => el.querySelector(s);
 export const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 

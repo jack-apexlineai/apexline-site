@@ -42,7 +42,7 @@ export function adsMini() {
 
 export const pendingCount = () => openRecs(getAds().advice).filter((r) => r.action).length;
 
-const KPI = [
+export const KPI = [
   { k: 'spend', label: 'Spend', fmt: (v) => money(v), good: null, explain: 'What you paid Meta in this period.' },
   { k: 'cpa', label: 'Cost per purchase', fmt: (v) => (v ? money(v, true) : 'n/a'), good: 'low', explain: 'Ad spend divided by sales. Lower is better. At your target ROAS this needs to be under about £27.' },
   { k: 'roas', label: 'ROAS', fmt: (v) => num(v, 2), good: 'high', explain: 'Sales Meta says the ads made, divided by spend. 1.45 means £1.45 back for every £1. Under 1 means losing money.' },
@@ -78,6 +78,8 @@ function kpiTiles(data) {
   <p class="muted small kpi-note">Arrows compare with the ${range} days before. Tap any number for what it means.</p>`;
 }
 
+export const SAFE_LINE = 'Small step. Check it yourself before you approve. This is based on your numbers, not professional advice.';
+
 function recCard(r) {
   const tone = { off: 'bad', tired: 'warn', scale: 'good', budget: 'info', learn: 'mute' }[r.type];
   const tag = { off: 'Turn off', tired: 'Tired creative', scale: 'Scale', budget: 'Budget', learn: 'Too early' }[r.type];
@@ -86,6 +88,7 @@ function recCard(r) {
     <h3>${esc(r.title)}</h3>
     <p>${esc(r.body)}</p>
     ${r.facts ? `<dl class="facts">${r.facts.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>` : ''}
+    <p class="rec-safe">${icon('info', 14)}<span>${SAFE_LINE}</span></p>
     ${r.action ? `<div class="row gap wrap rec-actions">
       <button class="btn primary" data-act="approve" data-id="${esc(r.id)}">${icon('check', 16)} Approve: ${esc(r.action.label)}</button>
       <button class="btn ghost" data-act="dismiss" data-id="${esc(r.id)}">Not now</button>
@@ -150,6 +153,7 @@ export function view() {
     </div>
     ${acting.length ? acting.map(recCard).join('') : '<div class="card empty-note">Nothing to approve. Everything is on track.</div>'}
     ${infos.map(recCard).join('')}
+    <p class="ads-hire">${icon('info', 15)}<span>If you hire someone to run your ads, keep this running. Once your Meta account is connected, it records what they change and how it went, so you can learn from it later.</span></p>
     ${changes.length ? `<div class="card changes"><div class="card-head"><h3>${icon('check', 16)} Approved</h3><span class="muted small">Sample mode: logged here. Live: sent to Meta when you press Approve.</span></div>
       <ul class="plain-list">${changes.map((c) => `<li><span>${esc(c.label)}</span><button class="link" data-act="undo-change" data-id="${esc(c.recId)}">Undo</button></li>`).join('')}</ul></div>` : ''}
   </section>
@@ -173,7 +177,7 @@ export function view() {
   ${adsTable(data, advice)}
 
   <section>
-    <div class="section-head"><h2>${icon('bolt', 20)} New ad ideas to test</h2><span class="muted small">Built from what is working now</span></div>
+    <div class="section-head"><h2>${icon('bolt', 20)} New ad ideas to test</h2><span class="muted small">One at a time, inside your current budget</span></div>
     <div class="ideas">
       ${advice.copy.map((c, i) => `<article class="card idea">
         <span class="eyebrow">Idea ${i + 1}</span>
@@ -181,6 +185,7 @@ export function view() {
         <p>${esc(c.text)}</p>
         <p class="muted small"><strong>Headline:</strong> ${esc(c.headline)}</p>
         <p class="muted small">${esc(c.why)}</p>
+        ${c.how ? `<p class="idea-how">${esc(c.how)}</p>` : ''}
         <button class="btn ghost sm" data-act="copy-idea" data-i="${i}">${icon('copy', 15)} Copy</button>
       </article>`).join('')}
     </div>

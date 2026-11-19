@@ -78,6 +78,7 @@ function mondayOf(today) {
 }
 
 const r2 = (n) => Math.round(n * 100) / 100;
+export const MAX_RAISE = 0.1; // budget increases are never more than 10% at a time
 
 // The rules. Everything is in plain English with the numbers that drove it.
 export function buildAdvice(data, settings, today, decisions = {}) {
@@ -87,6 +88,17 @@ export function buildAdvice(data, settings, today, decisions = {}) {
   const week = mondayOf(today);
   const recs = [];
   const status = {};
+  const winners = [];
+
+  // Where the month is heading, worked out first so no advice can push it over his cap.
+  const t = fromYmd(today);
+  const dim = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate();
+  const monthStart = ymd(new Date(t.getFullYear(), t.getMonth(), 1));
+  let mtd = 0;
+  data.ads.forEach((a) => a.daily.forEach((d) => { if (d.date >= monthStart && d.date < today) mtd += d.spend; }));
+  const daily = sum(data.ads.filter((a) => a.status !== 'paused'), (a) => a.budget);
+  const left = dim - t.getDate() + 1;
+  const projected = mtd + daily * left;
 
   data.ads.forEach((ad) => {
     const age = ad.daily.length;
@@ -99,11 +111,12 @@ export function buildAdvice(data, settings, today, decisions = {}) {
       status[ad.id] = { tag: 'Paused', tone: 'mute', text: 'You paused this.' };
       return;
     }
-    if (age < 5 && w7.spend < 40) {
+    // New ads stay in learning for their first 7 days, unless they are clearly burning money.
+    if (age < 7 && !(w7.spend >= targetCpa * 2 && w7.purchases === 0)) {
       status[ad.id] = { tag: 'Learning', tone: 'info', text: `Only ${age} days old. Too early to judge.` };
       recs.push({
         id: id('learn'), type: 'learn', adId: ad.id, title: `Leave "${ad.name}" alone for now`,
-        body: `It started ${age} days ago and has spent ${money(w7.spend)}. Meta needs about ${money(targetCpa * 2)} of spend before the numbers mean anything. Check it again on ${dayIn(today, 5 - age)}.`,
+        body: `It started ${age} days ago and has spent ${money(w7.spend)}. Meta needs about ${money(targetCpa * 2)} of spend before the numbers mean anything. Check it again on ${dayIn(today, 7 - age)}.`,
         facts: [['Spent', money(w7.spend)], ['ROAS so far', num(w7.roas, 2)], ['Purchases', num(w7.purchases)]],
       });
       return;
@@ -142,18 +155,10 @@ export function buildAdvice(data, settings, today, decisions = {}) {
       return;
     }
 
-    if (w7.roas >= target + 0.3 && w14.purchases >= 4 && w7.freq < freqLimit) {
-      const step = ad.retargeting ? 0.15 : 0.2;
-      const to = r2(ad.budget * (1 + step));
-      status[ad.id] = { tag: 'Scale', tone: 'good', text: `ROAS ${num(w7.roas, 2)}, room to grow.` };
-      recs.push({
-        id: id('scale'), type: 'scale', adId: ad.id, title: `Put more behind "${ad.name}"`,
-        body: `It is your best ad. ROAS ${num(w7.roas, 2)} over 7 days against a ${num(target, 2)} target, ${num(w14.purchases)} sales in 14 days, and people have only seen it ${num(w7.freq, 1)} times each, so there is room. Raise the budget ${Math.round(step * 100)}%. Not more, or Meta resets its learning.`,
-        facts: [['ROAS (7d)', num(w7.roas, 2)], ['Cost per sale', w7.cpa ? money(w7.cpa, true) : 'n/a'], ['Frequency', num(w7.freq, 1)], ['Purchases (14d)', num(w14.purchases)]],
-        action: { label: `Raise to ${money(to, true)}/day`, kind: 'budget', adId: ad.id, from: ad.budget, to },
-        impact: `About ${money((to - ad.budget) * 7)} more a week, expected back ${money((to - ad.budget) * 7 * w7.roas)}`,
-        saving: -(to - ad.budget) * 7,
-      });
+    // A winner: at least 7 days old, enough sales to judge, not seen too often.
+    if (age >= 7 && w7.roas >= target + 0.3 && w14.purchases >= 5 && w7.purchases >= 2 && w7.freq < freqLimit) {
+      status[ad.id] = { tag: 'Keep', tone: 'good', text: `ROAS ${num(w7.roas, 2)}, your best.` };
+      winners.push({ ad, w7, w14, freqLimit });
       return;
     }
 
@@ -163,15 +168,28 @@ export function buildAdvice(data, settings, today, decisions = {}) {
     if (ad.retargeting && w7.freq >= 4) status[ad.id].text += ` Frequency ${num(w7.freq, 1)}, normal for retargeting.`;
   });
 
+  // Safety first: pausing clear losers comes before putting more behind a winner,
+  // and a raise is one 10% step on the single best ad, only if the month stays under his cap.
+  const losersOpen = recs.some((r) => r.type === 'off');
+  winners.sort((a, b) => b.w7.roas - a.w7.roas);
+  winners.forEach(({ ad, w7, w14 }, i) => {
+    if (losersOpen) { status[ad.id].text += ' Turn off the losers first.'; return; }
+    if (i > 0) return;
+    const to = r2(ad.budget * (1 + MAX_RAISE));
+    const extraMonth = (to - ad.budget) * left;
+    if (projected + extraMonth > (settings.budgetHigh || 0)) { status[ad.id].text += ' No room under your monthly cap.'; return; }
+    status[ad.id] = { tag: 'Scale', tone: 'good', text: `ROAS ${num(w7.roas, 2)}, room for a small step.` };
+    recs.push({
+      id: `scale:${ad.id}:${week}`, type: 'scale', adId: ad.id, title: `Put a little more behind "${ad.name}"`,
+      body: `It is your best ad: ROAS ${num(w7.roas, 2)} over 7 days against a ${num(target, 2)} target, ${num(w14.purchases)} sales in 14 days, and people have only seen it ${num(w7.freq, 1)} times each. If you are comfortable with the extra spend, raise the budget 10%. Then leave it at least 3 days before any more. The month still lands under your ${money(settings.budgetHigh)} cap.`,
+      facts: [['ROAS (7d)', num(w7.roas, 2)], ['Cost per sale', w7.cpa ? money(w7.cpa, true) : 'n/a'], ['Frequency', num(w7.freq, 1)], ['Purchases (14d)', num(w14.purchases)]],
+      action: { label: `Raise to ${money(to, true)}/day`, kind: 'budget', adId: ad.id, from: ad.budget, to },
+      impact: `About ${money((to - ad.budget) * 7)} more a week`,
+      saving: -(to - ad.budget) * 7,
+    });
+  });
+
   // Budget pacing for the month.
-  const t = fromYmd(today);
-  const dim = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate();
-  const monthStart = ymd(new Date(t.getFullYear(), t.getMonth(), 1));
-  let mtd = 0;
-  data.ads.forEach((a) => a.daily.forEach((d) => { if (d.date >= monthStart && d.date < today) mtd += d.spend; }));
-  const daily = sum(data.ads.filter((a) => a.status !== 'paused'), (a) => a.budget);
-  const left = dim - t.getDate() + 1;
-  const projected = mtd + daily * left;
   const open = recs.filter((r) => r.action && !decisions[r.id]);
   const afterDaily = daily - sum(open, (r) => (r.saving || 0) / 7);
   const afterProjected = mtd + afterDaily * left;
@@ -182,14 +200,14 @@ export function buildAdvice(data, settings, today, decisions = {}) {
     recs.push({
       id: `budget:all:${week}`,
       type: 'budget', title: 'Budget after these changes',
-      body: `Right now you are set to spend ${money(daily, true)} a day, landing the month at about ${money(projected)}. If you approve the changes above, that becomes ${money(afterDaily, true)} a day and about ${money(afterProjected)} for the month. Your range is ${money(settings.budgetLow)} to ${money(settings.budgetHigh)}.${afterProjected < settings.budgetLow ? ` That is a little under your range, so there is room for about ${money((settings.budgetLow - afterProjected) / left, true)} a day more behind your best ad once it has settled.` : afterProjected > settings.budgetHigh ? ` That is still over your range, so trim about ${money((afterProjected - settings.budgetHigh) / left, true)} a day from the weakest ad.` : ''}`,
+      body: `Right now you are set to spend ${money(daily, true)} a day, landing the month at about ${money(projected)}. If you approve the changes above, that becomes ${money(afterDaily, true)} a day and about ${money(afterProjected)} for the month. Your range is ${money(settings.budgetLow)} to ${money(settings.budgetHigh)}.${afterProjected < settings.budgetLow ? ` That is a little under your range. No need to fill it: spending less is fine while money is tight.` : afterProjected > settings.budgetHigh ? ` That is still over your range, so trim about ${money((afterProjected - settings.budgetHigh) / left, true)} a day from the weakest ad.` : ''}`,
       facts: [['Spent this month', money(mtd)], ['Daily now', money(daily, true)], ['Daily after', money(afterDaily, true)], ['Month lands at', money(afterProjected)]],
       info: true,
     });
   } else if (projected > settings.budgetHigh) {
     recs.push({ id: `budget:high:${week}`, type: 'budget', title: 'On course to overspend', body: `At ${money(daily, true)} a day the month lands at about ${money(projected)}, over your ${money(settings.budgetHigh)} limit. Trim about ${money((projected - settings.budgetHigh) / left, true)} a day from the weakest ad.`, facts: [['Month lands at', money(projected)]], info: true });
   } else if (projected < settings.budgetLow && acct7.roas >= target) {
-    recs.push({ id: `budget:low:${week}`, type: 'budget', title: 'Room to spend a bit more', body: `Ads are on target (${num(acct7.roas, 2)}) and the month lands at ${money(projected)}, under your ${money(settings.budgetLow)} minimum. You could add about ${money((settings.budgetLow - projected) / left, true)} a day to your best ad.`, facts: [['Month lands at', money(projected)]], info: true });
+    recs.push({ id: `budget:low:${week}`, type: 'budget', title: 'Under your range, and that is fine', body: `Ads are on target (${num(acct7.roas, 2)}) and the month lands at ${money(projected)}, under your ${money(settings.budgetLow)} minimum. Only if you can afford it, add 10% to your best ad and wait 3 days before anything more.`, facts: [['Month lands at', money(projected)]], info: true });
   }
 
   const order = { off: 0, tired: 1, scale: 2, budget: 3, learn: 4 };
@@ -212,6 +230,8 @@ const COPY = {
   launch: { hook: 'The winter drop is here. It will not hang around.', text: 'New INFRNO hoodies. Heavyweight, built to train in and live in. When they are gone, they are gone.', headline: 'Winter range, out now' },
 };
 
+const TEST_SMALL = 'Test it small: one new version at a time, inside the budget the ad already has. No extra spend.';
+
 export function copyIdeas(data, today) {
   const ranked = data.ads
     .filter((a) => a.daily.length >= 7)
@@ -223,9 +243,9 @@ export function copyIdeas(data, today) {
   const picks = angles.slice(0, 2);
   const out = picks.map((ang) => {
     const src = ranked.find((x) => x.a.angle === ang);
-    return { ...COPY[ang], why: `Your "${src.a.name}" ad is working (ROAS ${num(src.w.roas, 2)}). Same angle, new words.` };
+    return { ...COPY[ang], why: `Your "${src.a.name}" ad is working (ROAS ${num(src.w.roas, 2)}). Same angle, new words.`, how: TEST_SMALL };
   });
-  out.push({ ...COPY.testimonial, why: 'Your testimonial reel is tired. This is the brief for its replacement.' });
+  out.push({ ...COPY.testimonial, why: 'Your testimonial reel is tired. This is the brief for its replacement.', how: 'Swap it in for the tired one on the same budget. No extra spend.' });
   return out;
 }
 
@@ -245,7 +265,7 @@ function weeklySummary(data, settings, today, recs, status) {
   const todo = [];
   if (offs) todo.push(`turn off ${offs === 1 ? 'the loser' : `${offs} losers`}`);
   if (tired) todo.push('film a fresh version of the tired ad');
-  if (scale) todo.push('put a bit more behind your best ad');
+  if (scale) todo.push('if you can afford it, a small 10% step on your best ad');
   return [
     `Last 7 days you spent ${money(a.spend)} on Meta ads. Meta says that brought in ${money(a.revenue)} of sales, a ROAS of ${num(a.roas, 2)}. That is ${verdict} (${num(target, 2)}), and ${trend} ${num(prev.roas, 2)} the week before.`,
     `Shopify took ${money(shop.sales)} in total from ${num(shop.orders)} orders. So for every £1 on ads, the shop took ${money(a.spend ? shop.sales / a.spend : 0, true)}. That includes people who found you without an ad.`,
@@ -262,7 +282,7 @@ export function claudeRequest(data, settings, today) {
   return {
     model: 'claude-opus-5-5',
     max_tokens: 4000,
-    system: 'You are a blunt, practical Meta ads adviser for a small UK e-commerce brand. Plain English, short sentences, numbers first, no jargon without a one-line explanation. Never use em dashes. Only suggest: turn off, scale (max +20%), refresh tired creative, budget changes, new copy ideas, and a weekly summary. Every suggestion needs the numbers that justify it.',
+    system: 'You are a blunt, practical Meta ads adviser for a small UK e-commerce brand. Plain English, short sentences, numbers first, no jargon without a one-line explanation. Never use em dashes. The owner has little money, so be cautious: prefer pausing clear losers over scaling winners; budget increases are at most 10% at a time, only on ads at least 7 days old with enough purchases to judge; never suggest total monthly spend above the cap; leave ads under 7 days old to learn. Every suggestion needs the numbers that justify it and ends with: Small step. Check it yourself before you approve.',
     messages: [{ role: 'user', content: JSON.stringify({ target_roas: settings.targetRoas, floor_roas: settings.minRoas, monthly_budget: [settings.budgetLow, settings.budgetHigh], shopify_7d: shopWindow(data, today, 7), ads }) }],
   };
 }

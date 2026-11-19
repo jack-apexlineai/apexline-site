@@ -14,6 +14,8 @@ import { HABITS } from './sample.js';
 import { sortTasks, isOpen } from './planner.js';
 import * as jarvis from './jarvis.js';
 import * as mind from './mind.js';
+import * as tour from './tour.js';
+import * as ask from './ask.js';
 
 const ROUTES = {
   today: { label: 'Today', icon: 'today', view: today.view },
@@ -40,7 +42,7 @@ function nav() {
   const all = Object.entries(ROUTES);
   $('#sidebar-nav').innerHTML = all.map(link).join('');
   // The phone tab bar keeps five tabs; Thinking is reached from the Today card.
-  $('#tabbar').innerHTML = all.filter(([, v]) => v.phone !== false).map(link).join('');
+  $('#tabbar').innerHTML = `${all.filter(([, v]) => v.phone !== false).map(link).join('')}<button type="button" class="nav-i" data-ask-open>${icon('chat', 22)}<span>Ask</span></button>`;
 }
 
 let lastRoute = null;
@@ -232,15 +234,16 @@ function onboarding() {
       <button class="btn primary big" data-act="welcome-go">Show me my day</button>
       <button class="btn ghost big" data-act="welcome-remind">${icon('bell', 16)} Turn on reminders</button>
     </div>
-  </div>`, { id: 'welcome', onClose: () => { state.profile.onboarded = true; save(); render(); } });
+  </div>`, { id: 'welcome', onClose: () => { state.profile.onboarded = true; save(); render(); bus.tour(); } });
 }
 
-ACTIONS['welcome-go'] = () => { state.profile.onboarded = true; save(); closeSheet(true); location.hash = '#today'; render(); };
+ACTIONS['welcome-go'] = () => { state.profile.onboarded = true; save(); closeSheet(true); location.hash = '#today'; render(); bus.tour(); };
 ACTIONS['welcome-remind'] = async () => {
   state.profile.onboarded = true;
   save();
   closeSheet(true);
   await ACTIONS['notify-on']();
+  bus.tour();
 };
 
 // ---------- Boot ----------
@@ -259,6 +262,7 @@ function boot() {
     render();
     greet();
   }
+  document.body.insertAdjacentHTML('beforeend', ask.fab());
   // A deep thinking session left open (reload, phone killed the tab) comes straight back.
   if (state.thinking.active && state.profile.onboarded) mind.openFocus();
   if (state_recovered) toast('Your saved data could not be read, so the app started fresh.', { kind: 'info', duration: 8000 });

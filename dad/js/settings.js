@@ -8,18 +8,37 @@ import * as notify from './notify.js';
 import { voice, head } from './timer.js';
 import { play, unlock } from './sound.js';
 
+export const NOT_YET = 'Not connected yet: Jack will switch this on, then you just click Allow.';
+const LATER_IDS = ['amazon', 'email', 'accounts'];
+
 function connections() {
-  const row = (p) => `<li class="conn">
+  const row = (p) => `<li class="conn conn-big">
+    <span class="conn-ico">${icon(p.icon, 22)}</span>
+    <span class="conn-main"><strong>${esc(p.name)}</strong><small>${esc(p.what)}</small><em class="conn-status">${LIVE ? 'Ready to connect: tap Connect, then click Allow.' : NOT_YET}</em></span>
+    <button class="btn ${LIVE ? 'primary' : 'ghost'} sm" data-act="connect" data-id="${p.id}">${LIVE ? 'Connect' : 'How it works'}</button>
+  </li>`;
+  const later = (p) => `<li class="conn">
     <span class="conn-ico">${icon(p.icon, 20)}</span>
     <span class="conn-main"><strong>${esc(p.name)}</strong><small>${esc(p.what)}</small></span>
-    ${p.phase === 1 ? `${pill('Sample data', 'warn')}<button class="btn ${LIVE ? 'primary' : 'ghost'} sm" data-act="connect" data-id="${p.id}">Connect</button>` : pill('Later', 'mute')}
+    ${pill('Later', 'mute')}
   </li>`;
-  return `<section class="card" id="connections">
-    <div class="card-head"><h3>${icon('link', 18)} Your accounts</h3></div>
-    <p class="muted small">You connect each one yourself by logging in to it and pressing Allow. Your passwords never come to this app or to Jack.</p>
+  return `<section class="card connect-card" id="connections">
+    <div class="card-head"><h3>${icon('link', 18)} Connect your accounts</h3>${pill('Sample data until then', 'warn')}</div>
+    <p class="connect-promise">${icon('lock', 16)}<span>Once you're set up, Jack logs out and does not look at your data.</span></p>
+    <p class="muted small">You connect each one yourself, on that company's own page, by clicking Allow. You never type a password or a key into this app, and nobody else needs them.</p>
     <ul class="conn-list">${PROVIDERS.filter((p) => p.phase === 1).map(row).join('')}</ul>
-    <h4 class="mini-h">Coming later</h4>
-    <ul class="conn-list later">${PROVIDERS.filter((p) => p.phase === 2).map(row).join('')}</ul>
+    <h4 class="mini-h">Later</h4>
+    <ul class="conn-list later">${PROVIDERS.filter((p) => LATER_IDS.includes(p.id)).map(later).join('')}</ul>
+  </section>`;
+}
+
+// Today card, shown until his accounts are connected (always, in the sample version).
+export function connectTodayCard() {
+  if (LIVE) return '';
+  return `<section class="card connect-today">
+    <div class="card-head"><h3>${icon('link', 16)} Connect your accounts</h3><a href="#settings" class="link">Open ${icon('right', 14)}</a></div>
+    <p class="muted small">The numbers here are samples until these are connected. Jack will switch this on, then you just click Allow.</p>
+    <ul class="conn-mini">${PROVIDERS.filter((p) => p.phase === 1).map((p) => `<li>${icon(p.icon, 15)}<span>${esc(p.name)}</span></li>`).join('')}</ul>
   </section>`;
 }
 
@@ -128,6 +147,7 @@ function lookAndData() {
       <div class="card-head"><h3>${icon('download', 18)} Your data</h3></div>
       <p class="muted small">Right now everything is saved on this device only. Once your login is set up it is kept safely online and works on your phone and laptop together.</p>
       <div class="row gap wrap">
+        <button class="btn ghost sm" data-act="tour-again">${icon('play', 15)} Take the tour again</button>
         <button class="btn ghost sm" data-act="export">${icon('download', 15)} Download a backup</button>
         <button class="btn ghost sm" data-act="reset-sample">${icon('refresh', 15)} Reset the sample data</button>
         <button class="btn danger-ghost sm" data-act="wipe">${icon('trash', 15)} Start empty</button>
@@ -138,9 +158,10 @@ function lookAndData() {
 
 export function view() {
   return `
-  <header class="page-head"><div><p class="eyebrow">Settings</p><h1>Set it up your way</h1><p class="sub">Accounts, reminders, your fixed day and targets.</p></div></header>
+  <header class="page-head"><div><p class="eyebrow">Settings</p><h1>Set it up your way</h1><p class="sub">Your accounts, reminders, your fixed day and targets.</p></div></header>
+  ${connections()}
   <div class="grid-2 settings-grid">
-    <div class="col">${connections()}${reminders()}</div>
+    <div class="col">${reminders()}</div>
     <div class="col">${fixedDay()}${deepCard()}${adTargets()}</div>
   </div>
   ${lookAndData()}
@@ -188,11 +209,8 @@ export const actions = {
     el.setAttribute('aria-pressed', String(on));
     el.classList.toggle('on', on);
   },
-  'sound-flag': (el) => {
-    state.settings.sound = el.checked;
-    save();
-    if (el.checked) { unlock(); play('perfect'); }
-  },
+  'sound-flag': (el) => setSound(el.checked),
+  'tour-again': () => bus.tour(true),
   tone: (el) => { state.settings.tone = el.dataset.v; save(); bus.render(); },
   theme: (el) => { state.settings.theme = el.dataset.v; save(); applyTheme(); bus.render(); },
   'fixed-del': (el) => { el.closest('li').remove(); },
@@ -212,35 +230,70 @@ export const actions = {
     bus.render();
     notify.toast('Fixed day reset.', { kind: 'info' });
   },
-  export: () => {
-    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `command-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
-  },
+  export: () => doExport(),
   'reset-sample': () => {
     openSheet(`<div class="explain"><h2>Reset the sample data?</h2><p>Tasks, ticks, money and ad approvals go back to the starting sample. Your settings stay.</p>
       <div class="row gap sheet-actions"><button class="btn primary" data-act="reset-yes">Reset</button><button class="btn ghost" data-close>Cancel</button></div></div>`, { id: 'confirm' });
   },
-  'reset-yes': () => { resetAll(true); closeSheet(true); bus.render(); notify.toast('Sample data reset.', { kind: 'good' }); },
+  'reset-yes': () => { closeSheet(true); doReset(); notify.toast('Sample data reset.', { kind: 'good' }); },
   wipe: () => {
     openSheet(`<div class="explain"><h2>Start with an empty app?</h2><p>This clears every task, tick, transaction and approval on this device so you can start using it for real. Ads stay on sample numbers until Meta is connected. This cannot be undone, so download a backup first if you want one.</p>
       <div class="row gap sheet-actions"><button class="btn danger" data-act="wipe-yes">Clear everything</button><button class="btn ghost" data-close>Cancel</button></div></div>`, { id: 'confirm' });
   },
   'wipe-yes': () => {
-    resetAll(true);
-    state.days = {};
-    state.habits = {};
-    state.money = { tx: [] };
-    save();
     closeSheet(true);
-    bus.render();
+    doWipe();
     notify.toast('All clear. Add your first task on Today.', { kind: 'good' });
   },
 };
+
+// ---------- Shared with Ask Command ----------
+export function doExport() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `command-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  return a.download;
+}
+
+export function doReset() {
+  resetAll(true);
+  bus.render();
+}
+
+export function doWipe() {
+  resetAll(true);
+  state.days = {};
+  state.habits = {};
+  state.money = { tx: [] };
+  save();
+  bus.render();
+}
+
+export function setSound(on) {
+  state.settings.sound = !!on;
+  save();
+  if (on) { unlock(); play('perfect'); }
+  const sw = document.querySelector('[data-act="sound-flag"]');
+  if (sw) sw.checked = !!on;
+}
+
+// Returns a problem in plain English, or '' when saved.
+export function setDeep(days, start = state.settings.deep.start) {
+  const s = hmToMins(start);
+  const mins = state.settings.deep.mins;
+  if (!days.length) return 'Pick at least one day.';
+  if (s === null || s < 6 * 60 || s + mins > 22 * 60) return 'Pick a start time between 6am and 9:15pm.';
+  const clash = state.settings.fixed.find((x) => hmToMins(x.start) < s + mins && hmToMins(x.end) > s);
+  if (clash) return `That clashes with "${clash.label}" (${clash.start} to ${clash.end}). Pick another time.`;
+  Object.assign(state.settings.deep, { days: [...new Set(days)], start });
+  save();
+  bus.render();
+  return '';
+}
 
 export const forms = {
   fixed: (f) => {
@@ -272,15 +325,8 @@ export const forms = {
     err.textContent = '';
     f.start.classList.remove('bad');
     const days = [...f.querySelectorAll('[data-act="deep-day"][aria-pressed="true"]')].map((b) => +b.dataset.v);
-    const s = hmToMins(f.start.value);
-    const mins = state.settings.deep.mins;
-    if (!days.length) { err.textContent = 'Pick at least one day.'; return; }
-    if (s === null || s < 6 * 60 || s + mins > 22 * 60) { err.textContent = 'Pick a start time between 6am and 9:15pm.'; f.start.classList.add('bad'); return; }
-    const clash = state.settings.fixed.find((x) => hmToMins(x.start) < s + mins && hmToMins(x.end) > s);
-    if (clash) { err.textContent = `That clashes with "${clash.label}" (${clash.start} to ${clash.end}). Pick another time.`; f.start.classList.add('bad'); return; }
-    Object.assign(state.settings.deep, { days, start: f.start.value });
-    save();
-    bus.render();
+    const problem = setDeep(days, f.start.value);
+    if (problem) { err.textContent = problem; if (days.length) f.start.classList.add('bad'); return; }
     notify.toast('Deep thinking saved. Your plan has been rebuilt.', { kind: 'good' });
   },
   targets: (f) => {

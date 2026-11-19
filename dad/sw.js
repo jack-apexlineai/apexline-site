@@ -1,10 +1,10 @@
 // Service worker: works offline, shows notifications, and (phase 2) receives push.
-const CACHE = 'command-v3';
+const CACHE = 'command-v4';
 const SHELL = [
   './', 'index.html', 'config.js', 'manifest.webmanifest', 'css/app.css',
   'js/app.js', 'js/util.js', 'js/store.js', 'js/sample.js', 'js/planner.js', 'js/sergeant.js', 'js/advice.js',
   'js/integrations.js', 'js/icons.js', 'js/charts.js', 'js/notify.js', 'js/ui.js', 'js/timer.js', 'js/habits.js',
-  'js/today.js', 'js/ads.js', 'js/money.js', 'js/settings.js', 'js/jarvis.js', 'js/sound.js', 'js/mind.js',
+  'js/today.js', 'js/ads.js', 'js/money.js', 'js/settings.js', 'js/jarvis.js', 'js/sound.js', 'js/mind.js', 'js/tour.js', 'js/ask.js',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
 ];
 

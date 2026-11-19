@@ -14,6 +14,7 @@ import { verdict } from './sergeant.js';
 import { adsMini } from './ads.js';
 import { briefCard } from './jarvis.js';
 import { fixedFor, todayCard as thinkCard, doneOn } from './mind.js';
+import { connectTodayCard } from './settings.js';
 
 const today = () => ymd();
 let viewDate = null;
@@ -31,7 +32,7 @@ function greet() {
   return h < 12 ? 'Morning' : h < 17 ? 'Afternoon' : 'Evening';
 }
 
-function planFor(date) {
+export function planFor(date) {
   const day = getDay(date);
   const sorted = sortTasks(day, date === today() ? today() : date);
   const nowM = minsOfDay();
@@ -352,6 +353,7 @@ export function view() {
       ${isToday ? ticksStrip(date) : ''}
       ${isToday ? thinkCard(date) : ''}
       ${isToday ? adsMini() : ''}
+      ${isToday ? connectTodayCard() : ''}
       ${closeCard(date)}
     </div>
   </div>`}`;
