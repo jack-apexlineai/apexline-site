@@ -1,7 +1,7 @@
 /* CAC demo store: state in this browser only, the message reader, supplier lookup, pricing, drafts and approvals.
    Nothing is ever sent anywhere. "Send" in this demo only adds the message to the screen. */
 (function () {
-  var KEY = 'cac-demo-v1', LKEY = 'cac-demo-leader';
+  var KEY = 'cac-demo-v3', LKEY = 'cac-demo-leader';
   var CS = window.CS = {};
   var listeners = [];
   var ME = Math.random().toString(36).slice(2);
@@ -53,13 +53,19 @@
     var now = Date.now();
     s.seededDay = dayKey(new Date()); s.t0 = now; s.liveT0 = null;
     s.jobs.forEach(function (j) { ['day', 'exDay', 'colDay'].forEach(function (k) { if (j[k] != null) j[k] = CS.wd(j[k]); }); });
+    s.rateChange.fromDay = CS.wd(s.rateChange.fromDay);
+    s.permits.forEach(function (pm) { if (pm.to != null) pm.to = CS.wd(pm.to); });
+    s.leaks.forEach(function (l) { l.status = 'open'; });
     s.leads.forEach(function (l) { if (l.next != null) l.next = CS.wd(l.next); if (l.last != null) l.last = CS.wd(l.last); });
     s.quotes.forEach(function (q) { q.day = CS.wd(q.day); });
     var CAS = ['sun', 'mon', 'tues', 'weds', 'thurs', 'fri', 'sat'];
     function toks(x) { return x.replace(/\{BDE\}/g, 'Sam').replace(/\{WDN:(-?\d+)\}/g, function (_, n) { return CAS[CS.dayDate(CS.wd(parseInt(n, 10))).getDay()]; }); }
     s.live.forEach(function (L) { L.text = toks(L.text); });
     s.threads.forEach(function (t) {
-      t.msgs.forEach(function (m) { m.at = now - m.mins * 60000; delete m.mins; m.text = toks(m.text); if (m.by) m.by = toks(m.by); });
+      t.msgs.forEach(function (m) {
+        m.at = now - m.mins * 60000; delete m.mins; m.text = toks(m.text); if (m.by) m.by = toks(m.by);
+        if (m.yclock) { var y = CS.dayDate(-1); var hm = m.yclock.split(':'); y.setHours(+hm[0], +hm[1], 0, 0); m.at = y.getTime(); delete m.yclock; }
+      });
       t.last = t.msgs[t.msgs.length - 1].at;
     });
     s.jobs.forEach(function (j) {
@@ -123,12 +129,16 @@
     if (j.svc === 'skip') return (j.qty > 1 ? j.qty + ' x ' : '') + (j.size >= 20 ? j.size + ' yard RoRo' : j.size + ' yard skip');
     if (j.svc === 'toilet') return j.qty + ' x site toilet' + (j.weeks ? ', ' + j.weeks + ' weeks' : '');
     if (j.svc === 'welfare') return 'Welfare unit' + (j.weeks ? ', ' + j.weeks + ' weeks' : '');
+    if (j.svc === 'container') return (j.ft || 20) + 'ft storage container' + (j.weeks ? ', ' + j.weeks + ' weeks' : '');
     if (j.svc === 'fencing') return (j.panels || '') + ' Heras panels' + (j.weeks ? ', ' + j.weeks + ' weeks' : '');
     if (j.svc === 'sweeper') return 'Road sweeper' + (j.hours ? ', ' + j.hours + ' hours' : '');
     if (j.svc === 'concrete') return (j.m3 || '') + 'm3 ' + (j.mix || 'readymix');
     if (j.svc === 'grab' || j.svc === 'muck' || j.svc === 'aggregates') return sv.name + (j.qty > 1 ? ', ' + j.qty + ' loads' : '');
     return sv.name;
   };
+  /* the last real message (ignoring automatic acknowledgements) */
+  CS.lastReal = function (t) { for (var i = t.msgs.length - 1; i >= 0; i--) if (!t.msgs[i].auto) return t.msgs[i]; return null; };
+  CS.needsYou = function (t) { var m = CS.lastReal(t); return !t.done && !!m && m.dir === 'in'; };
   CS.nextId = function (k, prefix) { var n = CS.S.counters[k]++; return prefix + n; };
 
   /* ---------- postcodes ---------- */
@@ -149,7 +159,7 @@
         return r[pick] * q;
       }
       case 'grab': case 'muck': case 'aggregates': return r * q;
-      case 'welfare': case 'toilet': case 'plant': return (r.week * (it.weeks || 1) + r.del) * q;
+      case 'welfare': case 'toilet': case 'plant': case 'container': return (r.week * (it.weeks || 1) + r.del) * q;
       case 'fencing': return Math.round(r.week * (it.panels || 20) * (it.weeks || 1) + r.del);
       case 'sweeper': return r.hour * Math.max(it.hours || r.min, r.min);
       case 'concrete': var v = it.m3 || 1; return Math.round(r.m3 * v + (v < 6 ? r.part : 0));
@@ -204,6 +214,7 @@
     if (has(/concrete|readymix|ready mix|\bc\d{2}\b/) || m3) r.items.push({ svc: 'concrete', m3: m3 || null, mix: (mm = /\b(c\d{2})\b/i.exec(t)) ? mm[1].toUpperCase() + ' concrete' : 'readymix' });
     if (has(/type ?1|\bmot\b|aggregate|ballast|sharp sand|building sand|gravel|hardcore|scalpings/)) r.items.push({ svc: 'aggregates', qty: loads || 1 });
     if (has(/welfare|cabin|canteen/)) r.items.push({ svc: 'welfare', qty: (mm = new RegExp(NW + '\\s*welfare', 'i').exec(t)) ? num(mm[1]) : 1, weeks: weeks || null });
+    if (has(/container|\bconnex|\b(?:10|20)\s*ft\b|\b(?:10|20)\s*(?:foot|feet)\b/)) r.items.push({ svc: 'container', qty: 1, ft: /\b10\s*(?:ft|foot|feet)\b/i.test(t) ? 10 : 20, weeks: weeks || null });
     if (has(/toilet|\bloos?\b|portaloo/)) r.items.push({ svc: 'toilet', qty: (mm = new RegExp(NW + '\\s*(?:site )?(?:toilets?|loos?|portaloos?)', 'i').exec(t)) ? num(mm[1]) : 1, weeks: weeks || null });
     if (has(/heras|fenc/)) r.items.push({ svc: 'fencing', panels: (mm = /(\d+)\s*(?:panels?|heras)/i.exec(t)) ? parseInt(mm[1], 10) : null, weeks: weeks || null });
     if (has(/sweep/)) r.items.push({ svc: 'sweeper', hours: hours || null });
@@ -267,7 +278,7 @@
     // defaults and gaps
     r.items.forEach(function (it) {
       if (it.svc === 'skip' && !it.size) { it.size = 8; it.assumed = true; }
-      if ((it.svc === 'welfare' || it.svc === 'toilet' || it.svc === 'fencing') && !it.weeks) { it.weeks = 4; it.assumedWeeks = true; }
+      if ((it.svc === 'welfare' || it.svc === 'toilet' || it.svc === 'fencing' || it.svc === 'container') && !it.weeks) { it.weeks = 4; it.assumedWeeks = true; }
       if (it.svc === 'fencing' && !it.panels) { it.panels = 20; it.assumed = true; }
       if (it.svc === 'concrete' && !it.m3) { it.m3 = 3; it.assumed = true; }
       if (it.svc === 'sweeper' && !it.hours) it.hours = 4;
@@ -292,6 +303,7 @@
       case 'muck': return (it.qty > 1 ? it.qty + ' loads of muck away' : 'a load of muck away');
       case 'welfare': return (it.qty > 1 ? it.qty + ' welfare units' : 'a welfare unit') + ' for ' + it.weeks + ' weeks';
       case 'toilet': return (it.qty > 1 ? it.qty + ' site toilets' : 'a site toilet') + ' for ' + it.weeks + ' weeks';
+      case 'container': return 'a ' + (it.ft || 20) + 'ft storage container for ' + it.weeks + ' weeks';
       case 'fencing': return it.panels + ' Heras panels for ' + it.weeks + ' weeks';
       case 'sweeper': return 'a road sweeper for ' + it.hours + ' hours';
       case 'concrete': return it.m3 + 'm3 of ' + (it.mix || 'readymix');
@@ -366,7 +378,7 @@
         if (r.missing.indexOf('day') >= 0) qs.push('which day do you want it');
         S.title = 'Needs ' + joinList(r.missing);
         S.summary = 'Not enough to price or book yet. The reply asks only for what is missing' + (S.lines.length ? ', and gives the price so far.' : '.');
-        S.drafts.push({ to: 'customer', party: t.party, ch: t.ch, text: greet(first) + ' no problem. ' + cap(joinList(qs)) + '?' + (S.lines.length ? ' It\'s ' + CS.money(S.sell) + ' + VAT.' : '') + ' ' + signoff(owner) });
+        S.drafts.push({ to: 'customer', party: t.party, ch: replyCh(t.ch), text: greet(first) + ' no problem. ' + cap(joinList(qs)) + '?' + (S.lines.length ? ' It\'s ' + CS.money(S.sell) + ' + VAT.' : '') + ' ' + signoff(owner) });
         S.approve = 'Approve and send'; S.mins = 3;
       } else if (S.kind === 'quote') {
         S.title = 'Quote: ' + itemsLine.replace(/^an? /, '') + (r.out ? ', ' + r.out : '');
@@ -381,13 +393,15 @@
         } else {
           body = greet(first) + ' ' + itemsLine + ' to ' + (r.pc || r.out) + (r.day != null ? ' ' + CS.dayPhrase(r.day) : '') + ' is ' + CS.money(S.sell) + ' + VAT' + (r.placement === 'road' ? ' including the council permit' : '') + '. Want me to book it in? ' + signoff(owner);
         }
-        S.drafts.push({ to: 'customer', party: t.party, ch: t.ch, text: body });
+        S.drafts.push({ to: 'customer', party: t.party, ch: replyCh(t.ch), text: body });
         S.approve = 'Approve and send quote'; S.mins = 7;
+        var crq = c ? CS.credit(c.id, 0) : null;
+        if (crq && crq.hold) S.notes.push(c.name + ' are on hold: ' + crq.why + ' The price can go, but a booking will be held until they pay.');
       } else {
         S.title = 'Book: ' + itemsLine.replace(/^an? /, '') + (r.out ? ', ' + r.out : '') + ', ' + CS.fmtDay(r.day);
         S.summary = 'Priced, supplier picked and both messages written. One tap books it.';
-        var dl = CS.fmtDayLong(r.day) + (r.when ? ' ' + r.when : '');
-        S.drafts.push({ to: 'customer', party: t.party, ch: t.ch, text: greet(first) + ' yes no problem. ' + cap(itemsLine) + ' to ' + where + ' on ' + dl + ', ' + CS.money(S.sell) + ' + VAT' + (r.placement === 'road' ? ' including the council permit' : '') + '. Booked in, I\'ll confirm the delivery window as soon as the driver\'s planned. ' + signoff(owner) });
+        var dl = CS.fmtDayLong(r.day) + (r.when ? ' ' + r.when : ''), onDl = (r.day > 1 ? 'on ' : '') + dl;
+        S.drafts.push({ to: 'customer', party: t.party, ch: replyCh(t.ch), text: greet(first) + ' yes no problem. ' + cap(itemsLine) + ' to ' + where + ' ' + onDl + ', ' + CS.money(S.sell) + ' + VAT' + (r.placement === 'road' ? ' including the council permit' : '') + '. Booked in, I\'ll confirm the delivery window as soon as the driver\'s planned. ' + signoff(owner) });
         var bySup = {};
         S.lines.forEach(function (l) { if (!l.permit) (bySup[l.sup] = bySup[l.sup] || []).push(l); });
         Object.keys(bySup).forEach(function (sid) {
@@ -397,6 +411,19 @@
             (r.placement === 'road' ? 'Going on the road, please sort the permit. ' : (r.placement === 'drive' ? 'On the drive, no permit. ' : '')) + 'Ref {JOB}. Send the WTN to this number once it\'s down. Thanks, ' + sig(owner) + ' (CAC)' });
         });
         S.approve = 'Approve: book it and send both'; S.mins = 9;
+        var cr = c ? CS.credit(c.id, S.sell) : null;
+        if (cr && cr.hold && !t.creditOk) {
+          S.kind = 'hold'; S.credit = cr;
+          S.title = 'Hold: ' + c.name + ' owe ' + CS.money(cr.owed, true);
+          S.summary = cr.why + ' The job is priced and ready, but nothing goes to the supplier until you say so.';
+          S.chips.push({ k: 'Credit', v: CS.money(cr.owed) + ' owed, limit ' + CS.money(cr.limit) });
+          var inv0 = cr.worstInv;
+          S.drafts = [{ to: 'customer', party: t.party, ch: replyCh(t.ch), att: inv0 ? [{ n: inv0.id + '.pdf', t: 'doc' }] : null,
+            text: greet(first) + ' happy to get ' + itemsLine + ' to ' + (r.siteName || r.pc || r.out) + ' ' + CS.dayPhrase(r.day) + '. Before I book it in, ' + (inv0 ? inv0.id + ' for ' + CS.money(inv0.amount, true) + ' is ' + (-inv0.due) + ' days over' : 'the account is over its limit') + '. Can you get that paid today and I\'ll book it straight away? ' + signoff(owner) }];
+          S.approve = 'Approve: ask ' + first + ' to pay first'; S.alt = 'Book it anyway'; S.mins = 6;
+        } else if (cr && cr.overdue > 0) {
+          S.notes.push(c.name + ' have ' + CS.money(cr.overdue, true) + ' overdue, ' + cr.worst + ' days late. Under the limit, so this is a heads up only.');
+        }
       }
       return S;
     }
@@ -411,7 +438,7 @@
       S.lines = [{ desc: ex ? 'Exchange, ' + CS.jobDesc(j).toLowerCase() : 'Collection (included in hire)', sup: j.sup, cost: ex ? exCost : 0, sell: exSell }];
       S.sell = exSell; S.cost = ex ? exCost : 0; S.margin = S.sell - S.cost;
       S.job = j.id; S.day = dd;
-      S.drafts.push({ to: 'customer', party: t.party, ch: t.ch, text: greet(c.first) + ' no problem, ' + (ex ? 'swap' : 'collection') + ' booked ' + CS.dayPhrase(dd).replace(/^on /, 'for ') + ' at ' + s.name + '.' + (ex ? ' Same price as before, ' + CS.money(exSell) + ' + VAT.' : '') + ' ' + signoff(owner) });
+      S.drafts.push({ to: 'customer', party: t.party, ch: replyCh(t.ch), text: greet(c.first) + ' no problem, ' + (ex ? 'swap' : 'collection') + ' booked ' + CS.dayPhrase(dd).replace(/^on /, 'for ') + ' at ' + s.name + '.' + (ex ? ' Same price as before, ' + CS.money(exSell) + ' + VAT.' : '') + ' ' + signoff(owner) });
       S.drafts.push({ to: 'supplier', party: { type: 'supplier', id: sup.id }, ch: 'wa', text: 'Hi ' + sup.contact + ', can you ' + (ex ? 'exchange the ' + j.size + 'yd' : 'collect the ' + CS.jobDesc(j).toLowerCase()) + ' at ' + s.name + ', ' + s.pc + ' ' + CS.fmtDayLong(dd) + ' please. Ref ' + j.id + '. WTN to this number as usual. Thanks, ' + sig(owner) + ' (CAC)' });
       S.approve = ex ? 'Approve: book the exchange' : 'Approve: book the collection'; S.mins = 6;
       return S;
@@ -442,7 +469,7 @@
       j = CS.job(scn.job); c = CS.cust(j.cust); s = CS.jobSite(j); sup = CS.sup(j.sup);
       var thu = j.day + 1; while ([0, 6].indexOf(CS.dayDate(thu).getDay()) >= 0) thu++;
       S.title = sup.name + ' can\'t do ' + CS.fmtDay(j.day) + ', offering ' + CS.fmtDay(thu);
-      S.summary = 'No other supplier on file covers ' + CS.outward(s.pc) + ' for skips with a better on-time record, and it\'s on a drive so a day later is low risk.';
+      S.summary = 'No other supplier on file covers ' + CS.outward(s.pc) + ' for skips with a better on-time record, and it\'s on a drive so a day later is low risk. Your promise: if a slot slips, the customer hears it from you first, so ' + c.first + '\'s message is already written.';
       S.chips = [{ k: 'Job', v: j.id + ', ' + CS.jobDesc(j) }, { k: 'Was', v: CS.fmtDay(j.day) }, { k: 'Now', v: CS.fmtDay(thu) + ' first thing' }, { k: 'Customer', v: c.name }];
       S.drafts.push({ to: 'customer', party: { type: 'customer', id: c.id }, ch: 'wa', text: greet(c.first) + ' heads up, the supplier\'s a driver down ' + CS.dayPhrase(j.day).replace(/^on /, '') + ' so your 8 yarder at Costessey is now ' + CS.dayPhrase(thu).replace(/^on /, '') + ' first thing. Sorry about that, shout if it causes a problem. ' + signoff(owner) });
       S.drafts.push({ to: 'supplier', party: { type: 'supplier', id: sup.id }, ch: 'wa', text: 'No worries ' + sup.contact + ', ' + CS.fmtDay(thu) + ' first thing is fine. Ref ' + j.id + '. Thanks, John (CAC)' });
@@ -519,7 +546,7 @@
     function sendDraft(d, jobId) {
       var text = d.text.replace(/\{JOB\}/g, jobId || '');
       var th = (d.party.type === t.party.type && d.party.id === t.party.id) ? t : CS.threadFor(d.party, d.ch);
-      CS.addMsg(th, 'out', text, { by: by, att: d.att });
+      CS.addMsg(th, 'out', text, { by: by, att: d.att || undefined });
       return th;
     }
     var k = S.kind;
@@ -529,12 +556,13 @@
         var id = CS.nextId('job', 'CAC-');
         var permitLine = S.lines.filter(function (x) { return x.permit; })[0];
         var j = { id: id, cust: c.id, site: r.site != null ? r.site : null, siteName: r.siteName ? null : (r.pc || r.out), pc: r.pc || r.out, svc: l.svc, size: l.it.size, qty: l.it.qty || 1,
-          weeks: l.it.weeks, panels: l.it.panels, m3: l.it.m3, hours: l.it.hours, mix: l.it.mix,
+          weeks: l.it.weeks, panels: l.it.panels, ft: l.it.ft, m3: l.it.m3, hours: l.it.hours, mix: l.it.mix,
           sup: l.sup, cost: l.cost + (i === 0 && permitLine ? permitLine.cost : 0), sell: l.sell + (i === 0 && permitLine ? permitLine.sell : 0), status: 'booked', day: r.day, bookedAt: Date.now(),
           wtn: (l.svc === 'skip' || l.svc === 'grab' || l.svc === 'muck') ? 'pending' : null, owner: owner, log: [], permit: r.placement === 'road' && l.svc === 'skip' };
         if (r.site == null) j.site = null;
         CS.jobLog(j, 'Booked from ' + chName(t.ch) + ' message, approved by ' + by);
         CS.S.jobs.push(j); jobIds.push(id);
+        if (j.permit) CS.S.permits.push({ job: id, council: 'Local council', to: null, status: 'applied' });
       });
       var qid = CS.nextId('quote', 'Q-');
       CS.S.quotes.unshift({ id: qid, cust: c.id, desc: S.lines.map(function (l) { return l.desc; }).join(', '), sell: S.sell, cost: S.cost, status: 'won', day: 0, job: jobIds[0], owner: owner });
@@ -560,6 +588,13 @@
       steps.push('Sent to ' + CS.party(t.party).first + ' on ' + chName(t.ch));
       steps.push('Follow up set for ' + CS.dayPhrase(2).replace(/^on /, '') + (owner === 'sam' ? ' on ' + CS.bde() + '\'s list' : ''));
       CS.feed('Quote ' + qid2 + ' sent to ' + CS.party(t.party).sub + ', ' + CS.money(S.sell), 'file-text');
+    } else if (k === 'hold') {
+      sendDraft(drafts[0]);
+      steps.push('Booking held. Nothing sent to the supplier');
+      steps.push('Payment request sent to ' + CS.party(t.party).first + (S.credit.worstInv ? ' with ' + S.credit.worstInv.id + ' attached' : ''));
+      steps.push('Comes back to your inbox, ready to book, when the invoice is marked paid');
+      t.held = true;
+      CS.feed('Held a booking for ' + CS.party(t.party).sub + ', ' + CS.money(S.credit.owed) + ' owed', 'alert');
     } else if (k === 'ask') {
       sendDraft(drafts[0]); steps.push('Asked ' + CS.party(t.party).first + ' for the missing details');
     } else if (k === 'exchange' || k === 'collect') {
@@ -596,6 +631,7 @@
       CS.feed('Sent ' + S.att.length + ' WTNs to ' + CS.party(t.party).sub, 'certificate');
     } else if (k === 'bill') {
       var b = CS.S.bills.filter(function (x) { return x.id === S.bill; })[0]; b.status = 'approved';
+      CS.S.leaks.forEach(function (l) { if (l.bill === b.id) l.status = 'recharged'; });
       var jb = CS.job(b.job); jb.cost = b.billed; jb.sell += 45; CS.jobLog(jb, 'Overweight recharged, £45');
       var iv = CS.S.invoices.filter(function (x) { return x.jobs.indexOf(jb.id) >= 0; })[0]; if (iv) iv.amount += 45;
       drafts[0].att = S.att; sendDraft(drafts[0]);
@@ -605,11 +641,13 @@
       steps.push('Marked as done');
     }
     t.done = true; t.unread = false;
+    if (k === 'paid') CS.releaseHolds(CS.inv(S.inv).cust);
     CS.saved(S.mins || 1);
     CS.commit('approve');
     return steps;
   };
-  function chName(ch) { return ch === 'wa' ? 'WhatsApp' : (ch === 'email' ? 'email' : 'website'); }
+  function chName(ch) { return ch === 'wa' ? 'WhatsApp' : (ch === 'email' ? 'email' : (ch === 'portal' ? 'customer link' : 'website')); }
+  function replyCh(ch) { return ch === 'portal' ? 'wa' : ch; }
   CS.chName = chName;
 
   /* An incoming message, from the live script, the "send a test message" phone, or a supplier reply. */
@@ -622,7 +660,7 @@
       CS.feed('New lead ' + party.id + ' from the website, given to ' + CS.bde(), 'user-plus');
     }
     var t;
-    if (o.ch === 'web' || o.newThread) { t = { id: 't' + (CS.S.counters.thread++), party: party, ch: o.ch, msgs: [], last: Date.now() }; CS.S.threads.push(t); }
+    if (o.ch === 'web' || o.ch === 'portal' || o.newThread) { t = { id: 't' + (CS.S.counters.thread++), party: party, ch: o.ch, msgs: [], last: Date.now() }; CS.S.threads.push(t); }
     else {
       t = CS.threadFor(party, o.ch);
       var lm = t.msgs[t.msgs.length - 1];
@@ -631,7 +669,7 @@
     t.done = false; t.unread = true; t.fresh = true; t.scn = o.scn || { kind: 'parse' };
     delete t.supOverride; delete t.siteOverride; delete t.priceOverride; delete t.edits;
     if (o.subject) t.subject = o.subject; if (o.form) t.form = o.form;
-    CS.addMsg(t, 'in', o.text, { att: o.att });
+    CS.addMsg(t, 'in', o.text, { att: o.att, voice: o.voice });
     return t;
   };
 
@@ -659,6 +697,9 @@
     if (due.length) {
       S.events = S.events.filter(function (e) { return e.due > now; });
       due.forEach(function (e) {
+        if (e.type === 'custReply') {
+          arrived.push(CS.incoming({ party: { type: 'customer', id: e.cust }, ch: 'wa', text: e.text, scn: e.scn }));
+        }
         if (e.type === 'supReply') {
           var j = CS.job(e.job);
           var t2 = CS.incoming({ party: { type: 'supplier', id: e.sup }, ch: 'wa', text: e.text, scn: { kind: e.noStatus ? 'none' : 'confirm', job: e.job } });
@@ -709,13 +750,14 @@
     var wtn = S.jobs.filter(function (j) { return (j.wtn === 'missing' || j.wtn === 'chased') && j.day <= -S.settings.wtnDays; });
     var pay = S.invoices.filter(function (i) { return i.status !== 'paid' && i.due < 0; }).sort(function (a, b) { return a.due - b.due; });
     var quotes = S.quotes.filter(function (q) { return q.status === 'sent' && q.day <= -2; });
-    return { sup: sup, wtn: wtn, pay: pay, quotes: quotes, total: sup.length + wtn.length + pay.length + quotes.length };
+    var nudge = CS.nudges();
+    return { sup: sup, wtn: wtn, pay: pay, quotes: quotes, nudge: nudge, total: sup.length + wtn.length + pay.length + quotes.length + nudge.length };
   };
   CS.stats = function () {
     var S = CS.S;
     var live = S.jobs.filter(function (j) { return j.status !== 'done'; });
     var monthMargin = S.jobs.reduce(function (a, j) { return a + (j.sell - j.cost); }, 0);
-    var needs = S.threads.filter(function (t) { return !t.done && t.msgs.length && t.msgs[t.msgs.length - 1].dir === 'in'; });
+    var needs = S.threads.filter(CS.needsYou);
     return {
       needs: needs.length, unread: S.threads.filter(function (t) { return t.unread && !t.done; }).length,
       today: S.jobs.filter(function (j) { return j.day === 0 || j.exDay === 0 || j.colDay === 0; }).length,
@@ -728,4 +770,126 @@
       quotesOpen: S.quotes.filter(function (q) { return q.status === 'sent' || q.status === 'draft'; }).length
     };
   };
+  /* ---------- round 2: credit, nudges, money found, permits, reports ---------- */
+  CS.credit = function (custId, add) {
+    var c = CS.cust(custId); if (!c) return null;
+    var unpaid = CS.S.invoices.filter(function (i) { return i.cust === custId && i.status !== 'paid'; });
+    var owed = unpaid.reduce(function (a, i) { return a + i.amount; }, 0);
+    var late = unpaid.filter(function (i) { return i.due < 0; }).sort(function (a, b) { return a.due - b.due; });
+    var overdue = late.reduce(function (a, i) { return a + i.amount; }, 0), worst = late.length ? -late[0].due : 0;
+    var r = { limit: c.limit || 0, owed: owed, overdue: overdue, worst: worst, worstInv: late[0] || null, card: !c.limit, unpaid: unpaid };
+    if (r.card) { r.state = 'card'; r.label = 'Card'; return r; }
+    var over = owed + (add || 0) > r.limit;
+    r.hold = worst > 14 || (over && overdue > 0) || owed > r.limit;
+    r.state = r.hold ? 'hold' : (overdue > 0 ? 'late' : 'good');
+    r.label = r.hold ? 'On hold' : (overdue > 0 ? worst + ' days late' : 'Good');
+    r.why = owed > r.limit ? CS.money(owed, true) + ' owed against a ' + CS.money(r.limit) + ' limit' + (worst ? ', and ' + (late[0].id) + ' is ' + worst + ' days late.' : '.')
+      : (worst > 14 ? late[0].id + ' is ' + worst + ' days late.' : (over ? 'This order would take them over their ' + CS.money(r.limit) + ' limit with ' + CS.money(overdue, true) + ' already late.' : ''));
+    return r;
+  };
+  /* When a customer pays, any booking held for them comes back ready to approve. */
+  CS.releaseHolds = function (custId) {
+    var n = 0;
+    if (CS.credit(custId, 0).hold) return 0;
+    CS.S.threads.forEach(function (t) {
+      if (!t.held || t.party.type !== 'customer' || t.party.id !== custId) return;
+      t.held = false; t.done = false; t.unread = true; t.creditOk = true; t.last = Date.now(); n++;
+      t.msgs.forEach(function (m) { if (m.dir === 'out') m.auto = true; });
+    });
+    if (n) CS.feed(CS.cust(custId).name + ' paid. Held booking is back in the inbox', 'circle-check');
+    return n;
+  };
+  CS.aged = function (custId) {
+    var b = { current: 0, d30: 0, d60: 0, total: 0, rows: [] };
+    CS.S.invoices.filter(function (i) { return i.cust === custId && i.status !== 'paid'; }).sort(function (a, b2) { return a.due - b2.due; }).forEach(function (i) {
+      var late = -i.due; b.total += i.amount; b.rows.push(i);
+      if (late <= 0) b.current += i.amount; else if (late <= 30) b.d30 += i.amount; else b.d60 += i.amount;
+    });
+    return b;
+  };
+  /* Skips that have sat too long, or are about due the customer's usual swap. */
+  CS.nudges = function () {
+    var out = [];
+    CS.S.jobs.forEach(function (j) {
+      if (j.svc !== 'skip' || j.status !== 'onhire' || j.nudged) return;
+      var c = CS.cust(j.cust), su = CS.sup(j.sup), days = -j.day, inc = su.hireDays || 14;
+      if (days > inc) {
+        var weeks = Math.ceil((days - inc) / 7);
+        out.push({ j: j, days: days, kind: 'long', why: days + ' days on site, ' + inc + ' included. ' + su.name + ' charge ' + CS.money(su.weekRate || 25) + ' a week after that (' + CS.money(weeks * (su.weekRate || 25)) + ' so far).' });
+      } else if (c.swapDays && (j.site || 0) === 0 && days >= c.swapDays - 1) {
+        out.push({ j: j, days: days, kind: 'due', why: c.first + ' has swapped here about every ' + c.swapDays + ' days. This one has been down ' + days + '.' });
+      }
+    });
+    return out.sort(function (a, b) { return b.days - a.days; });
+  };
+  CS.nudge = function (jid) {
+    var j = CS.job(jid), c = CS.cust(j.cust), s = CS.jobSite(j), n = CS.nudges().filter(function (x) { return x.j.id === jid; })[0];
+    var t = CS.threadFor({ type: 'customer', id: c.id }, 'wa');
+    var long = n && n.kind === 'long';
+    CS.addMsg(t, 'out', greet(c.first) + ' the ' + j.size + ' yarder at ' + s.name + (long ? ' has been with you ' + (-j.day) + ' days. Want it swapped or collected? There\'s a weekly hire charge after 14 days, so worth sorting.' : ' has been down ' + (-j.day) + ' days. Ready for a swap yet?') + ' ' + signoff(j.owner), { by: j.owner === 'sam' ? CS.bde() : 'John' });
+    j.nudged = true; CS.jobLog(j, 'Customer asked: swap or collect?');
+    CS.schedule(6, { type: 'custReply', cust: c.id, text: long ? 'collect it please mate, were done there' : 'yes please swap it tomorrow', scn: { kind: long ? 'collect' : 'exchange', job: j.id, day: 1 } });
+    CS.saved(3); CS.feed('Nudged ' + c.name + ' about ' + j.id, 'bell');
+  };
+  /* Extras nobody has recharged yet. */
+  CS.openLeaks = function () { return CS.S.leaks.filter(function (l) { return l.status === 'open'; }); };
+  CS.leakTotals = function () { var o = CS.openLeaks(); return { n: o.length, cost: o.reduce(function (a, l) { return a + l.cost; }, 0), recharge: o.reduce(function (a, l) { return a + l.recharge; }, 0) }; };
+  CS.recharge = function (lid) {
+    var l = CS.S.leaks.filter(function (x) { return x.id === lid; })[0]; if (!l || l.status !== 'open') return null;
+    var j = CS.job(l.job), c = CS.cust(j.cust);
+    j.cost += l.cost; j.sell += l.recharge; l.status = 'recharged';
+    var inv = CS.S.invoices.filter(function (i) { return i.cust === c.id && i.status !== 'paid' && i.jobs.indexOf(j.id) >= 0; })[0];
+    if (inv) inv.amount += l.recharge;
+    else { inv = { id: CS.nextId('inv', 'INV-'), cust: c.id, amount: l.recharge, issued: 0, due: 30, status: 'unpaid', jobs: [j.id], extra: l.type }; CS.S.invoices.unshift(inv); }
+    var t = CS.threadFor({ type: 'customer', id: c.id }, 'wa');
+    CS.addMsg(t, 'out', greet(c.first) + ' quick one on ' + j.id + ' at ' + CS.jobSite(j).name + ': ' + l.type.toLowerCase() + ' charge of ' + CS.money(l.recharge) + ' + VAT. ' + l.note.split('. ')[0] + '. It\'s on ' + inv.id + '. ' + signoff(j.owner), { by: 'John' });
+    CS.jobLog(j, l.type + ' recharged, ' + CS.money(l.recharge)); CS.saved(6);
+    CS.feed('Recharged ' + l.type.toLowerCase() + ' on ' + j.id + ', ' + CS.money(l.recharge), 'receipt');
+    return inv.id;
+  };
+  CS.absorb = function (lid) { var l = CS.S.leaks.filter(function (x) { return x.id === lid; })[0]; if (!l) return; var j = CS.job(l.job); j.cost += l.cost; l.status = 'absorbed'; CS.jobLog(j, l.type + ' absorbed, ' + CS.money(l.cost)); };
+  /* Supplier rate change, applied from a date so old quotes never book at a new cost. */
+  CS.applyRateChange = function (reprice) {
+    var rc = CS.S.rateChange, su = CS.sup(rc.sup); if (rc.status !== 'new') return;
+    Object.keys(su.rates[rc.svc]).forEach(function (k) { su.rates[rc.svc][k] += rc.up; });
+    rc.quotes.forEach(function (qid) { var q = CS.quote(qid); if (!q) return; var n = parseInt(q.desc, 10) || 1; q.cost += rc.up * n; if (reprice) q.sell += Math.ceil(rc.up * n * 1.33 / 5) * 5; q.repriced = !!reprice; });
+    rc.status = reprice ? 'repriced' : 'absorbed';
+    CS.feed(su.name + ' rates updated from ' + CS.fmtDay(rc.fromDay) + (reprice ? ', open quotes repriced' : ''), 'warehouse'); CS.saved(10);
+  };
+  /* Tonnes: the weighbridge figure when the supplier sent one, otherwise a typical weight for the container. */
+  CS.tonnes = function (j) {
+    if (j.t) return j.t;
+    if (j.svc === 'skip') return Math.round((j.size || 8) * 0.27 * 10) / 10 * (j.qty || 1);
+    if (j.svc === 'grab') return 15.5 * (j.qty || 1);
+    if (j.svc === 'muck') return 18 * (j.qty || 1);
+    return 0;
+  };
+  CS.report = function (custId) {
+    var js = CS.S.jobs.filter(function (j) { return j.cust === custId && j.wtn === 'received' && CS.tonnes(j) > 0; });
+    var c = CS.cust(custId), r = { jobs: js, moves: js.length, tonnes: 0, diverted: 0, co2: 0, sites: {}, streams: {} };
+    js.forEach(function (j) {
+      var t = CS.tonnes(j), rec = (CS.sup(j.sup).recov || 90) / 100, soil = j.svc !== 'skip';
+      var sn = CS.jobSite(j).name, st = soil ? 'Soil and stones' : 'Mixed construction waste';
+      r.tonnes += t; r.diverted += t * rec;
+      r.co2 += soil ? (t * rec * 1.01 + t * (1 - rec) * 19.55) : (t * rec * 1.01 + t * (1 - rec) * 4.65);
+      r.sites[sn] = r.sites[sn] || { t: 0, d: 0, n: 0 }; r.sites[sn].t += t; r.sites[sn].d += t * rec; r.sites[sn].n++;
+      r.streams[st] = (r.streams[st] || 0) + t;
+    });
+    r.pct = r.tonnes ? Math.round(r.diverted / r.tonnes * 100) : 0; r.tonnes = Math.round(r.tonnes * 10) / 10; r.co2 = Math.round(r.co2);
+    r.wtnAll = CS.S.jobs.filter(function (j) { return j.cust === custId && j.wtn && j.status !== 'booked' && j.status !== 'confirmed'; }).length;
+    r.cust = c; return r;
+  };
+  CS.briefing = function () {
+    var S = CS.S, st = CS.stats(), ch = CS.chaseLists(), lk = CS.leakTotals();
+    var today = S.jobs.filter(function (j) { return j.day === 0 || j.exDay === 0 || j.colDay === 0; });
+    var L = ['Morning John. Here\'s ' + CS.dayDate(0).toLocaleDateString('en-GB', { weekday: 'long' }) + '.'];
+    L.push('On today: ' + (today.length ? today.map(function (j) { return CS.jobDesc(j).toLowerCase() + ' for ' + CS.cust(j.cust).name; }).join(', ') : 'nothing booked yet') + '.');
+    L.push(st.needs + ' messages came in and are drafted, ready for a tap.');
+    if (ch.sup.length) L.push('Not confirmed yet: ' + ch.sup.map(function (x) { return CS.sup(x.j.sup).name + ' (' + x.j.id + ')'; }).join(', ') + '. Chased.');
+    if (ch.pay.length) L.push(CS.money(st.overdue) + ' overdue across ' + ch.pay.length + ' invoices. Reminders ready.');
+    if (lk.n) L.push(CS.money(lk.recharge) + ' of extras to recharge on ' + lk.n + ' jobs.');
+    if (ch.nudge.length) L.push(ch.nudge.length + ' skips worth a nudge.');
+    return L;
+  };
+  CS.replyCh = replyCh;
 })();

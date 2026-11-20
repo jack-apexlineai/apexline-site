@@ -7,9 +7,9 @@
   var ui = { tab: 'home', thread: null, done: {}, reading: {} };
 
   function $(s) { return document.querySelector(s); }
-  function needsYou(t) { return !t.done && t.msgs.length && t.msgs[t.msgs.length - 1].dir === 'in'; }
+  function needsYou(t) { return CS.needsYou(t); }
   function sorted() { return S.threads.slice().sort(function (a, b) { return (a.done ? 1 : 0) - (b.done ? 1 : 0) || b.last - a.last; }); }
-  function chIcon(ch) { return ch === 'wa' ? 'whatsapp' : (ch === 'email' ? 'mail' : 'world'); }
+  function chIcon(ch) { return ch === 'wa' ? 'whatsapp' : (ch === 'email' ? 'mail' : (ch === 'portal' ? 'link' : 'world')); }
   function av(name, type) { var pal = type === 'supplier' ? ['#3F3F46', '#52525B'] : type === 'lead' ? ['#7A3FF2', '#6D28D9'] : ['#EB9347', '#C7672A', '#D9853A']; var n = 0; for (var i = 0; i < name.length; i++) n += name.charCodeAt(i); return '<span class="av" style="--c:' + pal[n % pal.length] + '">' + h(CS.initials(name)) + '</span>'; }
   function toast(t, i) { var b = $('#toasts'), el = document.createElement('div'); el.className = 'toast'; el.innerHTML = ic(i || 'circle-check') + '<span>' + t + '</span>'; b.appendChild(el); setTimeout(function () { el.style.transition = 'opacity .4s'; el.style.opacity = 0; setTimeout(function () { el.remove(); }, 400); }, 3200); }
   function greeting() { var hr = new Date().getHours(); return hr < 12 ? 'Morning' : (hr < 18 ? 'Afternoon' : 'Evening'); }
@@ -29,12 +29,12 @@
   }
 
   function card(t) {
-    var p = CS.party(t.party), A = CS.analyse(t), last = t.msgs[t.msgs.length - 1];
+    var p = CS.party(t.party), A = CS.analyse(t), last = CS.lastReal(t) || t.msgs[t.msgs.length - 1];
     return '<div class="acard" id="card-' + t.id + '"><div class="who">' + av(p.name, t.party.type) + '<span class="bd"><b>' + h(p.name) + '</b><small>' + ic(chIcon(t.ch)) + ' ' + h(p.sub) + ' · ' + CS.ago(t.last) + '</small></span></div>' +
-      '<div class="msg">' + h(last.text) + '</div><div class="ttl">' + ic('sparkles') + '<span>' + h(A.title) + (A.margin ? ' <span class="tag ok">' + money(A.margin) + ' margin</span>' : '') + '</span></div>' +
-      '<div class="btns"><button class="btn ok" data-act="approve" data-id="' + t.id + '">' + ic('check') + h(shortApprove(A)) + '</button><button class="btn" data-act="open" data-id="' + t.id + '">Read</button></div></div>';
+      '<div class="msg">' + (last.voice ? ic('microphone') + ' ' : '') + h(last.text) + '</div><div class="ttl">' + ic('sparkles') + '<span>' + h(A.title) + (A.margin ? ' <span class="tag ok">' + money(A.margin) + ' margin</span>' : '') + '</span></div>' +
+      '<div class="btns"><button class="btn ' + (A.kind === 'hold' ? 'pri' : 'ok') + '" data-act="approve" data-id="' + t.id + '">' + ic(A.kind === 'hold' ? 'pound' : 'check') + h(shortApprove(A)) + '</button><button class="btn" data-act="open" data-id="' + t.id + '">Read</button></div></div>';
   }
-  function shortApprove(A) { return { book: 'Approve booking', quote: 'Send quote', ask: 'Send reply', exchange: 'Book exchange', collect: 'Book collection', wtn: 'File WTN', paid: 'Mark paid', pack: 'Send WTNs', bill: 'Approve and recharge', confirm: 'Confirm to customer', reschedule: 'Move and tell both' }[A.kind] || 'Mark done'; }
+  function shortApprove(A) { return { hold: 'Ask for payment', book: 'Approve booking', quote: 'Send quote', ask: 'Send reply', exchange: 'Book exchange', collect: 'Book collection', wtn: 'File WTN', paid: 'Mark paid', pack: 'Send WTNs', bill: 'Approve and recharge', confirm: 'Confirm to customer', reschedule: 'Move and tell both' }[A.kind] || 'Mark done'; }
 
   var V = {};
   V.home = function () {
@@ -47,7 +47,7 @@
   };
   V.inbox = function () {
     return '<div class="plist">' + sorted().map(function (t) {
-      var p = CS.party(t.party), last = t.msgs[t.msgs.length - 1];
+      var p = CS.party(t.party), last = CS.lastReal(t) || t.msgs[t.msgs.length - 1];
       return '<button class="it' + (t.unread && !t.done ? ' unread' : '') + (t.done ? ' done' : '') + '" data-act="open" data-id="' + t.id + '"><span class="av" style="--c:' + (t.party.type === 'supplier' ? '#3F3F46' : t.party.type === 'lead' ? '#7A3FF2' : '#EB9347') + '">' + h(CS.initials(p.name)) + '<span class="ch ' + t.ch + '">' + ic(chIcon(t.ch)) + '</span></span><span class="bd"><span class="l1"><b>' + h(p.name) + '</b><time>' + CS.ago(t.last) + '</time></span><span class="l2">' + h(p.sub) + '</span><span class="l3">' + h((last.dir === 'out' ? 'You: ' : '') + last.text) + '</span></span></button>';
     }).join('') + '</div>';
   };
@@ -67,7 +67,7 @@
   function threadView(t) {
     if (!t) { ui.thread = null; return V.home(); }
     var p = CS.party(t.party);
-    var msgs = t.msgs.map(function (m) { return '<div class="bub ' + (m.dir === 'out' ? 'out' : 'in') + '">' + (t.subject && m === t.msgs[0] ? '<span class="subj">' + h(t.subject) + '</span>' : '') + h(m.text) + (m.att && m.att.length ? '<div class="att">' + m.att.map(function (a) { return '<button data-act="noop">' + ic(a.t === 'wtn' ? 'certificate' : 'paperclip') + h(a.n) + '</button>'; }).join('') + '</div>' : '') + '<div class="meta">' + CS.clock(m.at) + '</div></div>'; }).join('');
+    var msgs = t.msgs.map(function (m) { return '<div class="bub ' + (m.dir === 'out' ? 'out' : 'in') + '">' + (t.subject && m === t.msgs[0] ? '<span class="subj">' + h(t.subject) + '</span>' : '') + (m.voice ? '<span class="vtr">' + ic('microphone') + 'Voice note, written out</span>' : '') + h(m.text) + (m.att && m.att.length ? '<div class="att">' + m.att.map(function (a) { return '<button data-act="noop">' + ic(a.t === 'wtn' ? 'certificate' : 'paperclip') + h(a.n) + '</button>'; }).join('') + '</div>' : '') + '<div class="meta">' + CS.clock(m.at) + '</div></div>'; }).join('');
     var o = '<div class="pth"><div class="pback"><button class="iconbtn" data-act="back" aria-label="Back">' + ic('chevron-left') + '</button>' + av(p.name, t.party.type) + '<span><b>' + h(p.name) + '</b><small>' + h(p.sub) + ' · ' + CS.chName(t.ch) + '</small></span></div><div class="msgs">' + msgs + '</div>';
     var d = ui.done[t.id];
     if (d) return o + '<div class="pdone"><h3>' + ic('circle-check') + 'Done</h3>' + d.map(function (s, i) { return '<div class="st" style="animation-delay:' + (i * 0.25) + 's">' + ic('check') + '<span>' + h(s) + '</span></div>'; }).join('') + '<button class="btn pri" data-act="nextOne" style="margin-top:6px">' + ic('arrow-right') + 'Next one</button></div></div>';

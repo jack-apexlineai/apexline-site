@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Presenter guide</title>
+<link rel="icon" href="brand/cac-favicon.png">
+<style>
+:root{--bg:#111113;--card:#1C1C20;--line:#2E2E34;--tx:#F4F4F5;--mu:#A1A1AA;--or:#EB9347;--gr:#34D399;--rd:#F87171;--am:#FBBF24;--say:#22201C}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+button{font:inherit;cursor:pointer}
+.bar{position:sticky;top:0;z-index:5;background:#7F1D1D;color:#fff;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-align:center;padding:5px 8px}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line)}
+.top h1{font-size:15px;margin:0;flex:1;min-width:180px}
+.top h1 small{display:block;color:var(--mu);font-weight:400;font-size:12px}
+.conn{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mu)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--rd)}
+.dot.on{background:var(--gr)}
+.btn{background:#27272A;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13.5px}
+.btn:hover{border-color:#52525B}
+.btn.pri{background:var(--or);border-color:var(--or);color:#1A1209;font-weight:700}
+.btn.big{padding:12px 20px;font-size:16px}
+.btn.sm{padding:4px 9px;font-size:12.5px}
+.wrap{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 100px)}
+.list{border-right:1px solid var(--line);padding:10px 0;overflow:auto;max-height:calc(100vh - 100px);position:sticky;top:28px}
+.list .sec{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);padding:12px 16px 4px}
+.list button{display:block;width:100%;text-align:left;background:none;border:0;color:var(--mu);padding:5px 16px;font-size:13.5px}
+.list button.cur{color:var(--tx);background:#26262B;box-shadow:inset 3px 0 var(--or)}
+.list button.seen{color:#D4D4D8}
+.main{padding:18px 22px 120px;max-width:820px}
+.clock{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;font-size:13px;color:var(--mu)}
+.clock b{font-variant-numeric:tabular-nums;color:var(--tx);font-size:18px}
+.clock .late{color:var(--rd)} .clock .ok{color:var(--gr)}
+.step .meta{font-size:12px;color:var(--or);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+.step h2{margin:2px 0 12px;font-size:24px;line-height:1.25}
+.blk{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:0 0 12px}
+.blk h3{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--mu)}
+.blk ol,.blk ul{margin:0;padding-left:20px}
+.blk li{margin:3px 0}
+.say{background:var(--say);border-color:#5A4630}
+.say p{margin:6px 0;font-size:17px;line-height:1.45}
+.say p::before{content:"\201C";color:var(--or);font-weight:700;margin-right:2px}
+.say p::after{content:"\201D";color:var(--or);font-weight:700}
+.say .stage{font-size:13px;color:var(--mu);font-style:italic}
+.say .stage::before,.say .stage::after{content:none}
+.watch{border-color:#5B4A1A}
+.watch h3{color:var(--am)}
+.ask h3{color:#93C5FD}
+.extra{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.nav{position:fixed;left:0;right:0;bottom:0;background:rgba(17,17,19,.96);border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;padding:10px 16px;z-index:6}
+.nav .grow{flex:1;font-size:12.5px;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.status{font-size:12.5px;color:var(--mu);margin:-4px 0 12px;min-height:18px}
+.status.err{color:var(--rd)}
+textarea{width:100%;min-height:90px;background:#0C0C0E;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;font-size:14px}
+.calc{display:grid;grid-template-columns:1fr 110px;gap:6px 10px;align-items:center;font-size:13.5px}
+.calc input{width:100%;background:#0C0C0E;color:var(--tx);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font:inherit;text-align:right}
+.calc .sub{grid-column:1/-1;font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--or);margin-top:8px}
+.tot{display:flex;justify-content:space-between;gap:10px;font-size:15px;padding:4px 0}
+.tot b{font-variant-numeric:tabular-nums}
+.verdict{margin-top:8px;padding:10px 12px;border-radius:8px;background:#0C0C0E;font-size:15px}
+.links input{width:100%;background:#0C0C0E;color:var(--tx);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit;font-size:13px}
+.links .r{display:flex;gap:8px;margin:6px 0}
+dl.gl{margin:0;display:grid;grid-template-columns:150px 1fr;gap:6px 12px;font-size:13.5px}
+dl.gl dt{font-weight:700}
+dl.gl dd{margin:0;color:#D4D4D8}
+.glo{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9;display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
+.glo.open{display:flex}
+.glo .in{background:var(--card);border:1px solid var(--line);border-radius:14px;max-width:720px;width:100%;padding:18px 20px}
+kbd{background:#27272A;border:1px solid var(--line);border-radius:4px;padding:0 5px;font-size:11.5px}
+@media (max-width:820px){
+  .wrap{grid-template-columns:1fr}
+  .list{display:none}
+  .main{padding:14px 16px 120px}
+  .step h2{font-size:20px}
+  .say p{font-size:16px}
+  dl.gl{grid-template-columns:1fr}
+  dl.gl dd{margin-bottom:6px}
+}
+</style>
+</head>
+<body>
+<div class="bar">Presenter only. Never share this window</div>
+<div class="top">
+  <h1>John Pesci, CAC Waste Management<small>Mon 23 Nov, 14:00 UK (21:00 Thai), Teams, 30 min</small></h1>
+  <span class="conn"><span class="dot" id="dot"></span><span id="connTx">Demo window not open</span></span>
+  <button class="btn" id="openDemo">Open the demo window</button>
+  <button class="btn" id="glossBtn">Words</button>
+</div>
+<div class="wrap">
+  <nav class="list" id="list" aria-label="Steps"></nav>
+  <main class="main">
+    <div class="clock"><span>Call clock</span><b id="clk">0:00</b><span id="clkNote">Press Start when John joins</span><button class="btn sm" id="clkBtn">Start</button></div>
+    <div class="status" id="status" aria-live="polite"></div>
+    <div id="step" class="step"></div>
+  </main>
+</div>
+<div class="nav">
+  <button class="btn" id="back">Back</button>
+  <span class="grow" id="nextName"></span>
+  <button class="btn" id="redo" title="Set the demo screen up again">Redo screen</button>
+  <button class="btn pri big" id="next">Next</button>
+</div>
+<div class="glo" id="glo" role="dialog" aria-label="Words in plain English"><div class="in">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b style="font-size:17px">Words in plain English</b><button class="btn sm" id="glossClose">Close</button></div>
+  <dl class="gl" id="gl"></dl>
+</div></div>
+
+<script>
+(function () {
+  var NOTES_KEY = 'cac-guide-notes', STEP_KEY = 'cac-guide-step', CALC_KEY = 'cac-guide-calc', CLOCK_KEY = 'cac-guide-clock';
+  function get(k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }
+  function put(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function h(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function $(s) { return document.querySelector(s); }
+
+  var SECS = { prep: { n: 'Before the call', end: 0 }, q: { n: 'Questions', end: 5 }, demo: { n: 'The demo', end: 19 }, val: { n: 'Value and price', end: 25 }, close: { n: 'Close', end: 30 } };
+
+  var STEPS = [
+    { id: 'prep', sec: 'prep', t: 'Ten minutes before', act: 'reset',
+      do: ['Press <b>Open the demo window</b> at the top. Put it on the left, this guide on the right.',
+           'Opening it resets the demo and turns live messages off. If you clicked around since, press <b>Redo screen</b>.',
+           'In the demo, Settings: if John has named his BDE, put the first name in. Otherwise leave it as Sam.',
+           'Teams: when you share, pick <b>Window</b>, then the demo window. Not this one, not the whole screen.',
+           'Phone on silent. Light theme on the demo (his brand is white and orange).',
+           'Have the notes box below open. His words go in there during the questions.'],
+      shows: 'Nothing is shared yet. This guide sets up every screen for you: press Next and the demo window jumps to the right place.',
+      notes: true },
+
+    { id: 'open', sec: 'q', t: 'Open the call', act: 'home',
+      do: ['Camera on, smile, no screen share yet.', 'Say the opener, then ask the one question and stop talking.'],
+      say: ['Hi John, thanks for making the time. I know you said you\'re busy, and you said don\'t waste your 30, so I won\'t.',
+            'Before I show you anything, what made you want to take the call?',
+            { stage: 'Then silence. Count to five in your head if you need to. Let him fill it.' }],
+      watch: ['Don\'t hand him the answer ("an admin problem"). Let him say it in his words.', 'Never bring up his past employers or anything personal. Only what he tells you on the call.'],
+      notes: true },
+
+    { id: 'clarify', sec: 'q', t: 'Dig in (only what you need)', act: null,
+      do: ['Ask one at a time. Write his exact words and any numbers in the notes box.', 'Skip any he has already answered.'],
+      say: ['Walk me through a job, from a builder getting in touch to the invoice going out. Who touches it?',
+            'Where do enquiries come in today? WhatsApp, calls, the website?',
+            'Roughly how many jobs a month now? Where does that go once your BDE is up and running?',
+            'When a supplier hasn\'t confirmed, how do you find out?',
+            'How do the WTNs get back to you, and where do they end up?',
+            'How many hours a week does all that take? Whose hours?',
+            'What systems have you used before, here or anywhere else? What did they cost?',
+            { stage: 'Let HIM name the system and the price. If he says Weighsoft or a big number, write it down: that\'s your anchor at the price step.' }],
+      watch: ['Don\'t name Weighsoft, any system or any firm he\'s worked for first. Never knock Weighsoft. Compare on public price only.'],
+      notes: true },
+
+    { id: 'label', sec: 'q', t: 'Label it, then what he\'s tried', act: null,
+      do: ['Read his own words back from the notes. Then the past attempts question.'],
+      say: ['So if I\'ve got it right: [his words]. Is that about right?',
+            'You\'ve been in this game a long time. When the places you\'ve worked got busy, what did they do about the admin?',
+            { stage: 'Usually: hired more office staff.' },
+            'And how did that work out?',
+            { stage: 'Usually: it worked, but it cost a lot and took ages to train. That hire is your price anchor later.' }],
+      notes: true },
+
+    { id: 'perm', sec: 'q', t: 'Ask permission, then share', act: 'home',
+      do: ['Ask permission.', 'On his yes: Teams, Share, Window, the demo window.', 'Then press Next.'],
+      say: ['Want me to show you what I\'ve built round CAC? Shout if any of it\'s not how you\'d do it.'] },
+
+    { id: 'startup', sec: 'demo', t: 'The start-up screen', act: 'startup',
+      do: ['Let it play for a few seconds. Then click <b>Straight in</b>.'],
+      shows: 'His logo, "Good afternoon, John", how many messages need him, jobs waiting on suppliers, margin this month, and the line from his own website.',
+      say: ['This is what you\'d open every morning. That line at the bottom is off your own website.'] },
+
+    { id: 'inbox', sec: 'demo', t: 'His inbox, his message', act: 'inbox', mins: 2,
+      extra: [{ l: 'Turn live messages on', act: 'liveOn' }],
+      do: ['Hannah\'s web enquiry is open. Point at the fields on the left of the message.', 'Press <b>Turn live messages on</b> above and let two messages land (a few seconds each).'],
+      shows: 'Every WhatsApp, email and Get a quote form, from customers and suppliers, in one list. Each one is already read and has a reply drafted. Hannah\'s card shows the exact fields from his own website form, plus "Came from: Google Ads".',
+      say: ['WhatsApp, email and your Get a quote form. Customers and suppliers. One screen, every one already read.',
+            'See this? It even tells you which Google Ad she came from.'],
+      watch: ['The demo "AI" is a rules-based stand-in that shows the flow. Live, an AI model reads each message against CAC\'s own rates. Nothing sends without a person tapping it.'] },
+
+    { id: 'testwa', sec: 'demo', t: 'His own message, priced', act: 'testwa', mins: 2,
+      do: ['Ask him for a message. Type HIS words in. If he won\'t, use "need an 8 yarder in PE31 Tuesday".', '"Send as": leave it on Dan Dunmore. Press send.', 'Point at each thing below, in order.', 'Wait about 6 seconds: the supplier replies by itself.'],
+      say: ['Give me a message a builder would actually send you.'],
+      shows: '<ol><li>It pulled out the size, postcode and day, and spotted Dan has two sites in PE31.</li><li>It picked Saltmarsh over Ringmere and says why: £10 dearer but 97% on time against 91%.</li><li>Customer price, supplier cost and the <b>margin</b>, before anything goes out.</li><li>The reply to the builder and the booking to the supplier, written in his tone. Change the price and both update.</li><li>One tap sends both. Then the supplier confirms, the job flips to confirmed and Dan\'s confirmation is drafted.</li></ol>',
+      say2: ['Nothing goes out until you tap that.', 'You didn\'t chase anyone.'] },
+
+    { id: 'desk', sec: 'demo', t: 'The phone rings. Slow down here', act: 'desk', mins: 1.5,
+      do: ['The New quote screen is open. Type <b>07700 900211</b> in the phone box. Dan comes up.', 'Type <b>PE31</b> for the postcode. 8 yard skip.', 'Point at each part on the right.'],
+      say: ['Someone rings for a price. Wherever you are, you hit Q, or New quote at the top.'],
+      shows: '<ul><li><b>Buy price</b>: what the supplier charges CAC, and the next supplier along.</li><li><b>Floor, Ideal, Stretch</b>: floor is the lowest he\'d go, ideal is his normal markup, stretch is a bit over. All from his own rules.</li><li>Dan\'s <b>agreed rate</b> is used automatically, and it shows <b>what he paid last time</b>.</li><li><b>Say it like this</b>: the exact line to read out, so a new BDE quotes like John on day one.</li></ul>',
+      say2: ['Anything over ideal is bonus. Under the floor, if your BDE tries it, it comes to you first.'],
+      watch: ['It does not connect to his phone system. He types the number. Don\'t imply it pops up on its own.'] },
+
+    { id: 'deskSend', sec: 'demo', t: 'Send it, then their view', act: null, mins: 1,
+      do: ['Still on the New quote screen. Tap <b>On the road</b>: the permit goes on the price.', 'Tap <b>WhatsApp it</b>, then Send.', 'On the little pop-up at the bottom, tap <b>See their view</b>: Dan\'s phone.', 'Tap <b>Accept and book it</b> on Dan\'s phone. Close it. The inbox shows "Quote accepted" with the booking drafted.'],
+      shows: 'The quote goes out with a tap-to-accept link. The customer sees his price and one button. When he taps it, the booking is drafted back in the office, one tap away.',
+      say: ['On the road? The permit goes on by itself.', 'That\'s what Dan sees. One button.'],
+      watch: ['In the demo the accept link only works inside this browser. Live, it\'s hosted on his own domain.'] },
+
+    { id: 'ask', sec: 'demo', t: 'Ask CAC', act: 'ask', mins: 0.5,
+      extra: [{ l: 'Ask: who owes me money?', act: 'ask2' }],
+      do: ['The question is typed in. Press Enter or Ask.', 'Then press <b>Ask: who owes me money?</b> above and press Enter in the demo.'],
+      shows: 'Ask it anything in plain English. It answers from his own records: prices, who covers a postcode, who owes money, longest on hire.',
+      say: ['Ask it like you\'d ask your office.'],
+      watch: ['The demo answers a handful of questions with simple rules. Live, an AI model reads his records. It reads and suggests, it never sends on its own.'] },
+
+    { id: 'pricebook', sec: 'demo', t: 'Price book', act: 'pricebook', mins: 0.5,
+      do: ['Scroll the grid of areas and sizes.', 'Change his markup in the rules box and watch every price move.', 'Point at <b>Upload a price list</b>.'],
+      shows: 'Every area, every size, his prices. His rules (markup and floor) drive the lot. A supplier sends a new price list? Upload it or forward the email, and the prices are read in for him to check.',
+      say: ['Supplier sends a new price list? Upload it, or forward the email. Every price read in.'],
+      watch: ['Live, an AI reads the PDF, Excel, photo or email and he checks the prices before they\'re saved. Messy scans need testing on his real lists.'] },
+
+    { id: 'bundle', sec: 'demo', t: 'A whole new site in one message', act: 'bundle', mins: 1.5,
+      do: ['The new site message is typed in. Press send.', 'Point at the five lines, the two suppliers and the margin. Then one tap books all five.'],
+      say: ['Your welfare page says welfare, storage, Heras, toilets and a first skip in one delivery window. Watch.'],
+      shows: 'One message becomes five priced lines (welfare unit, storage container, 40 Heras panels, a toilet, an 8 yard skip) across two suppliers, with every cost, sell price and the margin (about £570). Both supplier bookings and the customer reply are written.' },
+
+    { id: 'slip', sec: 'demo', t: 'You hear it from us first', act: 'slip', mins: 0.5,
+      do: ['Brecklane\'s message is open: the supplier can\'t make Monday.', 'Point at Kerry\'s message, already written.'],
+      shows: 'A supplier lets him down. The system moves the job and writes the customer message before the customer finds out.',
+      say: ['Your site says if a slot slips, the customer hears it from you first. Kerry\'s message is already written. One tap moves the job and tells both.'] },
+
+    { id: 'carbon', sec: 'demo', t: 'Waste and carbon. Let him look', act: 'carbon', mins: 2,
+      do: ['Slowly. This is what he used to sell.', 'Open Hexley\'s report in the table.', 'Tap <b>Send all now</b>.', 'Tap <b>Build an audit pack</b>.', 'Then say little. Let him look.'],
+      shows: 'Tonnes moved, the share kept out of landfill, transfer notes on file and carbon, for every account and site, with six months of trend. Built off the WTNs suppliers send back. Monthly reports go to each customer under the CAC logo.',
+      say: ['Every tonne, every site, every account. Off the WTNs your suppliers send back.', 'On the 1st, every account gets its report under the CAC logo, not a supplier\'s.', 'What a QS asks for, one click.'],
+      watch: ['The trend is sample history. Live, it fills up from his own WTNs from day one. Tonnes are only as good as the weights suppliers send. Carbon is an estimate.', 'Never mention his old employer or that he presented this kind of thing there.'] },
+
+    { id: 'credit', sec: 'demo', t: 'Credit hold', act: 'credit', mins: 0.75,
+      do: ['Mark Venn\'s message is open. Point at the hold and the reply it wrote instead.'],
+      shows: 'Mark wants another 20 yard RoRo, but his firm owes £2,340 and is 12 days late. So it held the booking and drafted a polite "settle up first" reply. John can override it.',
+      say: ['He wants another RoRo. But Ashby and Venn owe you £2,340, 12 days late, so it held the booking and wrote this instead. Your call every time.'],
+      watch: ['It holds and asks. It never refuses a customer by itself. Limits are whatever John sets.'] },
+
+    { id: 'account', sec: 'demo', t: 'Open a trade account', act: 'account', mins: 0.75,
+      do: ['The form is open. Press the Companies House check.', 'Point at the suggested limit, then <b>Open the account</b>.'],
+      shows: 'A new customer checked on Companies House, a suggested credit limit (John sets it), the account opened and their own link sent on WhatsApp. About two minutes.',
+      say: ['Construction had the most insolvencies of any sector this year. This is how you don\'t end up holding the bill.'],
+      watch: ['The Companies House result is a sample. Live, it reads the real register, which is free.'] },
+
+    { id: 'money', sec: 'demo', t: 'Money found', act: 'money', mins: 1,
+      do: ['Point at the supplier bills checked against the agreed rate, and the extras that never reached the customer\'s invoice.', 'Tap <b>Recharge all</b>.'],
+      shows: 'Every supplier bill is checked against the rate agreed on the job. Extras the supplier charged (overweight, extra days) that were never passed on to the customer are found and recharged.',
+      watch: ['The amounts are sample data, not a promise of what CAC will recover. It only finds extras the supplier itemises. A person confirms each recharge.'] },
+
+    { id: 'team', sec: 'demo', t: 'His team', act: 'sales', mins: 1,
+      extra: [{ l: 'Show the Team screen', act: 'team' }],
+      do: ['Sales screen first: the BDE\'s calls, quotes and follow ups.', 'Then press <b>Show the Team screen</b> above. Add a name if he wants to.'],
+      say: ['Every call, quote and follow up from your BDE, without asking him.', 'You said more roles are coming. Add someone, they get a login, day one opens on a five minute walkthrough. No training day.'] },
+
+    { id: 'reinforce', sec: 'demo', t: 'Stop. The reinforce question', act: 'today',
+      do: ['Keep sharing. The demo goes back to Today.', 'Ask, then silence. Write his answer down word for word. That\'s your close line.'],
+      say: ['If this was running in your office tomorrow, what changes for you?'],
+      notes: true },
+
+    { id: 'value', sec: 'val', t: 'What it\'s worth, in his numbers', act: null, calc: true,
+      do: ['Ask the questions in order. Type his answers in the boxes. Say the sums out loud.', 'Never put a number in for him. Never ask what he\'d pay or his budget.'],
+      say: ['How many hours a week go on reading messages, pricing, booking suppliers, chasing and paperwork? Yours and anyone else\'s?',
+            'What\'s an hour of your time worth when you\'re selling instead?',
+            'When your BDE fills the diary, who does the extra admin? What would that person cost you?',
+            'Out of every 100 jobs, how many come back from the supplier with something extra on the bill? What\'s a typical one? How many of those get passed on?',
+            'How many enquiries a month go nowhere because they came in late, or you were on the phone?',
+            'What\'s your average margin on a job?',
+            'What are you paying for software now?'] },
+
+    { id: 'price', sec: 'val', t: 'The price. One number, then silence', act: null, verdict: true,
+      do: ['Say the line from the verdict box first (it uses his numbers).', 'If he named a system he\'s paid for, compare with HIS figure: "You said [system] was [his number]."', 'Then the price. Then stop talking.'],
+      say: ['To build it round CAC, with your suppliers, your rates and your tone, it\'s eleven thousand nine hundred and fifty pounds, plus two hundred and ninety-nine a month, which covers WhatsApp, the AI, hosting and support.',
+            'No lock-in, one month\'s notice. Half to start, half when you\'re live and happy.',
+            { stage: 'Silence. Whoever talks first loses.' }],
+      watch: ['£11,950 + £299 a month. Not £12k, not £400. Year one £15,538, then £3,588 a year.'] },
+
+    { id: 'objection', sec: 'val', t: 'If he pushes on price', act: null,
+      do: ['Never discount. Cut scope instead. Never ask what budget he had in mind.'],
+      say: ['What would cost more is a cheaper system that can\'t do half of this, plus the hire to do the rest.',
+            'I can bring it in at nine thousand nine hundred and fifty by taking the AI booking out.',
+            { stage: 'At £9,950: same inbox, quotes, jobs board, customers and credit, chasing, money found, WTNs and BDE view. Replies and supplier bookings are written by hand with templates.' }],
+      ask: ['<b>"Why not just buy respond.io?"</b> Good inbox, but it doesn\'t know what a supplier, a postcode rate, a margin or a WTN is. It can\'t price a skip.',
+            '<b>"Why not a waste system?"</b> Waste Logics has no WhatsApp or email inbox and is built round lorries and weighbridges. Weighsoft is from £1,707 a month for 5 users on a multi-year term.',
+            '<b>"How long?"</b> Office side in about 3 weeks (confirm before the call). WhatsApp goes live when Meta verifies CAC, plan 1 to 3 weeks.'] },
+
+    { id: 'start', sec: 'close', t: 'Ask for the start', act: null,
+      say: ['Want to get it started? It\'s half up front, and I\'ll have the office side running in about three weeks, with WhatsApp live as soon as Meta verifies CAC.',
+            { stage: 'Then go quiet.' }],
+      watch: ['Confirm the weeks figure before Monday. Don\'t say a date you can\'t hit.'] },
+
+    { id: 'close', sec: 'close', t: 'Next steps', act: null, links: true,
+      do: ['<b>Yes:</b> proposal and deposit invoice the same day. Ask for his supplier list with rates and postcode cover, his Microsoft 365 email, new WhatsApp number or keep his own, his invoicing software, and his credit terms.',
+           '<b>Think about it:</b> book the follow up before he hangs up.',
+           'Paste the three links below into the Teams chat so he can try it on his phone.'],
+      say: ['Shall we say Thursday at 10?'],
+      watch: ['On his phone he gets his own copy. It won\'t change what\'s on your screen. Don\'t promise that it will.', 'Don\'t send the demo link to anyone else.'] }
+  ];
+
+  var GLOSS = [
+    ['Broker', 'Takes the order and sells the job, but hires the lorries and skips from other firms (suppliers). CAC has no yard of its own. John never uses the word in public, so don\'t either.'],
+    ['Supplier', 'The skip or haulage firm that actually does the job for CAC.'],
+    ['Buy price / sell price', 'What the supplier charges CAC, and what CAC charges the builder.'],
+    ['Margin', 'Sell price minus buy price. What CAC keeps.'],
+    ['Floor, Ideal, Stretch', 'Floor: the lowest he\'ll go. Ideal: his normal markup. Stretch: a bit over, for when the customer won\'t argue.'],
+    ['RoRo', 'Roll on roll off. The big open skips, 20 to 40 yards, for big sites.'],
+    ['Yard (8 yarder)', 'Skip size in cubic yards. An 8 yarder is the standard builder\'s skip.'],
+    ['Wait and load', 'The lorry waits while the customer fills it, then takes it away.'],
+    ['Grab / grab lorry', 'Lorry with a crane arm that scoops up loose waste or soil. Priced per load.'],
+    ['Muck away', 'Taking soil and rubble away, usually by the 8-wheeler tipper load.'],
+    ['Welfare unit', 'Site cabin with a kitchen, toilet and drying room for workers.'],
+    ['Heras', 'The metal mesh temporary fencing panels round building sites.'],
+    ['Permit (skip on the road)', 'Council licence needed when a skip goes on a public road. Adds to the price.'],
+    ['WTN', 'Waste transfer note. Legal paper for every load: what it was, who took it, where it went. Kept for 2 years.'],
+    ['Duty of care', 'The law that says whoever produces or moves waste must make sure it ends up in the right place. WTNs prove it.'],
+    ['CBDU number', 'His waste carrier, broker, dealer registration with the Environment Agency (CBDU650137). Suppliers need one too.'],
+    ['QS', 'Quantity surveyor. Checks costs and paperwork before a builder gets paid. Asks for WTNs.'],
+    ['Landfill diversion', 'Share of the waste recycled or recovered instead of buried. Big contractors report it.'],
+    ['Swap / exchange', 'Take the full skip away and drop an empty one in the same go.'],
+    ['BDE', 'Business development executive. John\'s new salesperson.'],
+    ['Trade account', 'Builder pays on credit, usually 30 days, instead of card on order.'],
+    ['Meta verification', 'Meta (WhatsApp\'s owner) checks CAC is a real business before the WhatsApp line goes fully live.']
+  ];
+
+  /* ---------- link to the demo window ---------- */
+  var bc = window.BroadcastChannel ? new BroadcastChannel('cac-guide') : null, lastSeen = 0, pending = null;
+  function setConn(on, tx) { $('#dot').classList.toggle('on', on); $('#connTx').textContent = tx; }
+  function status(tx, err) { var s = $('#status'); s.textContent = tx || ''; s.classList.toggle('err', !!err); }
+  if (bc) {
+    bc.onmessage = function (e) {
+      var m = e.data || {};
+      if (m.type === 'here' || m.type === 'done') { lastSeen = Date.now(); setConn(true, 'Demo window connected'); }
+      if (m.type === 'done' && pending === m.act) { pending = null; status('Demo screen ready'); }
+      if (m.type === 'error') status('The demo screen did not set up (' + m.msg + '). Press Redo screen, or click it by hand.', true);
+    };
+    setInterval(function () { bc.postMessage({ type: 'ping' }); if (Date.now() - lastSeen > 6000) setConn(false, 'Demo window not open'); }, 1500);
+    bc.postMessage({ type: 'ping' });
+  } else { setConn(false, 'This browser can\'t link windows. Use Chrome'); }
+  function run(act) {
+    if (!act) return;
+    if (!bc) return;
+    pending = act; status('Setting up the demo screen...'); bc.postMessage({ type: 'run', act: act });
+    setTimeout(function () { if (pending === act) { pending = null; status('The demo window didn\'t answer. Open it with the button at the top, then press Redo screen.', true); } }, 2500);
+  }
+  var demoWin = null;
+  $('#openDemo').onclick = function () {
+    demoWin = window.open('index.html?boot=0', 'cacdemo', 'width=1280,height=820');
+    status('Demo window opening. Give it a second, then the dot goes green.');
+    setTimeout(function () { var s = STEPS[cur]; if (s.act) run(s.act); }, 1500);
+  };
+
+  /* ---------- clock ---------- */
+  var t0 = get(CLOCK_KEY, null);
+  function tick() {
+    if (!t0) return;
+    var secs = Math.floor((Date.now() - t0) / 1000), m = Math.floor(secs / 60);
+    $('#clk').textContent = m + ':' + ('0' + secs % 60).slice(-2);
+    var sec = SECS[STEPS[cur].sec], note = $('#clkNote');
+    if (sec.end) { var left = sec.end - secs / 60; note.textContent = sec.n + ' should end at ' + sec.end + ':00' + (left < 0 ? ', ' + Math.ceil(-left) + ' min over' : ''); note.className = left < 0 ? 'late' : 'ok'; }
+    else { note.textContent = ''; }
+  }
+  $('#clkBtn').onclick = function () { t0 = t0 ? null : Date.now(); put(CLOCK_KEY, t0); $('#clkBtn').textContent = t0 ? 'Stop' : 'Start'; if (!t0) { $('#clk').textContent = '0:00'; $('#clkNote').textContent = 'Press Start when John joins'; $('#clkNote').className = ''; } };
+  if (t0) $('#clkBtn').textContent = 'Stop';
+  setInterval(tick, 1000);
+
+  /* ---------- value maths ---------- */
+  var CF = [
+    ['sub', 'A. Admin hours back'], ['hrs', 'Hours a week it takes off him'], ['rate', 'What his hour is worth, £'],
+    ['sub', 'B. Or the hire he doesn\'t make (use A or B)'], ['hire', 'What that person would cost a year, £'],
+    ['sub', 'C. Margin recovered'], ['jobs', 'Jobs a month'], ['xpct', 'Out of 100 jobs, how many have an extra'], ['xamt', 'Typical extra, £'], ['npct', 'Out of 100 extras, how many NOT passed on'],
+    ['sub', 'D. Jobs won'], ['lost', 'Enquiries lost a month'], ['marg', 'Average margin a job, £'],
+    ['sub', 'E. Tools it replaces'], ['tools', 'Paying for software now, £ a month']
+  ];
+  var calc = get(CALC_KEY, {});
+  function n(k) { var v = parseFloat(calc[k]); return isFinite(v) ? v : 0; }
+  function gbp(v) { return '£' + Math.round(v).toLocaleString('en-GB'); }
+  function sums() {
+    var A = n('hrs') * n('rate') * 48, B = n('hire'), C = n('jobs') * n('xpct') / 100 * n('xamt') * n('npct') / 100 * 12, D = n('lost') * n('marg') * 12, E = n('tools') * 12;
+    var AB = Math.max(A, B);
+    return { A: A, B: B, AB: AB, useB: B > A, C: C, D: D, E: E, total: AB + C + D + E, any: Object.keys(calc).some(function (k) { return calc[k] !== '' && calc[k] != null; }) };
+  }
+  function verdictHtml() {
+    var s = sums();
+    if (!s.any) return '<div class="verdict">Fill in his numbers on the previous step first. If you didn\'t get them, skip straight to the price.</div>';
+    var line = s.total > 15538
+      ? 'On your numbers it pays for itself inside the first year, and it\'s three thousand five hundred and eighty-eight a year after that.'
+      : 'On today\'s volume it takes into year two to pay back. The case is what happens when your BDE doubles the jobs and you don\'t double the admin.';
+    return '<div class="tot"><span>His total a year</span><b>' + gbp(s.total) + '</b></div><div class="tot"><span>Year one cost</span><b>£15,538</b></div><div class="tot"><span>Every year after</span><b>£3,588</b></div>' +
+      '<div class="verdict"><b>Say:</b> "' + h(line) + '"' + (s.total <= 15538 ? '<br><span style="color:var(--am);font-size:13px">If that isn\'t true for him either, the £9,950 scope is the right offer. Don\'t stretch it.</span>' : '') + '</div>';
+  }
+  function calcHtml() {
+    var s = sums();
+    return '<div class="blk"><h3>His numbers</h3><div class="calc">' + CF.map(function (f) {
+      if (f[0] === 'sub') return '<div class="sub">' + h(f[1]) + '</div>';
+      return '<label for="cf_' + f[0] + '">' + h(f[1]) + '</label><input id="cf_' + f[0] + '" data-k="' + f[0] + '" inputmode="decimal" value="' + h(calc[f[0]] == null ? '' : calc[f[0]]) + '">';
+    }).join('') + '</div><div style="margin-top:12px" id="calcOut">' + calcOut(s) + '</div></div>';
+  }
+  function calcOut(s) {
+    return '<div class="tot"><span>' + (s.useB ? 'B. The hire' : 'A. Hours back') + '</span><b>' + gbp(s.AB) + '</b></div><div class="tot"><span>C. Margin recovered</span><b>' + gbp(s.C) + '</b></div><div class="tot"><span>D. Jobs won</span><b>' + gbp(s.D) + '</b></div><div class="tot"><span>E. Tools replaced</span><b>' + gbp(s.E) + '</b></div><div class="tot" style="border-top:1px solid var(--line);margin-top:4px;padding-top:8px"><span><b>Total a year</b></span><b>' + gbp(s.total) + '</b></div>';
+  }
+
+  /* ---------- render ---------- */
+  var cur = Math.min(get(STEP_KEY, 0), STEPS.length - 1), seen = {};
+  function sayHtml(arr) { return arr.map(function (x) { return typeof x === 'string' ? '<p>' + h(x) + '</p>' : '<p class="stage">' + h(x.stage) + '</p>'; }).join(''); }
+  function render() {
+    var s = STEPS[cur]; seen[cur] = true; put(STEP_KEY, cur);
+    var html = '<div class="meta">' + h(SECS[s.sec].n) + ' · ' + (cur + 1) + ' of ' + STEPS.length + (s.mins ? ' · about ' + s.mins + ' min' : '') + '</div><h2>' + h(s.t) + '</h2>';
+    if (s.extra) html += '<div class="extra">' + s.extra.map(function (x) { return '<button class="btn" data-run="' + x.act + '">' + h(x.l) + '</button>'; }).join('') + '</div>';
+    if (s.do) html += '<div class="blk"><h3>Do this</h3><ol>' + s.do.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ol></div>';
+    if (s.say) html += '<div class="blk say"><h3>Say</h3>' + sayHtml(s.say) + '</div>';
+    if (s.shows) html += '<div class="blk"><h3>What it shows</h3>' + (s.shows.charAt(0) === '<' ? s.shows : '<div>' + s.shows + '</div>') + '</div>';
+    if (s.say2) html += '<div class="blk say"><h3>Then say</h3>' + sayHtml(s.say2) + '</div>';
+    if (s.calc) html += calcHtml();
+    if (s.verdict) html += '<div class="blk"><h3>His numbers against the price</h3>' + verdictHtml() + '</div>';
+    if (s.ask) html += '<div class="blk ask"><h3>If he asks</h3><ul>' + s.ask.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul></div>';
+    if (s.links) html += linksHtml();
+    if (s.watch) html += '<div class="blk watch"><h3>Only say what\'s true</h3><ul>' + s.watch.map(function (x) { return '<li>' + h(x) + '</li>'; }).join('') + '</ul></div>';
+    if (s.notes) html += '<div class="blk"><h3>His words and numbers</h3><textarea id="notes" placeholder="Write what he says, word for word">' + h(get(NOTES_KEY, '')) + '</textarea></div>';
+    $('#step').innerHTML = html;
+    $('#back').disabled = cur === 0;
+    $('#next').textContent = cur === STEPS.length - 1 ? 'Done' : 'Next';
+    $('#nextName').textContent = cur < STEPS.length - 1 ? 'Next: ' + STEPS[cur + 1].t : 'Last step';
+    $('#redo').disabled = !s.act;
+    renderList(); tick(); window.scrollTo(0, 0);
+  }
+  function linksHtml() {
+    var base = location.href.replace(/[^/]*$/, '');
+    var L = [['The office, opens on a short tour', base + '?tour=1'], ['The phone view', base + 'phone.html'], ['A customer\'s own link (Kerry, Pellow Homes)', base + 'portal.html?c=c2']];
+    return '<div class="blk links"><h3>Links for the Teams chat</h3>' + L.map(function (l, i) { return '<div style="font-size:13px;color:var(--mu);margin-top:6px">' + h(l[0]) + '</div><div class="r"><input readonly id="lk' + i + '" value="' + h(l[1]) + '"><button class="btn sm" data-copy="lk' + i + '">Copy</button></div>'; }).join('') + '</div>';
+  }
+  function renderList() {
+    var out = '', last = '';
+    STEPS.forEach(function (s, i) {
+      if (s.sec !== last) { out += '<div class="sec">' + h(SECS[s.sec].n) + '</div>'; last = s.sec; }
+      out += '<button data-i="' + i + '" class="' + (i === cur ? 'cur' : seen[i] ? 'seen' : '') + '">' + (i + 1) + '. ' + h(s.t) + '</button>';
+    });
+    $('#list').innerHTML = out;
+  }
+  function goTo(i) { if (i < 0 || i >= STEPS.length) return; cur = i; status(''); render(); run(STEPS[cur].act); }
+
+  $('#next').onclick = function () { if (cur < STEPS.length - 1) goTo(cur + 1); };
+  $('#back').onclick = function () { goTo(cur - 1); };
+  $('#redo').onclick = function () { run(STEPS[cur].act); };
+  $('#list').onclick = function (e) { var b = e.target.closest('[data-i]'); if (b) goTo(+b.dataset.i); };
+  document.addEventListener('click', function (e) {
+    var r = e.target.closest('[data-run]'); if (r) run(r.dataset.run);
+    var c = e.target.closest('[data-copy]'); if (c) { var inp = document.getElementById(c.dataset.copy); inp.select(); try { navigator.clipboard.writeText(inp.value); } catch (er) { document.execCommand('copy'); } c.textContent = 'Copied'; setTimeout(function () { c.textContent = 'Copy'; }, 1500); }
+  });
+  document.addEventListener('input', function (e) {
+    if (e.target.id === 'notes') put(NOTES_KEY, e.target.value);
+    if (e.target.dataset && e.target.dataset.k) { calc[e.target.dataset.k] = e.target.value; put(CALC_KEY, calc); var o = $('#calcOut'); if (o) o.innerHTML = calcOut(sums()); }
+  });
+  document.addEventListener('keydown', function (e) {
+    var tag = (e.target.tagName || '').toLowerCase(); if (tag === 'input' || tag === 'textarea') return;
+    if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); $('#next').click(); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); $('#back').click(); }
+    if (e.key === 'Escape') $('#glo').classList.remove('open');
+  });
+  $('#gl').innerHTML = GLOSS.map(function (g) { return '<dt>' + h(g[0]) + '</dt><dd>' + h(g[1]) + '</dd>'; }).join('');
+  $('#glossBtn').onclick = function () { $('#glo').classList.add('open'); };
+  $('#glossClose').onclick = function () { $('#glo').classList.remove('open'); };
+  $('#glo').onclick = function (e) { if (e.target.id === 'glo') $('#glo').classList.remove('open'); };
+  render();
+  window.CACGUIDE = { steps: STEPS.length, goTo: goTo, cur: function () { return cur; } };
+})();
+</script>
+</body>
+</html>

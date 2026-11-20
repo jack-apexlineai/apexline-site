@@ -1,6 +1,6 @@
 /* CAC Waste Management office demo. Every screen is drawn from CS (store.js). Nothing leaves this browser. */
 (function () {
-  var CS = window.CS, h = CS.esc, money = CS.money, ic = window.ic;
+  var CS = window.CS, h = CS.esc, money = CS.money, ic = window.ic, X = window.CACX;
   var params = new URLSearchParams(location.search);
   var S = CS.load();
   if (params.get('live') === '0') { S.settings.live = false; CS.save(); }
@@ -12,10 +12,13 @@
     { k: 'today', n: 'Today', ic: 'dashboard', sub: '' },
     { k: 'jobs', n: 'Jobs board', ic: 'truck', sub: 'Every skip, grab and unit, from booked to collected' },
     { k: 'quotes', n: 'Quotes', ic: 'file-text', sub: 'Customer price, supplier cost and margin on every quote' },
+    { k: 'pricebook', n: 'Price book', ic: 'list', sub: 'Your prices for every area and size, your rules, and price lists read in' },
+    { k: 'customers', n: 'Customers', ic: 'users', sub: 'Credit, sites, statements and each customer\'s own link' },
     { k: 'suppliers', n: 'Suppliers', ic: 'warehouse', sub: 'Who covers which postcode, at what rate, and how reliable they are' },
     { k: 'chasing', n: 'Chasing', ic: 'bell', sub: 'Everything waiting on someone else, chased for you' },
     { k: 'money', n: 'Money', ic: 'pound', sub: 'Invoices, supplier bills and margin' },
     { k: 'paperwork', n: 'Duty of care', ic: 'certificate', sub: 'WTNs per job, supplier licences, audit packs' },
+    { k: 'reports', n: 'Waste and carbon', ic: 'leaf', sub: 'Tonnes, landfill diversion and carbon for every account and site' },
     { k: 'sales', n: 'Sales', ic: 'trending-up', sub: 'Your BDE\'s pipeline and follow ups, visible to you' }
   ];
   var PARTY_COL = { customer: ['#EB9347', '#C7672A', '#D9853A', '#B9773F'], supplier: ['#3F3F46', '#52525B', '#27272A'], lead: ['#7A3FF2', '#6D28D9'] };
@@ -27,8 +30,8 @@
     var pal = PARTY_COL[type] || PARTY_COL.customer; var n = 0; for (var i = 0; i < name.length; i++) n += name.charCodeAt(i);
     return '<span class="av ' + (cls || '') + '" style="--c:' + pal[n % pal.length] + '">' + h(CS.initials(name)) + '</span>';
   }
-  function chIcon(ch) { return ch === 'wa' ? 'whatsapp' : (ch === 'email' ? 'mail' : 'world'); }
-  function chTag(ch) { return '<span class="tag ' + (ch === 'wa' ? 'wa' : ch === 'email' ? 'mail' : 'web') + '">' + ic(chIcon(ch)) + CS.chName(ch).replace(/^./, function (x) { return x.toUpperCase(); }) + '</span>'; }
+  function chIcon(ch) { return ch === 'wa' ? 'whatsapp' : (ch === 'email' ? 'mail' : (ch === 'portal' ? 'link' : 'world')); }
+  function chTag(ch) { return '<span class="tag ' + (ch === 'wa' ? 'wa' : ch === 'email' ? 'mail' : ch === 'portal' ? 'brand' : 'web') + '">' + ic(chIcon(ch)) + CS.chName(ch).replace(/^./, function (x) { return x.toUpperCase(); }) + '</span>'; }
   function margTag(m, s) { var p = CS.pct(m, s); return '<span class="tag ' + (p >= 20 ? 'ok' : p >= 12 ? 'amber' : 'bad') + '">' + money(m) + ' · ' + p + '%</span>'; }
   var STATUS = {
     booked: ['Waiting on supplier', 'amber', '#F59E0B'], confirmed: ['Confirmed', 'brand', '#EB9347'], onhire: ['On hire', 'ok', '#16A34A'],
@@ -50,17 +53,17 @@
     box.appendChild(el); setTimeout(function () { el.style.transition = 'opacity .4s'; el.style.opacity = '0'; setTimeout(function () { el.remove(); }, 400); }, action ? 6500 : 3800);
   }
   function lastIn(t) { return t.msgs.filter(function (m) { return m.dir === 'in'; }).slice(-1)[0]; }
-  function preview(t) { var m = t.msgs[t.msgs.length - 1]; return (m.dir === 'out' ? 'You: ' : '') + m.text.replace(/\s+/g, ' '); }
+  function preview(t) { var m = CS.lastReal(t) || t.msgs[t.msgs.length - 1]; return (m.dir === 'out' ? 'You: ' : '') + m.text.replace(/\s+/g, ' '); }
   function sortedThreads() {
     return S.threads.slice().sort(function (a, b) { return (a.done ? 1 : 0) - (b.done ? 1 : 0) || b.last - a.last; });
   }
-  function needsYou(t) { return !t.done && t.msgs.length && t.msgs[t.msgs.length - 1].dir === 'in'; }
+  function needsYou(t) { return CS.needsYou(t); }
 
   /* ---------- shell ---------- */
   function renderNav() {
     var st = CS.stats(), ch = CS.chaseLists();
     var counts = { inbox: st.needs, chasing: ch.total };
-    $('#nav').innerHTML = VIEWS.map(function (v) {
+    $('#nav').innerHTML = '<button class="navcta" data-act="desk" title="New quote (Q)">' + ic('plus') + '<span class="lb">New quote</span><kbd class="hide-md">Q</kbd></button>' + VIEWS.map(function (v) {
       var c = counts[v.k];
       return (v.k === 'suppliers' ? '<div class="sep"></div>' : '') + '<button data-act="go" data-v="' + v.k + '" class="' + (ui.view === v.k ? 'on' : '') + '" title="' + v.n + '">' + ic(v.ic) + '<span class="lb">' + v.n + '</span>' + (c ? '<span class="cnt' + (v.k === 'chasing' ? ' grey' : '') + '">' + c + '</span>' : '') + '</button>';
     }).join('') + '<div class="sep"></div><button data-act="phone" title="Phone view">' + ic('mobile') + '<span class="lb">Phone view</span></button><button data-act="settings" title="Settings">' + ic('settings') + '<span class="lb">Settings</span></button>';
@@ -123,7 +126,9 @@
       else if (A && needsYou(x)) {
         var k = A.kind;
         tag = '<span class="tag ai">' + ic('sparkles') + (k === 'book' ? 'Booking drafted' : k === 'quote' ? 'Quote drafted' : k === 'ask' ? 'Reply drafted' : k === 'exchange' ? 'Exchange drafted' : k === 'collect' ? 'Collection drafted' : k === 'wtn' ? 'WTN matched' : k === 'paid' ? 'Payment matched' : k === 'pack' ? 'WTN pack ready' : k === 'bill' ? 'Bill checked' : k === 'confirm' ? 'Confirmation drafted' : k === 'reschedule' ? 'New date drafted' : 'Read') + '</span>';
-        if (A.margin) tag += '<span class="tag ok">' + money(A.margin) + ' margin</span>';
+        if (k === 'hold') tag = '<span class="tag bad">' + ic('alert') + 'Credit hold</span>';
+        else if (A.margin) tag += '<span class="tag ok">' + money(A.margin) + ' margin</span>';
+        if (x.msgs.some(function (m) { return m.auto && !x.creditOk; })) tag += '<span class="tag">' + ic('moon') + 'Out of hours</span>';
       } else if (x.done) tag = '<span class="tag">' + ic('check') + 'Done</span>';
       return '<button class="it' + (x.id === ui.sel ? ' on' : '') + (x.unread && !x.done ? ' unread' : '') + (x.done ? ' done' : '') + (ui.newIds[x.id] ? ' newin' : '') + '" data-act="sel" data-id="' + x.id + '">' +
         '<span class="av" style="--c:' + avCol(p.name, x.party.type) + '">' + h(CS.initials(p.name)) + '<span class="ch ' + x.ch + '">' + ic(chIcon(x.ch)) + '</span></span>' +
@@ -153,6 +158,7 @@
       return sep + '<div class="bub ' + (m.dir === 'out' ? 'out' : 'in') + (t.ch !== 'wa' ? ' email' : '') + (isNew ? ' newin' : '') + '">' +
         (i === 0 && t.subject ? '<span class="subj">' + h(t.subject) + '</span>' : '') +
         (i === 0 && t.form ? '<dl class="form">' + Object.keys(t.form).map(function (k) { return '<dt>' + h(k) + '</dt><dd>' + h(t.form[k]) + '</dd>'; }).join('') + '</dl>' : '') +
+        (m.voice ? '<span class="voice">' + ic('play') + '<i></i><span>0:' + String(m.voice).padStart(2, '0') + '</span></span><span class="vtr">' + ic('microphone') + 'Voice note, written out</span>' : '') +
         h(m.text) +
         (m.att && m.att.length ? '<div class="att">' + m.att.map(function (a) { return '<button data-act="att" data-n="' + h(a.n) + '" data-t="' + a.t + '" data-job="' + h(a.job || jobFromName(a.n)) + '">' + ic(a.t === 'photo' ? 'eye' : a.t === 'wtn' ? 'certificate' : 'file-text') + h(a.n) + '</button>'; }).join('') + '</div>' : '') +
         '<div class="meta">' + (m.dir === 'out' ? (m.by ? h(m.by) + ' · ' : '') : '') + CS.clock(m.at) + (m.dir === 'out' ? ' ' + ic('checks') : '') + '</div></div>';
@@ -162,7 +168,7 @@
       '<div class="who"><b>' + h(p.name) + '</b><small>' + h(p.sub) + ' · ' + chTag(t.ch) + (p.phone ? '<span class="hide-sm">' + h(p.phone) + '</span>' : '') + linked + '</small></div>' +
       '<button class="btn sm" data-act="partyOpen" data-id="' + t.id + '">' + ic(t.party.type === 'supplier' ? 'warehouse' : 'user') + '<span class="hide-sm">' + (t.party.type === 'supplier' ? 'Supplier' : t.party.type === 'lead' ? 'Lead' : 'Customer') + '</span></button></div>' +
       '<div class="msgs" data-keep="msgs-' + t.id + '">' + msgs + '</div>' +
-      '<div class="compose"><textarea id="compose" rows="1" placeholder="Reply yourself on ' + CS.chName(t.ch) + '..."></textarea><button class="btn dark" data-act="sendOwn" data-id="' + t.id + '">' + ic('send') + '<span class="hide-sm">Send</span></button></div></div>';
+      '<div class="compose"><textarea id="compose" rows="1" placeholder="Reply yourself on ' + CS.chName(CS.replyCh(t.ch)) + '..."></textarea><button class="btn dark" data-act="sendOwn" data-id="' + t.id + '">' + ic('send') + '<span class="hide-sm">Send</span></button></div></div>';
   }
   function jobFromName(n) { var m = /CAC-\d+/.exec(n || ''); return m ? m[0] : ''; }
 
@@ -211,7 +217,8 @@
         (d.to === 'customer' && A.att ? '<div class="att" style="padding:0 10px 10px">' + A.att.map(function (a) { return '<button data-act="att" data-n="' + h(a.n) + '" data-t="' + a.t + '" data-job="' + h(a.job || '') + '">' + ic(a.t === 'wtn' ? 'certificate' : 'eye') + h(a.n) + '</button>'; }).join('') + '</div>' : '') + '</div>';
     });
     o += supHtml;
-    o += '</div><div class="approvebar"><button class="btn ok lg" data-act="approve" data-id="' + t.id + '">' + ic('check') + h(A.approve || 'Approve') + '</button>' +
+    o += '</div><div class="approvebar"><button class="btn ' + (A.kind === 'hold' ? 'pri' : 'ok') + ' lg" data-act="approve" data-id="' + t.id + '">' + ic(A.kind === 'hold' ? 'pound' : 'check') + h(A.approve || 'Approve') + '</button>' +
+      (A.alt ? '<button class="btn" data-act="bookAnyway" data-id="' + t.id + '">' + h(A.alt) + '</button>' : '') +
       '<div class="row" style="justify-content:center"><button class="btn sm ghost" data-act="skip" data-id="' + t.id + '">Not now</button><button class="btn sm ghost" data-act="ownReply" data-id="' + t.id + '">' + ic('pencil') + 'I\'ll reply myself</button></div>' +
       '<small>Nothing is sent until you tap approve. Edit any line first if you want.</small></div>';
     return o;
@@ -225,15 +232,15 @@
     var maxW = Math.max.apply(null, S.weeks);
     var hours = hm(S.saved.mins);
     return '<div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:16px"><div style="flex:1;min-width:220px"><h2 style="font-size:24px">' + greeting() + ', John</h2><p class="muted" style="margin:4px 0 0">' + st.needs + ' messages need you and every one already has a draft. ' + st.awaiting + ' jobs waiting on suppliers, ' + ch.total + ' things being chased.</p></div>' +
-      '<button class="btn pri" data-act="go" data-v="inbox">' + ic('inbox') + 'Open the inbox</button></div>' +
+      '<button class="btn" data-act="briefing">' + ic('sun') + 'Briefing</button><button class="btn pri" data-act="go" data-v="inbox">' + ic('inbox') + 'Open the inbox</button></div>' +
       '<div class="grid g4 kpis" style="margin-bottom:16px">' +
       '<button class="card kpi" data-act="go" data-v="inbox"><small>' + ic('inbox') + 'Needs you</small><b>' + st.needs + '</b><span class="d">all drafted, one tap each</span></button>' +
       '<button class="card kpi" data-act="go" data-v="jobs"><small>' + ic('truck') + 'Jobs today and tomorrow</small><b>' + (st.today + st.tomorrow) + '</b><span class="d">' + st.onhire + ' on hire, ' + st.awaiting + ' waiting on supplier</span></button>' +
       '<button class="card kpi hero" data-act="go" data-v="money"><small>' + ic('pound') + 'Margin this month</small><b>' + money(mtd.margin) + '</b><span class="d">' + CS.pct(mtd.margin, mtd.rev) + '% on ' + money(mtd.rev) + ' sales</span></button>' +
-      '<button class="card kpi" data-act="go" data-v="chasing"><small>' + ic('pound') + 'Overdue to you</small><b>' + money(st.overdue) + '</b><span class="d">' + ch.pay.length + ' invoices, reminders ready</span></button></div>' +
+      '<button class="card kpi" data-act="go" data-v="chasing"><small>' + ic('pound') + 'Overdue to you</small><b>' + money(st.overdue) + '</b><span class="d">' + ch.pay.length + ' invoices, reminders ready</span></button></div>' + X.todayStrip() +
       '<div class="grid g64"><div class="grid" style="align-content:start">' +
       '<div class="card"><div class="hd"><h2>' + ic('sparkles') + 'Needs you</h2><button class="btn sm" data-act="go" data-v="inbox">See all</button></div><div class="bd needs">' +
-      (needs.length ? needs.map(function (t) { var p = CS.party(t.party), A = CS.analyse(t); return '<button class="n" data-act="openThread" data-id="' + t.id + '">' + av(p.name, t.party.type, 'sm') + '<span class="bd"><b>' + h(A.title) + '</b><small>' + h(p.name + ', ' + p.sub) + ' · ' + CS.chName(t.ch) + ' · ' + CS.ago(t.last) + '</small></span>' + (A.margin ? '<span class="tag ok">' + money(A.margin) + '</span>' : '') + ic('chevron-right') + '</button>'; }).join('') : '<div class="empty">' + ic('circle-check') + 'All clear.</div>') +
+      (needs.length ? needs.map(function (t) { var p = CS.party(t.party), A = CS.analyse(t); return '<button class="n" data-act="openThread" data-id="' + t.id + '">' + av(p.name, t.party.type, 'sm') + '<span class="bd"><b>' + h(A.title) + '</b><small>' + h(p.name + ', ' + p.sub) + ' · ' + CS.chName(t.ch) + ' · ' + CS.ago(t.last) + '</small></span>' + (A.kind === 'hold' ? '<span class="tag bad">On hold</span>' : (A.margin ? '<span class="tag ok">' + money(A.margin) + '</span>' : '')) + ic('chevron-right') + '</button>'; }).join('') : '<div class="empty">' + ic('circle-check') + 'All clear.</div>') +
       '</div></div>' +
       '<div class="card"><div class="hd"><h2>' + ic('truck') + 'Today and tomorrow</h2><button class="btn sm" data-act="go" data-v="jobs">Jobs board</button></div><div class="tw"><table class="t"><tbody>' +
       todays.map(function (j) { var c = CS.cust(j.cust), s = CS.jobSite(j), what = j.exDay === 0 || j.exDay === 1 ? 'Exchange' : (j.colDay === 0 || j.colDay === 1 ? 'Collection' : 'Delivery'); var when = what === 'Exchange' ? j.exDay : what === 'Collection' ? j.colDay : j.day;
@@ -241,7 +248,7 @@
       '</tbody></table></div></div></div>' +
       '<div class="grid" style="align-content:start">' +
       '<div class="card pad"><h2>' + ic('hourglass') + 'Admin done for you today</h2><div style="display:flex;align-items:baseline;gap:10px;margin:10px 0 4px"><b style="font-size:34px;letter-spacing:-.02em">' + hours + '</b><span class="muted">' + S.saved.actions + ' jobs, quotes and chases</span></div>' +
-      '<p class="muted" style="margin:0;font-size:12.5px">Estimate, using 3 to 25 minutes per task done by hand. That is the work of an admin hire, done before you open the inbox.</p></div>' +
+      '<p class="muted" style="margin:0;font-size:12.5px">Estimate, using 3 to 25 minutes per task done by hand. That is the work of an admin hire, done before you open the inbox.</p></div>' + X.todayNudge() +
       '<div class="card pad"><h2>' + ic('trending-up') + 'Margin by week</h2><div class="bars">' + S.weeks.map(function (w, i) { return '<div class="b' + (i < S.weeks.length - 1 ? ' dim' : '') + '"><em>' + (w >= 1000 ? '£' + (w / 1000).toFixed(1) + 'k' : money(w)) + '</em><i style="height:' + Math.round(w / maxW * 100) + '%"></i><span>' + (i === S.weeks.length - 1 ? 'This wk' : 'W' + (i + 1)) + '</span></div>'; }).join('') + '</div></div>' +
       '<div class="card"><div class="hd"><h2>' + ic('activity' in window.ICONS ? 'activity' : 'bolt') + 'What happened</h2></div><div class="bd feed">' + S.feed.slice(0, 7).map(function (f) { return '<div class="f">' + ic(f.ic) + '<span>' + h(f.t) + '</span><time>' + CS.ago(f.at) + '</time></div>'; }).join('') + '</div></div>' +
       '</div></div>';
@@ -285,7 +292,7 @@
       '<div class="tw"><table class="t"><thead><tr><th>Quote</th><th>Customer</th><th class="r">Price</th><th class="r hide-sm">Cost</th><th class="r">Margin</th><th>Status</th><th class="hide-md">Owner</th><th></th></tr></thead><tbody>' +
       qs.map(function (q) { var who = q.cust ? CS.cust(q.cust).name : CS.lead(q.lead).company; var m = q.sell - q.cost;
         var stc = { draft: '', sent: 'amber', won: 'ok', lost: 'bad' }[q.status];
-        return '<tr class="click" data-act="openQuote" data-id="' + q.id + '"><td><b>' + q.id + '</b><small>' + CS.fmtDay(q.day) + '</small></td><td><b>' + h(who) + '</b><small>' + h(q.desc) + '</small></td><td class="r num">' + money(q.sell) + '</td><td class="r num hide-sm">' + money(q.cost) + '</td><td class="r"><span class="marg">' + money(m) + '<small>' + CS.pct(m, q.sell) + '%</small></span></td><td><span class="tag ' + stc + '">' + q.status.replace(/^./, function (x) { return x.toUpperCase(); }) + '</span></td><td class="hide-md">' + (q.owner === 'sam' ? CS.bde() : 'John') + '</td>' +
+        return '<tr class="click" data-act="openQuote" data-id="' + q.id + '"><td><b>' + q.id + '</b><small>' + CS.fmtDay(q.day) + '</small></td><td><b>' + h(who) + '</b><small>' + h(q.desc) + '</small></td><td class="r num">' + money(q.sell) + '</td><td class="r num hide-sm">' + money(q.cost) + '</td><td class="r"><span class="marg">' + money(m) + '<small>' + CS.pct(m, q.sell) + '%</small></span></td><td><span class="tag ' + stc + '">' + q.status.replace(/^./, function (x) { return x.toUpperCase(); }) + '</span>' + (q.status === 'lost' && q.lostWhy ? '<small>' + h(q.lostWhy) + '</small>' : (q.repriced ? '<small>Repriced</small>' : '')) + '</td><td class="hide-md">' + (q.owner === 'sam' ? CS.bde() : 'John') + '</td>' +
           '<td class="r">' + (q.status === 'sent' ? '<button class="btn sm" data-act="chaseQuote" data-id="' + q.id + '">' + ic('bell') + '<span class="hide-sm">Chase</span></button>' : q.status === 'draft' ? '<button class="btn sm" data-act="sendQuote" data-id="' + q.id + '">' + ic('send') + '<span class="hide-sm">Send</span></button>' : '') + '</td></tr>'; }).join('') +
       '</tbody></table></div></div>';
   };
@@ -293,7 +300,7 @@
   V.suppliers = function () {
     var lk = ui.lookup || { pc: 'PE31 8LT', svc: 'skip', size: 8 };
     var res = CS.lookup(lk.pc, { svc: lk.svc, size: Number(lk.size) || 8, qty: 1, weeks: 4, panels: 20, m3: 6, hours: 4 });
-    return '<div class="card" style="margin-bottom:16px"><div class="hd"><h2>' + ic('map-pin') + 'Who covers this postcode?</h2></div><div class="bd">' +
+    return X.rateAlert() + '<div class="card" style="margin-bottom:16px"><div class="hd"><h2>' + ic('map-pin') + 'Who covers this postcode?</h2></div><div class="bd">' +
       '<div class="row" style="flex-wrap:wrap;align-items:flex-end;gap:10px"><div class="field" style="margin:0;width:150px"><label for="lkPc">Site postcode</label><input id="lkPc" value="' + h(lk.pc) + '"></div>' +
       '<div class="field" style="margin:0;width:190px"><label for="lkSvc">Service</label><select id="lkSvc">' + Object.keys(S.services).map(function (k) { return '<option value="' + k + '"' + (k === lk.svc ? ' selected' : '') + '>' + S.services[k].name + '</option>'; }).join('') + '</select></div>' +
       (lk.svc === 'skip' ? '<div class="field" style="margin:0;width:120px"><label for="lkSize">Size</label><select id="lkSize">' + [4, 6, 8, 10, 12, 14, 16, 20, 40].map(function (z) { return '<option value="' + z + '"' + (z == lk.size ? ' selected' : '') + '>' + z + ' yard</option>'; }).join('') + '</select></div>' : '') +
@@ -332,6 +339,7 @@
       sec('Suppliers not confirmed', 'warehouse', ch.sup.length, 'chaseAllSup', supRows, 'Every booking is confirmed.') +
       sec('Customers not paid', 'pound', ch.pay.length, 'chaseAllPay', payRows, 'Nobody is late paying.') +
       sec('WTNs not back', 'certificate', ch.wtn.length, 'chaseAllWtn', wtnRows, 'Every WTN is on file.') +
+      sec('Skips sitting on site', 'skip', ch.nudge.length, 'nudgeAll', X.nudgeRows(ch.nudge), 'Nothing has sat too long.') +
       sec('Quotes with no answer', 'file-text', ch.quotes.length, 'chaseAllQ', qRows, 'No quotes waiting.') + '</div>' +
       '<div class="grid" style="align-content:start"><div class="card pad"><h2>' + ic('bolt') + 'Chase rules</h2><p class="muted" style="margin:6px 0 4px;font-size:12.5px">The system chases for you on WhatsApp and email, using these rules. Every chase is logged on the job.</p>' +
       '<div class="rowline"><div class="bd"><b>Chase suppliers who haven\'t confirmed</b><small>After <span class="seg" style="vertical-align:middle;margin-left:4px">' + [15, 30, 60].map(function (m) { return '<button data-act="chaseMins" data-v="' + m + '" class="' + (set.chaseMins === m ? 'on' : '') + '">' + m + ' min</button>'; }).join('') + '</span></small></div><button class="switch' + (set.autoChase ? ' on' : '') + '" data-act="toggle" data-k="autoChase" aria-label="Auto chase suppliers"></button></div>' +
@@ -352,7 +360,7 @@
       '<div class="card kpi"><small>Sales this month</small><b>' + money(mtd.rev) + '</b><span class="d up">on track for ' + money(Math.round(mtd.rev / CS.dayDate(0).getDate() * 30 / 100) * 100) + '</span></div>' +
       '<div class="card kpi hero"><small>Margin this month</small><b>' + money(mtd.margin) + '</b><span class="d">' + CS.pct(mtd.margin, mtd.rev) + '% average</span></div>' +
       '<div class="card kpi"><small>Owed to you</small><b>' + money(st.owed) + '</b><span class="d">' + money(st.overdue) + ' overdue</span></div>' +
-      '<div class="card kpi"><small>Supplier bills to check</small><b>' + S.bills.filter(function (b) { return b.status === 'query'; }).length + '</b><span class="d">every bill matched to the job</span></div></div>' +
+      '<div class="card kpi"><small>Supplier bills to check</small><b>' + S.bills.filter(function (b) { return b.status === 'query'; }).length + '</b><span class="d">every bill matched to the job</span></div></div>' + X.moneyFound() +
       '<div class="grid g3" style="margin-bottom:16px"><div class="card pad"><h2>' + ic('trending-up') + 'Sales and margin by month</h2><div class="bars" style="height:170px">' + S.months.map(function (m) { return '<div class="b"><em>' + money(m.margin) + '</em><i style="height:' + Math.round(m.rev / maxR * 100) + '%;background:linear-gradient(to top,var(--brand) ' + CS.pct(m.margin, m.rev) + '%,var(--brand-m) ' + CS.pct(m.margin, m.rev) + '%)"></i><span>' + m.m + (m.mtd ? ' so far' : '') + '</span></div>'; }).join('') + '</div><p class="muted" style="font-size:12px;margin:8px 0 0">Bar is sales, solid part is margin.</p></div>' +
       '<div class="card pad"><h2>' + ic('pound') + 'Margin by service, jobs on the board</h2><div style="margin-top:8px">' + hb(bySvc) + '</div></div>' +
       '<div class="card pad"><h2>' + ic('warehouse') + 'Margin by supplier, jobs on the board</h2><div style="margin-top:8px">' + hb(bySup) + '</div></div></div>' +
@@ -382,8 +390,9 @@
         return '<tr><td><a class="link" data-act="openJob" data-id="' + j.id + '">' + j.id + '</a><small>' + CS.fmtDay(j.day) + '</small></td><td><b>' + h(c.name) + '</b><small>' + h(s.name) + ', ' + h(s.pc) + '</small></td><td class="hide-md">' + h(su.name) + '<small>' + h(su.cbdu) + '</small></td><td class="hide-sm">' + h(sv.waste || '') + '<small>EWC ' + h(sv.ewc || '') + '</small></td><td>' + wtnTag(j.wtn) + '</td>' +
           '<td class="r">' + (j.wtn === 'received' ? '<button class="btn sm" data-act="viewWtn" data-id="' + j.id + '">' + ic('eye') + '<span class="hide-sm">View</span></button>' : (j.wtn === 'missing' || j.wtn === 'chased') ? '<button class="btn sm" data-act="chaseWtn" data-id="' + j.id + '">' + ic('bell') + '<span class="hide-sm">Chase</span></button>' : '') + '</td></tr>'; }).join('') +
       '</tbody></table></div></div>' +
-      '<div class="grid" style="align-content:start"><div class="card"><div class="hd"><h2>' + ic('shield-check') + 'Supplier licences</h2></div><div class="bd" style="padding-top:2px;padding-bottom:2px">' +
+      '<div class="grid" style="align-content:start"><div class="card"><div class="hd"><h2>' + ic('shield-check') + 'Supplier licences</h2><button class="btn sm" data-act="checkAll">' + ic('refresh') + 'Check the register</button></div><div class="bd" style="padding-top:2px;padding-bottom:2px">' +
       lic.sort(function (a, b) { return a.licExp - b.licExp; }).map(function (s) { return '<div class="rowline"><div class="bd"><b>' + h(s.name) + '</b><small>' + h(s.cbdu) + ' · expires ' + CS.fmtDay(s.licExp) + (s.checked ? ' · checked today' : '') + '</small></div>' + (s.licExp < 60 ? '<button class="btn sm" data-act="licCheck" data-id="' + s.id + '">' + ic('alert') + 'Ask for renewal</button>' : '<span class="tag ok">' + ic('check') + 'Valid</span>') + '</div>'; }).join('') + '</div></div>' +
+      X.permits() +
       '<div class="card pad"><h2>' + ic('calendar') + 'What the law asks of a broker</h2><ul style="margin:8px 0 0;padding-left:18px;font-size:13px;color:var(--ink2);display:flex;flex-direction:column;gap:6px">' +
       '<li>Only use registered carriers: every supplier\'s CBDU and expiry is stored and flagged before it lapses.</li>' +
       '<li>Keep WTNs for 2 years: each one is filed on its job the moment it arrives.</li>' +
@@ -397,7 +406,7 @@
     var due = S.leads.filter(function (l) { return l.stage !== 'won' && l.next != null && l.next <= 0; }).sort(function (a, b) { return a.next - b.next; });
     var pv = S.leads.filter(function (l) { return l.stage !== 'won'; }).reduce(function (a, l) { return a + l.value; }, 0);
     var mx = Math.max.apply(null, sm.calls.concat([20]));
-    return '<div class="row" style="margin-bottom:14px;flex-wrap:wrap">' + av(CS.bde(), 'lead', 'lg') + '<div style="flex:1;min-width:200px"><h2 style="font-size:18px">' + h(CS.bde()) + ', Business Development Executive</h2><span class="muted" style="font-size:13px">Your new hire. Every call, quote and follow up lands here, so you can see the pipeline without asking.</span></div><button class="btn" data-act="addLead">' + ic('user-plus') + 'Add lead</button></div>' +
+    return '<div class="row" style="margin-bottom:14px;flex-wrap:wrap">' + av(CS.bde(), 'lead', 'lg') + '<div style="flex:1;min-width:200px"><h2 style="font-size:18px">' + h(CS.bde()) + ', Business Development Executive</h2><span class="muted" style="font-size:13px">Your new hire. Every call, quote and follow up lands here, so you can see the pipeline without asking.</span></div>' + X.salesTag() + '<button class="btn" data-act="addLead">' + ic('user-plus') + 'Add lead</button></div>' +
       '<div class="grid g4 kpis" style="margin-bottom:16px">' +
       '<div class="card kpi"><small>' + ic('phone') + 'Calls, last 5 working days</small><b>' + week + ' <span class="muted" style="font-size:14px">/ ' + sm.callTarget + '</span></b><div class="meter"><i style="width:' + Math.min(100, Math.round(week / sm.callTarget * 100)) + '%"></i></div></div>' +
       '<div class="card kpi"><small>' + ic('file-text') + 'Quotes sent</small><b>' + sm.quotes + '</b><span class="d">' + sm.emails + ' emails, ' + sm.linkedin + ' LinkedIn messages</span></div>' +
@@ -490,7 +499,7 @@
       '<div class="field"><label for="tryWho">Send as</label><select id="tryWho">' + opts + '</select></div>' +
       '<div class="cphone"><div class="scr"><div class="wh">' + ic('chevron-left') + '<span class="av sm" style="--c:#EB9347">CAC</span><span><b>CAC Waste Management</b><small>online</small></span></div><div class="wb" id="tryBody"><div class="wm" style="align-self:flex-start;background:#fff">Morning, what can we sort for you today?</div></div>' +
       '<div class="wi"><input id="tryText" placeholder="Message" value="need an 8 yarder in PE31 Tuesday" aria-label="Message"><button data-act="trySend" aria-label="Send">' + ic('send') + '</button></div></div></div>' +
-      '<div class="sugg">' + ['need an 8 yarder in PE31 Tuesday', 'can you swap the skip at Docking Rd tomorrow', 'price for a grab lorry NR3 Friday 8am', 'welfare unit and 2 loos for 6 weeks IP24 from Monday', '3 loads of muck away PE30 tomorrow, wait and load', 'need a skip'].map(function (s) { return '<button data-act="trySugg" data-v="' + h(s) + '">' + h(s) + '</button>'; }).join('') + '</div>');
+      '<div class="sugg">' + ['need an 8 yarder in PE31 Tuesday', 'new site PE38 9AA Monday 7am: welfare unit, 20ft container, 40 heras, a toilet and an 8 yard skip', 'can you swap the skip at Docking Rd tomorrow', 'price for a grab lorry NR3 Friday 8am', 'welfare unit and 2 loos for 6 weeks IP24 from Monday', '3 loads of muck away PE30 tomorrow, wait and load', 'need a skip'].map(function (s) { return '<button data-act="trySugg" data-v="' + h(s) + '">' + h(s) + '</button>'; }).join('') + '</div>');
     setTimeout(function () { var i = $('#tryText'); if (i) { i.focus(); i.select(); } }, 50);
   }
   function quickQuote() {
@@ -512,33 +521,38 @@
     var st = S.settings;
     modal('Settings', '<div class="rowline"><div class="bd"><b>Theme</b><small>Light or dark</small></div><div class="seg"><button data-act="theme" data-v="light" class="' + (st.theme === 'light' ? 'on' : '') + '">Light</button><button data-act="theme" data-v="dark" class="' + (st.theme === 'dark' ? 'on' : '') + '">Dark</button></div></div>' +
       '<div class="rowline"><div class="bd"><b>Live messages</b><small>Sample messages arrive while you show it</small></div><button class="switch' + (st.live ? ' on' : '') + '" data-act="toggle" data-k="live" aria-label="Live messages"></button></div>' +
+      '<div class="rowline"><div class="bd"><b>Out of hours</b><small>Reply straight away, hold the booking for your approval in the morning</small></div><button class="switch' + (st.outOfHours !== false ? ' on' : '') + '" data-act="toggle" data-k="outOfHours" aria-label="Out of hours reply"></button></div>' +
       '<div class="rowline"><div class="bd"><b>Reply tone</b><small>' + (st.tone === 'formal' ? '"Hello Dan, ... Kind regards, John Pesci"' : '"Hi Dan, yes no problem ... Cheers, John"') + '</small></div><div class="seg"><button data-act="tone" data-v="friendly" class="' + (st.tone !== 'formal' ? 'on' : '') + '">Short and friendly</button><button data-act="tone" data-v="formal" class="' + (st.tone === 'formal' ? 'on' : '') + '">Formal</button></div></div>' +
       '<div class="rowline"><div class="bd"><b>Your BDE\'s first name</b><small>Shown on Sales, leads and their replies</small></div><input id="bdeName" value="' + h(CS.bde()) + '" style="width:130px;border:1px solid var(--line2);border-radius:10px;padding:7px 10px;background:var(--panel2)" aria-label="BDE first name"></div>' +
+      '<div class="rowline"><div class="bd"><b>Your team</b><small>John, your BDE and the next hires, with what each one sees</small></div><button class="btn sm" data-act="team">' + ic('users') + 'Team</button></div>' +
+      '<div class="rowline"><div class="bd"><b>Take the tour</b><small>Seven quick steps round the system</small></div><button class="btn sm" data-act="tour">' + ic('play') + 'Start</button></div>' +
       '<div class="rowline"><div class="bd"><b>Business</b><small>CAC Waste Management Ltd · broker CBDU650137 · 0330 122 5711</small></div></div>' +
       '<div class="rowline"><div class="bd"><b>Replay the live messages</b><small>Sends the sample messages again from the start</small></div><button class="btn sm" data-act="replay">' + ic('play') + 'Replay</button></div>' +
       '<div class="rowline"><div class="bd"><b>Play the start-up</b><small>The welcome screen</small></div><button class="btn sm" data-act="boot">' + ic('play') + 'Play</button></div>' +
       '<div class="rowline"><div class="bd"><b>Reset the demo</b><small>Puts all the sample data back</small></div><button class="btn sm" data-act="reset">' + ic('refresh') + 'Reset</button></div>');
   }
-  function openPhone() {
-    if (window.innerWidth < 900) { location.href = 'phone.html'; return; }
-    var ex = $('#phmodal'); if (ex) { ex.remove(); return; }
-    var d = document.createElement('div'); d.className = 'phmodal'; d.id = 'phmodal';
-    d.innerHTML = '<button class="x" data-act="closePhone" aria-label="Close phone">' + ic('x') + '</button><iframe src="phone.html?embed=1" title="CAC on John\'s phone"></iframe>';
+  function openPhone(src, title) {
+    src = src || 'phone.html';
+    if (window.innerWidth < 900) { location.href = src; return; }
+    var ex = $('#phmodal'); if (ex) { var same = ex.getAttribute('data-src') === src; ex.remove(); if (same) return; }
+    var d = document.createElement('div'); d.className = 'phmodal'; d.id = 'phmodal'; d.setAttribute('data-src', src);
+    d.innerHTML = '<button class="x" data-act="closePhone" aria-label="Close phone">' + ic('x') + '</button><iframe src="' + src + (src.indexOf('?') >= 0 ? '&' : '?') + 'embed=1" title="' + h(title || 'CAC on the phone') + '"></iframe>';
     document.body.appendChild(d);
   }
   function boot(force) {
-    if (!force && (params.get('boot') === '0' || sessionStorage.getItem('cac-boot'))) return;
+    if (!force && (params.get('boot') === '0' || params.get('tour') === '1' || sessionStorage.getItem('cac-boot'))) return;
     try { sessionStorage.setItem('cac-boot', '1'); } catch (e) {}
     var st = CS.stats(), mtd = S.months[S.months.length - 1];
     var b = document.createElement('div'); b.className = 'boot'; b.id = 'boot';
     b.innerHTML = '<div class="in"><img src="brand/cac-logo-inverted.svg" alt="CAC Waste Management"><h2>' + greeting() + ', John.</h2>' +
       '<div class="ln" style="animation-delay:1s"><b>' + st.needs + '</b> messages need you. Every one already has a draft.</div>' +
       '<div class="ln" style="animation-delay:1.35s"><b>' + st.awaiting + '</b> jobs waiting on suppliers, being chased.</div>' +
-      '<div class="ln" style="animation-delay:1.7s"><b>' + money(mtd.margin) + '</b> margin booked this month.</div><small>Tap to start</small></div>';
+      '<div class="ln" style="animation-delay:1.7s"><b>' + money(mtd.margin) + '</b> margin booked this month.</div>' +
+      '<div class="bootbtns"><button class="btn pri" data-boot="tour">' + ic('play') + 'Show me round</button><button class="btn ghost" data-boot="go">Straight in</button></div><small>One number for everything. Same person, every time.</small></div>';
     document.body.appendChild(b);
-    var t = setTimeout(end, 4200);
+    var t = setTimeout(end, 9000);
     function end() { clearTimeout(t); b.classList.add('out'); setTimeout(function () { b.remove(); }, 500); }
-    b.addEventListener('click', end);
+    b.addEventListener('click', function (e) { var bb = e.target.closest('[data-boot]'); end(); if (bb && bb.getAttribute('data-boot') === 'tour' && window.CACP) setTimeout(window.CACP.tour, 520); });
   }
   function closeSide() { $('#side').classList.remove('open'); var sc = $('#sideScrim'); if (sc) sc.remove(); }
 
@@ -578,7 +592,7 @@
     ownReply: function () { var c = $('#compose'); if (c) { c.focus(); c.placeholder = 'Type your reply, then Send'; } toast('Write your own reply below. The draft stays here if you change your mind.', 'pencil'); },
     sendOwn: function (el) {
       var c = $('#compose'); var txt = c && c.value.trim(); if (!txt) { toast('Type a reply first', 'pencil'); if (c) c.focus(); return; }
-      var t = CS.thread(el.dataset.id); CS.addMsg(t, 'out', txt, { by: 'John' }); t.done = true; c.value = ''; CS.commit(); toast('Sent on ' + CS.chName(t.ch) + ' (demo, nothing really sent)', 'send');
+      var t = CS.thread(el.dataset.id); CS.addMsg(t, 'out', txt, { by: 'John' }); t.done = true; c.value = ''; CS.commit(); toast('Sent on ' + CS.chName(CS.replyCh(t.ch)) + ' (demo, nothing really sent)', 'send');
     },
     reopen: function (el) { var t = CS.thread(el.dataset.id); t.done = false; CS.commit(); },
     pickSup: function (el) { var t = CS.thread(el.dataset.id); t.supOverride = t.supOverride || {}; t.supOverride[el.dataset.i] = el.dataset.s; t.edits = null; CS.commit(); },
@@ -602,7 +616,7 @@
     openLead: function (el) { openLead(el.dataset.id); },
     openInv: function (el) {
       var i = CS.inv(el.dataset.id), c = CS.cust(i.cust);
-      modal(i.id + ' · ' + h(c.name), '<dl class="kv"><dt>Amount</dt><dd>' + money(i.amount, true) + ' + VAT</dd><dt>Issued</dt><dd>' + CS.fmtDay(i.issued) + '</dd><dt>Due</dt><dd>' + CS.fmtDay(i.due) + '</dd><dt>Status</dt><dd>' + (i.status === 'paid' ? 'Paid ' + CS.fmtDay(i.paidDay || 0) : 'Unpaid') + '</dd><dt>Jobs</dt><dd>' + (i.jobs.length ? i.jobs.join(', ') : 'Several, last month') + '</dd><dt>Xero</dt><dd>' + (i.xero ? 'Synced' : 'Ready to sync') + '</dd></dl>',
+      modal(i.id + ' · ' + h(c.name), '<dl class="kv"><dt>Amount</dt><dd>' + money(i.amount, true) + ' + VAT</dd><dt>Issued</dt><dd>' + CS.fmtDay(i.issued) + '</dd><dt>Due</dt><dd>' + CS.fmtDay(i.due) + '</dd><dt>Status</dt><dd>' + (i.status === 'paid' ? 'Paid ' + CS.fmtDay(i.paidDay || 0) : 'Unpaid') + '</dd><dt>Jobs</dt><dd>' + (i.jobs.length ? i.jobs.join(', ') : 'Several, last month') + '</dd><dt>Xero</dt><dd>' + (i.xero ? 'Synced' : 'Ready to sync') + '</dd></dl>' + X.invoiceDoc(i),
         (i.status !== 'paid' ? '<button class="btn" data-act="remind" data-id="' + i.id + '">' + ic('mail') + 'Send reminder</button><button class="btn pri" data-act="markPaid" data-id="' + i.id + '">' + ic('check') + 'Mark paid</button>' : '<button class="btn" data-act="close">Close</button>'));
     },
     close: function () { closeLayer(); },
@@ -615,8 +629,8 @@
     toggle: function (el) {
       var k = el.dataset.k; S.settings[k] = S.settings[k] === false ? true : !S.settings[k];
       if (k === 'live' && S.settings.live) S.liveT0 = Date.now() - (S.liveIdx > 0 ? S.live[S.liveIdx - 1].at * 1000 : 3000);
-      CS.commit(); if ($('.modal')) settings();
-      toast((S.settings[k] ? 'On: ' : 'Off: ') + ({ live: 'live messages', autoChase: 'supplier auto chase', autoWtn: 'WTN chasing', autoPay: 'payment reminders', autoQuote: 'quote follow ups' }[k] || k), S.settings[k] ? 'circle-check' : 'pause');
+      CS.commit(); if (k === 'briefing') A.briefing(); else if ($('.modal')) settings();
+      toast((S.settings[k] ? 'On: ' : 'Off: ') + ({ outOfHours: 'out of hours reply', briefing: 'morning briefing', live: 'live messages', autoChase: 'supplier auto chase', autoWtn: 'WTN chasing', autoPay: 'payment reminders', autoQuote: 'quote follow ups', autoReports: 'monthly waste reports on the 1st' }[k] || k), S.settings[k] ? 'circle-check' : 'pause');
     },
     livePill: function () { A.toggle({ dataset: { k: 'live' } }); },
     replay: function () { S.liveIdx = 0; S.liveT0 = Date.now(); S.settings.live = true; CS.commit(); closeLayer(); toast('Live messages restarted. The first one lands in a few seconds.', 'play'); },
@@ -648,7 +662,11 @@
     sendQuote: function (el) { var q = CS.quote(el.dataset.id); q.status = 'sent'; q.day = 0; CS.commit(); closeLayer(); toast(q.id + ' sent (demo, nothing really sent)', 'send'); },
     chaseQuote: function (el) { CS.chaseQuote(el.dataset.id); CS.commit(); closeLayer(); toast('Follow up sent for ' + el.dataset.id, 'bell'); },
     quoteWon: function (el) { var q = CS.quote(el.dataset.id); q.status = 'won'; if (q.lead) { var l = CS.lead(q.lead); l.stage = 'trial'; l.lastWhat = 'Quote won'; } CS.commit(); closeLayer(); toast(q.id + ' won. Book the supplier from the inbox or the jobs board.', 'circle-check'); },
-    quoteLost: function (el) { var q = CS.quote(el.dataset.id); q.status = 'lost'; q.lostWhy = 'Marked lost'; CS.commit(); closeLayer(); toast(q.id + ' marked lost', 'x'); },
+    quoteLost: function (el) {
+      var q = CS.quote(el.dataset.id);
+      modal('Why did ' + q.id + ' go?', '<p class="muted" style="margin:0 0 12px;font-size:13px">One tap. It builds a picture of why quotes are lost, by service and by who sent them.</p><div class="sugg" style="justify-content:flex-start;margin:0">' + ['Price', 'Went direct', 'Too slow to reply', 'Job cancelled', 'No answer'].map(function (r) { return '<button data-act="lostWhy" data-id="' + q.id + '" data-v="' + r + '">' + r + '</button>'; }).join('') + '</div>');
+    },
+    lostWhy: function (el) { var q = CS.quote(el.dataset.id); q.status = 'lost'; q.lostWhy = el.dataset.v; CS.commit(); closeLayer(); toast(q.id + ' marked lost: ' + h(el.dataset.v.toLowerCase()), 'x'); },
     lookup: function () { ui.lookup = { pc: $('#lkPc').value, svc: $('#lkSvc').value, size: ($('#lkSize') || {}).value || 8 }; render(); },
     addSup: function () {
       modal('Add a supplier', '<div class="field"><label for="nsName">Name</label><input id="nsName" placeholder="Supplier name"></div><div class="grid g2"><div class="field"><label for="nsPh">WhatsApp number</label><input id="nsPh" placeholder="07..."></div><div class="field"><label for="nsAreas">Postcodes covered</label><input id="nsAreas" placeholder="PE30, PE31, NR"></div></div><div class="field"><label for="nsCbdu">Carrier number (CBDU)</label><input id="nsCbdu" placeholder="CBDU..."></div><p class="muted" style="font-size:12.5px;margin:0">In the live system their rate card is added here too, and the licence is checked against the public register.</p>',
@@ -669,7 +687,12 @@
     chaseAllPay: function () { var l = CS.chaseLists().pay; l.forEach(function (i) { CS.remind(i.id); }); CS.commit(); toast(l.length + ' payment reminders sent', 'mail'); },
     chaseAllQ: function () { var l = CS.chaseLists().quotes; l.forEach(function (q) { CS.chaseQuote(q.id); }); CS.commit(); toast(l.length + ' quotes followed up', 'file-text'); },
     chaseMins: function (el) { S.settings.chaseMins = Number(el.dataset.v); CS.commit(); toast('Suppliers get chased after ' + el.dataset.v + ' minutes', 'clock'); },
-    markPaid: function (el) { var i = CS.inv(el.dataset.id); i.status = 'paid'; i.paidDay = 0; CS.feed(i.id + ' paid', 'pound'); CS.commit(); closeLayer(); toast(i.id + ' marked paid', 'pound'); },
+    markPaid: function (el) {
+      var i = CS.inv(el.dataset.id); i.status = 'paid'; i.paidDay = 0; CS.feed(i.id + ' paid', 'pound');
+      var rel = CS.releaseHolds(i.cust); CS.commit(); closeLayer();
+      toast(i.id + ' marked paid' + (rel ? '. The booking held for ' + h(CS.cust(i.cust).name) + ' is back in your inbox, ready to approve' : ''), 'pound');
+    },
+    bookAnyway: function (el) { var t = CS.thread(el.dataset.id); t.creditOk = true; t.edits = null; CS.commit(); toast('Credit hold overridden for this job. Booking is ready to approve.', 'alert'); },
     xero: function () { S.invoices.forEach(function (i) { i.xero = true; }); CS.commit(); toast('In the live build invoices and bills post to Xero. Demo only, nothing sent.', 'refresh'); },
     raiseAll: function () {
       var nj = S.jobs.filter(function (j) { return j.status === 'done' && !S.invoices.some(function (i) { return i.jobs.indexOf(j.id) >= 0; }); });
@@ -707,17 +730,7 @@
     closeSide: function () { closeSide(); },
     srch: function (el) { var k = el.dataset.k, id = el.dataset.id; $('#sres').hidden = true; $('#q').value = ''; if (k === 'job') openJob(id); else if (k === 'sup') openSup(id); else if (k === 'quote') openQuote(id); else if (k === 'cust') openCust(id); else if (k === 'lead') openLead(id); }
   };
-  function openCust(id) {
-    var c = CS.cust(id); var js = S.jobs.filter(function (j) { return j.cust === id; }); var inv = S.invoices.filter(function (i) { return i.cust === id && i.status !== 'paid'; });
-    var m = js.reduce(function (a, j) { return a + j.sell - j.cost; }, 0);
-    drawer(h(c.name), h(c.contact) + ' · ' + h(c.type) + ' · ' + h(c.terms),
-      '<div class="grid g3"><div class="card kpi"><small>Jobs</small><b>' + js.length + '</b></div><div class="card kpi"><small>Margin</small><b>' + money(m) + '</b></div><div class="card kpi"><small>Owes</small><b>' + money(inv.reduce(function (a, i) { return a + i.amount; }, 0)) + '</b></div></div>' +
-      '<div class="sec"><h3>Sites</h3>' + c.sites.map(function (s) { return '<div class="rowline">' + ic('map-pin') + '<div class="bd"><b>' + h(s.name) + '</b><small>' + h(s.pc) + '</small></div></div>'; }).join('') + '</div>' +
-      '<div class="sec"><h3>Jobs</h3>' + js.slice().reverse().map(function (j) { return '<div class="rowline"><div class="bd"><b>' + j.id + ', ' + h(CS.jobDesc(j)) + '</b><small>' + CS.fmtDay(j.day) + ' · ' + h(CS.sup(j.sup).name) + '</small></div>' + stTag(j.status) + '</div>'; }).join('') + '</div>' +
-      '<div class="sec"><h3>Contact</h3><dl class="kv"><dt>Phone</dt><dd>' + h(c.phone) + '</dd><dt>Email</dt><dd>' + h(c.email) + '</dd><dt>Looked after by</dt><dd>' + (c.owner === 'sam' ? CS.bde() : 'John') + '</dd></dl></div>',
-      '<button class="btn pri" data-act="msgParty" data-type="customer" data-id="' + c.id + '">' + ic('whatsapp') + 'Message ' + h(c.first) + '</button>');
-  }
-
+  function openCust(id) { return X.openCust(id); }
   document.addEventListener('click', function (e) {
     var el = e.target.closest('[data-act]'); if (!el) { var sr = $('#sres'); if (sr && !e.target.closest('.search')) sr.hidden = true; return; }
     var a = el.getAttribute('data-act'); if (A[a]) { e.preventDefault(); A[a](el, e); }
@@ -757,7 +770,7 @@
   }
 
   /* ---------- live updates ---------- */
-  CS.on(function (why) { render(why); });
+  CS.on(function (why) { if (why === 'sync') X.syncToast(); render(why); });
   function loop() {
     var arrived = CS.tick({ runLive: true, prefer: true });
     arrived.forEach(function (t) {
@@ -774,7 +787,10 @@
   var hv = location.hash.replace('#', ''); if (VIEWS.some(function (v) { return v.k === hv; })) ui.view = hv;
   window.addEventListener('hashchange', function () { var v = location.hash.replace('#', ''); if (v !== ui.view && VIEWS.some(function (x) { return x.k === v; })) { ui.view = v; render(); } });
   if (!S.liveT0 && S.settings.live) { S.liveT0 = Date.now() + (params.get('boot') === '0' || sessionStorage.getItem('cac-boot') ? 0 : 3000); CS.save(); }
+  window.CACUI = { ui: ui, render: render, A: A, V: V };
+  X.init({ ui: ui, V: V, A: A, $: $, av: av, toast: toast, modal: modal, drawer: drawer, closeLayer: closeLayer, stTag: stTag, wtnTag: wtnTag, margTag: margTag, chIcon: chIcon,
+    render: render, go: go, openPhone: openPhone, selectThread: selectThread, openJob: openJob, wtnDoc: wtnDoc, needsYou: needsYou });
   render();
   boot();
-  window.CACUI = { ui: ui, render: render, A: A };
+  if (params.get('tour') === '1' && window.CACP) setTimeout(window.CACP.tour, 600);
 })();
