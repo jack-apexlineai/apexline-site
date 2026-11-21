@@ -146,3 +146,6 @@
   .wmap{flex-wrap:wrap}.wmap select{max-width:100%;width:100%}
   .top .demo-badge{display:none}
 }
+
+.gsum{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:13.5px}
+.gsum .muted{font-size:12.5px}
