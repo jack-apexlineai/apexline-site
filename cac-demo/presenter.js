@@ -18,9 +18,9 @@
   }
 
   var RUN = {
-    home: function () { closeAll(); view('inbox'); live(false); },
-    reset: function () { closeAll(); A().reset(); live(false); view('inbox'); },
-    startup: function () { closeAll(); view('inbox'); A().boot(); },
+    home: function () { closeAll(); view('home'); live(false); },
+    reset: function () { closeAll(); A().reset(); live(false); view('home'); },
+    startup: function () { closeAll(); view('home'); A().boot(); },
     inbox: function () { closeAll(); view('inbox'); thread('t3'); },
     liveOn: function () { live(true); },
     testwa: function () { closeAll(); view('inbox'); A().tryIt(); fill('#tryText', ''); },

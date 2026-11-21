@@ -339,7 +339,7 @@
       '<div class="tiles' + (arr ? ' arr' : '') + '" id="tiles">' + d.home.map(function (k, i) {
         var t = defs[k];
         return '<section class="card tile" draggable="true" data-tile="' + k + '"><div class="hd"><span class="grip" title="Drag to move">' + ic('menu') + '</span><h2>' + ic(t.ic) + h(t.n) + '</h2>' +
-          (arr ? '<button class="iconbtn sm" data-act="tileMove" data-v="' + k + '" data-d="-1" aria-label="Move ' + h(t.n) + ' earlier"' + (i === 0 ? ' disabled' : '') + '>' + ic('chevron-left') + '</button><button class="iconbtn sm" data-act="tileMove" data-v="' + k + '" data-d="1" aria-label="Move ' + h(t.n) + ' later"' + (i === d.home.length - 1 ? ' disabled' : '') + '>' + ic('chevron-right') + '</button><button class="iconbtn sm" data-act="tileHide" data-v="' + k + '" aria-label="Hide ' + h(t.n) + '">' + ic('x') + '</button>' : '') +
+          (arr ? (i === 0 ? '' : '<button class="iconbtn sm" data-act="tileMove" data-v="' + k + '" data-d="-1" aria-label="Move ' + h(t.n) + ' earlier">' + ic('chevron-left') + '</button>') + (i === d.home.length - 1 ? '' : '<button class="iconbtn sm" data-act="tileMove" data-v="' + k + '" data-d="1" aria-label="Move ' + h(t.n) + ' later">' + ic('chevron-right') + '</button>') + '<button class="iconbtn sm" data-act="tileHide" data-v="' + k + '" aria-label="Hide ' + h(t.n) + '">' + ic('x') + '</button>' : '') +
           '</div><div class="bd">' + t.body + '</div><button class="tgo" data-act="' + t.act + '" data-v="' + t.v + '">' + t.go + ic('chevron-right') + '</button></section>';
       }).join('') + '</div>';
   }
