@@ -240,10 +240,16 @@
     if (t.done || !(A.kind === 'book' || A.kind === 'quote') || !A.lines.length) return null;
     var book = A.kind === 'book', g = t.g || { step: 1 }, r = A.parsed, p = CS.party(t.party), nm = p.first || first(p.name);
     var last = book ? 3 : 2, sPrice = book ? 2 : 1;
-    function step(n, title, body, sum) {
+    function step(n, title, body, sum, always) {
       var st = g.step > n ? 'done' : g.step === n ? 'on' : 'todo';
-      return '<div class="gstep ' + st + '" data-step="' + n + '"><span class="gn">' + (st === 'done' ? ic('check') : n) + '</span><div class="gb"><b>' + title + '</b>' + (st === 'done' ? '<span class="gs">' + sum + ' <button class="lnk" data-act="gStep" data-id="' + t.id + '" data-v="' + n + '">Change</button></span>' : st === 'on' ? body : '') + '</div></div>';
+      return '<div class="gstep ' + st + (always ? ' show' : '') + '" data-step="' + n + '"><span class="gn">' + (st === 'done' ? ic('check') : n) + '</span><div class="gb"><b>' + title + '</b>' + (st === 'done' ? '<span class="gs">' + sum + ' <button class="lnk" data-act="gStep" data-id="' + t.id + '" data-v="' + n + '">Change</button></span>' : (st === 'on' || always) ? body : '') + '</div></div>';
     }
+    var supHtml = '';
+    A.lines.forEach(function (l) {
+      if (!l.alts || l.alts.length < 2) { if (l.why && l.sup) supHtml += '<div class="note">' + ic('star') + '<span><b>' + h(CS.sup(l.sup).name) + '</b>: ' + h(l.why) + '</span></div>'; return; }
+      supHtml += '<div class="supsel"><div class="sec"><h3>Supplier for ' + h(l.desc.toLowerCase()) + '</h3></div>' + l.alts.map(function (a) { var su = CS.sup(a.sup);
+        return '<button class="supopt' + (a.sup === l.sup ? ' on' : '') + '" data-act="pickSup" data-id="' + t.id + '" data-i="' + l.idx + '" data-s="' + a.sup + '"><span class="nm"><b>' + h(su.name) + '</b><small>' + su.onTime + '% on time · confirms in ~' + su.resp + ' min' + (su.wtn ? ' · WTNs ' + su.wtn + '%' : '') + '</small></span><b class="num">' + money(a.cost) + '</b>' + (a.sup === l.sup ? ic('circle-check') : '') + '</button>'; }).join('') + (l.why ? '<div class="note">' + ic('star') + '<span>' + h(l.why) + '</span></div>' : '') + '</div>';
+    });
     var o = '<div class="abody guide"><div class="ahead"><span class="tag ai">' + ic('sparkles') + 'Response drafted</span><h3>' + h(A.title) + '</h3><p>' + (book ? 'Check the date, check the price, then one tap books it and sends everything.' : 'Check the price, then one tap sends the quote.') + '</p></div>';
     if (A.chips.length) o += '<div class="chips">' + A.chips.map(function (c) { return '<span class="chip' + (c.assumed ? ' assumed' : '') + '"><small>' + h(c.k) + '</small><span>' + h(c.v) + '</span></span>'; }).join('') + '</div>';
     A.notes.forEach(function (n) { var multi = /Tap to change/.test(n); o += '<div class="note' + (multi ? ' click' : '') + '"' + (multi ? ' data-act="cycleSite" data-id="' + t.id + '" role="button" tabindex="0"' : '') + '>' + ic('sparkles') + '<span>' + h(n) + '</span></div>'; });
@@ -259,7 +265,7 @@
       '<div class="money">' + A.lines.map(function (l, i) { var su = l.sup && CS.sup(l.sup);
         return '<div class="ln"><div class="d"><b>' + h(l.desc) + '</b><small>' + (su ? h(su.name) + ' · cost ' + money(l.cost) : 'Cost ' + money(l.cost)) + '</small></div><span class="c">price</span><input id="price-' + t.id + '-' + i + '" data-price="' + i + '" data-id="' + t.id + '" inputmode="numeric" value="' + l.sell + '" aria-label="Customer price"></div>'; }).join('') +
       '<div class="tot"><div><small>Customer</small><b class="num">' + money(A.sell) + '</b></div><div><small>Supplier</small><b class="num">' + money(A.cost) + '</b></div><div class="m"><small>Margin</small><b class="num">' + money(A.margin) + ' <span style="font-size:12px">' + CS.pct(A.margin, A.sell) + '%</span></b></div></div></div>' +
-      '<div class="row gbtns"><button class="btn ok" data-act="gPrice" data-id="' + t.id + '">' + ic('check') + 'Price is right</button></div><small>Prices come from your price book. Type over any of them and the margin and the reply follow.</small>',
+      supHtml + '<div class="row gbtns"><button class="btn ok" data-act="gPrice" data-id="' + t.id + '">' + ic('check') + 'Price is right</button></div><small>Prices come from your price book. Type over any of them and the margin and the reply follow.</small>',
       money(A.sell) + ' + VAT, ' + money(A.margin) + ' margin (' + CS.pct(A.margin, A.sell) + '%).');
     var sendBody = '';
     A.drafts.forEach(function (d, i) {
@@ -268,7 +274,7 @@
         '<textarea id="draft-' + t.id + '-' + i + '" data-draft="' + i + '" data-id="' + t.id + '" rows="' + Math.min(8, Math.max(3, Math.ceil(text.length / 48) + (text.split('\n').length - 1))) + '">' + h(text) + '</textarea></div>';
     });
     if (book) sendBody += '<div class="note">' + ic('receipt') + '<span>The invoice and the order confirmation are made from this booking and go with the reply.</span></div>';
-    o += step(last, book ? 'Book it and send' : 'Send the quote', sendBody, '');
+    o += step(last, book ? 'Book it and send' : 'Send the quote', sendBody, '', true);
     o += '</div><div class="approvebar">' + (g.step >= last
       ? '<button class="btn ok lg gbig" data-act="' + (book ? 'gBook' : 'approve') + '" data-id="' + t.id + '">' + ic('check') + (book ? 'Book with supplier and send invoice and confirmation to ' + h(nm) : 'Send the quote to ' + h(nm)) + '</button>'
       : '<div class="gprog">Step ' + g.step + ' of ' + last + '</div>') +

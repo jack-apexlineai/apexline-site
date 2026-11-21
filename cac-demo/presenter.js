@@ -36,7 +36,15 @@
     money: function () { closeAll(); view('money'); },
     sales: function () { closeAll(); view('sales'); },
     team: function () { closeAll(); A().team(); },
-    today: function () { closeAll(); view('today'); }
+    today: function () { closeAll(); view('today'); },
+    homeDash: function () { closeAll(); view('home'); },
+    gemma: function () { closeAll(); view('inbox'); thread(window.CACV2.gemma()); },
+    order: function () { closeAll(); A().newOrder(); },
+    handbook: function () { closeAll(); view('suppliers'); },
+    skips: function () { closeAll(); A().jobTab({ dataset: { v: 'skips' } }); },
+    livejobs: function () { closeAll(); A().jobTab({ dataset: { v: 'live' } }); },
+    wtnauto: function () { closeAll(); view('paperwork'); },
+    pipeline: function () { closeAll(); view('sales'); }
   };
 
   bc.onmessage = function (e) {
