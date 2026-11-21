@@ -6,20 +6,21 @@
   if (params.get('live') === '0') { S.settings.live = false; CS.save(); }
   if (params.get('theme')) { S.settings.theme = params.get('theme'); CS.save(); }
 
-  var ui = { view: 'inbox', sel: null, tab: 'all', reading: {}, typed: {}, justDone: {}, newIds: {}, qFilter: 'all', jobOwner: 'all', jobQ: '', search: '', open: false };
+  var ui = { view: 'home', sel: null, asst: true, jobTab: 'live', tab: 'all', reading: {}, typed: {}, justDone: {}, newIds: {}, qFilter: 'all', jobOwner: 'all', jobQ: '', search: '', open: false };
   var VIEWS = [
+    { k: 'home', n: 'Home', ic: 'home', sub: '' },
     { k: 'inbox', n: 'Inbox', ic: 'inbox', sub: 'WhatsApp, email and the website in one place' },
     { k: 'today', n: 'Today', ic: 'dashboard', sub: '' },
-    { k: 'jobs', n: 'Jobs board', ic: 'truck', sub: 'Every skip, grab and unit, from booked to collected' },
+    { k: 'jobs', n: 'Jobs', ic: 'truck', sub: 'Live jobs today, skips on site and every job' },
     { k: 'quotes', n: 'Quotes', ic: 'file-text', sub: 'Customer price, supplier cost and margin on every quote' },
-    { k: 'pricebook', n: 'Price book', ic: 'list', sub: 'Your prices for every area and size, your rules, and price lists read in' },
+    { k: 'pricebook', hide: true, n: 'Price book', ic: 'list', sub: 'Your prices for every area and size, your rules, and price lists read in' },
     { k: 'customers', n: 'Customers', ic: 'users', sub: 'Credit, sites, statements and each customer\'s own link' },
-    { k: 'suppliers', n: 'Suppliers', ic: 'warehouse', sub: 'Who covers which postcode, at what rate, and how reliable they are' },
+    { k: 'suppliers', n: 'Supplier handbook', ic: 'warehouse', sub: 'Contacts, prices, surcharges, licences and who covers where' },
     { k: 'chasing', n: 'Chasing', ic: 'bell', sub: 'Everything waiting on someone else, chased for you' },
     { k: 'money', n: 'Money', ic: 'pound', sub: 'Invoices, supplier bills and margin' },
     { k: 'paperwork', n: 'Duty of care', ic: 'certificate', sub: 'WTNs per job, supplier licences, audit packs' },
     { k: 'reports', n: 'Waste and carbon', ic: 'leaf', sub: 'Tonnes, landfill diversion and carbon for every account and site' },
-    { k: 'sales', n: 'Sales', ic: 'trending-up', sub: 'Your BDE\'s pipeline and follow ups, visible to you' }
+    { k: 'sales', n: 'Sales', ic: 'trending-up', sub: 'The pipeline, every deal and every follow up' }
   ];
   var PARTY_COL = { customer: ['#EB9347', '#C7672A', '#D9853A', '#B9773F'], supplier: ['#3F3F46', '#52525B', '#27272A'], lead: ['#7A3FF2', '#6D28D9'] };
 
@@ -62,19 +63,20 @@
   /* ---------- shell ---------- */
   function renderNav() {
     var st = CS.stats(), ch = CS.chaseLists();
-    var counts = { inbox: st.needs, chasing: ch.total };
-    $('#nav').innerHTML = '<button class="navcta" data-act="desk" title="New quote (Q)">' + ic('plus') + '<span class="lb">New quote</span><kbd class="hide-md">Q</kbd></button>' + VIEWS.map(function (v) {
+    var counts = { inbox: st.unread || st.needs, chasing: ch.total };
+    $('#nav').innerHTML = '<button class="navcta" data-act="newOrder" title="New order (O)">' + ic('plus') + '<span class="lb">New order</span><kbd class="hide-md">O</kbd></button><button class="navcta two" data-act="desk" title="New quote (Q)">' + ic('file-text') + '<span class="lb">New quote</span><kbd class="hide-md">Q</kbd></button>' + VIEWS.filter(function (v) { return !v.hide; }).map(function (v) {
       var c = counts[v.k];
-      return (v.k === 'suppliers' ? '<div class="sep"></div>' : '') + '<button data-act="go" data-v="' + v.k + '" class="' + (ui.view === v.k ? 'on' : '') + '" title="' + v.n + '">' + ic(v.ic) + '<span class="lb">' + v.n + '</span>' + (c ? '<span class="cnt' + (v.k === 'chasing' ? ' grey' : '') + '">' + c + '</span>' : '') + '</button>';
+      return (v.k === 'suppliers' ? '<div class="sep"></div>' : '') + '<button data-act="go" data-v="' + v.k + '" class="' + (ui.view === v.k || (v.k === 'suppliers' && ui.view === 'pricebook') ? 'on' : '') + '" title="' + v.n + '">' + ic(v.ic) + '<span class="lb">' + v.n + '</span>' + (c ? '<span class="cnt' + (v.k === 'chasing' ? ' grey' : (v.k === 'inbox' && st.unread ? ' red' : '')) + '">' + c + '</span>' : '') + '</button>';
     }).join('') + '<div class="sep"></div><button data-act="phone" title="Phone view">' + ic('mobile') + '<span class="lb">Phone view</span></button><button data-act="settings" title="Settings">' + ic('settings') + '<span class="lb">Settings</span></button>';
   }
   function renderTop() {
     var v = VIEWS.filter(function (x) { return x.k === ui.view; })[0];
-    var sub = v.k === 'today' ? CS.dayDate(0).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) : v.sub;
+    var sub = (v.k === 'today' || v.k === 'home') ? CS.dayDate(0).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) : v.sub;
     $('#title').textContent = v.n; $('#sub').textContent = sub;
     var lp = $('#livePill'); lp.className = 'livepill' + (S.settings.live ? '' : ' off');
     lp.innerHTML = '<i></i><span class="t">' + (S.settings.live ? 'Live' : 'Paused') + '</span>';
     $('#themeBtn').innerHTML = ic(S.settings.theme === 'dark' ? 'sun' : 'moon');
+    var ab = $('#asstBtn'); if (ab && X.todoCount) { var n = X.todoCount(); ab.innerHTML = ic('sparkles') + '<span class="lb">Assistant</span>' + (n ? '<span class="cnt red">' + n + '</span>' : ''); }
   }
   function render(why) {
     S = CS.S;
@@ -111,15 +113,15 @@
 
   V.inbox = function () {
     var all = sortedThreads();
-    var tabs = [
-      ['all', 'All', all.length], ['needs', 'Needs you', all.filter(needsYou).length],
-      ['customer', 'Customers', all.filter(function (t) { return t.party.type === 'customer'; }).length],
-      ['supplier', 'Suppliers', all.filter(function (t) { return t.party.type === 'supplier'; }).length],
-      ['lead', 'New leads', all.filter(function (t) { return t.party.type === 'lead'; }).length]
-    ];
-    var list = all.filter(function (t) { return ui.tab === 'all' || (ui.tab === 'needs' ? needsYou(t) : t.party.type === ui.tab); });
-    if (!ui.sel || !CS.thread(ui.sel)) { var f = list.filter(needsYou)[0] || list[0]; ui.sel = f && f.id; }
-    var t = CS.thread(ui.sel);
+    var KIND = {}; all.forEach(function (x) { if (!x.done) KIND[x.id] = CS.analyse(x).kind; });
+    function isOrder(x) { return !x.done && needsYou(x) && /^(book|quote|exchange|collect|hold)$/.test(KIND[x.id] || ''); }
+    function isUnread(x) { return x.unread && !x.done; }
+    function inTab(k, x) { return k === 'all' || (k === 'needs' ? needsYou(x) : k === 'unread' ? isUnread(x) : k === 'orders' ? isOrder(x) : k === 'open' ? !x.done : k === 'done' ? !!x.done : x.party.type === k); }
+    var tabs = [['all', 'All'], ['unread', 'Unread'], ['needs', 'Needs you'], ['orders', 'Orders'], ['lead', 'New leads'], ['supplier', 'Suppliers'], ['open', 'Not closed']].map(function (x) { return [x[0], x[1], all.filter(function (y) { return inTab(x[0], y); }).length]; });
+    var list = all.filter(function (x) { return inTab(ui.tab, x); });
+    if (ui.sel && !CS.thread(ui.sel)) ui.sel = null;
+    var t = ui.sel ? CS.thread(ui.sel) : null;
+    var showAsst = !!t && ui.asst !== false;
     var items = list.map(function (x) {
       var p = CS.party(x.party), A = x.done ? null : CS.analyse(x), tag = '';
       if (ui.reading[x.id]) tag = '<span class="tag ai">' + ic('sparkles') + 'Reading...</span>';
@@ -132,16 +134,17 @@
       } else if (x.done) tag = '<span class="tag">' + ic('check') + 'Done</span>';
       return '<button class="it' + (x.id === ui.sel ? ' on' : '') + (x.unread && !x.done ? ' unread' : '') + (x.done ? ' done' : '') + (ui.newIds[x.id] ? ' newin' : '') + '" data-act="sel" data-id="' + x.id + '">' +
         '<span class="av" style="--c:' + avCol(p.name, x.party.type) + '">' + h(CS.initials(p.name)) + '<span class="ch ' + x.ch + '">' + ic(chIcon(x.ch)) + '</span></span>' +
-        '<span class="bd"><span class="l1"><b>' + h(p.name) + '</b><time>' + CS.ago(x.last) + '</time></span><span class="l2">' + h(p.sub) + (x.subject ? ' · ' + h(x.subject) : '') + '</span>' +
+        '<span class="bd"><span class="l1"><b>' + h(p.name) + '</b>' + (isUnread(x) ? '<span class="ub" title="Unread">' + unreadN(x) + '</span>' : '') + '<time>' + CS.ago(x.last) + '</time></span><span class="l2">' + h(p.sub) + (x.subject ? ' · ' + h(x.subject) : '') + '</span>' +
         '<span class="l3">' + h(preview(x)) + '</span><span class="l4">' + tag + '</span></span></button>';
     }).join('');
     ui.newIds = {};
-    return '<div class="inbox' + (ui.open ? ' open' : '') + '">' +
-      '<div class="col list"><div class="ilist-hd"><div class="tabs">' + tabs.map(function (x) { return '<button data-act="tab" data-v="' + x[0] + '" class="' + (ui.tab === x[0] ? 'on' : '') + '">' + x[1] + ' <span class="n">' + x[2] + '</span></button>'; }).join('') + '</div></div>' +
+    return '<div class="inbox' + (ui.open && t ? ' open' : '') + (showAsst ? '' : ' noasst') + '">' +
+      '<div class="col list"><div class="ilist-hd"><div class="tabs">' + tabs.map(function (x) { return '<button data-act="tab" data-v="' + x[0] + '" class="' + (ui.tab === x[0] ? 'on' : '') + '">' + x[1] + ' <span class="n' + (x[0] === 'unread' && x[2] ? ' red' : '') + '">' + x[2] + '</span></button>'; }).join('') + '</div></div>' +
       '<div class="ilist" data-keep="ilist">' + (items || '<div class="empty">' + ic('circle-check') + 'Nothing here. Inbox zero.</div>') + '</div></div>' +
-      '<div class="col mid">' + (t ? threadHTML(t) : '<div class="empty">Pick a conversation</div>') + '</div>' +
-      '<div class="col asst asst-col" data-keep="asst">' + (t ? asstHTML(t) : '') + '</div></div>';
+      '<div class="col mid">' + (t ? threadHTML(t) : '<div class="blank" id="inboxBlank"><img class="lg-l" src="brand/cac-logo.svg" alt="CAC Waste Management"><img class="lg-d" src="brand/cac-logo-inverted.svg" alt=""><b>Your inbox</b><small>WhatsApp, email and the website, all in one place. Pick a conversation on the left.</small><small class="k">Press <kbd>Esc</kbd> any time to come back here.</small></div>') + '</div>' +
+      (showAsst ? '<div class="col asst asst-col" data-keep="asst">' + asstHTML(t) + '</div>' : '') + '</div>';
   };
+  function unreadN(x) { var n = 0; for (var i = x.msgs.length - 1; i >= 0; i--) { if (x.msgs[i].dir === 'in' && !x.msgs[i].auto) n++; else if (x.msgs[i].dir === 'out' && !x.msgs[i].auto) break; } return n || 1; }
   function avCol(name, type) { var pal = PARTY_COL[type] || PARTY_COL.customer; var n = 0; for (var i = 0; i < name.length; i++) n += name.charCodeAt(i); return pal[n % pal.length]; }
 
   function threadHTML(t) {
@@ -166,6 +169,7 @@
     ui.bubNew = null;
     return '<div class="thread"><div class="thd"><button class="iconbtn back" data-act="back" aria-label="Back to the list">' + ic('chevron-left') + '</button>' + av(p.name, t.party.type, 'lg') +
       '<div class="who"><b>' + h(p.name) + '</b><small>' + h(p.sub) + ' · ' + chTag(t.ch) + (p.phone ? '<span class="hide-sm">' + h(p.phone) + '</span>' : '') + linked + '</small></div>' +
+      (ui.asst === false ? '<button class="btn sm ai" data-act="asstShow" title="Open the assistant">' + ic('sparkles') + '<span class="hide-sm">' + (needsYou(t) && !t.done ? 'Response drafted' : 'Assistant') + '</span></button>' : '') +
       '<button class="btn sm" data-act="partyOpen" data-id="' + t.id + '">' + ic(t.party.type === 'supplier' ? 'warehouse' : 'user') + '<span class="hide-sm">' + (t.party.type === 'supplier' ? 'Supplier' : t.party.type === 'lead' ? 'Lead' : 'Customer') + '</span></button></div>' +
       '<div class="msgs" data-keep="msgs-' + t.id + '">' + msgs + '</div>' +
       '<div class="compose"><textarea id="compose" rows="1" placeholder="Reply yourself on ' + CS.chName(CS.replyCh(t.ch)) + '..."></textarea><button class="btn dark" data-act="sendOwn" data-id="' + t.id + '">' + ic('send') + '<span class="hide-sm">Send</span></button></div></div>';
@@ -173,7 +177,7 @@
   function jobFromName(n) { var m = /CAC-\d+/.exec(n || ''); return m ? m[0] : ''; }
 
   function asstHTML(t) {
-    var head = '<div class="ahd"><span class="spark">' + ic('sparkles') + '</span><b>Assistant</b><span class="sp"></span><span class="tag">' + ic('shield-check') + 'Drafts only</span></div>';
+    var head = '<div class="ahd"><span class="spark">' + ic('sparkles') + '</span><b>Assistant</b><span class="sp"></span><span class="tag hide-sm">' + ic('shield-check') + 'Drafts only</span><button class="iconbtn sm" data-act="asstHide" aria-label="Hide the assistant" title="Hide the assistant">' + ic('x') + '</button></div>';
     var jd = ui.justDone[t.id];
     if (jd) {
       return head + '<div class="donecard"><h3>' + ic('circle-check') + 'Done in one tap</h3>' + jd.steps.map(function (s, i) { return '<div class="st" style="animation-delay:' + (i * 0.28) + 's">' + ic('check') + '<span>' + h(s) + '</span></div>'; }).join('') +
@@ -187,6 +191,7 @@
         '<div class="skel" style="width:80%;margin-top:8px"></div><div class="skel" style="width:60%"></div><div class="skel" style="width:70%"></div></div>';
     }
     var A = CS.analyse(t), typeIn = !ui.typed[t.id] && t.justRead;
+    var gd = X.guide && X.guide(t, A, typeIn); if (gd) return head + gd;
     var o = head + '<div class="abody"><div class="ahead"><h3>' + h(A.title) + '</h3><p>' + h(A.summary || '') + '</p></div>';
     if (A.chips.length) o += '<div class="chips">' + A.chips.map(function (c, i) { return '<span class="chip' + (c.assumed ? ' assumed' : '') + (typeIn ? ' reveal' : '') + '" style="animation-delay:' + (i * 0.07) + 's"><small>' + h(c.k) + '</small><span>' + h(c.v) + '</span></span>'; }).join('') + '</div>';
     A.notes.forEach(function (n) {
@@ -559,7 +564,7 @@
   /* ---------- selecting and reading a thread ---------- */
   function selectThread(id, opts) {
     var t = CS.thread(id); if (!t) return;
-    ui.sel = id; ui.open = true; ui.scrollMsgs = true; delete ui.justDone[id];
+    ui.sel = id; ui.open = true; ui.asst = true; ui.scrollMsgs = true; delete ui.justDone[id];
     if (t.fresh && !t.done) {
       ui.reading[id] = true; t.fresh = false; t.unread = false; CS.save();
       setTimeout(function () { delete ui.reading[id]; t = CS.thread(id); if (t) { t.justRead = true; } render(); setTimeout(function () { var tt = CS.thread(id); if (tt) { delete tt.justRead; CS.save(); } }, 50); }, 1500);
@@ -575,7 +580,10 @@
     tab: function (el) { ui.tab = el.dataset.v; render(); },
     sel: function (el) { selectThread(el.dataset.id); },
     openThread: function (el) { closeLayer(); selectThread(el.dataset.id); },
-    back: function () { ui.open = false; render(); },
+    back: function () { ui.open = false; ui.sel = null; render(); },
+    closeThread: function () { ui.open = false; ui.sel = null; render(); },
+    asstHide: function () { ui.asst = false; render(); },
+    asstShow: function () { ui.asst = true; render(); },
     approve: function (el) {
       var t = CS.thread(el.dataset.id); var An = CS.analyse(t);
       var edits = {}; $$('textarea[data-draft][data-id="' + t.id + '"]').forEach(function (ta) { edits[ta.dataset.draft] = ta.value; });
@@ -736,7 +744,7 @@
     var a = el.getAttribute('data-act'); if (A[a]) { e.preventDefault(); A[a](el, e); }
   });
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') { if ($('#layer').innerHTML) closeLayer(); else if ($('#phmodal')) $('#phmodal').remove(); closeSide(); }
+    if (e.key === 'Escape') { if ($('#layer').innerHTML) closeLayer(); else if ($('#phmodal')) $('#phmodal').remove(); else if (ui.view === 'inbox' && ui.sel) { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); A.closeThread(); } closeSide(); }
     if (e.key === 'Enter' && e.target.id === 'tryText') { e.preventDefault(); A.trySend(); }
     if (e.key === 'Enter' && e.target.id === 'lkPc') { e.preventDefault(); A.lookup(); }
     if (e.key === 'Enter' && e.target.dataset && e.target.dataset.price != null) { e.target.blur(); }
@@ -787,9 +795,9 @@
   var hv = location.hash.replace('#', ''); if (VIEWS.some(function (v) { return v.k === hv; })) ui.view = hv;
   window.addEventListener('hashchange', function () { var v = location.hash.replace('#', ''); if (v !== ui.view && VIEWS.some(function (x) { return x.k === v; })) { ui.view = v; render(); } });
   if (!S.liveT0 && S.settings.live) { S.liveT0 = Date.now() + (params.get('boot') === '0' || sessionStorage.getItem('cac-boot') ? 0 : 3000); CS.save(); }
-  window.CACUI = { ui: ui, render: render, A: A, V: V };
+  window.CACUI = { ui: ui, render: render, A: A, V: V, VIEWS: VIEWS };
   X.init({ ui: ui, V: V, A: A, $: $, av: av, toast: toast, modal: modal, drawer: drawer, closeLayer: closeLayer, stTag: stTag, wtnTag: wtnTag, margTag: margTag, chIcon: chIcon,
-    render: render, go: go, openPhone: openPhone, selectThread: selectThread, openJob: openJob, wtnDoc: wtnDoc, needsYou: needsYou });
+    render: render, go: go, layer: layer, hm: hm, sortedThreads: sortedThreads, openLead: openLead, openSup: openSup, openQuote: openQuote, VIEWS: VIEWS, openPhone: openPhone, selectThread: selectThread, openJob: openJob, wtnDoc: wtnDoc, needsYou: needsYou });
   render();
   boot();
   if (params.get('tour') === '1' && window.CACP) setTimeout(window.CACP.tour, 600);

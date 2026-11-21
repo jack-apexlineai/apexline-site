@@ -329,6 +329,7 @@
       c = t.party.type === 'customer' ? CS.cust(t.party.id) : null;
       var r = CS.parse(lastIn.text, { cust: c, formPc: t.form && t.form['Site postcode'] });
       if (t.siteOverride != null && c) { r.site = t.siteOverride; r.pc = c.sites[r.site].pc; r.out = CS.outward(r.pc); r.siteName = c.sites[r.site].name; }
+      if (t.dayOverride != null && r.day != null && t.dayOverride !== r.day) { r.dayWas = r.day; r.day = t.dayOverride; r.when = ''; }
       S.parsed = r;
       // exchange or collection of a live job for an existing customer
       if (c && (r.intent === 'exchange' || r.intent === 'collect')) {
@@ -401,7 +402,7 @@
         S.title = 'Book: ' + itemsLine.replace(/^an? /, '') + (r.out ? ', ' + r.out : '') + ', ' + CS.fmtDay(r.day);
         S.summary = 'Priced, supplier picked and both messages written. One tap books it.';
         var dl = CS.fmtDayLong(r.day) + (r.when ? ' ' + r.when : ''), onDl = (r.day > 1 ? 'on ' : '') + dl;
-        S.drafts.push({ to: 'customer', party: t.party, ch: replyCh(t.ch), text: greet(first) + ' yes no problem. ' + cap(itemsLine) + ' to ' + where + ' ' + onDl + ', ' + CS.money(S.sell) + ' + VAT' + (r.placement === 'road' ? ' including the council permit' : '') + '. Booked in, I\'ll confirm the delivery window as soon as the driver\'s planned. ' + signoff(owner) });
+        S.drafts.push({ to: 'customer', party: t.party, ch: replyCh(t.ch), text: greet(first) + (r.dayWas != null ? ' we can\'t do ' + CS.fmtDayLong(r.dayWas) + ', the earliest we can do is ' + dl + '. ' : ' yes no problem. ') + cap(itemsLine) + ' to ' + where + ' ' + onDl + ', ' + CS.money(S.sell) + ' + VAT' + (r.placement === 'road' ? ' including the council permit' : '') + '. Booked in, I\'ll confirm the delivery window as soon as the driver\'s planned. ' + signoff(owner) });
         var bySup = {};
         S.lines.forEach(function (l) { if (!l.permit) (bySup[l.sup] = bySup[l.sup] || []).push(l); });
         Object.keys(bySup).forEach(function (sid) {
@@ -667,7 +668,7 @@
       if (!t.done && lm && lm.dir === 'in' && t.scn && t.scn.kind !== 'parse') { t = { id: 't' + (CS.S.counters.thread++), party: party, ch: o.ch, msgs: [], last: Date.now() }; CS.S.threads.push(t); }
     }
     t.done = false; t.unread = true; t.fresh = true; t.scn = o.scn || { kind: 'parse' };
-    delete t.supOverride; delete t.siteOverride; delete t.priceOverride; delete t.edits;
+    delete t.supOverride; delete t.siteOverride; delete t.priceOverride; delete t.edits; delete t.dayOverride; delete t.g;
     if (o.subject) t.subject = o.subject; if (o.form) t.form = o.form;
     CS.addMsg(t, 'in', o.text, { att: o.att, voice: o.voice });
     return t;

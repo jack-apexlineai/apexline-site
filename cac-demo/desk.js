@@ -393,8 +393,10 @@
       var tag = (e.target.tagName || '').toLowerCase();
       if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.metaKey || e.ctrlKey || e.altKey) return;
       if ((e.key === 'q' || e.key === 'n') && !document.querySelector('#layer .modal')) { e.preventDefault(); Q.open(); }
+      if (e.key === 'o' && !document.querySelector('#layer .modal') && A.newOrder) { e.preventDefault(); A.newOrder(); }
       if (e.key === '/' && !document.querySelector('#layer .modal')) { e.preventDefault(); A.ask(); }
     });
+    if (window.CACV2) window.CACV2.init(H);
     document.addEventListener('change', function (e) {
       if (e.target.id === 'upFile' && e.target.files && e.target.files[0]) {
         var kind = /rate|agreed/i.test(e.target.files[0].name) ? 'customer' : 'supplier'; var b = H.$('#upRes');
