@@ -573,7 +573,7 @@
       CS.S.quotes.unshift({ id: qid, cust: c.id, desc: S.lines.map(function (l) { return l.desc; }).join(', '), sell: S.sell, cost: S.cost, status: 'won', day: 0, job: jobIds[0], owner: owner });
       sendDraft(drafts[0]);
       steps.push('Quote ' + qid + ' saved, ' + CS.money(S.sell) + ' at ' + CS.pct(S.margin, S.sell) + '% margin');
-      steps.push('Job ' + jobIds.join(', ') + ' on the jobs board');
+      steps.push('Job ' + jobIds.join(', ') + ' in the order diary and on live jobs');
       drafts.slice(1).forEach(function (d) {
         var jid = jobIds.filter(function (id) { return CS.job(id).sup === d.party.id; })[0] || jobIds[0];
         sendDraft(d, jid);

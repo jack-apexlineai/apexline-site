@@ -87,12 +87,14 @@
   /* ---------- guided tour ---------- */
   var TOUR = [
     { v: 'inbox', sel: '.nav [data-v="inbox"]', t: 'Every message, already read', b: 'WhatsApp, email and your Get a quote form land here, with the Google Ads source on every enquiry. Customers and suppliers. Each one is read, priced against your supplier rates and drafted in your tone. You tap approve.' },
-    { v: 'inbox', sel: '.nav .navcta', t: 'A price before they finish asking', b: 'Someone rings for a skip in B23? New quote, from any screen (or press Q). Postcode and size, and you get the buy price, your floor, your ideal and what they paid last time. Send it on WhatsApp or email in one tap.' },
-    { v: 'jobs', sel: '.nav [data-v="jobs"]', t: 'Every job, from booked to collected', b: 'Skips, grabs, welfare and the rest on one board, with the margin on every card. Suppliers are chased for you until they confirm.' },
+    { v: 'inbox', sel: '.nav .navcta', t: 'Place an order in one go', b: 'New order, from any screen (or press O). Customer, site, what and when. One tap books the supplier, raises the invoice and sends the customer their confirmation.' },
+    { v: 'inbox', sel: '.nav .navcta.two', t: 'A price before they finish asking', b: 'Someone rings for a skip in B23? Quote, from any screen (or press Q). Postcode and size, and you get the buy price, your floor, your ideal and what they paid last time. Send it on WhatsApp or email in one tap.' },
+    { v: 'orders', sel: '.nav [data-v="orders"]', t: 'Every order in one diary', b: 'Flick through by month, week or day, back to your first order and forward to what is booked. Open any order for its whole story, from booking to paid.' },
+    { v: 'jobs', sel: '.nav [data-v="jobs"]', t: 'What is moving, and what is on site', b: 'Today\'s deliveries with who to ring on site and when the supplier said they would be there. Every skip on site against that supplier\'s hire period. Suppliers are chased for you until they confirm.' },
     { v: 'customers', sel: '.nav [data-v="customers"]', t: 'Accounts and credit', b: 'Open a trade account in two minutes with a Companies House check. Credit limits hold a booking when someone\'s late paying, and every customer gets their own link.' },
     { v: 'reports', sel: '.nav [data-v="reports"]', t: 'Waste and carbon, under your logo', b: 'Tonnes, landfill diversion and carbon for every account and site, off the transfer notes. The monthly reports go out on the 1st by themselves.' },
     { v: 'money', sel: '.nav [data-v="money"]', t: 'Money found', b: 'Every supplier bill is checked against the rate you agreed. Extras that never reached the customer\'s invoice are found and recharged in one tap.' },
-    { v: 'today', sel: '.nav [data-act="phone"]', t: 'All of it on your phone', b: 'The same system in your pocket, with a morning briefing on your WhatsApp at 7:30. That\'s the tour. Have a click around, nothing you do here goes anywhere.' }
+    { v: 'home', sel: '#greet', t: 'Start every day here', b: 'One page with what needs you, laid out how you like it. The same system is in your pocket on your phone, with a morning briefing on your WhatsApp at 7:30. That\'s the tour. Have a click around, nothing you do here goes anywhere.' }
   ];
   var tourI = -1;
   function tourShow() {

@@ -49,6 +49,9 @@ button{font:inherit;cursor:pointer}
 .watch h3{color:var(--am)}
 .ask h3{color:#93C5FD}
 .extra{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.skipbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 12px;padding:10px 12px;border:1px dashed #52525B;border-radius:10px;font-size:14px;color:#D4D4D8}
+.skipbar .btn{margin-left:auto}
+.list button.opt{font-style:italic;opacity:.8}
 .nav{position:fixed;left:0;right:0;bottom:0;background:rgba(17,17,19,.96);border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;padding:10px 16px;z-index:6}
 .nav .grow{flex:1;font-size:12.5px;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .status{font-size:12.5px;color:var(--mu);margin:-4px 0 12px;min-height:18px}
@@ -115,7 +118,7 @@ kbd{background:#27272A;border:1px solid var(--line);border-radius:4px;padding:0 
   function h(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function $(s) { return document.querySelector(s); }
 
-  var SECS = { prep: { n: 'Before the call', end: 0 }, q: { n: 'Questions', end: 5 }, demo: { n: 'The demo', end: 19 }, val: { n: 'Value and price', end: 25 }, close: { n: 'Close', end: 30 } };
+  var SECS = { prep: { n: 'Before the call', end: 0 }, q: { n: 'Questions', end: 5 }, demo: { n: 'The demo', end: 19 }, more: { n: 'Only if he asks', end: 19 }, ask: { n: 'The question', end: 19 }, val: { n: 'Value and price', end: 25 }, close: { n: 'Close', end: 30 } };
 
   var STEPS = [
     { id: 'prep', sec: 'prep', t: 'Ten minutes before', act: 'reset',
@@ -167,19 +170,11 @@ kbd{background:#27272A;border:1px solid var(--line);border-radius:4px;padding:0 
       shows: 'His logo, "Good afternoon, John", how many messages need him, jobs waiting on suppliers, margin this month, and the line from his own website.',
       say: ['This is what you\'d open every morning. That line at the bottom is off your own website.'] },
 
-    { id: 'homeDash', sec: 'demo', t: 'Home. His page, his layout', act: 'homeDash', mins: 0.75,
-      do: ['The Home page is open. Point at the tiles: today, inbox, skips on site, chasing, money, the supplier handbook.', 'Grab the <b>Money</b> tile by its top bar and drag it to the front. It stays where he puts it.', 'Optional: press <b>Arrange</b> to show the arrows and the X (that is how it works on a phone).'],
-      say: ['This is the first thing you see in the morning. Everything that needs you, on one page.', 'And you lay it out how you want it. Put what you care about first.'],
-      shows: 'A home page made of tiles. Each tile is a live summary with a button into that section. He drags them into the order he wants and it remembers.',
+    { id: 'homeDash', sec: 'demo', t: 'Home. Calm, his page', act: 'homeDash', mins: 0.75,
+      do: ['The Home page is open. Let him read the top line. Then point along the tiles: New order, inbox, today, orders this month, skips on site, chasing, money, quotes gone quiet.', 'Grab the <b>Money</b> tile by its top bar and drag it to the front. It stays where he puts it.', 'Optional: press <b>Arrange</b>. That shows the arrows and the X, and four more tiles he can add.'],
+      say: ['This is the first thing you see in the morning. Good morning John, and what needs you. Nothing else.', 'And you lay it out how you want it. Put what you care about first.'],
+      shows: 'One greeting, one line, then eight tiles. Each tile is one number and a button into that part of the system. He drags them into his own order and it remembers.',
       watch: ['The layout is saved in this browser for the demo. Live, it is saved to his login so it follows him to any device.'] },
-
-    { id: 'inbox', sec: 'demo', t: 'His inbox, his message', act: 'inbox', mins: 2,
-      extra: [{ l: 'Turn live messages on', act: 'liveOn' }],
-      do: ['Hannah\'s web enquiry is open. Point at the fields on the left of the message.', 'Press <b>Turn live messages on</b> above and let two messages land (a few seconds each).'],
-      shows: 'Every WhatsApp, email and Get a quote form, from customers and suppliers, in one list. Each one is already read and has a reply drafted. Hannah\'s card shows the exact fields from his own website form, plus "Came from: Google Ads".',
-      say: ['WhatsApp, email and your Get a quote form. Customers and suppliers. One screen, every one already read.',
-            'See this? It even tells you which Google Ad she came from.'],
-      watch: ['The demo "AI" is a rules-based stand-in that shows the flow. Live, an AI model reads each message against CAC\'s own rates. Nothing sends without a person tapping it.'] },
 
     { id: 'gemma', sec: 'demo', t: 'Gemma\'s order, step by step', act: 'gemma', mins: 1.5,
       do: ['Gemma Shaw\'s email is open: a welfare unit and 2 toilets at Wells for 8 weeks from Monday. On the right it says <b>Response drafted</b>.', 'Step 1, "Can we do it on Monday?". Tap <b>No, pick another date</b>, then pick a day. Or just tap Yes.', 'Step 2, the price. It is filled in from his price book. Tap <b>Price is right</b>.', 'Step 3. Read him the reply, then tap the big green button: <b>Book with supplier and send invoice and confirmation to Gemma</b>.', 'Point at the ticks: job made, supplier booked, reply sent, invoice and order confirmation sent.'],
@@ -187,43 +182,31 @@ kbd{background:#27272A;border:1px solid var(--line);border-radius:4px;padding:0 
       shows: 'Any order that comes in gets the same three steps: date, price, send. Say no to the date and it offers the days you can do and rewrites the reply. The last tap books the supplier and sends the customer the reply, the invoice and the order confirmation together.',
       watch: ['Press <b>Esc</b> to close a chat. The inbox then shows the list on the left and the CAC logo in the middle, like WhatsApp on a Mac.', 'The invoice is made in this system. Pushing it into his accounts is a link we set up (Xero or QuickBooks only). Do not name any other accounts package.', 'The Assistant button at the top opens one list of everything that needs doing. It is not on screen all the time any more.'] },
 
-    { id: 'testwa', sec: 'demo', t: 'His own message, priced', act: 'testwa', mins: 2,
-      do: ['Ask him for a message. Type HIS words in. If he won\'t, use "need an 8 yarder in PE31 Tuesday".', '"Send as": leave it on Dan Dunmore. Press send.', 'Point at each thing below, in order.', 'Wait about 6 seconds: the supplier replies by itself.'],
-      say: ['Give me a message a builder would actually send you.'],
-      shows: '<ol><li>It pulled out the size, postcode and day, and spotted Dan has two sites in PE31.</li><li>It picked Saltmarsh over Ringmere and says why: £10 dearer but 97% on time against 91%.</li><li>Customer price, supplier cost and the <b>margin</b>, before anything goes out.</li><li>The reply to the builder and the booking to the supplier, written in his tone. Change the price and both update.</li><li>One tap sends both. Then the supplier confirms, the job flips to confirmed and Dan\'s confirmation is drafted.</li></ol>',
-      say2: ['Nothing goes out until you tap that.', 'You didn\'t chase anyone.'] },
-
-    { id: 'desk', sec: 'demo', t: 'The phone rings. Slow down here', act: 'desk', mins: 1.5,
-      do: ['The New quote screen is open. Type <b>07700 900211</b> in the phone box. Dan comes up.', 'Type <b>PE31</b> for the postcode. 8 yard skip.', 'Point at each part on the right.'],
-      say: ['Someone rings for a price. Wherever you are, you hit Q, or New quote at the top.'],
-      shows: '<ul><li><b>Buy price</b>: what the supplier charges CAC, and the next supplier along.</li><li><b>Floor, Ideal, Stretch</b>: floor is the lowest he\'d go, ideal is his normal markup, stretch is a bit over. All from his own rules.</li><li>Dan\'s <b>agreed rate</b> is used automatically, and it shows <b>what he paid last time</b>.</li><li><b>Say it like this</b>: the exact line to read out, so a new BDE quotes like John on day one.</li></ul>',
-      say2: ['Anything over ideal is bonus. Under the floor, if your BDE tries it, it comes to you first.'],
-      watch: ['It does not connect to his phone system. He types the number. Don\'t imply it pops up on its own.'] },
-
-    { id: 'deskSend', sec: 'demo', t: 'Send it, then their view', act: null, mins: 1,
-      do: ['Still on the New quote screen. Tap <b>On the road</b>: the permit goes on the price.', 'Tap <b>WhatsApp it</b>, then Send.', 'On the little pop-up at the bottom, tap <b>See their view</b>: Dan\'s phone.', 'Tap <b>Accept and book it</b> on Dan\'s phone. Close it. The inbox shows "Quote accepted" with the booking drafted.'],
-      shows: 'The quote goes out with a tap-to-accept link. The customer sees his price and one button. When he taps it, the booking is drafted back in the office, one tap away.',
-      say: ['On the road? The permit goes on by itself.', 'That\'s what Dan sees. One button.'],
-      watch: ['In the demo the accept link only works inside this browser. Live, it\'s hosted on his own domain.'] },
-
-    { id: 'order', sec: 'demo', t: 'Place an order yourself', act: 'order', mins: 1.25,
-      do: ['The New order screen is open (New order at the top left, or press O).', 'Pick a customer. The site, the contact name and the number fill in. Pick a service, size, date and time.', 'On the right: the suppliers who cover it with their price, his price and the margin. Change the price if he wants.', 'Pick how they pay, then tap <b>Place the order</b>.', 'On the done screen tap <b>Order confirmation</b>, then <b>Invoice</b>.'],
+    { id: 'order', sec: 'demo', t: 'Place an order', act: 'order', mins: 1.25,
+      do: ['The New order screen is open. It is the orange button at the top left of every page, or press O.', 'Pick a customer. The site, the contact name and the number fill in. Pick a service, size, date and time.', 'On the right: the suppliers who cover it with their price, his price and the margin. Change the price if he wants.', 'Pick how they pay, then tap <b>Place the order</b>.', 'On the done screen tap <b>Order confirmation</b>, then <b>Invoice</b>, then <b>See it in the diary</b>.'],
       say: ['Someone rings and just wants it booked. Customer, site, what, when.', 'One tap. Supplier booked, invoice raised, order confirmation and invoice sent to the customer.'],
-      shows: 'A proper order screen: customer, site address, site contact name and number, service, date, supplier and price. Placing it makes the job, sends the booking to the supplier, raises the invoice and sends the customer their order confirmation and invoice. The job then shows on Live jobs, Skips on site and Money.',
+      shows: 'A proper order screen: customer, site address, site contact name and number, service, date, supplier and price. Placing it makes the job, sends the booking to the supplier, raises the invoice and sends the customer their order confirmation and invoice. The order then shows in the diary, on Live jobs, Skips on site and Money.',
       watch: ['Card payments and pay by card links run through HIS OWN Stripe account, which we connect when we set him up. In the demo no card is taken. Say "through your own Stripe".', 'Nothing is really sent in the demo.'] },
 
-    { id: 'ask', sec: 'demo', t: 'Ask CAC', act: 'ask', mins: 0.5,
-      extra: [{ l: 'Ask: who owes me money?', act: 'ask2' }],
-      do: ['The question is typed in. Press Enter or Ask.', 'Then press <b>Ask: who owes me money?</b> above and press Enter in the demo.'],
-      shows: 'Ask it anything in plain English. It answers from his own records: prices, who covers a postcode, who owes money, longest on hire.',
-      say: ['Ask it like you\'d ask your office.'],
-      watch: ['The demo answers a handful of questions with simple rules. Live, an AI model reads his records. It reads and suggests, it never sends on its own.'] },
+    { id: 'diary', sec: 'demo', t: 'The order diary', act: 'diary', mins: 1.5,
+      extra: [{ l: 'Open one order', act: 'orderPage' }, { l: 'Show the week', act: 'diaryWeek' }, { l: 'Show the list with filters', act: 'diaryList' }],
+      do: ['The diary is open on this month. Each day shows how many orders and what they came to.', 'Press the <b>left arrow</b> to flick back to October, then September, then August. Press <b>Today</b> to come back.', 'Tap any day to see that day\'s orders.', 'Press <b>Open one order</b> above. Point at the timeline on the right, then the documents, then <b>Repeat this order</b>.', 'Optional: press <b>Show the list with filters</b> and pick a customer.'],
+      say: ['Every order you have taken, in one diary. Flick back a month, flick forward to what is booked.', 'Open any one and it is all there. When it was booked, delivered and collected, the note, the invoice, when it was paid.', 'Same customer wants the same again? One tap.'],
+      shows: 'A month, week and day diary of every order, with the count and the value on each day, back to his first order in August. A list with search and filters for customer, supplier, service, status and paid. Each order has its own page: the full timeline, documents, messages, margin and a repeat button.',
+      watch: ['The past orders are made-up sample history, sized to match the sample monthly figures. They start in August because that is when CAC started trading.', 'Waste transfer note: the legal slip that says what waste left the site and where it went.'] },
 
-    { id: 'pricebook', sec: 'demo', t: 'Price book', act: 'pricebook', mins: 0.5,
-      do: ['Scroll the grid of areas and sizes.', 'Change his markup in the rules box and watch every price move.', 'Point at <b>Upload a price list</b>.'],
-      shows: 'Every area, every size, his prices. His rules (markup and floor) drive the lot. A supplier sends a new price list? Upload it or forward the email, and the prices are read in for him to check.',
-      say: ['Supplier sends a new price list? Upload it, or forward the email. Every price read in.'],
-      watch: ['Live, an AI reads the PDF, Excel, photo or email and he checks the prices before they\'re saved. Messy scans need testing on his real lists.'] },
+    { id: 'trends', sec: 'demo', t: 'Trends and the forecast', act: 'trends', mins: 1,
+      do: ['Trends is open. Read the top row out loud: orders, sales and margin this month against the same point last month.', 'Point at the bar chart, then the forecast box on the right.', 'Scroll down once: by service, top customers, quotes won, busiest days, collections to book.'],
+      say: ['Are you taking more work than last month, or less? That is the first line. No spreadsheet.', 'And this is where the month is heading if it carries on like this.', 'Which service makes you the most, which customer is growing, which one has dropped off.'],
+      shows: 'This month against the same point last month in plain words, sales by month since he started, an estimate of where this month will finish, sales and margin by service, top customers with up or down against last month, quotes won, repeat customers, busiest days, and skips due off hire in the next 7 and 14 days.',
+      watch: ['The forecast is an estimate from what he has taken each working day this month. Say estimate. Never say it predicts.', 'There is no year on year line yet because CAC started in August. The page says so. Do not invent one.', 'The figures are sample data.'] },
+
+    { id: 'bills', sec: 'demo', t: 'Supplier bill check. Slow down here', act: 'bills', mins: 1.5,
+      extra: [{ l: 'Read the sample statement', act: 'billSample' }],
+      do: ['Bill check is open. Tap <b>Use a sample statement</b>, or press the button above.', 'Wait a second. Twelve lines come back. Seven match. Five are red.', 'Read two of the red ones out: charged as a 12 yard when he booked an 8, and the same job charged twice.', 'Point at the big number top left: overcharged this month.', 'Tap <b>Draft the query</b>. The email to their accounts person is written. Tap <b>Send the query</b>.'],
+      say: ['When a supplier sends their statement, who checks every line against what you actually booked?', 'This does. Wrong size, extra hire, overweight with no ticket, the same job twice, a price above their own sheet.', 'That is money you would have just paid. And the email to their accounts is already written.'],
+      shows: 'A supplier statement lined up against the orders, line by line. It flags a wrong size, extra hire days, an overweight charge with no weighbridge ticket, a job charged twice and a price above the agreed sheet. It adds up the overcharge and drafts the query to the supplier\'s accounts contact.',
+      watch: ['The statement in the demo is a sample. Live, an AI model reads the real file and he checks it. Messy scans need testing on his real statements.', 'It can only catch what the supplier has put on the bill. The amounts are sample data, not a promise of what he will save.', 'Weighbridge ticket: the printout from the scales at the tip that proves the weight.'] },
 
     { id: 'handbook', sec: 'demo', t: 'The supplier handbook', act: 'handbook', mins: 1.5,
       do: ['The Supplier handbook is open. Point at the box at the top: <b>To stay compliant</b>. A waste carrier licence runs out in 3 weeks.', 'Tap <b>Ask for the new one</b> on that row.', 'Open any skip supplier in the list. Point at: contacts, accounts team, hire period, fuel surcharge, their prices, licences.', 'Tap <b>Upload a price sheet</b>, then <b>Use a sample sheet</b>. It shows old price against new. Tap <b>Looks right, save it</b>.', 'Open a supplier marked "Not set up", tap <b>Set up</b> under Waste transfer notes, then <b>Use a sample note</b>. Answer the two it asks about, then save.'],
@@ -231,52 +214,123 @@ kbd{background:#27272A;border:1px solid var(--line);border-radius:4px;padding:0 
       shows: 'One page per supplier: bookings contact, accounts team, prices, fuel surcharge, standard hire period, waste carrier licence, permit and insurance with end dates. A price sheet upload with a check step. A one time set up so each supplier\'s waste transfer notes read themselves.',
       watch: ['Licence tracking works from the end dates on the documents he uploads, with reminders. It is NOT an automatic check against the Environment Agency register. Do not say it checks the register.', 'In the demo the uploads use a sample. Live, an AI model reads the real file and he checks it before it saves.', 'The price book (his own selling prices) now lives inside the handbook, top right of the supplier list.'] },
 
-    { id: 'bundle', sec: 'demo', t: 'A whole new site in one message', act: 'bundle', mins: 1.5,
-      do: ['The new site message is typed in. Press send.', 'Point at the five lines, the two suppliers and the margin. Then one tap books all five.'],
-      say: ['Your welfare page says welfare, storage, Heras, toilets and a first skip in one delivery window. Watch.'],
-      shows: 'One message becomes five priced lines (welfare unit, storage container, 40 Heras panels, a toilet, an 8 yard skip) across two suppliers, with every cost, sell price and the margin (about £570). Both supplier bookings and the customer reply are written.' },
-
-    { id: 'slip', sec: 'demo', t: 'You hear it from us first', act: 'slip', mins: 0.5,
-      do: ['Brecklane\'s message is open: the supplier can\'t make Monday.', 'Point at Kerry\'s message, already written.'],
-      shows: 'A supplier lets him down. The system moves the job and writes the customer message before the customer finds out.',
-      say: ['Your site says if a slot slips, the customer hears it from you first. Kerry\'s message is already written. One tap moves the job and tells both.'] },
-
     { id: 'skips', sec: 'demo', t: 'Skips on site and live jobs', act: 'skips', mins: 1,
       extra: [{ l: 'Show live jobs today', act: 'livejobs' }, { l: 'Show notes that file themselves', act: 'wtnauto' }],
       do: ['Skips on site is open. Point at the hire period, days on site and the red <b>Collection needs booking</b>.', 'Tap <b>Book collection</b> on a red one.', 'Press <b>Show live jobs today</b> above: date, site address, service, site contact, status, supplier and the supplier\'s ETA.', 'Optional: press <b>Show notes that file themselves</b>.'],
       say: ['As a broker you don\'t need a jobs board. You need to know what is sitting on site and what is moving today.', 'Every skip, whose it is, how long that supplier gives you, and how long it has been there.', 'And today\'s jobs with who to ring on site and when the supplier said they would be there.'],
       shows: 'Skips on site uses each supplier\'s own hire period from the handbook and flags anything past it, with the extra hire it is running up. Live jobs today is the tracking sheet: date, site address, service, site contact name and number, status, supplier, ETA and notes.',
-      watch: ['The ETA is the window the supplier gave when they confirmed. It is not live vehicle tracking. Do not say it tracks the lorry.', 'Notes that file themselves: his supplier emails a waste transfer note, it is picked up from his inbox, read and filed. That needs his Google sign in to link the inbox. Anything not back after 1 or 2 weeks, it asks if he wants to chase. It never chases on its own.'] },
+      watch: ['The ETA is the window the supplier gave when they confirmed. It is not live vehicle tracking. Do not say it tracks the lorry.', 'Notes that file themselves: his supplier emails a waste transfer note, it is picked up from his inbox, read and filed. That needs his own sign in to link the mailbox, Outlook or Gmail. Anything not back after 1 or 2 weeks, it asks if he wants to chase. It never chases on its own.'] },
 
-    { id: 'carbon', sec: 'demo', t: 'Waste and carbon. Let him look', act: 'carbon', mins: 2,
-      do: ['Slowly. This is what he used to sell.', 'Open Hexley\'s report in the table.', 'Tap <b>Send all now</b>.', 'Tap <b>Build an audit pack</b>.', 'Then say little. Let him look.'],
-      shows: 'Tonnes moved, the share kept out of landfill, transfer notes on file and carbon, for every account and site, with six months of trend. Built off the WTNs suppliers send back. Monthly reports go to each customer under the CAC logo.',
-      say: ['Every tonne, every site, every account. Off the WTNs your suppliers send back.', 'On the 1st, every account gets its report under the CAC logo, not a supplier\'s.', 'What a QS asks for, one click.'],
-      watch: ['The trend is sample history. Live, it fills up from his own WTNs from day one. Tonnes are only as good as the weights suppliers send. Carbon is an estimate.', 'Never mention his old employer or that he presented this kind of thing there.'] },
+    { id: 'chasing', sec: 'demo', t: 'Chasing, done for him', act: 'chasing', mins: 0.75,
+      do: ['Chasing is open. Point at the lists: suppliers who have not confirmed, customers who have not paid, notes not back, quotes gone quiet.', 'Tap one chase button so he sees the message it sends.', 'That is the last main screen. Press <b>Skip to the reinforce question</b> below, or carry on into the extras if he is asking for more.'],
+      say: ['Everything that is waiting on somebody else, in one place, with the chase already written.', 'This is the list you would otherwise keep in your head.'],
+      shows: 'One page of everything waiting on someone else, with the chase message written for each one.',
+      watch: ['In the demo nothing is really sent.'] },
 
-    { id: 'credit', sec: 'demo', t: 'Credit hold', act: 'credit', mins: 0.75,
+    { id: 'inbox', sec: 'more', opt: true, t: 'His inbox, his message', act: 'inbox', mins: 2,
+      extra: [{ l: 'Turn live messages on', act: 'liveOn' }],
+      do: ['Hannah\'s web enquiry is open. Point at the fields on the left of the message.', 'Press <b>Turn live messages on</b> above and let two messages land (a few seconds each).'],
+      shows: 'Every WhatsApp, email and Get a quote form, from customers and suppliers, in one list. Each one is already read and has a reply drafted. Hannah\'s card shows the exact fields from his own website form, plus "Came from: Google Ads".',
+      say: ['WhatsApp, email and your Get a quote form. Customers and suppliers. One screen, every one already read.',
+            'See this? It even tells you which Google Ad she came from.'],
+      watch: ['The demo "AI" is a rules-based stand-in that shows the flow. Live, an AI model reads each message against CAC\'s own rates. Nothing sends without a person tapping it.'] },
+
+    { id: 'testwa', sec: 'more', opt: true, t: 'His own message, priced', act: 'testwa', mins: 2,
+      do: ['Ask him for a message. Type HIS words in. If he won\'t, use "need an 8 yarder in PE31 Tuesday".', '"Send as": leave it on Dan Dunmore. Press send.', 'Point at each thing below, in order.', 'Wait about 6 seconds: the supplier replies by itself.'],
+      say: ['Give me a message a builder would actually send you.'],
+      shows: '<ol><li>It pulled out the size, postcode and day, and spotted Dan has two sites in PE31.</li><li>It picked Saltmarsh over Ringmere and says why: £10 dearer but 97% on time against 91%.</li><li>Customer price, supplier cost and the <b>margin</b>, before anything goes out.</li><li>The reply to the builder and the booking to the supplier, written in his tone. Change the price and both update.</li><li>One tap sends both. Then the supplier confirms, the job flips to confirmed and Dan\'s confirmation is drafted.</li></ol>',
+      say2: ['Nothing goes out until you tap that.', 'You didn\'t chase anyone.'] },
+
+    { id: 'desk', sec: 'more', opt: true, t: 'The phone rings. Slow down here', act: 'desk', mins: 1.5,
+      do: ['The New quote screen is open. Type <b>07700 900211</b> in the phone box. Dan comes up.', 'Type <b>PE31</b> for the postcode. 8 yard skip.', 'Point at each part on the right.'],
+      say: ['Someone rings for a price. Wherever you are, you hit Q, or New quote at the top.'],
+      shows: '<ul><li><b>Buy price</b>: what the supplier charges CAC, and the next supplier along.</li><li><b>Floor, Ideal, Stretch</b>: floor is the lowest he\'d go, ideal is his normal markup, stretch is a bit over. All from his own rules.</li><li>Dan\'s <b>agreed rate</b> is used automatically, and it shows <b>what he paid last time</b>.</li><li><b>Say it like this</b>: the exact line to read out, so a new BDE quotes like John on day one.</li></ul>',
+      say2: ['Anything over ideal is bonus. Under the floor, if your BDE tries it, it comes to you first.'],
+      watch: ['It does not connect to his phone system. He types the number. Don\'t imply it pops up on its own.'] },
+
+    { id: 'deskSend', sec: 'more', opt: true, t: 'Send it, then their view', act: null, mins: 1,
+      do: ['Still on the New quote screen. Tap <b>On the road</b>: the permit goes on the price.', 'Tap <b>WhatsApp it</b>, then Send.', 'On the little pop-up at the bottom, tap <b>See their view</b>: Dan\'s phone.', 'Tap <b>Accept and book it</b> on Dan\'s phone. Close it. The inbox shows "Quote accepted" with the booking drafted.'],
+      shows: 'The quote goes out with a tap-to-accept link. The customer sees his price and one button. When he taps it, the booking is drafted back in the office, one tap away.',
+      say: ['On the road? The permit goes on by itself.', 'That\'s what Dan sees. One button.'],
+      watch: ['In the demo the accept link only works inside this browser. Live, it\'s hosted on his own domain.'] },
+
+    { id: 'ask', sec: 'more', opt: true, t: 'Ask CAC', act: 'ask', mins: 0.5,
+      extra: [{ l: 'Ask: who owes me money?', act: 'ask2' }],
+      do: ['The question is typed in. Press Enter or Ask.', 'Then press <b>Ask: who owes me money?</b> above and press Enter in the demo.'],
+      shows: 'Ask it anything in plain English. It answers from his own records: prices, who covers a postcode, who owes money, longest on hire.',
+      say: ['Ask it like you\'d ask your office.'],
+      watch: ['The demo answers a handful of questions with simple rules. Live, an AI model reads his records. It reads and suggests, it never sends on its own.'] },
+
+    { id: 'pricebook', sec: 'more', opt: true, t: 'Price book', act: 'pricebook', mins: 0.5,
+      do: ['Scroll the grid of areas and sizes.', 'Change his markup in the rules box and watch every price move.', 'Point at <b>Upload a price list</b>.'],
+      shows: 'Every area, every size, his prices. His rules (markup and floor) drive the lot. A supplier sends a new price list? Upload it or forward the email, and the prices are read in for him to check.',
+      say: ['Supplier sends a new price list? Upload it, or forward the email. Every price read in.'],
+      watch: ['Live, an AI reads the PDF, Excel, photo or email and he checks the prices before they\'re saved. Messy scans need testing on his real lists.'] },
+
+    { id: 'bundle', sec: 'more', opt: true, t: 'A whole new site in one message', act: 'bundle', mins: 1.5,
+      do: ['The new site message is typed in. Press send.', 'Point at the five lines, the two suppliers and the margin. Then one tap books all five.'],
+      say: ['Your welfare page says welfare, storage, Heras, toilets and a first skip in one delivery window. Watch.'],
+      shows: 'One message becomes five priced lines (welfare unit, storage container, 40 Heras panels, a toilet, an 8 yard skip) across two suppliers, with every cost, sell price and the margin (about £570). Both supplier bookings and the customer reply are written.' },
+
+    { id: 'slip', sec: 'more', opt: true, t: 'You hear it from us first', act: 'slip', mins: 0.5,
+      do: ['Brecklane\'s message is open: the supplier can\'t make Monday.', 'Point at Kerry\'s message, already written.'],
+      shows: 'A supplier lets him down. The system moves the job and writes the customer message before the customer finds out.',
+      say: ['Your site says if a slot slips, the customer hears it from you first. Kerry\'s message is already written. One tap moves the job and tells both.'] },
+
+    { id: 'find', sec: 'more', opt: true, t: 'Find a supplier by postcode', act: 'find', mins: 0.75,
+      extra: [{ l: 'Open a scorecard', act: 'scorecard' }],
+      do: ['Find a supplier is open on PE31, 8 yard skip. Type a postcode he knows.', 'Tap <b>Cheapest</b>, then <b>Most reliable</b>.', 'Press <b>Open a scorecard</b> above.', 'Scroll down to the issues log. Tap <b>Log an issue</b> if he wants to see it.'],
+      say: ['A job comes in somewhere you do not normally cover. Who do you ring?', 'Everyone who covers it, cheapest first or most reliable first. And a score for each one, from your own jobs.'],
+      shows: 'Type a postcode and a service and see who covers it, with their price, his price and the margin. Each supplier has a scorecard: on time, failed deliveries, notes sent back, complaints and average margin. An issues log feeds the score.',
+      watch: ['Scores and percentages are sample figures. Live, they build from his own jobs, so they mean little in week one.'] },
+
+    { id: 'creditctl', sec: 'more', opt: true, t: 'Credit control and on stop', act: 'creditctl', mins: 0.75,
+      do: ['Credit control is open. Point at the columns: limit, owed, not due yet, 1 to 30 days late, over 30 days.', 'Tap <b>Put on stop</b> on one customer.', 'Press O for New order and pick that customer. The red warning shows before anything is booked.'],
+      say: ['Who owes you what, and how late. And if you put someone on stop, nobody books for them by accident.'],
+      shows: 'Every account with its limit, what is owed and how late it is. On hold is automatic. On stop is his decision, and New order warns before a booking goes through.',
+      watch: ['It warns and asks. It never refuses a customer by itself.'] },
+
+    { id: 'credit', sec: 'more', opt: true, t: 'Credit hold', act: 'credit', mins: 0.75,
       do: ['Mark Venn\'s message is open. Point at the hold and the reply it wrote instead.'],
       shows: 'Mark wants another 20 yard RoRo, but his firm owes £2,340 and is 12 days late. So it held the booking and drafted a polite "settle up first" reply. John can override it.',
       say: ['He wants another RoRo. But Ashby and Venn owe you £2,340, 12 days late, so it held the booking and wrote this instead. Your call every time.'],
       watch: ['It holds and asks. It never refuses a customer by itself. Limits are whatever John sets.'] },
 
-    { id: 'account', sec: 'demo', t: 'Open a trade account', act: 'account', mins: 0.75,
+    { id: 'custlink', sec: 'more', opt: true, t: 'The customer\'s own link', act: 'custlink', mins: 0.5,
+      do: ['A phone opens showing what Dan Dunmore sees. Tap <b>Swap it</b> on a skip.', 'Scroll down the phone: his waste transfer notes and invoices.', 'Close the phone with the X.'],
+      say: ['Your account customers get their own page. Order again, swap, collect, get their notes and invoices, without ringing you.'],
+      shows: 'A private page per customer: what is on each site, swap or collect in one tap, order again, waste transfer notes and invoices. Every request comes to the office to approve first.',
+      watch: ['In the demo it only works inside this browser. The real build needs proper access control on those links.'] },
+
+    { id: 'carbon', sec: 'more', opt: true, t: 'Waste and carbon. Let him look', act: 'carbon', mins: 2,
+      do: ['Slowly. This is what he used to sell.', 'Open Hexley\'s report in the table.', 'Tap <b>Send all now</b>.', 'Tap <b>Build an audit pack</b>.', 'Then say little. Let him look.'],
+      shows: 'Tonnes moved, the share kept out of landfill, transfer notes on file and carbon, for every account and site, with six months of trend. Built off the WTNs suppliers send back. Monthly reports go to each customer under the CAC logo.',
+      say: ['Every tonne, every site, every account. Off the WTNs your suppliers send back.', 'On the 1st, every account gets its report under the CAC logo, not a supplier\'s.', 'What a QS asks for, one click.'],
+      watch: ['The trend is sample history. Live, it fills up from his own WTNs from day one. Tonnes are only as good as the weights suppliers send. Carbon is an estimate.', 'Never mention his old employer or that he presented this kind of thing there.'] },
+
+    { id: 'account', sec: 'more', opt: true, t: 'Open a trade account', act: 'account', mins: 0.75,
       do: ['The form is open. Press the Companies House check.', 'Point at the suggested limit, then <b>Open the account</b>.'],
       shows: 'A new customer checked on Companies House, a suggested credit limit (John sets it), the account opened and their own link sent on WhatsApp. About two minutes.',
       say: ['Construction had the most insolvencies of any sector this year. This is how you don\'t end up holding the bill.'],
       watch: ['The Companies House result is a sample. Live, it reads the real register, which is free.'] },
 
-    { id: 'money', sec: 'demo', t: 'Money found', act: 'money', mins: 1,
+    { id: 'money', sec: 'more', opt: true, t: 'Money found', act: 'money', mins: 1,
       do: ['Point at the supplier bills checked against the agreed rate, and the extras that never reached the customer\'s invoice.', 'Tap <b>Recharge all</b>.'],
       shows: 'Every supplier bill is checked against the rate agreed on the job. Extras the supplier charged (overweight, extra days) that were never passed on to the customer are found and recharged.',
       watch: ['The amounts are sample data, not a promise of what CAC will recover. It only finds extras the supplier itemises. A person confirms each recharge.'] },
 
-    { id: 'team', sec: 'demo', t: 'His team', act: 'sales', mins: 1,
+    { id: 'team', sec: 'more', opt: true, t: 'His team', act: 'sales', mins: 1,
       extra: [{ l: 'Show the Team screen', act: 'team' }],
       do: ['Sales screen first: the pipeline. Drag a deal to the next stage. Tap <b>WhatsApp</b> or <b>Email</b> on a card to message them from there.', 'Under it: the BDE\'s calls, quotes and follow ups.', 'Then press <b>Show the Team screen</b> above. Add a name if he wants to.'],
       say: ['Every call, quote and follow up from your BDE, without asking him.', 'You said more roles are coming. Add someone, they get a login, day one opens on a five minute walkthrough. No training day.'] },
 
-    { id: 'reinforce', sec: 'demo', t: 'Stop. The reinforce question', act: 'today',
+    { id: 'connections', sec: 'more', opt: true, t: 'What it plugs into', act: 'connections', mins: 0.5,
+      do: ['Connections is open. Read down the cards: WhatsApp, email, website enquiries, Xero or QuickBooks, card payments, Companies House.'],
+      say: ['This is what it plugs into, and what each one needs from you. Mostly a sign in.'],
+      shows: 'Each connection, what it does and exactly what he has to provide. Every card says Not connected, because the demo is not connected to anything.',
+      watch: ['WhatsApp needs his business number approved by Meta. The running cost depends on message volume and we quote it before we start.', 'The accounts link is Xero or QuickBooks only. We connect it as part of the build. Do not say it is already connected.', 'Card payments need his own Stripe account. Email needs his own sign in to Outlook or Gmail.', 'Do not name any WhatsApp inbox product as the one we will use.'] },
+
+    { id: 'reinforce', sec: 'ask', t: 'Stop. The reinforce question', act: 'today',
       do: ['Keep sharing. The demo goes back to Today.', 'Ask, then silence. Write his answer down word for word. That\'s your close line.'],
       say: ['If this was running in your office tomorrow, what changes for you?'],
       notes: true },
@@ -428,6 +482,7 @@ kbd{background:#27272A;border:1px solid var(--line);border-radius:4px;padding:0 
   function render() {
     var s = STEPS[cur]; seen[cur] = true; put(STEP_KEY, cur);
     var html = '<div class="meta">' + h(SECS[s.sec].n) + ' · ' + (cur + 1) + ' of ' + STEPS.length + (s.mins ? ' · about ' + s.mins + ' min' : '') + '</div><h2>' + h(s.t) + '</h2>';
+    if (s.opt || s.id === 'chasing') html += '<div class="skipbar">' + (s.opt ? '<b>Only if he asks.</b> Skip this and the rest of the extras in one tap.' : '<b>That is the main demo.</b> The extras after this are only if he asks.') + '<button class="btn pri" id="skipBtn" data-skip="1">Skip to the reinforce question</button></div>';
     if (s.extra) html += '<div class="extra">' + s.extra.map(function (x) { return '<button class="btn" data-run="' + x.act + '">' + h(x.l) + '</button>'; }).join('') + '</div>';
     if (s.do) html += '<div class="blk"><h3>Do this</h3><ol>' + s.do.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ol></div>';
     if (s.say) html += '<div class="blk say"><h3>Say</h3>' + sayHtml(s.say) + '</div>';
@@ -455,7 +510,7 @@ kbd{background:#27272A;border:1px solid var(--line);border-radius:4px;padding:0 
     var out = '', last = '';
     STEPS.forEach(function (s, i) {
       if (s.sec !== last) { out += '<div class="sec">' + h(SECS[s.sec].n) + '</div>'; last = s.sec; }
-      out += '<button data-i="' + i + '" class="' + (i === cur ? 'cur' : seen[i] ? 'seen' : '') + '">' + (i + 1) + '. ' + h(s.t) + '</button>';
+      out += '<button data-i="' + i + '" class="' + (i === cur ? 'cur' : seen[i] ? 'seen' : '') + (s.opt ? ' opt' : '') + '">' + (i + 1) + '. ' + h(s.t) + '</button>';
     });
     $('#list').innerHTML = out;
   }
@@ -467,6 +522,7 @@ kbd{background:#27272A;border:1px solid var(--line);border-radius:4px;padding:0 
   $('#list').onclick = function (e) { var b = e.target.closest('[data-i]'); if (b) goTo(+b.dataset.i); };
   document.addEventListener('click', function (e) {
     var r = e.target.closest('[data-run]'); if (r) run(r.dataset.run);
+    if (e.target.closest('[data-skip]')) { for (var k = 0; k < STEPS.length; k++) if (STEPS[k].id === 'reinforce') { goTo(k); break; } }
     var c = e.target.closest('[data-copy]'); if (c) { var inp = document.getElementById(c.dataset.copy); inp.select(); try { navigator.clipboard.writeText(inp.value); } catch (er) { document.execCommand('copy'); } c.textContent = 'Copied'; setTimeout(function () { c.textContent = 'Copy'; }, 1500); }
   });
   document.addEventListener('input', function (e) {
@@ -484,7 +540,7 @@ kbd{background:#27272A;border:1px solid var(--line);border-radius:4px;padding:0 
   $('#glossClose').onclick = function () { $('#glo').classList.remove('open'); };
   $('#glo').onclick = function (e) { if (e.target.id === 'glo') $('#glo').classList.remove('open'); };
   render();
-  window.CACGUIDE = { steps: STEPS.length, goTo: goTo, cur: function () { return cur; } };
+  window.CACGUIDE = { steps: STEPS.length, ids: STEPS.map(function (s) { return s.id; }), goTo: goTo, cur: function () { return cur; } };
 })();
 </script>
 </body>

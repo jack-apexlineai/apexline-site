@@ -44,7 +44,20 @@
     skips: function () { closeAll(); A().jobTab({ dataset: { v: 'skips' } }); },
     livejobs: function () { closeAll(); A().jobTab({ dataset: { v: 'live' } }); },
     wtnauto: function () { closeAll(); view('paperwork'); },
-    pipeline: function () { closeAll(); view('sales'); }
+    pipeline: function () { closeAll(); view('sales'); },
+    diary: function () { closeAll(); UI().ui.diary = null; view('orders'); },
+    diaryWeek: function () { closeAll(); A().diaMode({ dataset: { v: 'week' } }); },
+    diaryList: function () { closeAll(); A().diaMode({ dataset: { v: 'list' } }); },
+    orderPage: function () { closeAll(); if (UI().ui.view !== 'orders') view('orders'); var l = window.CACV3.hist().filter(function (o) { return o.svc === 'skip' && o.off < -16; }), o = l.filter(function (x) { return x.exch; }).pop() || l.pop(); if (o) A().ordOpen({ dataset: { id: o.id } }); },
+    trends: function () { closeAll(); view('trends'); },
+    bills: function () { closeAll(); if (S().v3 && S().v3.bill) A().billReset(); view('bills'); },
+    billSample: function () { closeAll(); if (UI().ui.view !== 'bills') view('bills'); if (!(S().v3 && S().v3.bill)) A().billSample(); },
+    find: function () { closeAll(); UI().ui.find = null; view('find'); },
+    scorecard: function () { closeAll(); if (UI().ui.view !== 'find') view('find'); A().supScore({ dataset: { id: 's3' } }); },
+    creditctl: function () { closeAll(); view('credit'); },
+    chasing: function () { closeAll(); view('chasing'); },
+    connections: function () { closeAll(); view('connections'); },
+    custlink: function () { closeAll(); view('customers'); if (window.innerWidth >= 900) A().custLink({ dataset: { id: 'c1' } }); else { var c = el('#linkCard'); if (c) c.scrollIntoView(); } }
   };
 
   bc.onmessage = function (e) {
