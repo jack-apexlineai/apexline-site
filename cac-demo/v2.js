@@ -184,12 +184,13 @@
     }).join('') +
       '<div class="money" style="margin-top:12px"><div class="ln"><div class="d"><b>' + h(descOf(r.it)) + '</b><small>' + h(r.pick.sup.name) + ' · cost ' + money(r.cost) + '</small></div><span class="c">price</span><input id="ordSell" inputmode="numeric" value="' + r.sell + '" aria-label="Customer price"></div>' +
       '<div class="tot"><div><small>Customer</small><b class="num">' + money(r.sell) + '</b></div><div><small>Supplier</small><b class="num">' + money(r.cost) + '</b></div><div class="m"><small>Margin</small><b class="num">' + money(r.margin) + ' <span style="font-size:12px">' + CS.pct(r.margin, r.sell) + '%</span></b></div></div></div>' +
-      (cr && cr.hold ? '<div class="note" style="margin-top:10px;background:var(--bad-l)">' + ic('alert') + '<span><b>' + h(c.name) + ' are on hold.</b> ' + h(cr.why) + ' You can still place it, it is your call.</span></div>' : '') +
+      (c && c.stop ? '<div class="note" id="ordStop" style="margin-top:10px;background:var(--bad-l)">' + ic('lock') + '<span><b>' + h(c.name) + ' are on stop.</b> You put them on stop in Credit control' + (cr && cr.owed ? ', with ' + money(cr.owed, true) + ' owed' : '') + '. Take them off stop there, or place this one anyway.</span></div>' : '') +
+      (cr && cr.hold && !(c && c.stop) ? '<div class="note" style="margin-top:10px;background:var(--bad-l)">' + ic('alert') + '<span><b>' + h(c.name) + ' are on hold.</b> ' + h(cr.why) + ' You can still place it, it is your call.</span></div>' : '') +
       '<div class="field" style="margin-top:14px"><label>How they pay</label><div class="chips">' + pk('ordPay', 'account', O.pay === 'account', 'On account') + pk('ordPay', 'link', O.pay === 'link', 'Send a payment link') + pk('ordPay', 'card', O.pay === 'card', 'Take card now') + '</div></div>' +
       '<div class="field"><label>Send the paperwork by</label><div class="chips">' + pk('ordSend', 'wa', O.send === 'wa', ic('whatsapp') + 'WhatsApp') + pk('ordSend', 'email', O.send === 'email', ic('mail') + 'Email') + '</div></div>' +
       '<div class="note">' + ic('sparkles') + '<span>One tap books it with ' + h(r.pick.sup.name) + ', raises the invoice, and sends ' + h(first(O.cname || (c ? c.first : 'the customer'))) + ' the order confirmation' + (O.pay === 'account' ? ' and the invoice.' : O.pay === 'link' ? ' and the invoice with a pay by card link.' : '. The card is taken first.') + '</span></div>';
   }
-  function ordFoot() { var r = ordCalc(); return '<button class="btn" data-act="close">Cancel</button><span class="sp"></span><button class="btn pri lg" id="ordGo" data-act="ordPlace"' + (r.pick ? '' : ' disabled') + '>' + ic('check') + 'Place the order' + (r.pick ? ', ' + money(r.sell) : '') + '</button>'; }
+  function ordFoot() { var r = ordCalc(), c = ordCust(), stop = c && c.stop; return '<button class="btn" data-act="close">Cancel</button><span class="sp"></span><button class="btn pri lg" id="ordGo" data-act="ordPlace"' + (r.pick ? '' : ' disabled') + '>' + ic(stop ? 'lock' : 'check') + (stop ? (O.stopOk ? 'Yes, place it anyway' : 'On stop. Place it anyway') : 'Place the order') + (r.pick ? ', ' + money(r.sell) : '') + '</button>'; }
   function ordDraw() { H.modal('New order', '<div class="ord"><div id="ordL">' + ordLeft() + '</div><div class="res" id="ordR">' + ordRight() + '</div></div>', ordFoot(), true); }
   function ordRes() { var r = q('#ordR'); if (r) r.innerHTML = ordRight(); var f = document.querySelector('#layer .modal .mft'); if (f) f.innerHTML = ordFoot(); }
   function ordDoc(j) {
@@ -203,6 +204,7 @@
   function place() {
     var r = ordCalc(); if (!r.pick) { H.toast('Put a postcode in that a supplier covers first', 'alert'); return; }
     var c = ordCust(), s = S();
+    if (c && c.stop && !O.stopOk) { O.stopOk = true; ordRes(); H.toast(h(c.name) + ' are on stop. Tap again if you want to place it anyway.', 'lock'); return; }
     if (!c) {
       var nm = (O.newName || '').trim(); if (!nm) { H.toast('Put the customer\'s name in', 'alert'); var f = q('#ordNew'); if (f) f.focus(); return; }
       c = { id: 'c' + (s.customers.length + 40), limit: 0, name: nm, contact: O.cname || nm, first: first(O.cname || nm), phone: O.cphone, email: '', type: 'Builder', terms: 'Card on order', owner: 'john', sites: [{ name: O.addr || CS.outward(r.pc), pc: r.pc.toUpperCase() }] };
@@ -487,6 +489,8 @@
     return t.id;
   };
   W.onSite = onSite; W.warnings = warnings; W.todo = todo; W.order = function () { return O; };
+  W.x = { hb: hb, docs: docs, onSite: onSite, eta: eta, contact: contact, track: track, movesOn: movesOn, warnings: warnings, dateOf: dateOf, weeks: weeks, inWords: inWords, hash: hash, first: first, cap: cap, D: D, itemOf: itemOf, descOf: descOf,
+    order: function (pre) { H.A.closeSide(); freshOrder(pre); ordDraw(); } };
 
   /* ---------- wiring ---------- */
   W.init = function (o) {
@@ -494,10 +498,10 @@
     X.guide = guide;
     X.todoCount = function () { return todo().length; };
     V.home = homeView;
-    var jobsV = V.jobs; V.jobs = function () {
-      var tab = H.ui.jobTab || 'live', tabs = [['live', 'Live jobs today'], ['skips', 'Skips on site'], ['all', 'All jobs']];
-      return '<div class="row" style="flex-wrap:wrap;margin-bottom:14px"><div class="seg" id="jobTabs">' + tabs.map(function (x) { return '<button data-act="jobTab" data-v="' + x[0] + '" class="' + (tab === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div><span class="sp"></span>' + (tab === 'all' ? '' : '<button class="btn pri" data-act="newOrder">' + ic('plus') + 'New order</button>') + '</div>' +
-        (tab === 'live' ? liveView() : tab === 'skips' ? skipsView() : jobsV());
+    V.jobs = function () {
+      var tab = H.ui.jobTab === 'skips' ? 'skips' : 'live', tabs = [['live', 'Live jobs today'], ['skips', 'Skips on site']];
+      return '<div class="row" style="flex-wrap:wrap;margin-bottom:14px"><div class="seg" id="jobTabs">' + tabs.map(function (x) { return '<button data-act="jobTab" data-v="' + x[0] + '" class="' + (tab === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div><span class="sp"></span><button class="btn" data-act="go" data-v="orders">' + ic('calendar') + 'Order diary</button><button class="btn pri" data-act="newOrder">' + ic('plus') + 'New order</button></div>' +
+        (tab === 'skips' ? skipsView() : liveView());
     };
     var supV = V.suppliers; V.suppliers = function () { return hbView(supV()); };
     var pbV = V.pricebook; V.pricebook = function () { return '<div class="row" style="margin-bottom:12px"><button class="btn sm" data-act="go" data-v="suppliers">' + ic('chevron-left') + 'Supplier handbook</button><span class="muted" style="font-size:13px">Your own selling prices. Set once, then every quote uses them.</span></div>' + pbV(); };
@@ -628,7 +632,7 @@
     });
     document.addEventListener('change', function (e) {
       var el = e.target;
-      if (el.id === 'ordCust') { O.cust = el.value; O.sup = null; O.sell = null; var c = ordCust(); O.site = c ? 0 : 'other'; if (c) { O.cname = c.contact; O.cphone = c.phone; O.pay = /card/i.test(c.terms) ? 'link' : 'account'; } else { O.cname = ''; O.cphone = ''; O.pay = 'link'; } ordDraw(); }
+      if (el.id === 'ordCust') { O.cust = el.value; O.sup = null; O.sell = null; O.stopOk = false; var c = ordCust(); O.site = c ? 0 : 'other'; if (c) { O.cname = c.contact; O.cphone = c.phone; O.pay = /card/i.test(c.terms) ? 'link' : 'account'; } else { O.cname = ''; O.cphone = ''; O.pay = 'link'; } ordDraw(); }
       if (el.id === 'ordSite') { O.site = el.value === 'other' ? 'other' : Number(el.value); O.sup = null; O.sell = null; ordDraw(); }
       if (el.id === 'ordSell') { var v = parseFloat(String(el.value).replace(/[^\d.]/g, '')); if (!isNaN(v)) { O.sell = v; ordRes(); } }
       if (el.id === 'hbHire') { CS.sup(el.dataset.id).hireDays = Number(el.value); CS.commit(); H.toast('Hire period saved. Skips on site follows it.', 'check'); }
@@ -658,5 +662,6 @@
       else if (!setStage(d.id, t.getAttribute('data-stage'))) H.render();
     });
     document.addEventListener('dragend', function () { drag = null; clear(); Array.prototype.forEach.call(document.querySelectorAll('.dragging'), function (x) { x.classList.remove('dragging'); }); });
+    if (window.CACV3) window.CACV3.init(H);
   };
 })();

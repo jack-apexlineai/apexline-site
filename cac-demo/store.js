@@ -1,14 +1,18 @@
 /* CAC demo store: state in this browser only, the message reader, supplier lookup, pricing, drafts and approvals.
    Nothing is ever sent anywhere. "Send" in this demo only adds the message to the screen. */
 (function () {
-  var KEY = 'cac-demo-v3', LKEY = 'cac-demo-leader';
+  var KEY = 'cac-demo-v4', LKEY = 'cac-demo-leader';
   var CS = window.CS = {};
   var listeners = [];
   var ME = Math.random().toString(36).slice(2);
   CS.me = ME;
 
   /* ---------- dates and formatting ---------- */
-  function today0() { var d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+  /* ?day=2026-11-23 shows the demo as it will look on that day (for rehearsing and for the tests). The clock time stays real. */
+  var DAYSHIFT = 0;
+  try { var dq = /^(\d{4})-(\d\d?)-(\d\d?)$/.exec(new URLSearchParams(location.search).get('day') || (window.sessionStorage && sessionStorage.getItem('cac-day')) || ''); if (dq) { var want = new Date(+dq[1], +dq[2] - 1, +dq[3]), real = new Date(); real.setHours(0, 0, 0, 0); DAYSHIFT = Math.round((want - real) / 86400000); try { sessionStorage.setItem('cac-day', dq[0]); } catch (e2) {} } } catch (e) {}
+  function today0() { var d = new Date(); d.setHours(0, 0, 0, 0); if (DAYSHIFT) d.setDate(d.getDate() + DAYSHIFT); return d; }
+  CS.dayShift = function () { return DAYSHIFT; };
   function dayKey(d) { return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
   var DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   var DOWL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -51,7 +55,7 @@
   function seed() {
     var s = window.SEED();
     var now = Date.now();
-    s.seededDay = dayKey(new Date()); s.t0 = now; s.liveT0 = null;
+    s.seededDay = dayKey(today0()); s.t0 = now; s.liveT0 = null;
     s.jobs.forEach(function (j) { ['day', 'exDay', 'colDay'].forEach(function (k) { if (j[k] != null) j[k] = CS.wd(j[k]); }); });
     s.rateChange.fromDay = CS.wd(s.rateChange.fromDay);
     s.permits.forEach(function (pm) { if (pm.to != null) pm.to = CS.wd(pm.to); });
@@ -87,7 +91,7 @@
   CS.load = function () {
     var s = null;
     try { s = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { s = null; }
-    if (!s || s.seededDay !== dayKey(new Date()) || !s.threads) { s = seed(); CS.S = s; CS.save(); }
+    if (!s || s.seededDay !== dayKey(today0()) || !s.threads) { s = seed(); CS.S = s; CS.save(); }
     CS.S = s;
     return s;
   };

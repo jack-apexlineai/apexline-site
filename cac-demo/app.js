@@ -9,18 +9,24 @@
   var ui = { view: 'home', sel: null, asst: true, jobTab: 'live', tab: 'all', reading: {}, typed: {}, justDone: {}, newIds: {}, qFilter: 'all', jobOwner: 'all', jobQ: '', search: '', open: false };
   var VIEWS = [
     { k: 'home', n: 'Home', ic: 'home', sub: '' },
-    { k: 'inbox', n: 'Inbox', ic: 'inbox', sub: 'WhatsApp, email and the website in one place' },
-    { k: 'today', n: 'Today', ic: 'dashboard', sub: '' },
-    { k: 'jobs', n: 'Jobs', ic: 'truck', sub: 'Live jobs today, skips on site and every job' },
-    { k: 'quotes', n: 'Quotes', ic: 'file-text', sub: 'Customer price, supplier cost and margin on every quote' },
+    { k: 'inbox', g: 'Work', n: 'Inbox', ic: 'inbox', sub: 'WhatsApp, email and the website in one place' },
+    { k: 'today', g: 'Work', n: 'Today', ic: 'dashboard', sub: '' },
+    { k: 'orders', g: 'Work', n: 'Orders', ic: 'calendar', sub: 'Every order, past and booked. Flick through by month, week or day' },
+    { k: 'jobs', g: 'Work', n: 'Live jobs', ic: 'truck', sub: 'What is moving today, and what is sitting on site' },
+    { k: 'quotes', g: 'Work', n: 'Quotes', ic: 'file-text', sub: 'Customer price, supplier cost and margin on every quote' },
+    { k: 'chasing', g: 'Work', n: 'Chasing', ic: 'bell', sub: 'Everything waiting on someone else, chased for you' },
     { k: 'pricebook', hide: true, n: 'Price book', ic: 'list', sub: 'Your prices for every area and size, your rules, and price lists read in' },
-    { k: 'customers', n: 'Customers', ic: 'users', sub: 'Credit, sites, statements and each customer\'s own link' },
-    { k: 'suppliers', n: 'Supplier handbook', ic: 'warehouse', sub: 'Contacts, prices, surcharges, licences and who covers where' },
-    { k: 'chasing', n: 'Chasing', ic: 'bell', sub: 'Everything waiting on someone else, chased for you' },
-    { k: 'money', n: 'Money', ic: 'pound', sub: 'Invoices, supplier bills and margin' },
-    { k: 'paperwork', n: 'Duty of care', ic: 'certificate', sub: 'WTNs per job, supplier licences, audit packs' },
-    { k: 'reports', n: 'Waste and carbon', ic: 'leaf', sub: 'Tonnes, landfill diversion and carbon for every account and site' },
-    { k: 'sales', n: 'Sales', ic: 'trending-up', sub: 'The pipeline, every deal and every follow up' }
+    { k: 'customers', g: 'Customers', n: 'Customers', ic: 'users', sub: 'Sites, what each one is worth, and each customer\'s own link' },
+    { k: 'credit', g: 'Customers', n: 'Credit control', ic: 'lock', sub: 'Limits, who owes what, and who is on stop' },
+    { k: 'sales', g: 'Customers', n: 'Sales', ic: 'target', sub: 'The pipeline, every deal and every follow up' },
+    { k: 'suppliers', g: 'Suppliers', n: 'Supplier handbook', ic: 'warehouse', sub: 'Contacts, prices, surcharges, licences and who covers where' },
+    { k: 'find', g: 'Suppliers', n: 'Find a supplier', ic: 'map-pin', sub: 'Who covers a postcode, by price and by how reliable they are' },
+    { k: 'bills', g: 'Suppliers', n: 'Bill check', ic: 'receipt', sub: 'Supplier statements lined up against what you booked' },
+    { k: 'money', g: 'Money', n: 'Money', ic: 'pound', sub: 'Invoices, supplier bills and margin' },
+    { k: 'trends', g: 'Money', n: 'Trends', ic: 'trending-up', sub: 'This month against last month, and where the month is heading' },
+    { k: 'paperwork', g: 'Money', n: 'Duty of care', ic: 'certificate', sub: 'WTNs per job, supplier licences, audit packs' },
+    { k: 'reports', g: 'Money', n: 'Waste and carbon', ic: 'leaf', sub: 'Tonnes, landfill diversion and carbon for every account and site' },
+    { k: 'connections', hide: true, n: 'Connections', ic: 'link', sub: 'What the system plugs into, and what each one needs from you' }
   ];
   var PARTY_COL = { customer: ['#EB9347', '#C7672A', '#D9853A', '#B9773F'], supplier: ['#3F3F46', '#52525B', '#27272A'], lead: ['#7A3FF2', '#6D28D9'] };
 
@@ -63,11 +69,11 @@
   /* ---------- shell ---------- */
   function renderNav() {
     var st = CS.stats(), ch = CS.chaseLists();
-    var counts = { inbox: st.unread || st.needs, chasing: ch.total };
-    $('#nav').innerHTML = '<button class="navcta" data-act="newOrder" title="New order (O)">' + ic('plus') + '<span class="lb">New order</span><kbd class="hide-md">O</kbd></button><button class="navcta two" data-act="desk" title="New quote (Q)">' + ic('file-text') + '<span class="lb">New quote</span><kbd class="hide-md">Q</kbd></button>' + VIEWS.filter(function (v) { return !v.hide; }).map(function (v) {
-      var c = counts[v.k];
-      return (v.k === 'suppliers' ? '<div class="sep"></div>' : '') + '<button data-act="go" data-v="' + v.k + '" class="' + (ui.view === v.k || (v.k === 'suppliers' && ui.view === 'pricebook') ? 'on' : '') + '" title="' + v.n + '">' + ic(v.ic) + '<span class="lb">' + v.n + '</span>' + (c ? '<span class="cnt' + (v.k === 'chasing' ? ' grey' : (v.k === 'inbox' && st.unread ? ' red' : '')) + '">' + c + '</span>' : '') + '</button>';
-    }).join('') + '<div class="sep"></div><button data-act="phone" title="Phone view">' + ic('mobile') + '<span class="lb">Phone view</span></button><button data-act="settings" title="Settings">' + ic('settings') + '<span class="lb">Settings</span></button>';
+    var counts = { inbox: st.unread || st.needs, chasing: ch.total }, last = null;
+    $('#nav').innerHTML = '<div class="navtop"><button class="navcta" data-act="newOrder" title="New order (O)">' + ic('plus') + '<span class="lb">New order</span></button><button class="navcta two" data-act="desk" title="New quote (Q)">' + ic('file-text') + '<span class="lb">Quote</span></button></div>' + VIEWS.filter(function (v) { return !v.hide; }).map(function (v) {
+      var c = counts[v.k], head = v.g && v.g !== last ? '<div class="navg">' + v.g + '</div>' : ''; last = v.g || last;
+      return head + '<button data-act="go" data-v="' + v.k + '" class="' + (ui.view === v.k || (v.k === 'suppliers' && ui.view === 'pricebook') ? 'on' : '') + '" title="' + v.n + '">' + ic(v.ic) + '<span class="lb">' + v.n + '</span>' + (c ? '<span class="cnt' + (v.k === 'chasing' ? ' grey' : (v.k === 'inbox' && st.unread ? ' red' : '')) + '">' + c + '</span>' : '') + '</button>';
+    }).join('');
   }
   function renderTop() {
     var v = VIEWS.filter(function (x) { return x.k === ui.view; })[0];
@@ -232,12 +238,12 @@
   V.today = function () {
     var st = CS.stats(), ch = CS.chaseLists();
     var needs = sortedThreads().filter(needsYou).slice(0, 6);
-    var todays = S.jobs.filter(function (j) { return [j.day, j.exDay, j.colDay].indexOf(0) >= 0 || [j.day, j.exDay, j.colDay].indexOf(1) >= 0; }).slice(0, 8);
+    var todays = S.jobs.filter(function (j) { return [j.day, j.exDay, j.colDay].indexOf(0) >= 0 || [j.day, j.exDay, j.colDay].indexOf(1) >= 0; }).sort(function (p, q2) { function w(j) { return [j.day, j.exDay, j.colDay].indexOf(0) >= 0 ? 0 : 1; } return w(p) - w(q2); }).slice(0, 8);
     var mtd = S.months[S.months.length - 1];
     var maxW = Math.max.apply(null, S.weeks);
     var hours = hm(S.saved.mins);
-    return '<div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:16px"><div style="flex:1;min-width:220px"><h2 style="font-size:24px">' + greeting() + ', John</h2><p class="muted" style="margin:4px 0 0">' + st.needs + ' messages need you and every one already has a draft. ' + st.awaiting + ' jobs waiting on suppliers, ' + ch.total + ' things being chased.</p></div>' +
-      '<button class="btn" data-act="briefing">' + ic('sun') + 'Briefing</button><button class="btn pri" data-act="go" data-v="inbox">' + ic('inbox') + 'Open the inbox</button></div>' +
+    return '<div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:16px"><div style="flex:1;min-width:220px"><h2 style="font-size:24px">' + greeting() + ', John</h2><p class="muted" style="margin:4px 0 0">' + st.needs + ' messages need you, every one already drafted. ' + st.today + ' jobs moving today.</p></div>' +
+      '<button class="btn" data-act="briefing">' + ic('sun') + 'Briefing</button><button class="btn" data-act="go" data-v="inbox">' + ic('inbox') + 'Open the inbox</button></div>' +
       '<div class="grid g4 kpis" style="margin-bottom:16px">' +
       '<button class="card kpi" data-act="go" data-v="inbox"><small>' + ic('inbox') + 'Needs you</small><b>' + st.needs + '</b><span class="d">all drafted, one tap each</span></button>' +
       '<button class="card kpi" data-act="go" data-v="jobs"><small>' + ic('truck') + 'Jobs today and tomorrow</small><b>' + (st.today + st.tomorrow) + '</b><span class="d">' + st.onhire + ' on hire, ' + st.awaiting + ' waiting on supplier</span></button>' +
@@ -247,10 +253,10 @@
       '<div class="card"><div class="hd"><h2>' + ic('sparkles') + 'Needs you</h2><button class="btn sm" data-act="go" data-v="inbox">See all</button></div><div class="bd needs">' +
       (needs.length ? needs.map(function (t) { var p = CS.party(t.party), A = CS.analyse(t); return '<button class="n" data-act="openThread" data-id="' + t.id + '">' + av(p.name, t.party.type, 'sm') + '<span class="bd"><b>' + h(A.title) + '</b><small>' + h(p.name + ', ' + p.sub) + ' · ' + CS.chName(t.ch) + ' · ' + CS.ago(t.last) + '</small></span>' + (A.kind === 'hold' ? '<span class="tag bad">On hold</span>' : (A.margin ? '<span class="tag ok">' + money(A.margin) + '</span>' : '')) + ic('chevron-right') + '</button>'; }).join('') : '<div class="empty">' + ic('circle-check') + 'All clear.</div>') +
       '</div></div>' +
-      '<div class="card"><div class="hd"><h2>' + ic('truck') + 'Today and tomorrow</h2><button class="btn sm" data-act="go" data-v="jobs">Jobs board</button></div><div class="tw"><table class="t"><tbody>' +
+      '<div class="card"><div class="hd"><h2>' + ic('truck') + 'Today and tomorrow</h2><button class="btn sm" data-act="go" data-v="jobs">Live jobs</button></div><div class="tw"><table class="t"><tbody>' +
       todays.map(function (j) { var c = CS.cust(j.cust), s = CS.jobSite(j), what = j.exDay === 0 || j.exDay === 1 ? 'Exchange' : (j.colDay === 0 || j.colDay === 1 ? 'Collection' : 'Delivery'); var when = what === 'Exchange' ? j.exDay : what === 'Collection' ? j.colDay : j.day;
         return '<tr class="click" data-act="openJob" data-id="' + j.id + '"><td><b>' + CS.fmtDay(when) + '</b><small>' + what + '</small></td><td><b>' + h(CS.jobDesc(j)) + '</b><small>' + h(c.name) + ', ' + h(s.pc) + '</small></td><td class="hide-sm"><small style="display:inline">' + h(CS.sup(j.sup).name) + '</small></td><td class="r">' + stTag(j.status) + '</td></tr>'; }).join('') +
-      '</tbody></table></div></div></div>' +
+      '</tbody></table></div></div>' + (window.CACQ && window.CACQ.quietCard ? window.CACQ.quietCard() : '') + '</div>' +
       '<div class="grid" style="align-content:start">' +
       '<div class="card pad"><h2>' + ic('hourglass') + 'Admin done for you today</h2><div style="display:flex;align-items:baseline;gap:10px;margin:10px 0 4px"><b style="font-size:34px;letter-spacing:-.02em">' + hours + '</b><span class="muted">' + S.saved.actions + ' jobs, quotes and chases</span></div>' +
       '<p class="muted" style="margin:0;font-size:12.5px">Estimate, using 3 to 25 minutes per task done by hand. That is the work of an admin hire, done before you open the inbox.</p></div>' + X.todayNudge() +
@@ -530,6 +536,7 @@
       '<div class="rowline"><div class="bd"><b>Reply tone</b><small>' + (st.tone === 'formal' ? '"Hello Dan, ... Kind regards, John Pesci"' : '"Hi Dan, yes no problem ... Cheers, John"') + '</small></div><div class="seg"><button data-act="tone" data-v="friendly" class="' + (st.tone !== 'formal' ? 'on' : '') + '">Short and friendly</button><button data-act="tone" data-v="formal" class="' + (st.tone === 'formal' ? 'on' : '') + '">Formal</button></div></div>' +
       '<div class="rowline"><div class="bd"><b>Your BDE\'s first name</b><small>Shown on Sales, leads and their replies</small></div><input id="bdeName" value="' + h(CS.bde()) + '" style="width:130px;border:1px solid var(--line2);border-radius:10px;padding:7px 10px;background:var(--panel2)" aria-label="BDE first name"></div>' +
       '<div class="rowline"><div class="bd"><b>Your team</b><small>John, your BDE and the next hires, with what each one sees</small></div><button class="btn sm" data-act="team">' + ic('users') + 'Team</button></div>' +
+      '<div class="rowline"><div class="bd"><b>Connections</b><small>WhatsApp, email, your accounts and card payments, and what each needs</small></div><button class="btn sm" data-act="connections">' + ic('link') + 'Open</button></div>' +
       '<div class="rowline"><div class="bd"><b>Take the tour</b><small>Seven quick steps round the system</small></div><button class="btn sm" data-act="tour">' + ic('play') + 'Start</button></div>' +
       '<div class="rowline"><div class="bd"><b>Business</b><small>CAC Waste Management Ltd · broker CBDU650137 · 0330 122 5711</small></div></div>' +
       '<div class="rowline"><div class="bd"><b>Replay the live messages</b><small>Sends the sample messages again from the start</small></div><button class="btn sm" data-act="replay">' + ic('play') + 'Replay</button></div>' +

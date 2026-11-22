@@ -295,10 +295,9 @@
     H = o; var A = H.A, V = H.V; rules();
     S().agreed = S().agreed || { c1: { 'skip-8': 270 } };
     V.pricebook = Q.priceBook;
-    var todayV = V.today; V.today = function () { return Q.quietCard() + todayV(); };
     var quotesV = V.quotes; V.quotes = function () { return Q.quietCard() + Q.lostInsight() + quotesV(); };
     var supV = V.suppliers; V.suppliers = function () { return '<div class="row" style="margin-bottom:14px;flex-wrap:wrap;gap:10px"><div style="flex:1;min-width:220px"><b style="font-size:15px">New price list from a supplier?</b><span class="muted" style="font-size:13px;display:block">Upload it or forward the email. Every price is read in and checked against your open quotes.</span></div><button class="btn" data-act="upload" data-v="supplier">' + ic('download') + 'Upload a price list</button></div>' + supV(); };
-    var fab = document.createElement('button'); fab.className = 'fab'; fab.setAttribute('data-act', 'desk'); fab.setAttribute('aria-label', 'New quote'); fab.innerHTML = ic('plus') + '<span>New quote</span>'; document.body.appendChild(fab);
+    var fab = document.createElement('button'); fab.className = 'fab'; fab.setAttribute('data-act', 'newOrder'); fab.setAttribute('aria-label', 'New order'); fab.innerHTML = ic('plus') + '<span>New order</span>'; document.body.appendChild(fab);
 
     A.desk = function () { Q.open(); };
     A.dkSvc = function (el) { D.svc = el.dataset.v; D.qty = ''; D.sup = null; D.sell = null; redraw(); };

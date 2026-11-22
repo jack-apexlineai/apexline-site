@@ -21,11 +21,11 @@
     { id: 's1', recov: 94, hireDays: 14, weekRate: 25, name: 'Saltmarsh Skips', contact: 'Sarah', phone: '07700 900141', base: 'Heacham', services: ['skip'],
       areas: range('PE', 30, 38).concat(range('NR', 21, 27)), rates: { skip: NORFOLK_SKIP },
       resp: 14, onTime: 97, wtn: 99, jobs: 61, cbdu: 'CBDU418207', licExp: 640, preferred: true },
-    { id: 's13', recov: 88, hireDays: 14, weekRate: 25, name: 'Ringmere Skip Hire', contact: 'Gav', phone: '07700 900162', base: 'Downham Market', services: ['skip'],
+    { id: 's13', recov: 88, hireDays: 28, weekRate: 25, name: 'Ringmere Skip Hire', contact: 'Gav', phone: '07700 900162', base: 'Downham Market', services: ['skip'],
       areas: range('PE', 1, 7).concat(range('PE', 13, 14), range('PE', 30, 34), ['PE37', 'PE38', 'NR19', 'NR20']),
       rates: { skip: { 4: 145, 6: 172, 8: 195, 10: 232, 12: 255, 14: 280, 16: 305, 20: 410, 40: 545 } },
       resp: 35, onTime: 91, wtn: 84, jobs: 38, cbdu: 'CBDU377415', licExp: 38 },
-    { id: 's3', recov: 86, hireDays: 14, weekRate: 25, name: 'Brecklane Waste', contact: 'Martin', phone: '07700 900118', base: 'Thetford', services: ['skip'],
+    { id: 's3', recov: 86, hireDays: 28, weekRate: 25, name: 'Brecklane Waste', contact: 'Martin', phone: '07700 900118', base: 'Thetford', services: ['skip'],
       areas: range('NR', 1, 18).concat(range('IP', 24, 27), range('CB', 21, 25)),
       rates: { skip: { 4: 155, 6: 185, 8: 210, 10: 245, 12: 270, 14: 295, 16: 320, 20: 430, 40: 575 } },
       resp: 41, onTime: 88, wtn: 81, jobs: 44, cbdu: 'CBDU402981', licExp: 410 },
@@ -44,7 +44,7 @@
     { id: 's12', name: 'Stoneharbour Aggregates', contact: 'Kev', phone: '07700 900171', base: 'Lincoln', services: ['aggregates'],
       areas: ['PE', 'NR', 'CB', 'IP', 'LN', 'NG'], rates: { aggregates: 340 },
       resp: 48, onTime: 90, wtn: null, jobs: 11, cbdu: 'n/a (supply only)', licExp: null },
-    { id: 's7', recov: 92, hireDays: 14, weekRate: 25, name: 'Docklight Skips', contact: 'Ray', phone: '07700 900184', base: 'Barking', services: ['skip'],
+    { id: 's7', recov: 92, hireDays: 28, weekRate: 25, name: 'Docklight Skips', contact: 'Ray', phone: '07700 900184', base: 'Barking', services: ['skip'],
       areas: ['E', 'N', 'SE', 'IG', 'RM', 'EC'], rates: { skip: { 4: 240, 6: 280, 8: 320, 10: 360, 12: 395, 14: 430, 16: 460 } },
       resp: 18, onTime: 94, wtn: 95, jobs: 22, cbdu: 'CBDU288140', licExp: 290 },
     { id: 's8', recov: 95, hireDays: 14, weekRate: 25, name: 'Larkbridge Grab Hire', contact: 'Dev', phone: '07700 900190', base: 'Croydon', services: ['grab', 'muck'],
@@ -53,7 +53,7 @@
     { id: 's9', recov: 90, hireDays: 14, weekRate: 25, name: 'Brindlecross Skips', contact: 'Paula', phone: '07700 900115', base: 'Walsall', services: ['skip', 'grab', 'muck'],
       areas: ['B', 'WS', 'WV', 'DY', 'CV'], rates: { skip: { 4: 175, 6: 210, 8: 255, 10: 290, 12: 320, 14: 350, 16: 380 }, grab: 300, muck: 345 },
       resp: 24, onTime: 93, wtn: 92, jobs: 14, cbdu: 'CBDU366502', licExp: 455 },
-    { id: 's10', recov: 93, hireDays: 14, weekRate: 25, name: 'Moorvale Grab and Skip', contact: 'Shaun', phone: '07700 900122', base: 'Oldham', services: ['skip', 'grab', 'muck'],
+    { id: 's10', recov: 93, hireDays: 28, weekRate: 25, name: 'Moorvale Grab and Skip', contact: 'Shaun', phone: '07700 900122', base: 'Oldham', services: ['skip', 'grab', 'muck'],
       areas: ['M', 'SK', 'OL', 'BL', 'WN'], rates: { skip: { 4: 170, 6: 205, 8: 245, 10: 280, 12: 310, 14: 340, 16: 370 }, grab: 290, muck: 340 },
       resp: 21, onTime: 95, wtn: 94, jobs: 12, cbdu: 'CBDU349918', licExp: 980 },
     { id: 's11', recov: 89, hireDays: 14, weekRate: 25, name: 'Quayline Skips', contact: 'Carl', phone: '07700 900137', base: 'Bootle', services: ['skip'],
@@ -111,7 +111,21 @@
     job('CAC-1045', 'c2', 1, 'skip', 8, 1, 's3', 210, 280, 'booked', 2, 'pending', { bookedMins: 190 }),
     job('CAC-1046', 'c3', 0, 'sweeper', null, 1, 's6', 208, 260, 'confirmed', 1, null, { hours: 4 }),
     job('CAC-1047', 'c10', 0, 'skip', 8, 1, 's11', 235, 310, 'booked', 1, 'pending', { bookedMins: 52, permit: true }),
-    job('CAC-1048', 'c1', 1, 'grab', null, 1, 's2', 275, 340, 'booked', 3, 'pending', { bookedMins: 95 })
+    job('CAC-1048', 'c1', 1, 'grab', null, 1, 's2', 275, 340, 'booked', 3, 'pending', { bookedMins: 95 }),
+    /* a full day today and the next working day, so the live jobs sheet looks like a real Monday */
+    job('CAC-1022', 'c1', 1, 'skip', 6, 1, 's1', 180, 240, 'collection', -9, 'received', { colDay: 0, eta: '8 to 10' }),
+    job('CAC-1024', 'c2', 1, 'skip', 8, 1, 's3', 210, 280, 'exchange', -6, 'received', { exDay: 0, eta: '9 to 11' }),
+    job('CAC-1049', 'c1', 0, 'skip', 8, 1, 's1', 205, 275, 'onhire', 0, 'pending', { eta: '7 to 8:30', note: 'Drop by the site cabin' }),
+    job('CAC-1050', 'c2', 0, 'grab', null, 1, 's2', 275, 340, 'confirmed', 0, 'pending', { eta: '8 to 10' }),
+    job('CAC-1051', 'c6', 1, 'skip', 12, 1, 's3', 270, 355, 'confirmed', 0, 'pending', { eta: '10 to 12', note: 'Gate code 2580' }),
+    job('CAC-1052', 'c3', 0, 'skip', 16, 1, 's13', 305, 405, 'confirmed', 0, 'pending', { eta: '10 to 12' }),
+    job('CAC-1053', 'c5', 0, 'skip', 8, 1, 's7', 320, 425, 'confirmed', 0, 'pending', { eta: '12 to 2', permit: true }),
+    job('CAC-1054', 'c7', 0, 'aggregates', null, 1, 's2', 360, 430, 'confirmed', 0, null, { eta: '1 to 3' }),
+    job('CAC-1023', 'c3', 0, 'skip', 12, 1, 's13', 255, 340, 'collection', -8, 'received', { colDay: 1, eta: '8 to 10' }),
+    job('CAC-1055', 'c4', 0, 'skip', 8, 1, 's1', 205, 275, 'confirmed', 1, 'pending', { eta: '7 to 8:30' }),
+    job('CAC-1056', 'c6', 0, 'muck', null, 2, 's2', 640, 780, 'confirmed', 1, 'pending', { eta: '8 to 10' }),
+    job('CAC-1057', 'c1', 0, 'toilet', null, 1, 's4', 133, 185, 'confirmed', 1, null, { weeks: 4, eta: '9 to 11' }),
+    job('CAC-1058', 'c9', 0, 'skip', 6, 1, 's10', 215, 285, 'confirmed', 1, 'pending', { eta: '12 to 2', permit: true })
   ];
   JOBS.forEach(function (j) { if (j.cust === 'c7' || j.cust === 'c8' || j.cust === 'c9' || j.cust === 'c10') j.owner = 'sam'; });
 
@@ -241,7 +255,7 @@
       services: SERVICES, suppliers: SUPPLIERS, customers: CUSTOMERS, jobs: JOBS, quotes: QUOTES, invoices: INVOICES, bills: BILLS,
       leads: LEADS, threads: THREADS, live: LIVE, leaks: LEAKS, permits: PERMITS, rateChange: RATECHANGE, months: MONTHS, weeks: WEEKS,
       sam: { calls: [14, 17, 12, 11, 10], callTarget: 100, emails: 38, linkedin: 22, quotes: 7, accounts: 2 },
-      counters: { job: 1049, quote: 2233, inv: 2212, thread: 100, lead: 100 },
+      counters: { job: 1059, quote: 2233, inv: 2212, thread: 100, lead: 100 },
       saved: { mins: 186, actions: 31 },
       settings: { theme: 'light', live: true, tone: 'friendly', autoChase: true, chaseMins: 30, wtnDays: 2, outOfHours: true, briefing: true },
       liveIdx: 0, events: [], feed: []
