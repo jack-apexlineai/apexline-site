@@ -38,7 +38,14 @@
     team: function () { closeAll(); A().team(); },
     today: function () { closeAll(); view('today'); },
     homeDash: function () { closeAll(); view('home'); },
-    gemma: function () { closeAll(); view('inbox'); thread(window.CACV2.gemma()); },
+    /* Gemma: the open order if there is one (fresh or part way through), else her booked order as it was left. A second order is only made after a reset. */
+    gemma: function () {
+      closeAll(); view('inbox');
+      var th = S().threads.filter(function (x) { return x.party.type === 'customer' && x.party.id === 'c7'; });
+      var open = th.filter(function (x) { return !x.done && window.CS.needsYou(x); })[0];
+      thread(open ? open.id : th.length ? th[0].id : window.CACV2.gemma());
+    },
+    gemmaFresh: function () { closeAll(); A().reset(); live(false); view('inbox'); thread(window.CACV2.gemma()); },
     order: function () { closeAll(); A().newOrder(); },
     handbook: function () { closeAll(); view('suppliers'); },
     skips: function () { closeAll(); A().jobTab({ dataset: { v: 'skips' } }); },
@@ -51,12 +58,14 @@
     orderPage: function () { closeAll(); if (UI().ui.view !== 'orders') view('orders'); var l = window.CACV3.hist().filter(function (o) { return o.svc === 'skip' && o.off < -16; }), o = l.filter(function (x) { return x.exch; }).pop() || l.pop(); if (o) A().ordOpen({ dataset: { id: o.id } }); },
     trends: function () { closeAll(); view('trends'); },
     bills: function () { closeAll(); if (S().v3 && S().v3.bill) A().billReset(); view('bills'); },
+    billsKeep: function () { closeAll(); view('bills'); },
     billSample: function () { closeAll(); if (UI().ui.view !== 'bills') view('bills'); if (!(S().v3 && S().v3.bill)) A().billSample(); },
     find: function () { closeAll(); UI().ui.find = null; view('find'); },
     scorecard: function () { closeAll(); if (UI().ui.view !== 'find') view('find'); A().supScore({ dataset: { id: 's3' } }); },
     creditctl: function () { closeAll(); view('credit'); },
     chasing: function () { closeAll(); view('chasing'); },
     connections: function () { closeAll(); view('connections'); },
+    phoneView: function () { closeAll(); A().phone(); },
     custlink: function () { closeAll(); view('customers'); if (window.innerWidth >= 900) A().custLink({ dataset: { id: 'c1' } }); else { var c = el('#linkCard'); if (c) c.scrollIntoView(); } }
   };
 
@@ -65,7 +74,7 @@
     if (!UI()) return;
     if (m.type === 'ping') { bc.postMessage({ type: 'here', view: UI().ui.view }); return; }
     if (m.type === 'run' && RUN[m.act]) {
-      try { RUN[m.act](); bc.postMessage({ type: 'done', act: m.act, view: UI().ui.view }); }
+      try { window.scrollTo(0, 0); RUN[m.act](); bc.postMessage({ type: 'done', act: m.act, view: UI().ui.view }); }
       catch (err) { bc.postMessage({ type: 'error', act: m.act, msg: String(err && err.message || err) }); }
     }
   };
