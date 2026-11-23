@@ -7,6 +7,7 @@
     var UI = window.CACUI, CS = window.CS, V2 = window.CACV2, SK = window.CACSK;
     if (!(UI && CS && CS.S && V2 && V2.x && SK && SK.after)) { if ((tries || 0) < 100) setTimeout(function () { start((tries || 0) + 1); }, 50); return; }
     var A = UI.A, ui = UI.ui, ic = window.ic || function () { return ''; };
+    var QUIET = new URLSearchParams(location.search).get('quiet') === '1';   /* quiet version: Gemma's scripted answer never comes */
     var delay = (function () { var v = parseFloat(new URLSearchParams(location.search).get('nudge')); return (v > 0 ? v : 30) * 1000; })();
     function h(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
     function money(n) { return '£' + Math.round(n).toLocaleString('en-GB'); }
@@ -34,7 +35,7 @@
     }
     function card(t) {
       var F = facts(t);
-      if (t.gx === 1) return '<div class="gx-line">' + ic('send') + '<span><b>Reply sent to Gemma by email.</b> Waiting for her answer. Demo, nothing is really sent.</span></div>';
+      if (t.gx === 1) return '<div class="gx-line">' + ic('send') + '<span><b>Reply sent to Gemma by email.</b> ' + (QUIET ? 'Her answer lands in this conversation, and one tap books it.' : 'Waiting for her answer.') + ' Demo, nothing is really sent.</span></div>';
       if (t.gx === 2) return '<div class="gx-h"><span class="gx-sp">' + ic('sparkles') + '</span><b>Gemma wants to book</b><span class="tag ok">Ready to book</span></div><p class="gx-p">' + h(F.dayLong) + ', between 8 and 12, on account. A grab lorry at the ' + h(F.site) + ' with ' + h(F.supName) + '.</p><div class="gx-b"><button class="btn pri" data-act="gxBook">' + ic('check') + 'Open and book</button></div>';
       if (t.gx === 3) return '<div class="gx-line ok">' + ic('circle-check') + '<span><b>Booked' + (t.gxJob ? ', ' + h(t.gxJob) : '') + '.</b> Grab lorry, ' + h(F.dayLong) + ', 8 to 12, with ' + h(F.supName) + '.</span><button class="btn sm" data-act="go" data-v="orders">Open the diary</button></div>';
       return '<div class="gx-h"><span class="gx-sp">' + ic('sparkles') + '</span><b>Suggested reply</b><span class="tag bad">Hot</span><span class="gx-want">Wants a price</span></div>' +
@@ -275,7 +276,7 @@
       t.gx = 2; t.done = false; t.unread = !(ui.view === 'inbox' && ui.sel === t.id); CS.commit();
       bubble(); ping();
     }
-    setInterval(function () { var t = gem(); if (t && t.gx === 1 && t.gxAt && Date.now() - t.gxAt >= delay) answer(t); else if (t && t.gx !== 2) hideBubble(); }, 500);
+    setInterval(function () { if (QUIET) return; var t = gem(); if (t && t.gx === 1 && t.gxAt && Date.now() - t.gxAt >= delay) answer(t); else if (t && t.gx !== 2) hideBubble(); }, 500);
     A.gxDismiss = function () { hideBubble(); };
     A.gxBook = function () {
       var t = gem(); if (!t) return; var F = facts(t), c = CS.cust('c7');
@@ -291,6 +292,7 @@
     };
     /* for the guided tour: make sure the reply has gone and she has answered, then show the bubble */
     window.CACGX = { force: function () {
+      if (QUIET) return;
       var t = gem(); if (!t) { try { t = CS.thread(V2.gemma()); } catch (e) {} } if (!t) return;
       if (t.gx == null) t.gx = 0;
       if (t.gx === 0) { CS.addMsg(t, 'out', draft(t), { by: 'John' }); t.gx = 1; t.gxAt = Date.now(); t.done = true; t.unread = false; }

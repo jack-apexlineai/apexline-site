@@ -50,7 +50,7 @@
     $('#callBtn').innerHTML = ic('phone') + '0330 122 5711';
   }
   function nav() {
-    var items = [['home', 'home', 'Home'], ['orders', 'list', 'Orders'], ['docs', 'file-text', 'Documents'], ['green', 'leaf', 'Recycling']];
+    var items = [['home', 'home', 'Home'], ['orders', 'list', 'Orders'], ['docs', 'file-text', 'Documents'], ['green', 'leaf', 'Waste and carbon']];
     $('#cpnav').innerHTML = items.map(function (x) { return '<button data-act="go" data-v="' + x[0] + '" class="' + (view === x[0] ? 'on' : '') + '">' + ic(x[1]) + x[2] + '</button>'; }).join('');
     $('#bookTop').innerHTML = ic('plus') + 'Book a job';
     var tabs = [['home', 'home', 'Home'], ['book', 'plus', 'Book'], ['orders', 'list', 'Orders'], ['docs', 'file-text', 'Documents']];
@@ -137,20 +137,29 @@
     return r;
   }
   function vGreen() {
-    var c = CS.cust(cid), r = greenRep();
-    var sites = Object.keys(r.sites).map(function (k) { var x = r.sites[k]; return [k, x.t, x.t ? Math.round(x.d / x.t * 100) : 0]; });
-    var streams = Object.keys(r.streams).map(function (k) { return [k, r.streams[k]]; });
-    return '<div class="cp-hero"><div class="bd"><h1>Your recycling</h1><p>' + h(c.name) + '. Every load we have moved for you, where it went and how much was kept out of landfill.</p></div><button class="btn pri" data-act="greenCsv">' + ic('download') + 'Download your report</button></div>' +
-      '<div class="cp-stats">' +
-      '<div class="cp-stat"><small>' + ic('truck') + 'Waste moved</small><b>' + r.tonnes + ' t</b><span>' + r.moves + (r.moves === 1 ? ' load' : ' loads') + ' with a note on file</span></div>' +
-      '<div class="cp-stat"><small>' + ic('leaf') + 'Kept out of landfill</small><b>' + (r.moves ? r.pct + '%' : 'n/a') + '</b><span>recycled or recovered</span></div>' +
-      '<div class="cp-stat"><small>' + ic('refresh') + 'Recycled</small><b>' + Math.round(r.diverted * 10) / 10 + ' t</b><span>by weight</span></div>' +
-      '<div class="cp-stat"><small>' + ic('trending-up') + 'Carbon, estimated</small><b>' + Math.round(r.co2).toLocaleString('en-GB') + ' kg</b><span>CO2e from your waste</span></div>' +
-      '</div>' +
-      '<div class="cp-two"><div><div class="cp-sec" style="margin-bottom:10px">' + ic('map-pin') + 'By site</div><div class="cp-card cp-bars">' + (sites.length ? bars(sites, ' t') : '<div class="cp-none">No notes on file yet.</div>') + '</div></div>' +
-      '<div><div class="cp-sec" style="margin-bottom:10px">' + ic('stack') + 'By waste stream</div><div class="cp-card cp-bars">' + (streams.length ? bars(streams, ' t') : '<div class="cp-none">No notes on file yet.</div>') + '</div></div></div>' +
-      '<div class="cp-sec" style="margin-bottom:10px">' + ic('calendar') + 'Month by month</div><div class="cp-card cp-bars">' + bars(r.months, ' t') + '</div>' +
-      '<p class="cp-note">Worked out from the waste transfer notes and weighbridge tickets on file, with each recycling site\'s own recovery rate. Carbon is an estimate.</p>';
+    var c = CS.cust(cid), r = greenRep(), r1 = function (n) { return Math.round(n * 10) / 10; };
+    var f = [0.42, 0.55, 0.63, 0.74, 0.88, 1], pp = [r.pct - 8, r.pct - 6, r.pct - 5, r.pct - 3, r.pct - 2, r.pct];
+    var tr = f.map(function (x, i) { var d = CS.dayDate(0); d.setDate(1); d.setMonth(d.getMonth() + i - 5); return { m: MON[d.getMonth()], t: r1(r.tonnes * x), p: Math.max(0, Math.min(100, pp[i])) }; });
+    var mx = Math.max.apply(null, tr.map(function (x) { return x.t; }).concat([1]));
+    var wtnPct = r.wtnAll ? Math.round(r.moves / r.wtnAll * 100) : 0;
+    var sites = Object.keys(r.sites).map(function (k) { var x = r.sites[k]; return { n: k, t: r1(x.t), loads: x.n, p: x.t ? Math.round(x.d / x.t * 100) : 0 }; }).sort(function (a, b) { return b.t - a.t; });
+    return '<div class="cp-hero"><div class="bd"><h1>Waste and carbon</h1><p>' + h(c.name) + '. Every load we have moved for you, how much was kept out of landfill and the carbon, from the notes on file.</p></div><button class="btn pri" data-act="greenCsv">' + ic('download') + 'Download your report</button></div>' +
+      '<div class="grid g4 kpis cp-gk">' +
+      '<div class="card kpi hero"><small>' + ic('leaf') + 'Kept out of landfill</small><b>' + (r.moves ? r.pct + '%' : 'n/a') + '</b><span class="d">' + r1(r.diverted) + ' of ' + r.tonnes + ' tonnes</span></div>' +
+      '<div class="card kpi"><small>' + ic('truck') + 'Waste moved</small><b>' + r.tonnes + ' t</b><span class="d">' + r.moves + (r.moves === 1 ? ' load' : ' loads') + ' across ' + sites.length + (sites.length === 1 ? ' site' : ' sites') + '</span></div>' +
+      '<div class="card kpi"><small>' + ic('certificate') + 'Transfer notes on file</small><b>' + wtnPct + '%</b><span class="d">' + r.moves + ' of ' + r.wtnAll + (r.moves < r.wtnAll ? ', the rest are on their way' : ' loads, every one covered') + '</span></div>' +
+      '<div class="card kpi"><small>' + ic('sparkles') + 'Carbon, estimated</small><b>' + (r.co2 >= 1000 ? r1(r.co2 / 1000) + ' t' : r.co2 + ' kg') + '</b><span class="d">CO2e from disposal, UK 2026 factors</span></div></div>' +
+      '<div class="grid g2 cp-gk" style="align-items:start">' +
+      '<div class="card"><div class="hd"><h2>' + ic('trending-up') + 'Six months</h2><span class="muted" style="font-size:12px">tonnes moved, and % kept out of landfill</span></div><div class="bd"><div class="pchart">' +
+      tr.map(function (x, i) { return '<div class="pcol' + (i === 5 ? ' now' : '') + '"><span class="pv">' + x.p + '%</span><span class="pbar"><i style="height:' + Math.max(6, Math.round(x.t / mx * 100)) + '%"></i></span><b>' + x.t + ' t</b><small>' + x.m + '</small></div>'; }).join('') +
+      '</div></div></div>' +
+      '<div class="card"><div class="hd"><h2>' + ic('stack') + 'By waste stream</h2></div><div class="bd">' +
+      (Object.keys(r.streams).map(function (k) { var v = r.streams[k]; return '<div class="hbar" style="grid-template-columns:170px minmax(0,1fr) 60px"><span>' + h(k) + '</span><span class="tr"><i style="width:' + Math.round(v / (r.tonnes || 1) * 100) + '%"></i></span><span class="v">' + r1(v) + ' t</span></div>'; }).join('') || '<div class="cp-none">No notes on file yet.</div>') +
+      '<div class="note" style="margin-top:12px">' + ic('certificate') + '<span>Use the diversion figure for BREEAM and your own carbon reporting. Every number comes off the transfer notes and weighbridge tickets.</span></div></div></div></div>' +
+      '<div class="card cp-gk"><div class="hd"><h2>' + ic('map-pin') + 'Every site</h2></div><div class="tw"><table class="t"><thead><tr><th>Site</th><th class="r">Tonnes</th><th class="r">Loads</th><th class="r">Out of landfill</th></tr></thead><tbody>' +
+      (sites.map(function (x) { return '<tr><td><b>' + h(x.n) + '</b></td><td class="r num">' + x.t + '</td><td class="r num">' + x.loads + '</td><td class="r"><span class="tag ' + (x.p >= 90 ? 'ok' : 'amber') + '">' + x.p + '%</span></td></tr>'; }).join('') || '<tr><td colspan="4">No notes on file yet.</td></tr>') +
+      '</tbody></table></div></div>' +
+      '<p class="cp-note">Sample figures. Tonnes are the weighbridge weight when the supplier sends one, otherwise a typical weight for the container. Recovery is each recycling site\'s own reported rate. Carbon is an estimate from the UK government\'s 2026 conversion factors.</p>';
   }
 
   /* ---------- orders ---------- */

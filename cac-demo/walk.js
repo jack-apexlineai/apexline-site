@@ -47,8 +47,8 @@
       p: 'A card for every customer: orders, value, gross profit and sites. Put an account on stop and nobody can book for them.',
       x: [{ l: 'Show credit control', act: 'creditctl' }] },
     { id: 'portal', act: 'portal', m: '1 min', t: 'The customer\'s own page',
-      p: 'Each customer gets their own page. They book a job, ask for a quote, and find their waste transfer notes, invoices and statements, without ringing you. Each customer has their own recycling and carbon dashboard. Book something on it and it lands in your inbox, ready to book in one tap.',
-      x: [{ l: 'Show their recycling', act: 'portalGreen' }, { l: 'Open their booking in the inbox', act: 'portalInbox' }] },
+      p: 'Each customer gets their own page. They book a job, ask for a quote, and find their waste transfer notes, invoices and statements, without ringing you. Each customer has their own waste and carbon dashboard. Book something on it and it lands in your inbox, ready to book in one tap.',
+      x: [{ l: 'Show their waste and carbon', act: 'portalGreen' }, { l: 'Open their booking in the inbox', act: 'portalInbox' }] },
     { id: 'carbon', act: 'carbon', m: '1 min', t: 'Waste and carbon',
       p: 'Tonnes, the share kept out of landfill and carbon for every account and site, built from the transfer notes your suppliers send back. Each customer\'s report goes out under your logo. Carbon is an estimate.' },
     { id: 'unpaid', act: 'unpaid', m: 'half a min', t: 'Half four: who has not paid',
@@ -56,6 +56,8 @@
     { id: 'skipper', act: 'skipper', m: '1 min', t: 'Skipper',
       p: 'Ask it in plain words. It finds the message, suggests the reply, and sends it only when you say so. Press Enter to ask.' }
   ];
+  /* quiet version for a prospect on their own (?quiet=1): no scripted moments where a customer or supplier answers on a timer */
+  if (new URLSearchParams(location.search).get('quiet') === '1') STEPS = STEPS.filter(function (s) { return s.id !== 'gemmabook' && s.id !== 'lee'; });
   var st = { i: -1, paused: false };
   try { var sv = JSON.parse(sessionStorage.getItem(KEY) || 'null'); if (sv && typeof sv.i === 'number') st = { i: Math.max(-1, Math.min(STEPS.length, sv.i)), paused: !!sv.paused }; } catch (e) {}
   function save() { try { sessionStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
