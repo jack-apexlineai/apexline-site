@@ -420,8 +420,8 @@
         Object.keys(bySup).forEach(function (sid) {
           var su = CS.sup(sid);
           var items = bySup[sid].map(function (l) { return CS.itemText(l.it); });
-          S.drafts.push({ to: 'supplier', party: { type: 'supplier', id: sid }, ch: 'wa', text: 'Hi ' + su.contact + ', can you do ' + joinList(items) + ' for ' + (c ? c.name : p.sub || p.name) + ', ' + where + ', ' + dl + ' please. ' +
-            (r.placement === 'road' ? 'Going on the road, please sort the permit. ' : (r.placement === 'drive' ? 'On the drive, no permit. ' : '')) + 'Ref {JOB}. Send the WTN to this number once it\'s down. Thanks, ' + sig(owner) + ' (CAC)' });
+          S.drafts.push({ to: 'supplier', party: { type: 'supplier', id: sid }, ch: 'wa', text: 'Hi ' + su.contact + ', can you do ' + joinList(items) + ' at ' + where + ', ' + dl + ' please. ' +
+            (r.placement === 'road' ? 'Going on the road, please sort the permit. ' : (r.placement === 'drive' ? 'On the drive, no permit. ' : '')) + 'Ref {JOB}. Thanks, ' + sig(owner) + ' (CAC)' });
         });
         S.approve = 'Approve: book it and send both'; S.mins = 9;
         var cr = c ? CS.credit(c.id, S.sell) : null;

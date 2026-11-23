@@ -67,25 +67,106 @@
       if (SIMPLE[t.id] === 'quote') return 'Hi Hannah,\n\nThanks for getting in touch. A 12 yard skip delivered to ' + F.pc + ' on ' + F.dayLong + ' is ' + money(F.sell) + ' + VAT.\n\nOn account is no problem, I just need your company details. Want me to book it in?\n\nCheers, John';
       return 'Hi Lee, yes no problem mate. Grab booked in for tomorrow at the Histon site, ' + money(F.sell) + ' + VAT. Have requested AM, will confirm the window as soon as possible.';
     }
+    /* Undo: the whole state is saved just before an action and put back on Undo (kept in memory, so it lasts until a reload) */
+    var SNAP = {};
+    function snap(id) { try { SNAP[id] = JSON.stringify(CS.S); } catch (e) {} }
+    A.sxUndo = function (el) {
+      var id = el.dataset.id, s = SNAP[id]; if (!s) return;
+      try { CS.S = JSON.parse(s); } catch (e) { return; }
+      delete SNAP[id]; ['lxNudge', 'gxNudge'].forEach(function (k) { var n = document.getElementById(k); if (n && n.parentNode) n.parentNode.removeChild(n); });
+      CS.commit(); tick('Undone');
+    };
+    function undoBtn(id) { return SNAP[id] ? '<button class="btn sm" data-act="sxUndo" data-id="' + id + '">' + ic('refresh') + 'Undo</button>' : ''; }
+    function at(ms) { try { return CS.clock(ms); } catch (e) { return ''; } }
+
+    /* Lee: ask the supplier first, they answer, then book it */
+    function lsups(t) {
+      var F = sfacts(t), L = [];
+      try { L = (CS.lookup(CS.outward(F.pc), { svc: 'grab', qty: 1 }) || []).slice(0, 3); } catch (e) {}
+      return L.map(function (x) { var su = x.sup && x.sup.id ? x.sup : CS.sup(x.sup); return { id: su.id, name: su.name, contact: su.contact || 'there', cost: x.cost, sell: x.sell, onTime: su.onTime }; });
+    }
+    function lpick(t) { var L = lsups(t); return L.filter(function (s) { return s.id === t.lxSup; })[0] || L[0] || { id: sfacts(t).sup, name: sfacts(t).supName, contact: 'there', cost: sfacts(t).cost, sell: sfacts(t).sell }; }
+    function lsupMsg(t, s) {
+      var F = sfacts(t);
+      return 'Hi ' + s.contact + ', can you do a grab lorry for soil and clay at ' + F.site + ', ' + F.pc + ' tomorrow, AM if possible? Confirming ' + money(s.cost) + ' as per your price. Ref CAC-' + CS.S.counters.job + '. Thanks, John (CAC)';
+    }
+    function lcustMsg(t) { var s = lpick(t); return t.lxDraft != null ? t.lxDraft : 'Hi Lee, yes no problem mate. Grab booked in for tomorrow at the Histon site, ' + money(s.sell) + ' + VAT. Have requested AM, will confirm the window as soon as possible.'; }
+    function money3(s) { return '<div class="gx-money"><span><small>Their price</small><b>' + money(s.sell) + '</b></span><span><small>Supplier cost</small><b>' + money(s.cost) + '</b></span><span class="gp"><small>Gross profit</small><b>' + money(s.sell - s.cost) + '</b></span></div>'; }
+    function lcard(t) {
+      var F = sfacts(t), c = CS.cust(t.party.id), s = lpick(t);
+      if (t.lx === 3) return '<div class="gx-line ok">' + ic('circle-check') + '<span><b>Booked' + (t.sxJob ? ' ' + h(t.sxJob) : '') + ' at ' + at(t.lxDoneAt) + ' by John.</b> ' + h(s.name) + ', tomorrow AM. Lee has his reply on WhatsApp and the confirmation by email. Demo, nothing is really sent.</span>' + undoBtn(t.id) + '<button class="btn sm" data-act="xh2Dia" data-v="1">Open tomorrow</button></div>';
+      if (t.lx === 1) return '<div class="gx-line">' + ic('clock') + '<span><b>Asked ' + h(s.name) + ' at ' + at(t.lxAt) + ' on WhatsApp.</b> Waiting for their answer.</span>' + undoBtn(t.id) + '</div>';
+      if (t.lx === 2) return '<div class="gx-h"><span class="gx-sp">' + ic('sparkles') + '</span><b>' + h(s.name) + ' can do it</b><span class="tag ok">Ready to book</span></div>' +
+        '<p class="gx-quote">"' + h(t.lxReply || '') + '"</p>' + money3(s) +
+        '<textarea id="lxText" rows="3" aria-label="Reply to Lee">' + h(lcustMsg(t)) + '</textarea>' +
+        '<div class="gx-b"><button class="btn pri" data-act="lxBook">' + ic('check') + 'Book it</button><small>Books ' + h(s.name) + ', sends Lee this on WhatsApp and emails his confirmation.</small>' + undoBtn(t.id) + '</div>';
+      var live = c ? CS.S.jobs.filter(function (j) { return j.cust === c.id && ['booked', 'confirmed', 'onhire', 'exchange', 'collection'].indexOf(j.status) >= 0; }).length : 0, L = lsups(t);
+      if (!t.lxSup && L[0]) t.lxSup = L[0].id;
+      return '<div class="gx-h"><span class="gx-sp">' + ic('sparkles') + '</span><b>Next step: ask the supplier</b><span class="tag bad">Hot</span><span class="gx-want">Wants to book</span></div>' +
+        '<ul class="gx-facts"><li>' + ic('users') + '<span>Existing customer: <b>' + h(c ? c.name : '') + '</b>, ' + live + ' live jobs</span></li><li>' + ic('map-pin') + '<span>Site already on his account: <b>' + h(F.site) + ', ' + h(F.pc) + '</b>. Soil and clay, tomorrow, morning asked for.</span></li></ul>' +
+        '<div class="lx-sups">' + L.map(function (x, i) { return '<label class="lx-sup' + (x.id === t.lxSup ? ' on' : '') + '"><input type="radio" name="lxSup" value="' + x.id + '"' + (x.id === t.lxSup ? ' checked' : '') + '><span><b>' + h(x.name) + '</b>' + (i === 0 ? '<span class="tag ok">Best pick</span>' : '') + '<small>' + (x.onTime ? x.onTime + '% on time · ' : '') + 'buy ' + money(x.cost) + '</small></span><b class="lx-p">' + money(x.sell - x.cost) + '<small>gross profit</small></b></label>'; }).join('') + '</div>' +
+        '<textarea id="lxSupText" rows="3" aria-label="Message to the supplier">' + h(t.lxSupDraft != null ? t.lxSupDraft : lsupMsg(t, s)) + '</textarea>' +
+        '<div class="gx-b"><button class="btn pri" data-act="lxAsk">' + ic('whatsapp') + 'Ask ' + h(s.name.split(' ')[0]) + '</button><small>Goes to them on WhatsApp. Book Lee in once they say yes.</small></div>';
+    }
+    A.lxAsk = function () {
+      var t = CS.thread('t15'); if (!t || t.lx) return; var s = lpick(t), ta = document.getElementById('lxSupText');
+      snap(t.id);
+      var txt = ((ta && ta.value) || lsupMsg(t, s)).trim(), th = CS.threadFor({ type: 'supplier', id: s.id }, 'wa');
+      CS.addMsg(th, 'out', txt, { by: 'John' }); th.done = true; th.unread = false;
+      t.lx = 1; t.lxAt = Date.now(); t.lxSupTid = th.id; t.unread = false; CS.commit(); tick('Sent to ' + s.name);
+    };
+    document.addEventListener('change', function (e) {
+      if (e.target && e.target.name === 'lxSup') { var t = CS.thread('t15'); if (t) { t.lxSup = e.target.value; t.lxSupDraft = null; CS.save(); UI.render(); } }
+    });
+    document.addEventListener('input', function (e) {
+      var t = CS.thread('t15'); if (!t || !e.target) return;
+      if (e.target.id === 'lxSupText') t.lxSupDraft = e.target.value;
+      if (e.target.id === 'lxText') t.lxDraft = e.target.value;
+    });
+    var supDelay = (function () { var v = parseFloat(new URLSearchParams(location.search).get('nudge')); return (v > 0 ? Math.min(v, 6) : 6) * 1000; })();
+    function lbubble(t) {
+      var s = lpick(t), old = document.getElementById('lxNudge'); if (old) old.remove();
+      var d = document.createElement('div'); d.className = 'sk-nudge gx-nudge'; d.id = 'lxNudge'; d.setAttribute('role', 'status');
+      d.innerHTML = '<span class="sk-av">' + ic('whatsapp') + '</span><div class="bd"><b>' + h(s.name) + ' can do Lee\'s grab. Book it in?</b><small>"' + h(t.lxReply) + '"</small><div class="sk-acts"><button class="btn sm pri" data-act="lxBook">Book it</button><button class="btn sm ghost" data-act="lxOpen">Open</button></div></div>';
+      document.body.appendChild(d); ping();
+    }
+    A.lxOpen = function () { var n = document.getElementById('lxNudge'); if (n) n.remove(); A.openThread({ dataset: { id: 't15' } }); };
+    setInterval(function () {
+      var t = CS.thread('t15'); if (!t || t.lx !== 1 || !t.lxAt || Date.now() - t.lxAt < supDelay) return;
+      var s = lpick(t), th = CS.thread(t.lxSupTid) || CS.threadFor({ type: 'supplier', id: s.id }, 'wa');
+      t.lxReply = 'Hi John, yes we can do that, no problem. AM is fine.';
+      CS.addMsg(th, 'in', t.lxReply); th.done = true; th.unread = false;
+      t.lx = 2; CS.commit(); lbubble(t);
+    }, 500);
+    A.lxBook = function () {
+      var t = CS.thread('t15'); if (!t || t.lx !== 2) return;
+      var s = lpick(t), ta = document.getElementById('lxText'), txt = ((ta && ta.value) || lcustMsg(t)).trim();
+      var n = document.getElementById('lxNudge'); if (n) n.remove();
+      snap(t.id);
+      t.supOverride = { 0: s.id }; t.edits = null;
+      var An = CS.analyse(t), ed = {}, jb = CS.S.counters.job;
+      (An.drafts || []).forEach(function (d, i) { if (d.to === 'customer') ed[i] = txt; else if (d.to === 'supplier') ed[i] = 'Thanks ' + s.contact + ', that\'s booked in. Ref {JOB}. Cheers, John (CAC)'; });
+      try { CS.approve(t.id, ed); } catch (e) { return; }
+      t.lx = 3; t.lxDoneAt = Date.now(); t.sxJob = CS.S.counters.job > jb ? 'CAC-' + jb : null; t.done = true; t.unread = false;
+      var th = CS.thread(t.lxSupTid); if (th) { th.done = true; th.unread = false; }
+      ui.scrollMsgs = true; CS.commit(); tick('Booked');
+    };
+
     function scard(t) {
-      var F = sfacts(t), quote = SIMPLE[t.id] === 'quote', c = t.party.type === 'customer' ? CS.cust(t.party.id) : null;
-      if (t.sx === 1) return quote
-        ? '<div class="gx-line ok">' + ic('circle-check') + '<span><b>Quote sent to Hannah.</b> It is on the Quotes page with your other open quotes. Demo, nothing is really sent.</span><button class="btn sm" data-act="go" data-v="quotes">Open quotes</button></div>'
-        : '<div class="gx-line ok">' + ic('circle-check') + '<span><b>Booked' + (t.sxJob ? ', ' + h(t.sxJob) : '') + '.</b> ' + h(F.supName) + ' asked for the morning. Lee has his reply on WhatsApp and the confirmation by email. Demo, nothing is really sent.</span><button class="btn sm" data-act="go" data-v="orders">Open the diary</button></div>';
-      var live = c ? CS.S.jobs.filter(function (j) { return j.cust === c.id && ['booked', 'confirmed', 'onhire', 'exchange', 'collection'].indexOf(j.status) >= 0; }).length : 0;
-      var first = t.msgs[0] || {}, lead = quote ? CS.party(t.party) : null, ph = (t.form && t.form.Phone) || (lead && lead.phone) || '';
-      var facts = quote
-        ? '<li>' + ic('clock') + '<span>Came in <b>' + ago(first.at || Date.now()) + '</b> from your website. She found you on Google Ads.</span></li>' +
-          '<li>' + ic('phone') + '<span>New lead. <b>Ring her now' + (ph ? ' on ' + h(ph) : '') + '</b> while it is fresh, or send this.</span></li>' +
-          '<li>' + ic('truck') + '<span><b>' + h(F.supName) + '</b> covers ' + h(CS.outward(F.pc)) + (F.onTime ? ', ' + F.onTime + '% on time' : '') + '</span></li>'
-        : '<li>' + ic('users') + '<span>Existing customer: <b>' + h(c ? c.name : '') + '</b>, ' + live + ' live jobs</span></li>' +
-          '<li>' + ic('map-pin') + '<span>Site already on his account: <b>' + h(F.site) + ', ' + h(F.pc) + '</b></span></li>' +
-          '<li>' + ic('truck') + '<span><b>' + h(F.supName) + '</b> covers ' + h(CS.outward(F.pc)) + (F.onTime ? ', ' + F.onTime + '% on time' : '') + '. Morning asked for.</span></li>';
-      return '<div class="gx-h"><span class="gx-sp">' + ic('sparkles') + '</span><b>Suggested reply</b><span class="tag bad">Hot</span><span class="gx-want">' + (quote ? 'Wants a price' : 'Wants to book') + '</span></div>' +
-        '<ul class="gx-facts">' + facts + '</ul>' +
-        '<div class="gx-money"><span><small>Their price</small><b>' + money(F.sell) + '</b></span><span><small>Supplier cost</small><b>' + money(F.cost) + '</b></span><span class="gp"><small>Gross profit</small><b>' + money(F.sell - F.cost) + '</b></span></div>' +
-        '<textarea id="sxText" rows="' + (quote ? 6 : 3) + '" aria-label="Suggested reply">' + h(sdraft(t)) + '</textarea>' +
-        '<div class="gx-b"><button class="btn pri" data-act="sxSend" data-id="' + t.id + '">' + ic(quote ? 'send' : 'check') + (quote ? 'Send quote' : 'Book and send') + '</button><small>' + (quote ? 'Goes by email to the address on her form.' : 'Books ' + h(F.supName) + ' and sends Lee this on WhatsApp.') + ' Change anything first.</small></div>';
+      if (SIMPLE[t.id] === 'book') return lcard(t);
+      var F = sfacts(t);
+      if (t.sx === 1) {
+        var fu = CS.dayDate(CS.wd(2)).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
+        return '<div class="gx-line ok">' + ic('circle-check') + '<span><b>Quote sent at ' + at(t.sxAt) + ' by John, by email.</b> Follow-up due ' + h(fu) + ', it is on the Quotes page. Demo, nothing is really sent.</span>' + undoBtn(t.id) + '<button class="btn sm" data-act="go" data-v="quotes">Open quotes</button></div>';
+      }
+      var first = t.msgs[0] || {}, lead = CS.party(t.party), ph = (t.form && t.form.Phone) || (lead && lead.phone) || '';
+      return '<div class="gx-h"><span class="gx-sp">' + ic('sparkles') + '</span><b>Suggested reply</b><span class="tag bad">Hot</span><span class="gx-want">Wants a price</span></div>' +
+        '<ul class="gx-facts"><li>' + ic('clock') + '<span>Came in <b>' + ago(first.at || Date.now()) + '</b> from your website. She found you on Google Ads.</span></li>' +
+        '<li>' + ic('phone') + '<span>New lead. <b>Ring her now' + (ph ? ' on ' + h(ph) : '') + '</b> while it is fresh, or send this.</span></li>' +
+        '<li>' + ic('truck') + '<span><b>' + h(F.supName) + '</b> covers ' + h(CS.outward(F.pc)) + (F.onTime ? ', ' + F.onTime + '% on time' : '') + '</span></li></ul>' +
+        money3({ sell: F.sell, cost: F.cost }) +
+        '<textarea id="sxText" rows="6" aria-label="Suggested reply">' + h(sdraft(t)) + '</textarea>' +
+        '<div class="gx-b"><button class="btn pri" data-act="sxSend" data-id="' + t.id + '">' + ic('send') + 'Send quote</button><small>Goes by email to the address on her form. Change anything first.</small></div>';
     }
     function tick(text) {
       try {
@@ -96,20 +177,20 @@
       } catch (e) {}
     }
     A.sxSend = function (el) {
-      var t = CS.thread(el.dataset.id); if (!t || !SIMPLE[t.id] || t.sx === 1) return;
+      var t = CS.thread(el.dataset.id); if (!t || SIMPLE[t.id] !== 'quote' || t.sx === 1) return;
       var F = sfacts(t), ta = document.getElementById('sxText'), txt = ((ta && ta.value) || sdraft(t)).trim(), ed = {}; ed[F.idx] = txt;
-      var jb = CS.S.counters.job;
+      snap(t.id);
       try { CS.approve(t.id, ed); } catch (e) { return; }
-      t.sx = 1; t.sxJob = CS.S.counters.job > jb ? 'CAC-' + jb : null; t.unread = false; ui.scrollMsgs = true; CS.commit();
-      tick(SIMPLE[t.id] === 'quote' ? 'Quote sent' : 'Booked and sent');
+      t.sx = 1; t.sxAt = Date.now(); t.unread = false; ui.scrollMsgs = true; CS.commit();
+      tick('Quote sent');
     };
     function paintSimple() {
       var sid = ui.view === 'inbox' ? ui.sel : null, t = sid && SIMPLE[sid] ? CS.thread(sid) : null, old = document.getElementById('gxCard');
-      if (!t || !(t.sx === 1 || (!t.done && CS.needsYou(t)))) return false;
+      if (!t || !(t.sx === 1 || t.lx >= 1 || (!t.done && CS.needsYou(t)))) return false;
       if (ui.gxSel !== t.id) { ui.gxSel = t.id; if (ui.asst !== false) { ui.asst = false; UI.render(); return true; } }
       var comp = document.querySelector('#view .compose'); if (!comp) return true;
       if (old) old.remove();
-      var d = document.createElement('div'); d.id = 'gxCard'; d.className = 'gx s' + (t.sx === 1 ? 3 : 0); d.innerHTML = scard(t);
+      var d = document.createElement('div'); d.id = 'gxCard'; d.className = 'gx s' + ((t.sx === 1 || t.lx === 1 || t.lx === 3) ? 3 : 0); d.innerHTML = scard(t);
       comp.parentNode.insertBefore(d, comp);
       return true;
     }
