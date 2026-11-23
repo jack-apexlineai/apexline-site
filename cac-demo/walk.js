@@ -5,7 +5,12 @@
 (function () {
   var ON = 'cac-walk-on', KEY = 'cac-walk', p = new URLSearchParams(location.search), on = false;
   try {
-    if (p.get('guide') === '1') sessionStorage.setItem(ON, '1');
+    if (p.get('guide') === '1') {
+      sessionStorage.setItem(ON, '1');
+      /* opening the link fresh (typed, pasted or clicked) always starts the tour from the beginning. A refresh keeps your place. */
+      var nav = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0]) || {};
+      if (nav.type !== 'reload' && nav.type !== 'back_forward') sessionStorage.removeItem(KEY);
+    }
     if (p.get('guide') === '0') { sessionStorage.removeItem(ON); sessionStorage.removeItem(KEY); }
     on = sessionStorage.getItem(ON) === '1';
   } catch (e) { on = p.get('guide') === '1'; }
