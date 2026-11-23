@@ -480,7 +480,8 @@
       (j.wtn ? '<div class="sec"><h3>Duty of care</h3>' + wtnTag(j.wtn) + ' <span class="muted" style="font-size:12.5px">' + h(CS.svc(j.svc).waste || '') + ', EWC ' + h(CS.svc(j.svc).ewc || '') + ', carrier ' + h(su.cbdu) + '</span></div>' : '') +
       '<div class="sec"><h3>Timeline</h3><div class="tl">' + j.log.slice().reverse().map(function (e) { return '<div class="e"><span>' + h(e.t) + '</span><time>' + CS.ago(e.at) + '</time></div>'; }).join('') + '</div></div>',
       acts.map(function (a) { return '<button class="btn' + (a === acts[0] ? ' pri' : '') + '" data-act="' + a[0] + '" data-id="' + j.id + '">' + ic(a[1]) + a[2] + '</button>'; }).join('') +
-      '<button class="btn" data-act="msgParty" data-type="supplier" data-id="' + su.id + '">' + ic('whatsapp') + 'Message ' + h(su.name.split(' ')[0]) + '</button><button class="btn" data-act="msgParty" data-type="customer" data-id="' + c.id + '">' + ic('message') + 'Message ' + h(c.first) + '</button>');
+      '<button class="btn" data-act="msgParty" data-type="supplier" data-id="' + su.id + '">' + ic('whatsapp') + 'Message ' + h(su.name.split(' ')[0]) + '</button><button class="btn" data-act="msgParty" data-type="customer" data-id="' + c.id + '">' + ic('message') + 'Message ' + h(c.first) + '</button>' +
+      (window.CACUI && window.CACUI.xCancellable && window.CACUI.xCancellable(j.id) ? '<button class="btn xc-btn" data-act="ordCancel" data-id="' + j.id + '">' + ic('x') + 'Cancel order</button>' : ''));
   }
   function openSup(id) {
     var s = CS.sup(id); var rates = [];

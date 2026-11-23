@@ -87,7 +87,7 @@
     return { src: 'j', id: j.id, off: j.day, cust: j.cust, site: j.site, siteName: j.siteName, pc: j.pc, svc: j.svc, size: j.size, qty: j.qty, weeks: j.weeks, panels: j.panels, ft: j.ft, m3: j.m3, hours: j.hours, mix: j.mix,
       sup: j.sup, cost: j.cost, sell: j.sell, status: j.status, owner: j.owner, po: j.po || '', job: j, inv: inv ? inv.id : null, pay: inv ? (inv.status === 'paid' ? 'paid' : 'unpaid') : (j.day > 0 || j.invLater ? 'none' : 'unpaid') };
   }
-  function all() { return hist().concat(S().jobs.map(fromJob)).sort(function (a, b) { return a.off - b.off || (a.id < b.id ? -1 : 1); }); }
+  function all() { var xc = S().xCancel || {}; return hist().concat(S().jobs.map(fromJob)).filter(function (o) { return !xc[o.id]; }).sort(function (a, b) { return a.off - b.off || (a.id < b.id ? -1 : 1); }); }   /* cancelled orders (x-cancel.js) are left out everywhere */
   function find(id) { return all().filter(function (o) { return o.id === id; })[0] || null; }
   function custName(o) { var c = CS.cust(o.cust); return c ? c.name : 'Customer'; }
   function custShort(o) { return custName(o).split(' ').filter(function (w) { return w.replace(/\W/g, '').length > 2; })[0] || custName(o); }
@@ -245,21 +245,24 @@
       (o.src === 'h' ? '<div class="sec"><h3>Messages</h3></div><div class="ochat">' + chat(o).map(function (x) { return '<div class="ob ' + x[0] + '"><small>' + h(x[1]) + '</small>' + h(x[2]) + '</div>'; }).join('') + '</div>'
         : '<div class="sec"><h3>What has happened</h3></div>' + o.job.log.slice(-5).map(function (l) { return '<div class="rowline"><div class="bd"><b>' + h(l.t) + '</b><small>' + CS.ago(l.at) + '</small></div></div>'; }).join('')) + '</div>' +
       '<div><div class="sec" style="margin-top:0"><h3>Start to finish</h3></div><div class="otl">' + tl.map(function (x) { return '<div class="os' + (x.done ? ' done' : '') + '"><i>' + (x.done ? ic('check') : '') + '</i><span><b>' + x.t + '</b><small>' + h([x.when, x.note].filter(Boolean).join(' · ') || (x.done ? 'Done' : 'Not yet')) + '</small></span></div>'; }).join('') + '</div></div></div>';
-    H.modal('Order ' + o.id, body, (o.src === 'j' ? '<button class="btn" data-act="openJob" data-id="' + o.id + '">' + ic('truck') + 'Open the job</button>' : '') + '<span class="sp"></span><button class="btn" data-act="close">Close</button><button class="btn pri" data-act="ordRepeat" data-id="' + o.id + '">' + ic('refresh') + 'Repeat this order</button>', true);
+    H.modal('Order ' + o.id, body, (o.src === 'j' ? '<button class="btn" data-act="openJob" data-id="' + o.id + '">' + ic('truck') + 'Open the job</button>' : '') + (window.CACUI && window.CACUI.xCancellable && window.CACUI.xCancellable(o.id) ? '<button class="btn xc-btn" data-act="ordCancel" data-id="' + o.id + '">' + ic('x') + 'Cancel order</button>' : '') + '<span class="sp"></span><button class="btn" data-act="close">Close</button><button class="btn pri" data-act="ordRepeat" data-id="' + o.id + '">' + ic('refresh') + 'Repeat this order</button>', true);
   }
   /* ---------- an order's three documents, and the waste transfer note on CAC's own template ---------- */
   function wtnBack(o) { return o.src === 'h' || (!!o.job && o.job.wtn === 'received'); }
   function docRow(id, icon, title, sub, btn) { return '<div class="xdrow" id="' + id + '"><span class="xdic">' + ic(icon) + '</span><div class="bd"><b>' + title + '</b><small>' + sub + '</small></div>' + (btn || '') + '</div>'; }
   function docBtn(act, k, id) { return '<button class="btn sm" data-act="' + act + '" data-k="' + k + '" data-id="' + id + '">' + ic('eye') + 'View</button>'; }
+  /* an Email button next to each document, and Email all at the foot (x-history.js sends them) */
+  function emBtn(k, oid) { return '<button class="btn sm" data-act="xhEmail" data-k="' + k + '" data-id="' + oid + '">' + ic('mail') + 'Email</button>'; }
   function docsBlock(o) {
-    var j = o.job, su = CS.sup(o.sup);
+    var j = o.job, su = CS.sup(o.sup), hasW = !!WASTE[o.svc] && wtnBack(o);
     return '<div class="xdocs" id="ordDocs">' +
-      docRow('ordDocConf', 'file-text', 'Order confirmation', 'What was booked, where and when', docBtn(j ? 'ordView' : 'histDoc', 'order', o.id)) +
-      (o.inv ? docRow('ordDocInv', 'receipt', 'Invoice ' + h(o.inv), o.pay === 'paid' ? 'Paid' : 'Not paid yet', docBtn(j ? 'openInv' : 'histDoc', 'inv', j ? o.inv : o.id))
+      docRow('ordDocConf', 'file-text', 'Order confirmation', 'What was booked, where and when', docBtn(j ? 'ordView' : 'histDoc', 'order', o.id) + emBtn('order', o.id)) +
+      (o.inv ? docRow('ordDocInv', 'receipt', 'Invoice ' + h(o.inv), o.pay === 'paid' ? 'Paid' : 'Not paid yet', docBtn(j ? 'openInv' : 'histDoc', 'inv', j ? o.inv : o.id) + emBtn('inv', o.id))
         : j && j.invLater ? docRow('ordDocInv', 'receipt', 'Invoice: raised when the job is marked complete', 'Held back on account. Set the job to Complete on Live jobs and it is raised then.')
         : docRow('ordDocInv', 'receipt', 'Invoice', 'Not raised yet')) +
       (!WASTE[o.svc] ? docRow('ordDocWtn', 'certificate', 'Waste transfer note', 'Not needed. No waste is moved on this order.')
-        : docRow('ordDocWtn', 'certificate', 'Waste transfer note', wtnBack(o) ? 'Back from ' + h(su.name) + ' and filed' : 'Not back from the supplier yet' + (j && j.wtn === 'chased' ? ', chased' : ''), docBtn('histDoc', 'wtn', o.id))) + '</div>';
+        : docRow('ordDocWtn', 'certificate', 'Waste transfer note', wtnBack(o) ? 'Back from ' + h(su.name) + ' and filed' : 'Not back from the supplier yet' + (j && j.wtn === 'chased' ? ', chased' : ''), docBtn('histDoc', 'wtn', o.id) + (hasW ? emBtn('wtn', o.id) : ''))) +
+      '<div class="xdall"><button class="btn sm pri" data-act="xhEmail" data-k="all" data-id="' + o.id + '">' + ic('mail') + 'Email all to the customer</button></div></div>';
   }
   function bx(label, a, b) { return '<div class="bx"><small>' + label + '</small>' + a + (b ? '<span>' + b + '</span>' : '') + '</div>'; }
   function wtnPaper(o) {
@@ -282,7 +285,7 @@
       '<p>' + (!WASTE[o.svc] ? 'No waste is moved on this order, so there is no note to come back.' : chase ? h(su.name) + ' have not sent the waste transfer note for ' + o.id + ' back.' + (j.wtn === 'chased' ? ' They have been chased already.' : ' One tap chases them on WhatsApp.') : 'The note for ' + o.id + ' comes from ' + h(su.name) + ' once the job is done. There is nothing to chase yet.') + '</p>' +
       (chase ? '<button class="btn pri" data-act="chaseWtn" data-id="' + o.id + '">' + ic('whatsapp') + (j.wtn === 'chased' ? 'Chase again' : 'Chase ' + h(su.contact)) + '</button>' : '') + '</div>' +
       '<p class="xdnote">When it comes back it is filed against this order and shown here on your own template.</p>';
-    H.modal('Waste transfer note, ' + o.id, body, (back ? '<button class="btn" data-act="ordOpen" data-id="' + o.id + '">' + ic('chevron-left') + 'Back to the order</button>' : '') + '<span class="sp"></span><button class="btn pri" data-act="close">Close</button>');
+    H.modal('Waste transfer note, ' + o.id, body, (back ? '<button class="btn" data-act="ordOpen" data-id="' + o.id + '">' + ic('chevron-left') + 'Back to the order</button>' : '') + '<span class="sp"></span>' + (wtnBack(o) && WASTE[o.svc] ? '<button class="btn pri" data-act="xhEmail" data-k="wtn" data-id="' + o.id + '">' + ic('mail') + 'Email to the customer</button><button class="btn" data-act="close">Close</button>' : '<button class="btn pri" data-act="close">Close</button>'));
   }
   function histDoc(o, k) {
     if (k === 'wtn') return wtnModal(o, true);
