@@ -37,14 +37,45 @@
       function key(e) { if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') end(); }
       b.addEventListener('click', end); document.addEventListener('keydown', key, true);
     }
+    /* sign in first: the CAC logo, username j.pesci and a 4 digit PIN (1234 in the demo), then the start-up screen.
+       In the real build each person has their own login and PIN, checked on the server. ?pin=0 skips this screen. */
+    var PIN = '1234', USER = 'j.pesci';
+    function signin(then) {
+      if (new URLSearchParams(location.search).get('pin') === '0') { then(); return; }
+      var old = document.getElementById('xsign'); if (old && old.parentNode) old.parentNode.removeChild(old);
+      var w = document.createElement('div'); w.id = 'xsign'; w.className = 'xs';
+      w.innerHTML = '<div class="xb-glow" aria-hidden="true"></div><form class="xs-card" id="xsForm" autocomplete="off" novalidate>' +
+        '<img class="xs-logo" src="brand/cac-logo-inverted.svg" alt="CAC Waste Management"><div class="xs-cap">Office system</div><h1 class="xs-h">Sign in</h1>' +
+        '<label class="xs-f"><span>Username</span><input id="xsUser" value="' + USER + '" autocapitalize="none" autocorrect="off" spellcheck="false"></label>' +
+        '<label class="xs-f"><span>PIN</span><span class="xs-pin"><input id="xsPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="PIN"><span class="xs-cells" aria-hidden="true"><i></i><i></i><i></i><i></i></span></span></label>' +
+        '<div class="xs-err" id="xsErr" role="alert"></div><button class="xs-go" type="submit">Sign in</button></form><div class="xs-foot">CAC Waste Management · sample data</div>';
+      document.body.appendChild(w);
+      document.documentElement.classList.remove('xb-pre');
+      var pin = w.querySelector('#xsPin'), user = w.querySelector('#xsUser'), err = w.querySelector('#xsErr'), cells = w.querySelectorAll('.xs-cells i'), done = false;
+      function paint() { var n = pin.value.length; [].forEach.call(cells, function (c, i) { c.className = i < n ? 'on' : (i === n ? 'cur' : ''); }); }
+      function go(e) {
+        if (e) e.preventDefault(); if (done) return;
+        var u = String(user.value || '').trim().toLowerCase();
+        if (u !== USER) { err.textContent = 'No one with that username. Try ' + USER + '.'; user.focus(); return; }
+        if (pin.value.length < 4) { err.textContent = 'Enter your 4 digit PIN.'; pin.focus(); return; }
+        if (pin.value !== PIN) { err.textContent = 'That PIN is not right. Try again.'; pin.value = ''; paint(); w.querySelector('.xs-card').classList.remove('shake'); void w.offsetWidth; w.querySelector('.xs-card').classList.add('shake'); pin.focus(); return; }
+        done = true; err.textContent = ''; w.classList.add('ok');
+        setTimeout(function () { then(); setTimeout(function () { if (w.parentNode) w.parentNode.removeChild(w); }, 60); }, 380);
+      }
+      pin.addEventListener('input', function () { pin.value = pin.value.replace(/\D/g, '').slice(0, 4); err.textContent = ''; paint(); if (pin.value.length === 4) setTimeout(go, 160); });
+      pin.addEventListener('focus', paint); pin.addEventListener('blur', function () { [].forEach.call(cells, function (c, i) { c.className = i < pin.value.length ? 'on' : ''; }); });
+      w.querySelector('#xsForm').addEventListener('submit', go);
+      setTimeout(function () { try { pin.focus(); } catch (e) {} paint(); }, 60);
+    }
+    window.CACSIGN = { pass: function () { var w = document.getElementById('xsign'); if (!w) return false; w.querySelector('#xsPin').value = PIN; w.querySelector('#xsForm').dispatchEvent(new Event('submit', { cancelable: true })); return true; } };   /* for the tests */
     /* the Play the start-up button, the guided tour and the presenter guide all come through here */
-    A.boot = function () { try { A.close(); } catch (e) {} run(); };
+    A.boot = function () { try { A.close(); } catch (e) {} signin(run); };
     /* it plays every time the page loads, including a refresh and the guided tour, unless ?boot=0 is in the address
        or the guided tour is part way through (a refresh mid-demo keeps your place without replaying it) */
     setTimeout(function () { document.documentElement.classList.remove('xb-pre'); }, 2500);   /* never leave the cover up if something goes wrong */
     var q = new URLSearchParams(location.search);
     var first = document.getElementById('boot');
-    if (q.get('boot') !== '0') setTimeout(run, 200);   /* every load, a refresh too. A moment's wait so the guided inbox is calmed first and the figures match */
+    if (q.get('boot') !== '0') setTimeout(function () { signin(run); }, 200);   /* every load, a refresh too. A moment's wait so the guided inbox is calmed first and the figures match */
     else if (first && !/\bxb\b/.test(first.className)) run();
   }
   start(0);

@@ -115,7 +115,7 @@
     /* click anywhere on the page and the card folds down to a small strip, out of the way. Resume or Next bring it back. */
     document.addEventListener('click', function (e) {
       if (st.paused || st.i < 0 || st.i >= STEPS.length) return;
-      var t = e.target; if (!t || !t.closest || t.closest('#walk') || t.closest('#boot')) return;
+      var t = e.target; if (!t || !t.closest || t.closest('#walk') || t.closest('#boot') || t.closest('#xsign')) return;
       st.paused = true; save(); draw();
     }, true);
   }
