@@ -237,7 +237,9 @@ label.btn{cursor:pointer}
 #walk button.mini{padding:3px 8px;font-size:11.5px;background:none;border-color:#3A3A40;color:#A9A9B0}
 #walk button.xtra{text-align:left;background:none;border-color:#3A3A40;font-weight:600}
 #walk button.xtra:hover{border-color:var(--brand)}
-#walk.paused{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 12px}
+#walk.paused{display:flex;align-items:center;gap:6px;padding:7px 7px 7px 12px}
+#walk.paused button{padding:6px 9px;font-size:12px}
+#walk.paused button.pri{flex:none;font-size:12.5px;padding:6px 12px}
 #walk.paused .wk-n{color:#C9C9CE}
 body:has(#boot) #walk{display:none}
 /* the side menu makes room for the tour card, and pop-ups sit in the page area so the card never covers them */
