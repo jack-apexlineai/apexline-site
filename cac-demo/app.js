@@ -499,9 +499,24 @@
       '<div class="sec"><h3>Covers</h3><div class="chips">' + coverText(s).split(', ').map(function (a) { return '<span class="tag">' + h(a) + '</span>'; }).join(' ') + '</div></div>' +
       '<div class="sec"><h3>Rate card and your price</h3><div class="tw"><table class="t"><thead><tr><th>Item</th><th class="r">Their rate</th><th class="r">Your price</th></tr></thead><tbody>' + (rates.length ? rates.map(function (r) { return '<tr><td>' + h(r[0]) + '</td><td class="r num">' + r[1] + '</td><td class="r num"><b>' + r[2] + '</b></td></tr>'; }).join('') : '<tr><td colspan="3" class="muted">No prices on file yet. Upload their price sheet and they show here.</td></tr>') + '</tbody></table></div></div>' +
       '<div class="sec"><h3>Licence</h3><dl class="kv"><dt>Carrier number</dt><dd>' + h(s.cbdu) + '</dd><dt>Expires</dt><dd>' + (s.licExp != null ? CS.fmtDay(s.licExp) : 'n/a') + ' ' + licTag(s) + '</dd></dl></div>' +
+      supDocs(s) +
       '<div class="sec"><h3>Live jobs with them</h3>' + (jobs.filter(function (j) { return j.status !== 'done'; }).map(function (j) { return '<div class="rowline"><div class="bd"><b>' + j.id + ', ' + h(CS.jobDesc(j)) + '</b><small>' + h(CS.cust(j.cust).name) + ' · ' + CS.fmtDay(j.day) + '</small></div>' + stTag(j.status) + '</div>'; }).join('') || '<span class="muted">None right now.</span>') + '</div>',
       '<button class="btn pri" data-act="msgParty" data-type="supplier" data-id="' + s.id + '">' + ic(s.pref === 'email' ? 'mail' : 'whatsapp') + (s.pref === 'email' ? 'Email them' : 'Message on WhatsApp') + '</button><button class="btn" data-act="supPref" data-id="' + s.id + '">' + ic('star') + (s.preferred ? 'Remove preferred' : 'Make preferred') + '</button>');
   }
+  /* Everything else a supplier sends: insurance, price lists, reports, site audits. Any file type. Demo: only the file name is kept. */
+  function supDocs(s) {
+    var base = [['Price list', s.rates && Object.keys(s.rates).length ? 'On file, read into the rate card' : 'Not sent yet']];
+    var own = (s.docs || []).map(function (d) { return [d.n, 'Added ' + d.when]; });
+    return '<div class="sec"><h3>Other documents</h3>' + base.concat(own).map(function (d) { return '<div class="rowline"><span class="cic">' + ic('file-text') + '</span><div class="bd"><b>' + h(d[0]) + '</b><small>' + h(d[1]) + '</small></div></div>'; }).join('') +
+      '<label class="btn sm" style="margin-top:8px;cursor:pointer">' + ic('paperclip') + 'Add a document<input type="file" hidden accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.png,.jpg,.jpeg,.heic" data-supdoc="' + s.id + '"></label>' +
+      '<small class="muted" style="display:block;margin-top:6px">PDF, Word, Excel or a photo. Reports, site audits, anything else they send.</small></div>';
+  }
+  document.addEventListener('change', function (e) {
+    var t = e.target; if (!t || !t.dataset || !t.dataset.supdoc || !t.files || !t.files[0]) return;
+    var s = CS.sup(t.dataset.supdoc); if (!s) return;
+    s.docs = (s.docs || []).concat([{ n: t.files[0].name, when: CS.dayDate(0).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) }]);
+    CS.commit(); openSup(s.id); toast('Saved to the documents for ' + h(s.name), 'paperclip');
+  });
   function openQuote(id) {
     var q = CS.quote(id); var who = q.cust ? CS.cust(q.cust).name : CS.lead(q.lead).company; var m = q.sell - q.cost;
     var foot = '';

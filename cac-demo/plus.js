@@ -20,10 +20,7 @@
     return t;
   }
   /* Six months of history, scaled from this month so the trend always matches the live figures. Sample only. */
-  function trend(now) {
-    var f = [0.42, 0.55, 0.63, 0.74, 0.88, 1], p = [86, 87, 89, 88, 90, now.pct];
-    return f.map(function (x, i) { return { m: monthName(i - 5), t: r1(now.tonnes * x), p: p[i] }; });
-  }
+  function trend(now) { return CS.months6(now.rows); }
   P.reportsView = function () {
     var t = totals(), tr = trend(t), mx = Math.max.apply(null, tr.map(function (x) { return x.t; }).concat([1]));
     var sent = S().reportsSent || {}, auto = S().settings.autoReports !== false;
@@ -35,7 +32,7 @@
       '<div class="card kpi"><small>' + ic('sparkles') + 'Carbon, estimated</small><b>' + (t.co2 >= 1000 ? r1(t.co2 / 1000) + ' t' : t.co2 + ' kg') + '</b><span class="d">CO2e from disposal, UK 2026 factors</span></div></div>' +
       '<div class="grid g2" style="margin-bottom:16px;align-items:start">' +
       '<div class="card"><div class="hd"><h2>' + ic('trending-up') + 'Six months</h2><span class="muted" style="font-size:12px">tonnes moved, and % kept out of landfill</span></div><div class="bd"><div class="pchart">' +
-      tr.map(function (x, i) { return '<div class="pcol' + (i === 5 ? ' now' : '') + '"><span class="pv">' + x.p + '%</span><span class="pbar"><i style="height:' + Math.max(6, Math.round(x.t / mx * 100)) + '%"></i></span><b>' + x.t + ' t</b><small>' + x.m + '</small></div>'; }).join('') +
+      tr.map(function (x, i) { return '<div class="pcol' + (i === 5 ? ' now' : '') + '"><span class="pv">' + (x.p == null ? '&nbsp;' : x.p + '%') + '</span><span class="pbar"><i style="height:' + (x.t ? Math.max(6, Math.round(x.t / mx * 100)) : 0) + '%"></i></span><b>' + (x.t ? x.t + ' t' : 'None') + '</b><small>' + x.m + '</small></div>'; }).join('') +
       '</div></div></div>' +
       '<div class="card"><div class="hd"><h2>' + ic('stack') + 'By waste stream</h2></div><div class="bd">' +
       Object.keys(t.streams).map(function (k) { var v = t.streams[k]; return '<div class="hbar" style="grid-template-columns:170px minmax(0,1fr) 60px"><span>' + h(k) + '</span><span class="tr"><i style="width:' + Math.round(v / t.tonnes * 100) + '%"></i></span><span class="v">' + r1(v) + ' t</span></div>'; }).join('') +
@@ -46,7 +43,7 @@
         var c = r.cust, st = sent[c.id];
         return '<tr><td><b>' + h(c.name) + '</b><small>' + Object.keys(r.sites).length + ' site' + (Object.keys(r.sites).length === 1 ? '' : 's') + ' · ' + h(c.type) + '</small></td><td class="r num">' + r.tonnes + '</td><td class="r num hide-sm">' + r.moves + '</td><td class="r"><span class="tag ' + (r.pct >= 90 ? 'ok' : r.pct >= 80 ? 'amber' : 'bad') + '">' + r.pct + '%</span></td><td class="r num hide-md">' + r.moves + ' of ' + r.wtnAll + '</td>' +
           '<td class="hide-sm">' + (st ? '<span class="tag ok">' + ic('check') + 'Sent ' + h(st) + '</span>' : '<span class="tag">' + (auto ? 'Goes ' + nextFirst() : 'Not sent') + '</span>') + '</td>' +
-          '<td class="r"><button class="btn sm" data-act="siteReport" data-id="' + c.id + '">' + ic('eye') + 'Open</button></td></tr>';
+          '<td class="r"><div class="row" style="gap:6px;justify-content:flex-end;flex-wrap:nowrap"><button class="btn sm" data-act="custGreen" data-id="' + c.id + '" title="Their own waste and carbon page, in their portal">' + ic('leaf') + 'Their page</button><button class="btn sm" data-act="siteReport" data-id="' + c.id + '">' + ic('eye') + 'Report</button></div></td></tr>';
       }).join('') + '</tbody></table></div></div>' +
       '<div class="card"><div class="bd"><div class="row" style="gap:12px;flex-wrap:wrap;align-items:flex-start"><span class="spark">' + ic('shield-check') + '</span><div style="flex:1;min-width:240px"><b style="font-size:15px">What a QS or main contractor asks a waste supplier for, ready in one click</b>' +
       '<p class="muted" style="margin:4px 0 0;font-size:13px">Tonnes and diversion by site, the transfer note for every load, and the carrier licence of every supplier used. Under your logo, not a supplier\'s.</p></div>' +
@@ -72,13 +69,16 @@
   /* ---------- team ---------- */
   function teamBody() {
     var bde = CS.bde(), extra = S().team || [];
-    var row = function (ini, col, name, role, sees, tag) {
-      return '<div class="rowline"><span class="av" style="--c:' + col + '">' + h(ini) + '</span><div class="bd"><b>' + h(name) + ' <span class="muted" style="font-weight:500">· ' + h(role) + '</span></b><small>' + h(sees) + '</small></div>' + (tag || '') + '</div>';
+    var box = function (list) { return '<span class="tminb">' + list.map(function (x) { return '<span class="tag">' + ic(x[0]) + h(x[1]) + '</span>'; }).join('') + '</span>'; };
+    var mail = function (n) { return String(n).split(' ')[0].toLowerCase().replace(/[^a-z]/g, '') + '@cacwaste.co.uk'; };
+    var row = function (ini, col, name, role, sees, tag, inb) {
+      return '<div class="rowline"><span class="av" style="--c:' + col + '">' + h(ini) + '</span><div class="bd"><b>' + h(name) + ' <span class="muted" style="font-weight:500">· ' + h(role) + '</span></b><small>' + h(sees) + '</small>' + (inb ? box(inb) : '') + '</div>' + (tag || '') + '</div>';
     };
-    return '<p class="muted" style="font-size:13px;margin:0 0 6px">One login each. Everyone works from the same inbox and jobs, so a customer gets the same answer whoever picks it up.</p>' +
-      row('JP', '#EB9347', 'John Pesci', 'Managing Director', 'Everything: margin, supplier costs, credit, the whole team\'s pipeline', '<span class="tag brand">Owner</span>') +
-      row(CS.initials(bde), '#7A3FF2', bde, 'Business Development Executive', 'Leads, quotes and his own accounts. Sees the margin on what he sells', '<span class="tag amber">Starting soon</span>') +
-      extra.map(function (p) { return row(CS.initials(p.name), '#52525B', p.name, p.role, p.sees, p.imported ? '<span class="tag">Starting PIN set</span>' : '<span class="tag">' + ic('mail') + 'Invite sent</span>'); }).join('') +
+    var INB_ALL = function (n) { return [['mail', mail(n)], ['mail', 'info@cacwaste.co.uk'], ['whatsapp', 'CAC WhatsApp']]; };
+    return '<p class="muted" style="font-size:13px;margin:0 0 6px">One login each. Each person links their own inbox, and you choose who also sees info@ and the WhatsApp number. Whoever picks a message up first answers it, so a customer gets the same answer whoever it is.</p>' +
+      row('JP', '#EB9347', 'John Pesci', 'Managing Director', 'Everything: margin, supplier costs, credit, the whole team\'s pipeline', '<span class="tag brand">Owner</span>', INB_ALL('John')) +
+      row(CS.initials(bde), '#7A3FF2', bde, 'Business Development Executive', 'Leads, quotes and his own accounts. Sees the margin on what he sells', '<span class="tag amber">Starting soon</span>', INB_ALL(bde)) +
+      extra.map(function (p) { return row(CS.initials(p.name), '#52525B', p.name, p.role, p.sees, p.imported ? '<span class="tag">Starting PIN set</span>' : '<span class="tag">' + ic('mail') + 'Invite sent</span>', p.role === 'Office and accounts' ? [['mail', mail(p.name)], ['mail', 'accounts@cacwaste.co.uk']] : INB_ALL(p.name)); }).join('') +
       '<div class="card" style="box-shadow:none;margin-top:12px"><div class="bd"><b>Add the next hire</b><div class="grid g2" style="margin-top:8px"><div class="field"><label for="tmName">Name</label><input id="tmName" placeholder="First and last name"></div><div class="field"><label for="tmRole">Role</label><select id="tmRole"><option>Account manager</option><option>Office and accounts</option><option>Business Development Executive</option></select></div></div>' +
       '<p class="muted" style="font-size:12.5px;margin:0">They get a login link. Day one opens on a five minute walkthrough of their own screens, so nobody needs a training day.</p></div></div>';
   }
@@ -133,6 +133,8 @@
   P.init = function (o) {
     H = o; var A = H.A, V = H.V;
     V.reports = P.reportsView;
+    /* Open one customer's own waste and carbon page, as they see it in their portal. */
+    A.custGreen = function (el) { var c = CS.cust(el.dataset.id); H.closeLayer(); H.openPhone('portal.html?c=' + encodeURIComponent(c.id) + '&v=green', c.name + ' waste and carbon'); if (window.innerWidth >= 900) H.toast('This is the waste and carbon page ' + h(c.name) + ' see in their own portal.', 'leaf'); };
     var custV = V.customers;
     V.customers = function () {
       return '<div class="row" style="margin-bottom:14px;flex-wrap:wrap;gap:10px"><div style="flex:1;min-width:220px"><b style="font-size:15px">New customer?</b><span class="muted" style="font-size:13px;display:block">Checked on Companies House, credit limit set and their link sent, in about two minutes.</span></div><button class="btn pri" data-act="newAccount">' + ic('user-plus') + 'Open a trade account</button></div>' + custV();

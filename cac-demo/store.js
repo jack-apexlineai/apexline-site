@@ -888,7 +888,7 @@
     var c = CS.cust(custId), r = { jobs: js, moves: js.length, tonnes: 0, diverted: 0, co2: 0, sites: {}, streams: {} };
     js.forEach(function (j) {
       var t = CS.tonnes(j), rec = (CS.sup(j.sup).recov || 90) / 100, soil = j.svc !== 'skip';
-      var sn = CS.jobSite(j).name, st = soil ? 'Soil and stones' : 'Mixed construction waste';
+      var sn = CS.jobSite(j).name, st = j.mat || (soil ? 'Soil and stones' : 'Mixed construction waste');
       r.tonnes += t; r.diverted += t * rec;
       r.co2 += soil ? (t * rec * 1.01 + t * (1 - rec) * 19.55) : (t * rec * 1.01 + t * (1 - rec) * 4.65);
       r.sites[sn] = r.sites[sn] || { t: 0, d: 0, n: 0 }; r.sites[sn].t += t; r.sites[sn].d += t * rec; r.sites[sn].n++;
@@ -897,6 +897,26 @@
     r.pct = r.tonnes ? Math.round(r.diverted / r.tonnes * 100) : 0; r.tonnes = Math.round(r.tonnes * 10) / 10; r.co2 = Math.round(r.co2);
     r.wtnAll = CS.S.jobs.filter(function (j) { return j.cust === custId && j.wtn && j.status !== 'booked' && j.status !== 'confirmed'; }).length;
     r.cust = c; return r;
+  };
+  /* The last six months, built from the loads themselves: tonnes and % kept out of landfill per month.
+     Demo only: the five earlier months get made-up history added on top (flag below).
+     On a real install this is false and every bar is real loads. */
+  CS.SAMPLE_HISTORY = true;
+  CS.months6 = function (reps) {
+    var now = CS.dayDate(0), out = [], i, all = { t: 0, d: 0 };
+    for (i = 5; i >= 0; i--) { var d = new Date(now.getFullYear(), now.getMonth() - i, 1); out.push({ m: d.toLocaleDateString('en-GB', { month: 'short' }), mo: d.getMonth(), y: d.getFullYear(), t: 0, d: 0, n: 0 }); }
+    reps.forEach(function (r) {
+      r.jobs.forEach(function (j) {
+        var dd = CS.dayDate(j.day), t = CS.tonnes(j), rec = (CS.sup(j.sup).recov || 90) / 100;
+        all.t += t; all.d += t * rec;
+        out.forEach(function (o) { if (o.mo === dd.getMonth() && o.y === dd.getFullYear()) { o.t += t; o.d += t * rec; o.n++; } });
+      });
+    });
+    if (CS.SAMPLE_HISTORY && all.t) {
+      var f = [0.42, 0.55, 0.63, 0.74, 0.88], off = [-6, -5, -3, -4, -2], pc = all.d / all.t * 100;
+      out.forEach(function (o, k) { if (k < 5) { var st = all.t * f[k]; o.t += st; o.d += st * Math.max(0, Math.min(100, pc + off[k])) / 100; o.sample = true; } });
+    }
+    return out.map(function (o) { return { m: o.m, t: Math.round(o.t * 10) / 10, p: o.t ? Math.round(o.d / o.t * 100) : null, loads: o.n, sample: !!o.sample }; });
   };
   CS.briefing = function () {
     var S = CS.S, st = CS.stats(), ch = CS.chaseLists(), lk = CS.leakTotals();

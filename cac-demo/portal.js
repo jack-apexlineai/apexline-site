@@ -10,7 +10,7 @@
   var qid = params.get('q');
   var asked = {};
   var VIEWS = ['home', 'book', 'orders', 'docs', 'green'];
-  var view = (location.hash || '').replace('#', ''); if (view === 'documents') view = 'docs'; if (VIEWS.indexOf(view) < 0) view = 'home';
+  var view = (location.hash || '').replace('#', '') || params.get('v') || ''; if (view === 'documents') view = 'docs'; if (VIEWS.indexOf(view) < 0) view = 'home';
   var docTab = 'wtn', docQ = '', ordF = 'all', B = null;
 
   var DOWL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -53,7 +53,7 @@
     var items = [['home', 'home', 'Home'], ['orders', 'list', 'Orders'], ['docs', 'file-text', 'Documents'], ['green', 'leaf', 'Waste and carbon']];
     $('#cpnav').innerHTML = items.map(function (x) { return '<button data-act="go" data-v="' + x[0] + '" class="' + (view === x[0] ? 'on' : '') + '">' + ic(x[1]) + x[2] + '</button>'; }).join('');
     $('#bookTop').innerHTML = ic('plus') + 'Book a job';
-    var tabs = [['home', 'home', 'Home'], ['book', 'plus', 'Book'], ['orders', 'list', 'Orders'], ['docs', 'file-text', 'Documents']];
+    var tabs = [['home', 'home', 'Home'], ['book', 'plus', 'Book'], ['orders', 'list', 'Orders'], ['docs', 'file-text', 'Docs'], ['green', 'leaf', 'Carbon']];
     $('#ptabs').innerHTML = tabs.map(function (x) { return '<button data-act="' + (x[0] === 'book' ? 'book' : 'go') + '" data-v="' + x[0] + '" class="' + (view === x[0] ? 'on' : '') + (x[0] === 'book' ? ' main' : '') + '">' + ic(x[1]) + x[2] + '</button>'; }).join('');
   }
   function foot() {
@@ -138,8 +138,7 @@
   }
   function vGreen() {
     var c = CS.cust(cid), r = greenRep(), r1 = function (n) { return Math.round(n * 10) / 10; };
-    var f = [0.42, 0.55, 0.63, 0.74, 0.88, 1], pp = [r.pct - 8, r.pct - 6, r.pct - 5, r.pct - 3, r.pct - 2, r.pct];
-    var tr = f.map(function (x, i) { var d = CS.dayDate(0); d.setDate(1); d.setMonth(d.getMonth() + i - 5); return { m: MON[d.getMonth()], t: r1(r.tonnes * x), p: Math.max(0, Math.min(100, pp[i])) }; });
+    var tr = CS.months6([r]);
     var mx = Math.max.apply(null, tr.map(function (x) { return x.t; }).concat([1]));
     var wtnPct = r.wtnAll ? Math.round(r.moves / r.wtnAll * 100) : 0;
     var sites = Object.keys(r.sites).map(function (k) { var x = r.sites[k]; return { n: k, t: r1(x.t), loads: x.n, p: x.t ? Math.round(x.d / x.t * 100) : 0 }; }).sort(function (a, b) { return b.t - a.t; });
@@ -151,7 +150,7 @@
       '<div class="card kpi"><small>' + ic('sparkles') + 'Carbon, estimated</small><b>' + (r.co2 >= 1000 ? r1(r.co2 / 1000) + ' t' : r.co2 + ' kg') + '</b><span class="d">CO2e from disposal, UK 2026 factors</span></div></div>' +
       '<div class="grid g2 cp-gk" style="align-items:start">' +
       '<div class="card"><div class="hd"><h2>' + ic('trending-up') + 'Six months</h2><span class="muted" style="font-size:12px">tonnes moved, and % kept out of landfill</span></div><div class="bd"><div class="pchart">' +
-      tr.map(function (x, i) { return '<div class="pcol' + (i === 5 ? ' now' : '') + '"><span class="pv">' + x.p + '%</span><span class="pbar"><i style="height:' + Math.max(6, Math.round(x.t / mx * 100)) + '%"></i></span><b>' + x.t + ' t</b><small>' + x.m + '</small></div>'; }).join('') +
+      tr.map(function (x, i) { return '<div class="pcol' + (i === 5 ? ' now' : '') + '"><span class="pv">' + (x.p == null ? '&nbsp;' : x.p + '%') + '</span><span class="pbar"><i style="height:' + (x.t ? Math.max(6, Math.round(x.t / mx * 100)) : 0) + '%"></i></span><b>' + (x.t ? x.t + ' t' : 'None') + '</b><small>' + x.m + '</small></div>'; }).join('') +
       '</div></div></div>' +
       '<div class="card"><div class="hd"><h2>' + ic('stack') + 'By waste stream</h2></div><div class="bd">' +
       (Object.keys(r.streams).map(function (k) { var v = r.streams[k]; return '<div class="hbar" style="grid-template-columns:170px minmax(0,1fr) 60px"><span>' + h(k) + '</span><span class="tr"><i style="width:' + Math.round(v / (r.tonnes || 1) * 100) + '%"></i></span><span class="v">' + r1(v) + ' t</span></div>'; }).join('') || '<div class="cp-none">No notes on file yet.</div>') +

@@ -8,6 +8,7 @@ body:not(.cp) #ptabs{display:none}
 .pbody.cp .pmain{padding:6px 14px 28px;gap:14px}
 .pbody.cp .ptop{border-bottom:1px solid var(--line)}
 .pbody a.btn{text-decoration:none}
+.pbody.cp .ptabs{grid-template-columns:repeat(5,1fr)}
 .pbody.cp .ptabs button{min-width:0}
 .pbody.cp .ptabs button.main .ic{color:var(--brand-ink)}
 

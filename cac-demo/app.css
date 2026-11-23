@@ -633,3 +633,4 @@ body:has(#layer .modal) .fab,body:has(#tourBox) .fab{display:none!important}
 .pqinc{list-style:none;padding:0;margin:6px 0 10px;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
 .pqinc li{display:flex;gap:8px;align-items:center}
 .pqinc .ic{color:var(--ok)}
+.tminb{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.tminb .tag{font-size:11.5px}
