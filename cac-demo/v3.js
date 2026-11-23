@@ -467,6 +467,18 @@
       carbon: { n: 'Waste and carbon', ic: 'leaf', act: 'go', v: 'reports', go: 'Open the reports', body: big((Math.round(tonnes * 10) / 10) + ' t', 'handled this year') + line(rep.length, 'accounts with a report ready') }
     };
   }
+  /* the picture at the top of Home: sales by month with this month's forecast, and this month so far next to it */
+  function homeChart() {
+    var f = forecast(), cur = f.cur, prev = f.prev, ms = f.ms, firstM = ms[0], mx = Math.max.apply(null, ms.map(function (x) { return x.s.rev; }).concat([f.est]));
+    var dr = prev ? cur.s.rev - prev.st.rev : 0, first = !H.ui.hcSeen; H.ui.hcSeen = true;
+    return '<section class="card homechart' + (first ? ' grow' : '') + '" id="homeChart"><div class="hc-l"><div class="row" style="margin-bottom:4px"><h2 style="flex:1">' + ic('trending-up') + 'Sales by month</h2><span class="tag">' + ic('calendar') + 'Since ' + firstM.long + ' ' + firstM.y + '</span></div>' +
+      '<div class="bars hc">' + ms.map(function (x, i) { var last = i === ms.length - 1; return '<div class="b' + (last ? '' : ' dim') + '"><em>' + (last ? money(x.s.rev) + ' so far' : money(x.s.rev)) + '</em>' + (last ? '<i class="ghost" style="height:' + Math.round(f.est / mx * 100) + '%"><i style="height:' + Math.round(x.s.rev / f.est * 100) + '%"></i></i>' : '<i style="height:' + Math.round(x.s.rev / mx * 100) + '%"></i>') + '<span>' + x.label + (last ? '' : ' · ' + x.s.n) + '</span></div>'; }).join('') + '</div>' +
+      '<p class="muted hc-note">The pale bar is where ' + cur.long + ' is heading, an estimate.</p></div>' +
+      '<div class="hc-r"><small>' + cur.long + ' so far</small><b class="big">' + money(cur.s.rev) + '</b>' +
+      (prev ? '<span class="d ' + (dr >= 0 ? 'up' : 'down') + '">' + (dr >= 0 ? '&#9650; ' : '&#9660; ') + money(Math.abs(dr)) + (dr >= 0 ? ' more' : ' less') + ' than this point in ' + prev.long + '</span>' : '') +
+      '<div class="tline"><b>' + cur.s.n + '</b><span>orders</span></div><div class="tline"><b>' + money(cur.s.margin) + '</b><span>margin, ' + CS.pct(cur.s.margin, cur.s.rev) + '%</span></div><div class="tline"><b>' + money(f.est) + '</b><span>forecast for the month, an estimate</span></div>' +
+      '<button class="tgo" data-act="go" data-v="trends">Open trends' + ic('chevron-right') + '</button></div></section>';
+  }
   function homeView() {
     var d = homeState(), defs = tileDefs(), arr = !!H.ui.arrange, st = CS.stats(), hr = new Date().getHours(), greet = hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening', t0 = X2.movesOn(0).length;
     d.home = d.home.filter(function (k) { return defs[k]; }); d.hidden = d.hidden.filter(function (k) { return defs[k]; });
@@ -474,6 +486,7 @@
     return '<div class="homehd"><div style="flex:1;min-width:220px"><h2 id="greet">' + greet + ', John</h2><p class="muted">' + plural(st.needs, 'message') + ' need you, every one already drafted. ' + plural(t0, 'job') + ' moving today.</p></div>' +
       '<button class="btn sm' + (arr ? ' dark' : '') + '" data-act="homeArrange">' + ic(arr ? 'check' : 'pencil') + (arr ? 'Done' : 'Arrange') + '</button></div>' +
       (arr ? '<div class="row" style="flex-wrap:wrap;margin-bottom:12px"><span class="muted" style="font-size:13px">' + (d.hidden.length ? 'Drag a tile to move it. More tiles you can add:' : 'Drag a tile to move it.') + '</span>' + d.hidden.map(function (k) { return '<button class="pk sm" data-act="tileShow" data-v="' + k + '">' + ic('plus') + h(defs[k].n) + '</button>'; }).join('') + '</div>' : '') +
+      homeChart() +
       '<div class="tiles t3' + (arr ? ' arr' : '') + '" id="tiles">' + d.home.map(function (k, i) {
         var t = defs[k];
         return '<section class="card tile' + (t.cta ? ' cta' : '') + '" draggable="true" data-tile="' + k + '"><div class="hd"><span class="grip" title="Drag to move">' + ic('menu') + '</span><h2>' + ic(t.ic) + h(t.n) + '</h2>' +

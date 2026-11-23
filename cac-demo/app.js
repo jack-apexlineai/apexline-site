@@ -565,7 +565,7 @@
     document.body.appendChild(d);
   }
   function boot(force) {
-    if (!force && (params.get('boot') === '0' || params.get('tour') === '1' || sessionStorage.getItem('cac-boot'))) return;
+    if (!force && (params.get('boot') === '0' || params.get('tour') === '1' || params.get('guide') === '1' || sessionStorage.getItem('cac-walk-on') === '1' || sessionStorage.getItem('cac-boot'))) return;
     try { sessionStorage.setItem('cac-boot', '1'); } catch (e) {}
     var st = CS.stats(), mtd = S.months[S.months.length - 1];
     var b = document.createElement('div'); b.className = 'boot'; b.id = 'boot';

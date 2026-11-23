@@ -111,7 +111,13 @@
   CS.on = function (fn) { listeners.push(fn); };
   CS.emit = function (why) { listeners.forEach(function (fn) { try { fn(why); } catch (e) { if (window.console) console.error(e); } }); };
   CS.commit = function (why) { CS.save(); CS.emit(why); };
-  window.addEventListener('storage', function (e) { if (e.key === KEY) { CS.load(); CS.emit('sync'); } });
+  window.addEventListener('storage', function (e) {
+    if (e.key !== KEY) return;
+    /* a tab running on a different demo clock (see clock.js, ?at=) keeps its own data: taking it in here would rebuild the sample data in both tabs, over and over */
+    var inc = null; try { inc = JSON.parse(e.newValue || 'null'); } catch (x) {}
+    if (inc && (inc.clk || 0) !== CLK) return;
+    CS.load(); CS.emit('sync');
+  });
 
   /* ---------- lookups ---------- */
   CS.cust = function (id) { return CS.S.customers.filter(function (c) { return c.id === id; })[0]; };
