@@ -631,7 +631,13 @@
     A.findSize = function (el) { fnd().size = Number(el.dataset.v); H.render(); };
     A.findSort = function (el) { fnd().sort = el.dataset.v; H.render(); };
     A.supScore = function (el) { var su = CS.sup(el.dataset.id); if (su) scoreDrawer(su); };
-    A.findOrder = function (el) { var f = fnd(); X2.order({ cust: 'new', site: 'other', cname: '', cphone: '', pc: f.pc.toUpperCase(), svc: f.svc, size: f.size, sup: el.dataset.id, pay: 'link' }); };
+    A.findOrder = function (el) {
+      var f = fnd(), out = CS.outward(f.pc), hit = null;
+      /* if a customer already has a site in that postcode, the order starts on them and that site; the customer box can still be changed */
+      S().customers.some(function (c) { return (c.sites || []).some(function (s, i) { if (CS.outward(s.pc) === out) { hit = { c: c, i: i }; return true; } return false; }); });
+      if (hit) X2.order({ cust: hit.c.id, site: hit.i, cname: hit.c.contact, cphone: hit.c.phone, svc: f.svc, size: f.size, sup: el.dataset.id, pay: /card/i.test(hit.c.terms || '') ? 'link' : 'account' });
+      else X2.order({ cust: 'new', site: 'other', cname: '', cphone: '', pc: f.pc.toUpperCase(), svc: f.svc, size: f.size, sup: el.dataset.id, pay: 'link' });
+    };
     A.issueNew = function (el) {
       var pre = el && el.dataset && el.dataset.id; H.ui.issueType = ITYPES[0];
       H.modal('Log an issue', '<div class="field"><label for="issSup">Supplier</label><select id="issSup">' + S().suppliers.map(function (s) { return '<option value="' + s.id + '"' + (s.id === pre ? ' selected' : '') + '>' + h(s.name) + '</option>'; }).join('') + '</select></div>' +
