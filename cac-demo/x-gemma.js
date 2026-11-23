@@ -71,7 +71,7 @@
       var F = sfacts(t), quote = SIMPLE[t.id] === 'quote', c = t.party.type === 'customer' ? CS.cust(t.party.id) : null;
       if (t.sx === 1) return quote
         ? '<div class="gx-line ok">' + ic('circle-check') + '<span><b>Quote sent to Hannah.</b> It is on the Quotes page with your other open quotes. Demo, nothing is really sent.</span><button class="btn sm" data-act="go" data-v="quotes">Open quotes</button></div>'
-        : '<div class="gx-line ok">' + ic('circle-check') + '<span><b>Booked' + (t.sxJob ? ', ' + h(t.sxJob) : '') + '.</b> ' + h(F.supName) + ' asked for the morning. Lee has his confirmation. Demo, nothing is really sent.</span><button class="btn sm" data-act="go" data-v="orders">Open the diary</button></div>';
+        : '<div class="gx-line ok">' + ic('circle-check') + '<span><b>Booked' + (t.sxJob ? ', ' + h(t.sxJob) : '') + '.</b> ' + h(F.supName) + ' asked for the morning. Lee has his reply on WhatsApp and the confirmation by email. Demo, nothing is really sent.</span><button class="btn sm" data-act="go" data-v="orders">Open the diary</button></div>';
       var live = c ? CS.S.jobs.filter(function (j) { return j.cust === c.id && ['booked', 'confirmed', 'onhire', 'exchange', 'collection'].indexOf(j.status) >= 0; }).length : 0;
       var first = t.msgs[0] || {}, lead = quote ? CS.party(t.party) : null, ph = (t.form && t.form.Phone) || (lead && lead.phone) || '';
       var facts = quote

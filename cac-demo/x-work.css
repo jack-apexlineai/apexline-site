@@ -88,6 +88,19 @@
 .sres .xdso b{display:block;color:var(--ink)}
 .sres .xdsall b{font-weight:700;color:var(--ink2)}
 
+/* New order: postcode finds the road, date picker, paperwork by email */
+.xwpc input{max-width:220px;text-transform:uppercase}
+.xwpc input::placeholder{text-transform:none}
+.xwpcst{min-height:18px;margin-top:5px;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:7px}
+.xwpcst:empty{min-height:0;margin-top:0}
+.xwpcbad{color:var(--bad)}
+.xwspin{width:13px;height:13px;flex:none;border-radius:50%;border:2px solid var(--line2);border-top-color:var(--brand);animation:spin .8s linear infinite}
+.xwdp{position:relative;display:inline-flex;max-width:100%}
+.xwdp input[type="date"]{position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0;color-scheme:light dark}
+.xwdp.open{flex-wrap:wrap;gap:6px}
+.xwdp.open input[type="date"]{position:static;width:auto;height:34px;opacity:1;pointer-events:auto;border:1px solid var(--line2);border-radius:10px;padding:0 10px;background:var(--panel);color:var(--ink)}
+.xwsendby{display:flex;align-items:center;gap:8px;margin:12px 0 0;font-size:12.5px;color:var(--muted);line-height:1.4;overflow-wrap:anywhere}
+.xwsendby svg{width:15px;height:15px;flex:none}
 @media (max-width:899px){
   .xwdate b{font-size:22px}
 }

@@ -1,0 +1,4 @@
+/* chips once a conversation is dealt with (x-confirm.js) */
+.sk-temp.booked{color:#15803D;background:#DCFCE7}
+.sk-temp.done{color:var(--muted);background:var(--sunk,#F4F4F5)}
+:root[data-theme="dark"] .sk-temp.booked{color:#86EFAC;background:rgba(22,101,52,.35)}
