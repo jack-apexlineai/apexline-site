@@ -149,7 +149,7 @@
   function descOf(it) { return cap(CS.itemText(it).replace(/^(an|a) /i, '')); }
   function freshOrder(pre) {
     var c = S().customers[0];
-    O = { cust: c.id, site: 0, addr: '', pc: '', cname: c.contact, cphone: c.phone, newName: '', svc: 'skip', size: 8, qty: '', day: CS.wd(1), time: TIMES[0], sup: null, sell: null, pay: /card/i.test(c.terms) ? 'link' : 'account', send: 'wa', note: '' };
+    O = { cust: c.id, site: 0, addr: '', pc: '', cname: c.contact, cphone: c.phone, newName: '', svc: 'skip', size: 8, qty: '', day: CS.wd(1), time: TIMES[0], sup: null, sell: null, pay: /card/i.test(c.terms) ? 'link' : 'account', send: 'wa', note: '', po: '' };
     if (pre) for (var k in pre) O[k] = pre[k];
     return O;
   }
@@ -166,6 +166,7 @@
   function ordLeft() {
     var c = ordCust(), q2 = QTY[O.svc];
     return '<div class="field"><label for="ordCust">Customer</label><select id="ordCust">' + S().customers.map(function (x) { return '<option value="' + x.id + '"' + (x.id === O.cust ? ' selected' : '') + '>' + h(x.name) + ' (' + h(x.contact) + ')</option>'; }).join('') + '<option value="new"' + (O.cust === 'new' ? ' selected' : '') + '>New customer</option></select></div>' +
+      (c && c.stop ? '<div class="xwstop" id="ordStop" role="alert">' + ic('lock') + '<span><b>On stop. Speak to the accounts team.</b><small>' + h(c.name) + ' are on stop in Credit control, so no order can be placed for them.</small></span></div>' : '') +
       (c ? '' : '<div class="field"><label for="ordNew">Customer or company name</label><input id="ordNew" value="' + h(O.newName) + '" placeholder="For example Harlow Builders"></div>') +
       (c ? '<div class="field"><label for="ordSite">Site</label><select id="ordSite">' + c.sites.map(function (s, i) { return '<option value="' + i + '"' + (String(O.site) === String(i) ? ' selected' : '') + '>' + h(s.name) + ', ' + h(s.pc) + '</option>'; }).join('') + '<option value="other"' + (O.site === 'other' ? ' selected' : '') + '>A different address</option></select></div>' : '') +
       (!c || O.site === 'other' ? '<div class="frow"><div class="field" style="flex:2"><label for="ordAddr">Site address</label><input id="ordAddr" value="' + h(O.addr) + '" placeholder="12 Mill Lane, Hunstanton"></div><div class="field" style="flex:1"><label for="ordPc">Postcode</label><input id="ordPc" value="' + h(O.pc) + '" placeholder="PE36 5AB"></div></div>' : '') +
@@ -175,10 +176,12 @@
         : '<div class="field" style="max-width:180px"><label for="ordQty">' + q2[0] + '</label><input id="ordQty" inputmode="numeric" value="' + h(O.qty || q2[1]) + '"></div>') +
       '<div class="field"><label>Date</label><div class="chips">' + days().map(function (d) { return pk('ordDay', d, O.day === d, CS.fmtDay(d)); }).join('') + '</div></div>' +
       '<div class="field"><label>Time on site</label><div class="chips">' + TIMES.map(function (t) { return pk('ordTime', t, O.time === t, t); }).join('') + '</div></div>' +
+      '<div class="field"><label for="ordPo">PO number (optional)</label><input id="ordPo" value="' + h(O.po || '') + '" placeholder="The customer\'s purchase order number" autocomplete="off" maxlength="40"></div>' +
       '<div class="field"><label for="ordNote">Notes for the driver (optional)</label><input id="ordNote" value="' + h(O.note) + '" placeholder="Gate code, where to put it, who to ring"></div>';
   }
   function ordRight() {
     var r = ordCalc(), c = ordCust();
+    if (c && c.stop) return '<div class="xwstop">' + ic('lock') + '<span><b>On stop. Speak to the accounts team.</b><small>Suppliers and prices are hidden while this customer is on stop.</small></span></div>';
     if (!r.pc) return '<div class="note">' + ic('map-pin') + '<span>Put the site postcode in and the suppliers who cover it show here, with their price and yours.</span></div>';
     if (!r.pick) return '<div class="note">' + ic('alert') + '<span>No supplier on file covers ' + h(CS.outward(r.pc)) + ' for ' + h(S().services[O.svc].name.toLowerCase()) + '. Add one in the Supplier handbook, or pick a different service.</span></div>';
     var cr = c ? CS.credit(c.id, r.sell) : null;
@@ -187,27 +190,26 @@
     }).join('') +
       '<div class="money" style="margin-top:12px"><div class="ln"><div class="d"><b>' + h(descOf(r.it)) + '</b><small>' + h(r.pick.sup.name) + ' · cost ' + money(r.cost) + '</small></div><span class="c">price</span><input id="ordSell" inputmode="numeric" value="' + r.sell + '" aria-label="Customer price"></div>' +
       '<div class="tot"><div><small>Customer</small><b class="num">' + money(r.sell) + '</b></div><div><small>Supplier</small><b class="num">' + money(r.cost) + '</b></div><div class="m"><small>Margin</small><b class="num">' + money(r.margin) + ' <span style="font-size:12px">' + CS.pct(r.margin, r.sell) + '%</span></b></div></div></div>' +
-      (c && c.stop ? '<div class="note" id="ordStop" style="margin-top:10px;background:var(--bad-l)">' + ic('lock') + '<span><b>' + h(c.name) + ' are on stop.</b> You put them on stop in Credit control' + (cr && cr.owed ? ', with ' + money(cr.owed, true) + ' owed' : '') + '. Take them off stop there, or place this one anyway.</span></div>' : '') +
       (cr && cr.hold && !(c && c.stop) ? '<div class="note" style="margin-top:10px;background:var(--bad-l)">' + ic('alert') + '<span><b>' + h(c.name) + ' are on hold.</b> ' + h(cr.why) + ' You can still place it, it is your call.</span></div>' : '') +
       '<div class="field" style="margin-top:14px"><label>How they pay</label><div class="chips">' + pk('ordPay', 'account', O.pay === 'account', 'On account') + pk('ordPay', 'link', O.pay === 'link', 'Send a payment link') + pk('ordPay', 'card', O.pay === 'card', 'Take card now') + '</div></div>' +
       '<div class="field"><label>Send the paperwork by</label><div class="chips">' + pk('ordSend', 'wa', O.send === 'wa', ic('whatsapp') + 'WhatsApp') + pk('ordSend', 'email', O.send === 'email', ic('mail') + 'Email') + '</div></div>' +
       '<div class="note">' + ic('sparkles') + '<span>One tap books it with ' + h(r.pick.sup.name) + ', raises the invoice, and sends ' + h(first(O.cname || (c ? c.first : 'the customer'))) + ' the order confirmation' + (O.pay === 'account' ? ' and the invoice.' : O.pay === 'link' ? ' and the invoice with a pay by card link.' : '. The card is taken first.') + '</span></div>';
   }
-  function ordFoot() { var r = ordCalc(), c = ordCust(), stop = c && c.stop; return '<button class="btn" data-act="close">Cancel</button><span class="sp"></span><button class="btn pri lg" id="ordGo" data-act="ordPlace"' + (r.pick ? '' : ' disabled') + '>' + ic(stop ? 'lock' : 'check') + (stop ? (O.stopOk ? 'Yes, place it anyway' : 'On stop. Place it anyway') : 'Place the order') + (r.pick ? ', ' + money(r.sell) : '') + '</button>'; }
+  function ordFoot() { var r = ordCalc(), c = ordCust(), stop = c && c.stop; return '<button class="btn" data-act="close">Cancel</button><span class="sp"></span><button class="btn pri lg" id="ordGo" data-act="ordPlace"' + (r.pick && !stop ? '' : ' disabled') + '>' + ic(stop ? 'lock' : 'check') + (stop ? 'On stop' : 'Place the order' + (r.pick ? ', ' + money(r.sell) : '')) + '</button>'; }
   function ordDraw() { H.modal('New order', '<div class="ord"><div id="ordL">' + ordLeft() + '</div><div class="res" id="ordR">' + ordRight() + '</div></div>', ordFoot(), true); }
   function ordRes() { var r = q('#ordR'); if (r) r.innerHTML = ordRight(); var f = document.querySelector('#layer .modal .mft'); if (f) f.innerHTML = ordFoot(); }
   function ordDoc(j) {
     var c = CS.cust(j.cust), s = CS.jobSite(j), ct = contact(j), inv = S().invoices.filter(function (i) { return i.jobs.indexOf(j.id) >= 0; })[0];
     return '<div class="doc v2doc"><div class="dh2"><img src="brand/cac-logo.svg" alt="CAC Waste Management"><div><b>Order confirmation</b><small>' + j.id + ' · ' + dateOf(0) + '</small></div></div>' +
       '<dl class="kv"><dt>Customer</dt><dd>' + h(c.name) + '</dd><dt>Site address</dt><dd>' + h(j.addr ? j.addr + ', ' : (s.name && s.name !== s.pc ? s.name + ', ' : '')) + h(s.pc) + '</dd><dt>Site contact</dt><dd>' + h(ct.name) + ' · ' + h(ct.phone || '') + '</dd>' +
-      '<dt>What</dt><dd>' + h(CS.jobDesc(j)) + '</dd><dt>When</dt><dd>' + CS.fmtDayLong(j.day) + (eta(j) !== 'Any time' ? ', ' + h(eta(j)) : '') + '</dd>' + (j.note ? '<dt>Notes</dt><dd>' + h(j.note) + '</dd>' : '') +
+      (j.po ? '<dt>PO number</dt><dd>' + h(j.po) + '</dd>' : '') + '<dt>What</dt><dd>' + h(CS.jobDesc(j)) + '</dd><dt>When</dt><dd>' + CS.fmtDayLong(j.day) + (eta(j) !== 'Any time' ? ', ' + h(eta(j)) : '') + '</dd>' + (j.note ? '<dt>Notes</dt><dd>' + h(j.note) + '</dd>' : '') +
       '<dt>Price</dt><dd>' + money(j.sell, true) + ' + VAT (' + money(j.sell * 1.2, true) + ' with VAT)</dd><dt>Invoice</dt><dd>' + (inv ? inv.id + (inv.status === 'paid' ? ', paid by card' : inv.pay === 'link' ? ', pay by card link on the invoice' : ', on your ' + h(c.terms.toLowerCase())) : 'To follow') + '</dd></dl>' +
       '<p style="color:#666;font-size:12.5px;margin:12px 0 0">We will confirm the delivery window once the driver is planned. Your waste transfer note follows after delivery. Any changes, reply to this message or call 0330 122 5711.</p></div>';
   }
   function place() {
     var r = ordCalc(); if (!r.pick) { H.toast('Put a postcode in that a supplier covers first', 'alert'); return; }
     var c = ordCust(), s = S();
-    if (c && c.stop && !O.stopOk) { O.stopOk = true; ordRes(); H.toast(h(c.name) + ' are on stop. Tap again if you want to place it anyway.', 'lock'); return; }
+    if (c && c.stop) { H.toast('On stop. Speak to the accounts team.', 'lock'); return; }
     if (!c) {
       var nm = (O.newName || '').trim(); if (!nm) { H.toast('Put the customer\'s name in', 'alert'); var f = q('#ordNew'); if (f) f.focus(); return; }
       c = { id: 'c' + (s.customers.length + 40), limit: 0, name: nm, contact: O.cname || nm, first: first(O.cname || nm), phone: O.cphone, email: '', type: 'Builder', terms: 'Card on order', owner: 'john', sites: [{ name: O.addr || CS.outward(r.pc), pc: r.pc.toUpperCase() }] };
@@ -217,6 +219,7 @@
     var j = { id: id, cust: c.id, site: other ? null : Number(O.site), siteName: other ? (O.addr || r.pc.toUpperCase()) : null, pc: other ? r.pc.toUpperCase() : null, addr: other ? O.addr : '', svc: it.svc, size: it.size, qty: it.qty || 1, weeks: it.weeks, panels: it.panels, ft: it.ft, m3: it.m3, hours: it.hours,
       sup: su.id, cost: r.cost, sell: r.sell, status: 'booked', day: O.day, bookedAt: Date.now(), wtn: /skip|grab|muck/.test(it.svc) ? 'pending' : null, owner: 'john', log: [],
       contact: { name: O.cname || c.contact, phone: O.cphone || c.phone }, note: O.note, eta: O.time === 'Any time' ? null : O.time };
+    var po = String(O.po || '').trim(); if (po) j.po = po;
     if (!other) { delete j.siteName; delete j.pc; }
     CS.jobLog(j, 'Order placed by John'); s.jobs.push(j);
     var inv = CS.nextId('inv', 'INV-'), paid = O.pay === 'card';
@@ -630,6 +633,7 @@
         if (el.id === 'ordCn') O.cname = el.value;
         if (el.id === 'ordCp') O.cphone = el.value;
         if (el.id === 'ordNote') O.note = el.value;
+        if (el.id === 'ordPo') O.po = el.value;
         if (el.id === 'ordQty') { O.qty = el.value; O.sell = null; ordRes(); }
       }
     });

@@ -1,0 +1,75 @@
+/* CAC demo, work layer: live jobs status drop-down, the diary day view, back arrows, the on stop notice */
+
+/* spreadsheet feel: light lines between the columns */
+.xwsheet th,.xwsheet td{border-right:1px solid var(--line)}
+.xwsheet th:last-child,.xwsheet td:last-child{border-right:0}
+.xwsheet td{vertical-align:middle}
+.xwsheet tr.xwdone td:not(.xwstc){opacity:.62}
+.xwhint{font-size:12.5px;font-weight:600}
+.xwsm{display:none!important}
+
+/* the status drop-down */
+.xwstc{cursor:default;white-space:nowrap}
+.xwst{appearance:none;-webkit-appearance:none;font:inherit;font-size:12.5px;font-weight:700;line-height:1.2;min-width:138px;max-width:100%;padding:7px 30px 7px 12px;border-radius:999px;border:1px solid var(--line2);background-color:var(--panel2);color:var(--ink);cursor:pointer;outline:none;
+  background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);background-position:calc(100% - 16px) 52%,calc(100% - 11px) 52%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+.xwst:hover,.xwst:focus{border-color:var(--brand)}
+.xwst option{background:var(--panel);color:var(--ink);font-weight:600}
+.xwst[data-st="Confirmed"]{background-color:var(--brand-l);color:var(--brand-ink);border-color:transparent}
+.xwst[data-st="On the way"]{background-color:var(--mail-l);color:var(--mail);border-color:transparent}
+.xwst[data-st="Rescheduled"]{background-color:var(--amber-l);color:var(--amber);border-color:transparent}
+.xwst[data-st="In progress"]{background-color:var(--web-l);color:var(--web);border-color:transparent}
+.xwst[data-st="Complete"]{background-color:var(--ok-l);color:var(--ok);border-color:transparent}
+.xwst[data-st=""]{color:var(--muted)}
+.xwst[data-st]:hover,.xwst[data-st]:focus{border-color:currentColor}
+.t td small.xwwait{color:var(--amber);font-weight:700;margin-top:4px}
+
+/* the pop-up that offers the text message */
+.xwaddon{margin-left:6px;vertical-align:middle}
+.modal .mhd h2 .ic{vertical-align:-3px}
+.xwq{font-size:17px;font-weight:700;margin:0 0 14px;color:var(--ink)}
+.xwsms{background:var(--sunk);border:1px solid var(--line);border-radius:16px 16px 16px 4px;padding:12px 14px;font-size:14px;line-height:1.45;color:var(--ink);max-width:440px;overflow-wrap:anywhere}
+
+/* the diary day view */
+.xwday{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 16px;margin-bottom:12px}
+.xwdnav{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.xwdnav .iconbtn{flex:none}
+.xwdate{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.xwdate b{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.15;color:var(--ink)}
+.xwdate small{color:var(--muted);font-size:13px}
+.xwquick{display:flex;gap:6px;flex-wrap:wrap}
+.xwback{margin-bottom:12px}
+.t td small.xwpo{color:var(--ink2);font-weight:600}
+.xwid{white-space:nowrap}
+.xwask{align-items:center;gap:5px;margin-top:6px;font-size:12px;font-weight:700;color:var(--muted)}
+.xwask .ic{font-size:14px}
+.xwsmtag{margin-top:4px}
+
+/* back arrows */
+.xwbk{flex:none;white-space:nowrap}
+.modal .mft .xwbko,.drawer .dft .xwbko{margin-right:auto}
+
+/* on stop: no order can be placed */
+.xwstop{display:flex;gap:10px;align-items:flex-start;background:var(--bad-l);border:1px solid var(--bad);border-radius:10px;padding:10px 12px;margin:0 0 12px;color:var(--bad);font-size:14px}
+.xwstop .ic{flex:none;margin-top:2px;font-size:18px}
+.xwstop b{display:block;font-weight:800}
+.xwstop small{display:block;color:var(--ink2);font-size:12.5px;margin-top:2px}
+
+@media (max-width:899px){
+  .xwdate b{font-size:22px}
+}
+@media (max-width:560px){
+  .xwsm{display:block!important}
+  span.xwsm{display:inline-block!important}
+  button.xwsm{display:flex!important}
+  .xwsheet td:first-child small{max-width:92px}
+  .xwsheet th,.xwsheet td{padding-left:8px;padding-right:8px}
+  .xwsmtag .tag{white-space:normal;text-align:right;border-radius:10px;line-height:1.25;padding:3px 8px}
+  .xwst{min-width:118px;padding-left:10px}
+  .xwday{padding:12px}
+  .xwdnav{flex-basis:100%}
+  .xwdate b{font-size:19px}
+  .xwquick{width:100%}
+  .xwquick .pk{flex:1;justify-content:center}
+  .xwhint{display:none}
+  .modal .mhd .xwbk{padding-left:8px;padding-right:10px}
+}

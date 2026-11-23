@@ -13,26 +13,29 @@
 
   var STEPS = [
     { id: 'home', act: 'startup', back: 'homeDash', t: 'Your home page',
-      p: 'This is your view, the director\'s. Everyone you add gets their own login and only sees what you allow. Sales by month at the top, then a card for each thing that needs you. Arrange chooses what is on here.' },
+      p: 'This is your view, the director\'s. Everyone you add gets their own login and only sees what you allow. This month against last month at the top, today hour by hour under it, then a card for each thing that needs you.' },
     { id: 'gemma', act: 'gemma', t: 'An order from an email',
       p: 'Gemma\'s email is already read and the reply is drafted. Three answers: the date, the price, then one button books the supplier and sends her the invoice and confirmation.' },
     { id: 'order', act: 'order', t: 'Place an order',
-      p: 'Pick a customer, a service and a day. It shows who covers it, their price, your price and the margin. One button books the supplier and sends the paperwork.' },
+      p: 'Pick a customer, a service and a day. It shows who covers it, their price, your price and the gross profit. Add a PO number if they gave one. One button books the supplier and sends the paperwork.' },
     { id: 'diary', act: 'diary', t: 'The order diary',
-      p: 'Every order, past and booked, by month, week or day. The arrows flick back through every month.',
-      x: [{ l: 'Open one order', act: 'orderPage' }, { l: 'Show the week', act: 'diaryWeek' }, { l: 'Show the list', act: 'diaryList' }] },
-    { id: 'trends', act: 'trends', t: 'Trends and the forecast',
-      p: 'This month against the same point last month, in plain words. The forecast is an estimate from what you have taken per working day.' },
+      p: 'Every order for the day, with Yesterday, Today and Tomorrow one tap away. Month, Week and List are on the tabs.',
+      x: [{ l: 'Open one order', act: 'orderPage' }, { l: 'Show the month', act: 'diaryMonth' }, { l: 'Show the list', act: 'diaryList' }] },
+    { id: 'live', act: 'livejobs', t: 'Live jobs today',
+      p: 'Today\'s jobs in order of the supplier\'s window. Change a status from the drop-down. Set one to On the way and it offers to text the customer.',
+      x: [{ l: 'Show skips on site', act: 'skips' }] },
+    { id: 'handbook', act: 'handbook', t: 'Supplier handbook',
+      p: 'Who is cheapest, fastest to confirm and most reliable, so you know where to send the work. A card for every supplier, and a warning before a licence or insurance runs out.' },
     { id: 'bills', act: 'bills', t: 'Supplier bill check',
       p: 'Upload a supplier\'s statement and every line is put next to what you booked. Anything that does not match is flagged before you pay.',
       x: [{ l: 'Read the sample statement', act: 'billSample' }] },
-    { id: 'handbook', act: 'handbook', t: 'Supplier handbook',
-      p: 'Every supplier\'s contacts, prices and hire period in one place, with a warning before a licence or insurance runs out.' },
-    { id: 'skips', act: 'skips', t: 'Skips on site',
-      p: 'Every skip on site, counted against that supplier\'s hire period, and flagged when a collection needs booking.',
-      x: [{ l: 'Show live jobs today', act: 'livejobs' }] },
+    { id: 'customers', act: 'customers', t: 'Customers',
+      p: 'A card for every customer: orders, value, gross profit and sites. Credit control sits under Money. Put an account on stop and nobody can book for them.',
+      x: [{ l: 'Show credit control', act: 'creditctl' }] },
     { id: 'chasing', act: 'chasing', t: 'Chasing',
-      p: 'Everything waiting on someone else, with the chase message already written.' }
+      p: 'Everything waiting on someone else, with the chase message already written.' },
+    { id: 'skipper', act: 'skipper', t: 'Skipper',
+      p: 'Ask it in plain words. It finds the message, suggests the reply, and sends it only when you say so. Press Enter to ask.' }
   ];
   var st = { i: -1, paused: false };
   try { var sv = JSON.parse(sessionStorage.getItem(KEY) || 'null'); if (sv && typeof sv.i === 'number') st = { i: Math.max(-1, Math.min(STEPS.length, sv.i)), paused: !!sv.paused }; } catch (e) {}

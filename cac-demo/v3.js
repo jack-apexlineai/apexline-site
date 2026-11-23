@@ -85,7 +85,7 @@
   function fromJob(j) {
     var inv = invOf(j.id);
     return { src: 'j', id: j.id, off: j.day, cust: j.cust, site: j.site, siteName: j.siteName, pc: j.pc, svc: j.svc, size: j.size, qty: j.qty, weeks: j.weeks, panels: j.panels, ft: j.ft, m3: j.m3, hours: j.hours, mix: j.mix,
-      sup: j.sup, cost: j.cost, sell: j.sell, status: j.status, owner: j.owner, job: j, inv: inv ? inv.id : null, pay: inv ? (inv.status === 'paid' ? 'paid' : 'unpaid') : (j.day > 0 ? 'none' : 'unpaid') };
+      sup: j.sup, cost: j.cost, sell: j.sell, status: j.status, owner: j.owner, po: j.po || '', job: j, inv: inv ? inv.id : null, pay: inv ? (inv.status === 'paid' ? 'paid' : 'unpaid') : (j.day > 0 ? 'none' : 'unpaid') };
   }
   function all() { return hist().concat(S().jobs.map(fromJob)).sort(function (a, b) { return a.off - b.off || (a.id < b.id ? -1 : 1); }); }
   function find(id) { return all().filter(function (o) { return o.id === id; })[0] || null; }
@@ -215,7 +215,7 @@
     if (o.inv) docs.push(['receipt', 'Invoice ' + o.inv, o.src === 'j' ? 'openInv' : 'histDoc', 'inv', o.src === 'j' ? o.inv : o.id]);
     var body = '<div class="opage"><div><div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:12px">' + H.stTag(o.status) + payTag(o) + H.margTag(m, o.sell) + '</div>' +
       '<dl class="kv"><dt>Customer</dt><dd>' + h(c.name) + '</dd><dt>Site</dt><dd>' + h(s.name) + ', ' + h(s.pc) + '</dd><dt>Site contact</dt><dd>' + h(ct.name) + ' · ' + h(ct.phone || '') + '</dd><dt>What</dt><dd>' + h(CS.jobDesc(o)) + '</dd>' +
-      '<dt>Delivery</dt><dd>' + dLong(o.off) + '</dd><dt>Supplier</dt><dd>' + h(su.name) + '</dd></dl>' +
+      '<dt>Delivery</dt><dd>' + dLong(o.off) + '</dd><dt>Supplier</dt><dd>' + h(su.name) + '</dd>' + (o.po ? '<dt>PO number</dt><dd id="ordPoShow">' + h(o.po) + '</dd>' : '') + '</dl>' +
       '<div class="sec"><h3>Money</h3></div><div class="money"><div class="tot"><div><small>Customer</small><b class="num">' + money(o.sell) + '</b></div><div><small>Supplier</small><b class="num">' + money(o.cost) + '</b></div><div class="m"><small>Margin</small><b class="num">' + money(m) + ' <span style="font-size:12px">' + CS.pct(m, o.sell) + '%</span></b></div></div></div>' +
       '<div class="sec"><h3>Documents</h3></div>' + docs.map(function (x) { return '<div class="rowline"><div class="bd"><b>' + ic(x[0]) + ' ' + h(x[1]) + '</b></div><button class="btn sm" data-act="' + x[2] + '" data-k="' + x[3] + '" data-id="' + x[4] + '">' + ic('eye') + 'View</button></div>'; }).join('') +
       (o.src === 'h' ? '<div class="sec"><h3>Messages</h3></div><div class="ochat">' + chat(o).map(function (x) { return '<div class="ob ' + x[0] + '"><small>' + h(x[1]) + '</small>' + h(x[2]) + '</div>'; }).join('') + '</div>'
@@ -424,7 +424,7 @@
           '<td>' + tag + (cr.why && !c.stop ? '<small class="why hide-sm">' + h(cr.why) + '</small>' : '') + '</td><td class="r"><div class="row" style="justify-content:flex-end;gap:6px">' + (r.ag.total ? '<button class="btn sm hide-sm" data-act="statement" data-id="' + c.id + '">' + ic('receipt') + '<span class="hide-md">Statement</span></button>' : '') +
           '<button class="btn sm' + (c.stop ? ' pri' : '') + '" data-act="stopToggle" data-id="' + c.id + '" aria-label="' + (c.stop ? 'Take ' + h(c.name) + ' off stop' : 'Put ' + h(c.name) + ' on stop') + '">' + ic(c.stop ? 'check' : 'lock') + '<span class="hide-sm">' + (c.stop ? 'Take off stop' : 'Put on stop') + '</span></button></div></td></tr>';
       }).join('') + '<tr class="totrow"><td><b>Total</b></td><td class="hide-sm"></td><td class="r num"><b>' + money(tot.t) + '</b></td>' + cell(tot.c) + cell(tot.d30, true) + cell(tot.d60, true) + '<td></td><td></td></tr></tbody></table></div></div>' +
-      '<p class="muted" style="font-size:12.5px;margin:12px 0 0"><b>On hold</b> is automatic: over their limit, or an invoice more than 14 days late. New orders from them are held and you are asked first. <b>On stop</b> is your call: New order warns you before anything is booked. Nobody is ever refused without you deciding.</p>';
+      '<p class="muted" style="font-size:12.5px;margin:12px 0 0"><b>On hold</b> is automatic: over their limit, or an invoice more than 14 days late. New orders from them are held and you are asked first. <b>On stop</b> is your call: New order is blocked for them until you take them off stop. Nobody is ever stopped without you deciding.</p>';
   }
 
   /* ---------- connections ---------- */
@@ -574,7 +574,7 @@
     A.stopToggle = function (el) {
       var c = CS.cust(el.dataset.id); if (!c) return; c.stop = !c.stop;
       CS.feed(c.name + (c.stop ? ' put on stop' : ' taken off stop'), 'lock'); CS.commit();
-      H.toast(c.stop ? h(c.name) + ' are on stop. New order will warn you before anything is booked for them.' : h(c.name) + ' are off stop.', c.stop ? 'lock' : 'check');
+      H.toast(c.stop ? h(c.name) + ' are on stop. New order is blocked for them until you take them off stop.' : h(c.name) + ' are off stop.', c.stop ? 'lock' : 'check');
     };
     A.connGo = function (el) { H.closeLayer(); H.go(el.dataset.v); };
     A.connections = function () { H.closeLayer(); H.go('connections'); };

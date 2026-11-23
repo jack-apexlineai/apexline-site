@@ -58,7 +58,14 @@
       resp: 21, onTime: 95, wtn: 94, jobs: 12, cbdu: 'CBDU349918', licExp: 980 },
     { id: 's11', recov: 89, hireDays: 14, weekRate: 25, name: 'Quayline Skips', contact: 'Carl', phone: '07700 900137', base: 'Bootle', services: ['skip'],
       areas: ['L', 'CH', 'WA', 'PR'], rates: { skip: { 4: 165, 6: 198, 8: 235, 10: 270, 12: 300, 14: 330, 16: 360 } },
-      resp: 52, onTime: 89, wtn: 86, jobs: 8, cbdu: 'CBDU412360', licExp: 21 }
+      resp: 52, onTime: 89, wtn: 86, jobs: 8, cbdu: 'CBDU412360', licExp: 21 },
+    /* Surrey, so a GU22 quote has two suppliers to choose between. Made-up names like the rest. */
+    { id: 's14', recov: 93, hireDays: 14, weekRate: 25, name: 'Heathwey Skips', contact: 'Nina', phone: '07700 900141', base: 'Woking', services: ['skip'],
+      areas: ['GU', 'KT', 'TW'], rates: { skip: { 4: 195, 6: 235, 8: 275, 10: 315, 12: 350, 14: 385, 16: 415 } },
+      resp: 16, onTime: 97, wtn: 96, jobs: 12, cbdu: 'CBDU377214', licExp: 510 },
+    { id: 's15', recov: 90, hireDays: 14, weekRate: 25, name: 'Chobmere Grab and Skip', contact: 'Dean', phone: '07700 900152', base: 'Chobham', services: ['skip', 'grab', 'muck'],
+      areas: ['GU', 'RG', 'SL'], rates: { skip: { 4: 185, 6: 222, 8: 260, 10: 298, 12: 335, 14: 368, 16: 398 }, grab: 315, muck: 370 },
+      resp: 41, onTime: 90, wtn: 88, jobs: 7, cbdu: 'CBDU390566', licExp: 365 }
   ];
 
   var CUSTOMERS = [

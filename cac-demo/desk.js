@@ -13,7 +13,7 @@
   var QTY = { grab: ['Loads', 1], muck: ['Loads', 1], aggregates: ['Loads', 1], welfare: ['Weeks', 4], container: ['Weeks', 4], toilet: ['Weeks', 4], fencing: ['Panels', 40], sweeper: ['Hours', 4], concrete: ['Cubic metres', 6], plant: ['Weeks', 1] };
   var REGIONS = [
     ['Hunstanton and West Norfolk', 'PE31'], ['King\'s Lynn', 'PE30'], ['Norwich', 'NR3'], ['Fens and Peterborough', 'PE13'],
-    ['East London', 'E14'], ['Birmingham', 'B23'], ['Manchester', 'M1'], ['Liverpool', 'L1']
+    ['East London', 'E14'], ['Woking and Surrey', 'GU22'], ['Birmingham', 'B23'], ['Manchester', 'M1'], ['Liverpool', 'L1']
   ];
 
   /* ---------- pricing rules ---------- */
@@ -281,6 +281,7 @@
     }
     return { t: 'In the live build this goes to an AI model that reads your jobs, quotes, invoices and suppliers, so you can ask it anything. In the demo, try one of these.', rows: [], act: null };
   }
+  Q.answer = answer;   /* Skipper (x-skipper.js) answers with the same rules */
   function askBody(q) {
     var a = q ? answer(q) : null;
     return '<div class="askin"><span class="spark">' + ic('sparkles') + '</span><input id="askQ" placeholder="Ask about prices, money, skips, paperwork..." value="' + h(q || '') + '" autocomplete="off"><button class="btn pri" data-act="askGo">Ask</button></div>' +

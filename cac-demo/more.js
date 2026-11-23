@@ -116,9 +116,9 @@
       '<div class="card kpi"><small>' + ic('pound') + 'Owed to you</small><b>' + money(owed) + '</b><span class="d">across ' + cs.filter(function (x) { return x.cr.owed > 0; }).length + ' accounts</span></div>' +
       '<div class="card kpi"><small>' + ic('lock') + 'On hold</small><b' + (hold.length ? ' style="color:var(--bad)"' : '') + '>' + hold.length + '</b><span class="d">new bookings wait for payment</span></div>' +
       '<div class="card kpi"><small>' + ic('link') + 'Customer links</small><b>' + cs.length + '</b><span class="d">swap, collect and paperwork, no phone call</span></div></div>' +
-      '<div class="card"><div class="hd"><h2>' + ic('users') + 'Customers</h2></div><div class="tw"><table class="t"><thead><tr><th>Customer</th><th class="r hide-sm">Live jobs</th><th class="r hide-md">Margin</th><th>Credit</th><th>Status</th><th class="hide-md">Looked after by</th></tr></thead><tbody>' +
+      '<div class="card"><div class="hd"><h2>' + ic('users') + 'Customers</h2></div><div class="tw"><table class="t"><thead><tr><th>Customer</th><th class="r hide-sm">Live jobs</th><th class="r hide-md">Gross profit</th><th>Credit</th><th class="hide-md">Looked after by</th></tr></thead><tbody>' +
       cs.map(function (x) {
-        return '<tr class="click" data-act="openCust" data-id="' + x.c.id + '"><td><b>' + h(x.c.name) + '</b><small>' + h(x.c.contact) + ' · ' + h(x.c.type) + '</small></td><td class="r num hide-sm">' + x.live + '</td><td class="r num hide-md">' + money(x.margin) + '</td><td>' + creditBar(x.cr) + '</td><td>' + creditTag(x.cr) + '</td><td class="hide-md">' + (x.c.owner === 'sam' ? h(CS.bde()) : 'John') + '</td></tr>';
+        return '<tr class="click" data-act="openCust" data-id="' + x.c.id + '"><td><b>' + h(x.c.name) + '</b><small>' + h(x.c.contact) + ' · ' + h(x.c.type) + '</small></td><td class="r num hide-sm">' + x.live + '</td><td class="r num hide-md">' + money(x.margin) + '</td><td>' + (x.c.stop ? '<span class="tag bad">On stop</span>' : creditTag(x.cr)) + '</td><td class="hide-md">' + (x.c.owner === 'sam' ? h(CS.bde()) : 'John') + '</td></tr>';
       }).join('') + '</tbody></table></div></div>';
   }
   X.openCust = function (id) {

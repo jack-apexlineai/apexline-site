@@ -17,12 +17,12 @@
     { k: 'chasing', g: 'Work', n: 'Chasing', ic: 'bell', sub: 'Everything waiting on someone else, chased for you' },
     { k: 'pricebook', hide: true, n: 'Price book', ic: 'list', sub: 'Your prices for every area and size, your rules, and price lists read in' },
     { k: 'customers', g: 'Customers', n: 'Customers', ic: 'users', sub: 'Sites, what each one is worth, and each customer\'s own link' },
-    { k: 'credit', g: 'Customers', n: 'Credit control', ic: 'lock', sub: 'Limits, who owes what, and who is on stop' },
     { k: 'sales', g: 'Customers', n: 'Sales', ic: 'target', sub: 'The pipeline, every deal and every follow up' },
     { k: 'suppliers', g: 'Suppliers', n: 'Supplier handbook', ic: 'warehouse', sub: 'Contacts, prices, surcharges, licences and who covers where' },
     { k: 'find', g: 'Suppliers', n: 'Find a supplier', ic: 'map-pin', sub: 'Who covers a postcode, by price and by how reliable they are' },
     { k: 'bills', g: 'Suppliers', n: 'Bill check', ic: 'receipt', sub: 'Supplier statements lined up against what you booked' },
     { k: 'money', g: 'Money', n: 'Money', ic: 'pound', sub: 'Invoices, supplier bills and margin' },
+    { k: 'credit', g: 'Money', n: 'Credit control', ic: 'lock', sub: 'Limits, who owes what, and who is on stop' },
     { k: 'trends', g: 'Money', n: 'Trends', ic: 'trending-up', sub: 'This month against last month, and where the month is heading' },
     { k: 'paperwork', g: 'Money', n: 'Duty of care', ic: 'certificate', sub: 'WTNs per job, supplier licences, audit packs' },
     { k: 'reports', g: 'Money', n: 'Waste and carbon', ic: 'leaf', sub: 'Tonnes, landfill diversion and carbon for every account and site' },
@@ -61,7 +61,7 @@
     box.appendChild(el); setTimeout(function () { el.style.transition = 'opacity .4s'; el.style.opacity = '0'; setTimeout(function () { el.remove(); }, 400); }, action ? 6500 : 3800);
   }
   function lastIn(t) { return t.msgs.filter(function (m) { return m.dir === 'in'; }).slice(-1)[0]; }
-  function preview(t) { var m = CS.lastReal(t) || t.msgs[t.msgs.length - 1]; return (m.dir === 'out' ? 'You: ' : '') + m.text.replace(/\s+/g, ' '); }
+  function preview(t) { var m = CS.lastReal(t) || t.msgs[t.msgs.length - 1]; return (m.dir === 'out' ? 'You: ' : '') + skTxt(m).replace(/\s+/g, ' '); }
   function sortedThreads() {
     return S.threads.slice().sort(function (a, b) { return (a.done ? 1 : 0) - (b.done ? 1 : 0) || b.last - a.last; });
   }
@@ -93,8 +93,11 @@
     var lp = $('#livePill'); lp.className = 'livepill' + (S.settings.live ? '' : ' off');
     lp.innerHTML = '<i></i><span class="t">' + (S.settings.live ? 'Live' : 'Paused') + '</span>';
     $('#themeBtn').innerHTML = ic(S.settings.theme === 'dark' ? 'sun' : 'moon');
-    var ab = $('#asstBtn'); if (ab && X.todoCount) { var n = X.todoCount(); ab.innerHTML = ic('sparkles') + '<span class="lb">Assistant</span>' + (n ? '<span class="cnt red">' + n + '</span>' : ''); }
+    var ab = $('#asstBtn'); if (ab && X.todoCount) { var n = X.todoCount(); ab.innerHTML = ic('bell') + (n ? '<span class="cnt red">' + n + '</span>' : ''); ab.setAttribute('aria-label', n ? n + ' things need you' : 'Nothing needs you'); ab.title = 'What needs you'; }
   }
+  /* John's own account: nothing in his conversations shows as written by the BDE */
+  function skBy(by) { return by === CS.bde() ? 'John' : by; }
+  function skTxt(m) { return m.dir === 'out' && m.by === CS.bde() ? String(m.text).split(CS.bde()).join('John') : m.text; }
   function render(why) {
     S = CS.S;
     document.documentElement.setAttribute('data-theme', S.settings.theme);
@@ -122,6 +125,7 @@
         })();
       });
     }
+    try { if (window.CACSK && window.CACSK.after) window.CACSK.after(); } catch (e) {}
   }
   function go(v) { ui.view = v; closeSide(); location.hash = v; render(); window.scrollTo(0, 0); }
 
@@ -152,14 +156,14 @@
       return '<button class="it' + (x.id === ui.sel ? ' on' : '') + (x.unread && !x.done ? ' unread' : '') + (x.done ? ' done' : '') + (ui.newIds[x.id] ? ' newin' : '') + '" data-act="sel" data-id="' + x.id + '">' +
         '<span class="av" style="--c:' + avCol(p.name, x.party.type) + '">' + h(CS.initials(p.name)) + '<span class="ch ' + x.ch + '">' + ic(chIcon(x.ch)) + '</span></span>' +
         '<span class="bd"><span class="l1"><b>' + h(p.name) + '</b>' + (isUnread(x) ? '<span class="ub" title="Unread">' + unreadN(x) + '</span>' : '') + '<time>' + CS.ago(x.last) + '</time></span><span class="l2">' + h(p.sub) + (x.subject ? ' · ' + h(x.subject) : '') + '</span>' +
-        '<span class="l3">' + h(preview(x)) + '</span><span class="l4">' + tag + '</span></span></button>';
+        '<span class="l3">' + h(preview(x)) + '</span><span class="l4">' + (window.CACSK && window.CACSK.chip ? window.CACSK.chip(x) : '') + tag + '</span></span></button>';
     }).join('');
     ui.newIds = {};
     return '<div class="inbox' + (ui.open && t ? ' open' : '') + (showAsst ? '' : ' noasst') + '">' +
       '<div class="col list"><div class="ilist-hd"><div class="tabs">' + tabs.map(function (x) { return '<button data-act="tab" data-v="' + x[0] + '" class="' + (ui.tab === x[0] ? 'on' : '') + '">' + x[1] + ' <span class="n' + (x[0] === 'unread' && x[2] ? ' red' : '') + '">' + x[2] + '</span></button>'; }).join('') + '</div></div>' +
       '<div class="ilist" data-keep="ilist">' + (items || '<div class="empty">' + ic('circle-check') + 'Nothing here. Inbox zero.</div>') + '</div></div>' +
       '<div class="col mid">' + (t ? threadHTML(t) : '<div class="blank" id="inboxBlank"><img class="lg-l" src="brand/cac-logo.svg" alt="CAC Waste Management"><img class="lg-d" src="brand/cac-logo-inverted.svg" alt=""><b>Your inbox</b><small>WhatsApp, email and the website, all in one place. Pick a conversation on the left.</small><small class="k">Press <kbd>Esc</kbd> any time to come back here.</small></div>') + '</div>' +
-      (showAsst ? '<div class="col asst asst-col" data-keep="asst">' + asstHTML(t) + '</div>' : '') + '</div>';
+      (showAsst ? '<div class="col asst asst-col' + (ui.skMore && ui.skMore[t.id] ? ' sk-open' : '') + '" data-keep="asst">' + asstHTML(t) + '</div>' : '') + '</div>';
   };
   function unreadN(x) { var n = 0; for (var i = x.msgs.length - 1; i >= 0; i--) { if (x.msgs[i].dir === 'in' && !x.msgs[i].auto) n++; else if (x.msgs[i].dir === 'out' && !x.msgs[i].auto) break; } return n || 1; }
   function avCol(name, type) { var pal = PARTY_COL[type] || PARTY_COL.customer; var n = 0; for (var i = 0; i < name.length; i++) n += name.charCodeAt(i); return pal[n % pal.length]; }
@@ -179,9 +183,9 @@
         (i === 0 && t.subject ? '<span class="subj">' + h(t.subject) + '</span>' : '') +
         (i === 0 && t.form ? '<dl class="form">' + Object.keys(t.form).map(function (k) { return '<dt>' + h(k) + '</dt><dd>' + h(t.form[k]) + '</dd>'; }).join('') + '</dl>' : '') +
         (m.voice ? '<span class="voice">' + ic('play') + '<i></i><span>0:' + String(m.voice).padStart(2, '0') + '</span></span><span class="vtr">' + ic('microphone') + 'Voice note, written out</span>' : '') +
-        h(m.text) +
+        h(skTxt(m)) +
         (m.att && m.att.length ? '<div class="att">' + m.att.map(function (a) { return '<button data-act="att" data-n="' + h(a.n) + '" data-t="' + a.t + '" data-job="' + h(a.job || jobFromName(a.n)) + '">' + ic(a.t === 'photo' ? 'eye' : a.t === 'wtn' ? 'certificate' : 'file-text') + h(a.n) + '</button>'; }).join('') + '</div>' : '') +
-        '<div class="meta">' + (m.dir === 'out' ? (m.by ? h(m.by) + ' · ' : '') : '') + CS.clock(m.at) + (m.dir === 'out' ? ' ' + ic('checks') : '') + '</div></div>';
+        '<div class="meta">' + (m.dir === 'out' ? (m.by ? h(skBy(m.by)) + ' · ' : '') : '') + CS.clock(m.at) + (m.dir === 'out' ? ' ' + ic('checks') : '') + '</div></div>';
     }).join('');
     ui.bubNew = null;
     return '<div class="thread"><div class="thd"><button class="iconbtn back" data-act="back" aria-label="Back to the list">' + ic('chevron-left') + '</button>' + av(p.name, t.party.type, 'lg') +
@@ -208,21 +212,27 @@
         '<div class="skel" style="width:80%;margin-top:8px"></div><div class="skel" style="width:60%"></div><div class="skel" style="width:70%"></div></div>';
     }
     var A = CS.analyse(t), typeIn = !ui.typed[t.id] && t.justRead;
-    var gd = X.guide && X.guide(t, A, typeIn); if (gd) return head + gd;
-    var o = head + '<div class="abody"><div class="ahead"><h3>' + h(A.title) + '</h3><p>' + h(A.summary || '') + '</p></div>';
-    if (A.chips.length) o += '<div class="chips">' + A.chips.map(function (c, i) { return '<span class="chip' + (c.assumed ? ' assumed' : '') + (typeIn ? ' reveal' : '') + '" style="animation-delay:' + (i * 0.07) + 's"><small>' + h(c.k) + '</small><span>' + h(c.v) + '</span></span>'; }).join('') + '</div>';
+    /* calm column: chip, what they asked, money, the reply, one button. The rest sits behind More detail (x-skipper.js). */
+    var SK = window.CACSK || {}, skOpen = !!(ui.skMore && ui.skMore[t.id]);
+    var skTop = SK.topHTML ? SK.topHTML(t, A) : '<div class="ahead"><h3>' + h(A.title) + '</h3></div>';
+    var skBtn = '<button class="sk-morebtn" data-act="skMore" data-id="' + t.id + '" aria-expanded="' + skOpen + '">' + ic('chevron-down') + '<span>' + (skOpen ? 'Less detail' : 'More detail') + '</span></button>';
+    function skFix(s) { return SK.fix ? SK.fix(s) : s; }
+    var gd = X.guide && X.guide(t, A, typeIn); if (gd) return head + (SK.guideHTML ? SK.guideHTML(gd, skTop, skBtn) : gd);
+    var o = head + '<div class="abody sk-card">' + skTop, det = A.summary ? '<p class="sk-sum">' + h(A.summary) + '</p>' : '';
+    if (A.chips.length) det += '<div class="chips">' + A.chips.map(function (c, i) { return '<span class="chip' + (c.assumed ? ' assumed' : '') + (typeIn ? ' reveal' : '') + '" style="animation-delay:' + (i * 0.07) + 's"><small>' + h(c.k) + '</small><span>' + h(c.v) + '</span></span>'; }).join('') + '</div>';
     A.notes.forEach(function (n) {
       var multi = /Tap to change/.test(n);
-      o += '<div class="note' + (multi ? ' click' : '') + '"' + (multi ? ' data-act="cycleSite" data-id="' + t.id + '" role="button" tabindex="0"' : '') + '>' + ic('sparkles') + '<span>' + h(n) + '</span></div>';
+      var nh = '<div class="note' + (multi ? ' click' : '') + '"' + (multi ? ' data-act="cycleSite" data-id="' + t.id + '" role="button" tabindex="0"' : '') + '>' + ic('sparkles') + '<span>' + h(n) + '</span></div>';
+      if (multi) o += nh; else det += nh;
     });
     var supHtml = '';
     if (A.lines.length) {
-      o += '<div class="money">' + A.lines.map(function (l, i) {
+      o += '<div class="money sk-tot"><div class="tot"><div><small>Their price</small><b class="num">' + money(A.sell) + '</b></div><div><small>Supplier cost</small><b class="num">' + money(A.cost) + '</b></div><div class="m"><small>Gross profit</small><b class="num">' + money(A.margin) + ' <span style="font-size:12px">' + CS.pct(A.margin, A.sell) + '%</span></b></div></div></div>';
+      det += '<div class="money">' + A.lines.map(function (l, i) {
         var su = l.sup && CS.sup(l.sup);
         return '<div class="ln"><div class="d"><b>' + h(l.desc) + '</b><small>' + (su ? h(su.name) + ' · cost ' + money(l.cost) : 'Cost ' + money(l.cost)) + '</small></div>' +
           '<span class="c">sell</span><input id="price-' + t.id + '-' + i + '" data-price="' + i + '" data-id="' + t.id + '" inputmode="numeric" value="' + l.sell + '" aria-label="Customer price"></div>';
-      }).join('') +
-        '<div class="tot"><div><small>Customer</small><b class="num">' + money(A.sell) + '</b></div><div><small>Supplier</small><b class="num">' + money(A.cost) + '</b></div><div class="m"><small>Margin</small><b class="num">' + money(A.margin) + ' <span style="font-size:12px">' + CS.pct(A.margin, A.sell) + '%</span></b></div></div></div>';
+      }).join('') + '</div>';
       A.lines.forEach(function (l, i) {
         if (!l.alts || l.alts.length < 2) { if (l.why && l.sup) supHtml += '<div class="note">' + ic('star') + '<span><b>' + h(CS.sup(l.sup).name) + '</b>: ' + h(l.why) + '</span></div>'; return; }
         supHtml += '<div class="supsel"><div class="sec"><h3>Supplier for ' + h(l.desc.toLowerCase()) + '</h3></div>' + l.alts.map(function (a) {
@@ -233,16 +243,18 @@
     }
     A.drafts.forEach(function (d, i) {
       var who = CS.party(d.party);
-      var text = (t.edits && t.edits[i] != null) ? t.edits[i] : d.text.replace(/\{JOB\}/g, 'CAC-' + S.counters.job);
-      o += '<div class="draft"><div class="dh">' + ic(chIcon(d.ch)) + '<span>To ' + h(d.to === 'supplier' ? who.name : who.name + (who.sub ? ', ' + who.sub : '')) + '</span><span class="sp"></span><span class="tag ai">' + (d.to === 'supplier' ? 'Supplier booking' : 'Your reply') + '</span></div>' +
+      var text = (t.edits && t.edits[i] != null) ? t.edits[i] : skFix(d.text).replace(/\{JOB\}/g, 'CAC-' + S.counters.job);
+      var dh = '<div class="draft"><div class="dh">' + ic(chIcon(d.ch)) + '<span>To ' + h(d.to === 'supplier' ? who.name : who.name + (who.sub ? ', ' + who.sub : '')) + '</span><span class="sp"></span><span class="tag ai">' + (d.to === 'supplier' ? 'Supplier booking' : 'Your reply') + '</span></div>' +
         '<textarea id="draft-' + t.id + '-' + i + '" data-draft="' + i + '" data-id="' + t.id + '" rows="' + Math.min(9, Math.max(3, Math.ceil(text.length / 48) + (text.split('\n').length - 1))) + '"' + (typeIn ? ' data-typein="' + t.id + '"' : '') + '>' + h(text) + '</textarea>' +
         (d.to === 'customer' && A.att ? '<div class="att" style="padding:0 10px 10px">' + A.att.map(function (a) { return '<button data-act="att" data-n="' + h(a.n) + '" data-t="' + a.t + '" data-job="' + h(a.job || '') + '">' + ic(a.t === 'wtn' ? 'certificate' : 'eye') + h(a.n) + '</button>'; }).join('') + '</div>' : '') + '</div>';
+      if (i === 0) o += dh; else det += dh;   /* the reply shows, anything else that goes out with it sits in More detail */
     });
-    o += supHtml;
-    o += '</div><div class="approvebar"><button class="btn ' + (A.kind === 'hold' ? 'pri' : 'ok') + ' lg" data-act="approve" data-id="' + t.id + '">' + ic(A.kind === 'hold' ? 'pound' : 'check') + h(A.approve || 'Approve') + '</button>' +
-      (A.alt ? '<button class="btn" data-act="bookAnyway" data-id="' + t.id + '">' + h(A.alt) + '</button>' : '') +
-      '<div class="row" style="justify-content:center"><button class="btn sm ghost" data-act="skip" data-id="' + t.id + '">Not now</button><button class="btn sm ghost" data-act="ownReply" data-id="' + t.id + '">' + ic('pencil') + 'I\'ll reply myself</button></div>' +
-      '<small>Nothing is sent until you tap approve. Edit any line first if you want.</small></div>';
+    det += supHtml;
+    det += '<div class="row sk-alt"><button class="btn sm ghost" data-act="skip" data-id="' + t.id + '">Not now</button><button class="btn sm ghost" data-act="ownReply" data-id="' + t.id + '">' + ic('pencil') + 'I\'ll reply myself</button></div>';
+    o += skBtn + '<div class="sk-more"' + (skOpen ? '' : ' hidden') + '>' + det + '</div>';
+    o += '</div><div class="approvebar"><button class="btn ' + (A.kind === 'hold' ? 'pri' : 'ok') + ' lg" data-act="approve" data-id="' + t.id + '">' + ic(A.kind === 'hold' ? 'pound' : 'check') + h(String(A.approve || 'Confirm').replace(/^Approve\b/, 'Confirm')) + '</button>' +
+      (A.alt ? '<button class="btn sm ghost" data-act="bookAnyway" data-id="' + t.id + '">' + h(A.alt) + '</button>' : '') +
+      '<small>Nothing is sent until you press the button.</small></div>';
     return o;
   }
 
