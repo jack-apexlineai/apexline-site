@@ -173,7 +173,18 @@
       try { CS.approve(t.id, ed); } catch (e) { return; }
       t.lx = 3; t.lxDoneAt = Date.now(); t.sxJob = CS.S.counters.job > jb ? 'CAC-' + jb : null; t.done = true; t.unread = false;
       var th = CS.thread(t.lxSupTid); if (th) { th.done = true; th.unread = false; }
-      ui.scrollMsgs = true; CS.commit(); tick('Booked');
+      ui.scrollMsgs = true;
+      /* the same booked screen as every other order: what was booked, the PO, the invoice, who was told */
+      var jid = t.sxJob, inv = jid && window.CACINV ? window.CACINV(jid) : null, c = CS.cust(t.party.id) || {}, jj = jid ? CS.job(jid) : null, sell = jj ? jj.sell : s.sell;
+      CS.commit();
+      if (window.CACDONE) window.CACDONE((jid || 'Order') + ' is booked', [
+        'Grab lorry booked with ' + h(s.name) + ', tomorrow AM, ref ' + h(jid || ''),
+        'Purchase order sent to ' + h(s.contact) + ' at ' + h(s.name) + ' on WhatsApp',
+        inv ? 'Invoice ' + h(inv.id) + ' raised, ' + money(inv.amount) + ' + VAT, on their ' + h((c.terms || 'account').toLowerCase()) : 'Invoice raised, ' + money(sell) + ' + VAT, on their account',
+        'Lee has his reply on WhatsApp',
+        'Order confirmation and invoice emailed to ' + h(c.email || 'Lee') + ', each as its own email'
+      ]);
+      else tick('Booked');
     };
 
     function scard(t) {

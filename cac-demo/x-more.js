@@ -35,6 +35,18 @@
         foot || '<span class="sp"></span><button class="btn pri" data-act="close">Done</button>');
     }
 
+    window.CACDONE = doneList;   /* the same done screen, for Lee's booking in x-gemma.js */
+    /* a booking made from the inbox raises its invoice and emails it, the same as New order does */
+    function raiseInv(jid) {
+      var j = CS.job(jid); if (!j) return null; var ex = S().invoices.filter(function (i) { return i.jobs && i.jobs.indexOf(jid) >= 0; })[0]; if (ex) return ex;
+      var c = CS.cust(j.cust), acc = onAcc(c), inv = { id: CS.nextId('inv', 'INV-'), cust: c.id, amount: j.sell, issued: 0, due: acc ? 30 : 0, status: 'unpaid', jobs: [jid], pay: acc ? 'account' : 'link' };
+      S().invoices.unshift(inv); CS.jobLog(j, 'Invoiced on ' + inv.id);
+      var t = CS.newThread({ type: 'customer', id: c.id }, 'email', 'Invoice ' + inv.id);
+      CS.addMsg(t, 'out', 'Hi ' + first(c.contact) + ',\n\nPlease find invoice ' + inv.id + ' attached for ' + jid + ', ' + CS.jobDesc(j).toLowerCase() + ', ' + money(j.sell) + ' + VAT (' + money(j.sell * 1.2) + ' with VAT).\n\n' + (acc ? 'Due on your ' + String(c.terms || '30 day account').toLowerCase() + '.' : 'You can pay by card with the link on the invoice.') + '\n\nThanks,\nJohn\nCAC Waste Management', { by: 'John', att: [{ n: inv.id + '.pdf', t: 'inv', job: inv.id }] });
+      return inv;
+    }
+    window.CACINV = raiseInv;
+
     /* ---------- live jobs: chase every ETA in one go, one message per supplier ---------- */
     function etaGroups() {
       var g = {}, order = [];
@@ -230,9 +242,10 @@
       var t = pxThread(el.dataset.id); if (!t || t.pxDone) return; var jb = S().counters.job, F = pxFacts(t);
       var n = document.getElementById('xpNudge'); if (n) n.remove();
       try { CS.approve(t.id); } catch (e) { toast('Could not book that one. Open it and book it by hand.', 'alert'); return; }
-      t.pxDone = Date.now(); t.pxJob = S().counters.job > jb ? 'CAC-' + jb : null; t.done = true; t.unread = false; ui.scrollMsgs = true; CS.commit();
+      t.pxDone = Date.now(); t.pxJob = S().counters.job > jb ? 'CAC-' + jb : null; t.done = true; t.unread = false; ui.scrollMsgs = true;
+      var pinv = t.pxJob ? raiseInv(t.pxJob) : null; CS.commit();
       var c = CS.cust(t.party.id); t.pxSup = F.supName;
-      doneList('Booked', ['Order ' + (t.pxJob || '') + ' placed with ' + h(F.supName) + ', PO sent to them', 'Invoice raised' + (onAcc(c) ? ', on account' : ', with a pay by card link'), 'Confirmation and invoice emailed to ' + h(first(c.contact))]);
+      doneList((t.pxJob || 'Order') + ' is booked', ['Order ' + (t.pxJob || '') + ' placed with ' + h(F.supName) + ', purchase order sent to them', 'Invoice ' + (pinv ? pinv.id + ' ' : '') + 'raised, ' + money(F.sell) + ' + VAT' + (onAcc(c) ? ', on account' : ', with a pay by card link'), 'Order confirmation and invoice emailed to ' + h(first(c.contact)) + ', each as its own email']);
     };
     function pxPaint() {
       var old = document.getElementById('xpCard'), t = ui.view === 'inbox' && ui.sel ? pxThread(ui.sel) : null;
