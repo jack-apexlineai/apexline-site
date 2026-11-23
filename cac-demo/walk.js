@@ -18,7 +18,7 @@
 
   var STEPS = [
     { id: 'home', act: 'startup', back: 'homeDash', m: '1 min', t: 'Your home page',
-      p: 'This is your view, the director\'s. Everyone you add gets their own login and only sees what you allow. This month against last month, then today\'s jobs, then a card for each thing that needs you.' },
+      p: 'This is your view, the director\'s. Everyone you add gets their own login and only sees what you allow. Today\'s jobs, what is unpaid and what is booked this week, the month\'s revenue, and what is on the road right now.' },
     { id: 'gemma', act: 'gemma', m: '1 min', t: 'An email asking for a price',
       p: 'Gemma\'s email is already read. The site, the supplier and the price are worked out and the reply is written. Press Send reply.' },
     { id: 'order', act: 'order', m: '1 min', t: 'Place an order',
