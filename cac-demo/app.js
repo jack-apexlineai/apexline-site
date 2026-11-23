@@ -61,7 +61,8 @@
     box.appendChild(el); setTimeout(function () { el.style.transition = 'opacity .4s'; el.style.opacity = '0'; setTimeout(function () { el.remove(); }, 400); }, action ? 6500 : 3800);
   }
   function lastIn(t) { return t.msgs.filter(function (m) { return m.dir === 'in'; }).slice(-1)[0]; }
-  function preview(t) { var m = CS.lastReal(t) || t.msgs[t.msgs.length - 1]; return (m.dir === 'out' ? 'You: ' : '') + skTxt(m).replace(/\s+/g, ' '); }
+  function preview(t) { var m = CS.lastReal(t) || t.msgs[t.msgs.length - 1]; if (!m) return 'New conversation';   /* opened from Message on a customer or supplier, nothing said yet */
+    return (m.dir === 'out' ? 'You: ' : '') + skTxt(m).replace(/\s+/g, ' '); }
   function sortedThreads() {
     return S.threads.slice().sort(function (a, b) { return (a.done ? 1 : 0) - (b.done ? 1 : 0) || b.last - a.last; });
   }
