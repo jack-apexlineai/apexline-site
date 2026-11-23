@@ -55,6 +55,11 @@
       var d = document.createElement('div'); d.id = 'gxCard'; d.className = 'gx s' + t.gx; d.innerHTML = card(t);
       comp.parentNode.insertBefore(d, comp);
     }
+    /* once she has answered, the chip on her conversation says hot, wants to book, to match the bubble */
+    var st0 = SK.temp; SK.temp = function (t) {
+      if (t && t.gx === 2) return { k: 'hot', label: 'Hot', line: 'Wants to book', next: 'Open and book' };
+      return st0.apply(this, arguments);
+    };
     var sa = SK.after; SK.after = function () { sa.apply(this, arguments); try { paint(); } catch (e) {} };
     document.addEventListener('input', function (e) { if (e.target && e.target.id === 'gxText') { var t = gem(); if (t) t.gxDraft = e.target.value; } });
 
