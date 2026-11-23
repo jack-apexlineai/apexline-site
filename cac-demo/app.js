@@ -321,8 +321,8 @@
     return '<div class="grid g4 kpis" style="margin-bottom:16px">' +
       '<div class="card kpi"><small>Open quotes</small><b>' + open.length + '</b><span class="d">' + money(open.reduce(function (a, q) { return a + q.sell; }, 0)) + ' of work</span></div>' +
       '<div class="card kpi"><small>Won this month</small><b>' + won.length + '</b><span class="d up">' + Math.round(won.length / Math.max(1, won.length + lost.length) * 100) + '% win rate</span></div>' +
-      '<div class="card kpi"><small>Average margin on won</small><b>' + avgM + '%</b><span class="d">target 25%</span></div>' +
-      '<div class="card kpi"><small>Need a follow up</small><b>' + CS.chaseLists().quotes.length + '</b><span class="d">sent 2+ days, no answer</span></div></div>' +
+      '<div class="card kpi"><small>Average margin on won</small><b>' + avgM + '%</b><span class="d">target ' + (CS.targetGp ? CS.targetGp('skip') : 20) + '%</span></div>' +
+      '<div class="card kpi"><small>Need a follow up</small><b>' + CS.chaseLists().quotes.length + '</b><span class="d">sent 3+ days, no answer</span></div></div>' +
       '<div class="card"><div class="hd"><h2>' + ic('file-text') + 'Quotes</h2><div class="seg hide-sm">' + [['all', 'All'], ['draft', 'Draft'], ['sent', 'Sent'], ['won', 'Won'], ['lost', 'Lost']].map(function (x) { return '<button data-act="qFilter" data-v="' + x[0] + '" class="' + (ui.qFilter === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div><button class="btn pri sm" data-act="newQuote">' + ic('plus') + 'Quick quote</button></div>' +
       '<div class="tw"><table class="t"><thead><tr><th>Quote</th><th>Customer</th><th class="r">Price</th><th class="r hide-sm">Cost</th><th class="r">Margin</th><th>Status</th><th class="hide-md">Owner</th><th></th></tr></thead><tbody>' +
       qs.map(function (q) { var who = q.cust ? CS.cust(q.cust).name : CS.lead(q.lead).company; var m = q.sell - q.cost;

@@ -64,7 +64,7 @@
     function sdraft(t) {
       var F = sfacts(t);
       if (t.sxDraft != null) return t.sxDraft;
-      if (SIMPLE[t.id] === 'quote') return 'Hi Hannah,\n\nThanks for getting in touch. A 12 yard skip delivered to ' + F.pc + ' on ' + F.dayLong + ' is ' + money(F.sell) + ' + VAT.\n\nOn account is no problem, I just need your company details. Want me to book it in?\n\nCheers, John';
+      if (SIMPLE[t.id] === 'quote') return 'Hi Hannah,\n\nThanks for getting in touch. A 12 yard skip delivered to ' + F.pc + ' on ' + F.dayLong + ' is ' + money(F.sell) + ' + VAT.\n\nWant me to book it in?\n\nCheers, John';
       return 'Hi Lee, yes no problem mate. Grab booked in for tomorrow at the Histon site, ' + money(F.sell) + ' + VAT. Have requested AM, will confirm the window as soon as possible.';
     }
     /* Undo: the whole state is saved just before an action and put back on Undo (kept in memory, so it lasts until a reload) */
@@ -191,7 +191,7 @@
       if (SIMPLE[t.id] === 'book') return lcard(t);
       var F = sfacts(t);
       if (t.sx === 1) {
-        var fu = CS.dayDate(CS.wd(2)).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
+        var fu = CS.dayDate(CS.wd(3)).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
         return '<div class="gx-line ok">' + ic('circle-check') + '<span><b>Quote sent at ' + at(t.sxAt) + ' by John, by email.</b> Follow-up due ' + h(fu) + ', it is on the Quotes page. Demo, nothing is really sent.</span>' + undoBtn(t.id) + '<button class="btn sm" data-act="go" data-v="quotes">Open quotes</button></div>';
       }
       var first = t.msgs[0] || {}, lead = CS.party(t.party), ph = (t.form && t.form.Phone) || (lead && lead.phone) || '';

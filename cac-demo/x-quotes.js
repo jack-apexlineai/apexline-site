@@ -22,7 +22,7 @@
     }
 
     /* ---------- which quotes are due a follow-up: the same rule as the "Quotes gone quiet" card ---------- */
-    function isQuiet(q) { return q.status === 'sent' && q.day <= -2; }
+    function isQuiet(q) { return q.status === 'sent' && q.day <= -3; }
     function due() { return quotes().filter(function (q) { return isQuiet(q) && !q.snoozed; }).sort(function (a, b) { return a.day - b.day; }); }
     function doneToday() { return quotes().some(function (q) { return isQuiet(q) && q.snoozed && q.chased; }); }
 
@@ -44,7 +44,7 @@
       var sorted = l.slice().sort(function (a, b) {
         var ga = grp(a), gb = grp(b);
         if (ga !== gb) return ga - gb;
-        if (ga === 0) return (a.day - b.day) || ((a.xqAt || 0) - (b.xqAt || 0)) || (pos[b.id] - pos[a.id]);   /* oldest first, sent last at the bottom */
+        if (ga === 0) return ((b.xqAt || 0) - (a.xqAt || 0)) || (b.day - a.day) || (pos[b.id] - pos[a.id]);   /* the one just sent at the top, then newest first */
         return (b.day - a.day) || (pos[a.id] - pos[b.id]);                                                    /* won and lost: newest first */
       });
       var out = {}; sorted.forEach(function (x, i) { out[x.id] = i; }); return out;
@@ -53,7 +53,7 @@
     function bar() {
       var l = due(), n = l.length, worth = l.reduce(function (a, x) { return a + (x.sell || 0); }, 0);
       var label, note, off = !n;
-      if (n) { label = ic('send') + '<span>Send all follow-ups due today</span><span class="xq-n" id="xqDueN">' + n + '</span>'; note = n + (n === 1 ? ' quote was' : ' quotes were') + ' sent 2 or more days ago with no answer. ' + money(worth) + ' of work.'; }
+      if (n) { label = ic('send') + '<span>Send all follow-ups due today</span><span class="xq-n" id="xqDueN">' + n + '</span>'; note = n + (n === 1 ? ' quote was' : ' quotes were') + ' sent 3 or more days ago with no answer. ' + money(worth) + ' of work.'; }
       else if (doneToday()) { label = ic('check') + '<span>All followed up today</span>'; note = 'Every quote that had gone quiet has a follow-up ready. Nothing is sent in this demo.'; }
       else { label = ic('check') + '<span>No follow-ups due today</span>'; note = 'No quote is waiting on a follow-up today.'; }
       return '<div class="card xq-bar" id="xqBar" data-due="' + n + '"><div class="xq-bt"><b>' + ic('bell') + 'Follow-ups due today</b><small>' + h(note) + '</small></div>' +
@@ -69,6 +69,10 @@
         var rows = [].slice.call(root.querySelectorAll('tr[data-act="openQuote"]'));
         if (rows.length > 1) {
           var body = rows[0].parentNode;
+          /* only the live quotes in the list: won and lost ones are counted in the figures and the reasons, not listed */
+          var st = {}; quotes().forEach(function (x) { st[x.id] = x.status; });
+          if ((UI.ui.qFilter || 'all') === 'all') rows.forEach(function (r) { var s2 = st[r.getAttribute('data-id')]; if (s2 === 'won' || s2 === 'lost') r.parentNode.removeChild(r); });
+          rows = rows.filter(function (r) { return !!r.parentNode; });
           rows.filter(function (r) { return r.parentNode === body; })
             .sort(function (a, b) { var x = ord[a.getAttribute('data-id')], y = ord[b.getAttribute('data-id')]; return (x == null ? 1e6 : x) - (y == null ? 1e6 : y); })
             .forEach(function (r) { body.appendChild(r); });

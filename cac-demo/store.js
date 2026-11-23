@@ -768,7 +768,7 @@
     var sup = S.jobs.filter(function (j) { return j.status === 'booked'; }).map(function (j) { return { j: j, mins: Math.round((now - (j.bookedAt || now)) / 60000) }; }).sort(function (a, b) { return b.mins - a.mins; });
     var wtn = S.jobs.filter(function (j) { return (j.wtn === 'missing' || j.wtn === 'chased') && j.day <= -S.settings.wtnDays; });
     var pay = S.invoices.filter(function (i) { return i.status !== 'paid' && i.due < 0; }).sort(function (a, b) { return a.due - b.due; });
-    var quotes = S.quotes.filter(function (q) { return q.status === 'sent' && q.day <= -2; });
+    var quotes = S.quotes.filter(function (q) { return q.status === 'sent' && q.day <= -3; });
     var nudge = CS.nudges();
     return { sup: sup, wtn: wtn, pay: pay, quotes: quotes, nudge: nudge, total: sup.length + wtn.length + pay.length + quotes.length + nudge.length };
   };

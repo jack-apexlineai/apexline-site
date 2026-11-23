@@ -187,7 +187,7 @@
   }
 
   /* ---------- quotes gone quiet: yes or no ---------- */
-  function quiet() { return S().quotes.filter(function (q) { return q.status === 'sent' && q.day <= -2 && !q.snoozed; }).sort(function (a, b) { return a.day - b.day; }); }
+  function quiet() { return S().quotes.filter(function (q) { return q.status === 'sent' && q.day <= -3 && !q.snoozed; }).sort(function (a, b) { return a.day - b.day; }); }
   Q.quietCard = function () {
     var l = quiet(); if (!l.length) return '';
     return '<div class="card" style="margin-bottom:16px"><div class="hd"><h2>' + ic('bell') + 'Quotes gone quiet. Follow up?</h2><span class="muted" style="font-size:12.5px">' + money(l.reduce(function (a, q) { return a + q.sell; }, 0)) + ' of work waiting on an answer</span></div><div class="bd" style="padding-top:2px;padding-bottom:2px">' +

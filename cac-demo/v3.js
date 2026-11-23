@@ -511,7 +511,7 @@
   function tileDefs() {
     var st = CS.stats(), ch = CS.chaseLists(), mtd = S().months[S().months.length - 1], t0 = X2.movesOn(0), os = X2.onSite(), due = os.filter(function (x) { return x.due; }), wr = X2.warnings();
     var needs = H.sortedThreads().filter(H.needsYou), leads = S().leads.filter(function (l) { return l.stage !== 'won'; }), f = forecast(), prev = f.prev, dn = prev ? f.cur.s.n - prev.st.n : 0;
-    var quiet = S().quotes.filter(function (x) { return x.status === 'sent' && x.day <= -2 && !x.snoozed; }), b = D3().bill;
+    var quiet = S().quotes.filter(function (x) { return x.status === 'sent' && x.day <= -3 && !x.snoozed; }), b = D3().bill;
     var rep = S().customers.map(function (c) { return CS.report(c.id); }).filter(function (r) { return r.moves; }), tonnes = rep.reduce(function (a, r) { return a + r.tonnes; }, 0);
     function row(act, attrs, a, b2, tag) { return '<button class="trow" data-act="' + act + '" ' + attrs + '><span class="bd"><b>' + a + '</b><small>' + b2 + '</small></span>' + (tag || '') + '</button>'; }
     function big(n, label) { return '<div class="tbig"><b>' + n + '</b><span>' + label + '</span></div>'; }

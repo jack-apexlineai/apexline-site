@@ -35,6 +35,15 @@
         foot || '<span class="sp"></span><button class="btn pri" data-act="close">Done</button>');
     }
 
+    /* every pop-up bubble gets an X in the top right that closes it */
+    function addX(n) {
+      if (!n.classList || !n.classList.contains('sk-nudge') || n.querySelector('.sk-x')) return;
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'sk-x'; b.setAttribute('aria-label', 'Close'); b.innerHTML = '&times;';
+      b.addEventListener('click', function (e) { e.stopPropagation(); if (n.id === 'gxNudge') { var g = S().threads.filter(function (t) { return t.gx === 2; })[0]; if (g) { g.gxShut = true; CS.save(); } } n.remove(); });
+      n.appendChild(b);
+    }
+    [].forEach.call(document.querySelectorAll('.sk-nudge'), addX);
+    new MutationObserver(function (ms) { ms.forEach(function (m) { [].forEach.call(m.addedNodes, function (n) { if (n.nodeType === 1) addX(n); }); }); }).observe(document.body, { childList: true });
     window.CACDONE = doneList;   /* the same done screen, for Lee's booking in x-gemma.js */
     /* a booking made from the inbox raises its invoice and emails it, the same as New order does */
     function raiseInv(jid) {
