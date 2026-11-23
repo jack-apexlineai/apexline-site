@@ -38,8 +38,13 @@
     }
     /* the Play the start-up button, the guided tour and the presenter guide all come through here */
     A.boot = function () { try { A.close(); } catch (e) {} run(); };
-    /* a first visit starts on the older screen that app.js draws before this file loads: swap it for this one */
-    var first = document.getElementById('boot'); if (first && !/\bxb\b/.test(first.className)) run();
+    /* it plays every time the page loads, including a refresh and the guided tour, unless ?boot=0 is in the address
+       or the guided tour is part way through (a refresh mid-demo keeps your place without replaying it) */
+    var q = new URLSearchParams(location.search), mid = false;
+    try { var w = JSON.parse(sessionStorage.getItem('cac-walk') || 'null'); mid = sessionStorage.getItem('cac-walk-on') === '1' && !!w && w.i >= 0; } catch (e) {}
+    var first = document.getElementById('boot');
+    if (q.get('boot') !== '0' && !mid) setTimeout(run, 200);   /* a moment's wait so the guided inbox is calmed first and the figures match */
+    else if (first && !/\bxb\b/.test(first.className)) run();
   }
   start(0);
 })();

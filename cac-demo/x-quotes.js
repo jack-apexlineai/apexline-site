@@ -103,7 +103,7 @@
           var row = b.closest('tr') || b.closest('.rowline'); if (!row || row.querySelector('.xq-where')) return;
           var sp = b.querySelector('span'); if (sp) sp.textContent = 'View note'; else b.insertAdjacentHTML('beforeend', '<span>View note</span>');
           b.classList.add('xq-vn'); b.setAttribute('title', 'View the waste transfer note'); b.setAttribute('aria-label', 'View note for ' + id);
-          var where = '<button type="button" class="xq-where" data-act="' + (hasOrder(id) ? 'ordOpen' : 'openJob') + '" data-id="' + h(id) + '" title="Open the order. The note, the invoice and the order confirmation are there together.">' +
+          var where = '<button type="button" class="xq-where" data-act="' + (hasOrder(id) ? 'ordOpen' : 'openJob') + '" data-id="' + h(id) + '" title="Open the order. Its documents are kept together there.">' +
             '<span>Filed on order ' + h(id) + '</span>' + ic('chevron-right') + '</button>';
           if (row.tagName === 'TR') {
             var tag = row.querySelector('td .tag.ok'), cell = tag ? tag.closest('td') : null;
