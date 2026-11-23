@@ -80,10 +80,13 @@ export const source = {
     return sampleAds(today);
   },
   adsSync(today = ymd()) {
+    // Live: empty until Meta is connected, never sample numbers on his real version.
+    if (LIVE) return { account: { name: 'Meta not connected', id: null }, ads: [], shopify: [], empty: true };
     return sampleAds(today);
   },
   calendar(date, today = ymd()) {
-    // Live: prefetched by the backend into /google/events?date=, cached per day.
+    // Live: empty until Google Calendar is connected.
+    if (LIVE) return [];
     return sampleCalendar(date, today);
   },
 };

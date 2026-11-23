@@ -15,8 +15,11 @@ let cache = { key: '', data: null, advice: null };
 export function getAds() {
   const key = today() + JSON.stringify(state.ads.changes) + JSON.stringify(state.settings.ads) + Object.keys(state.ads.decisions).length;
   if (cache.key !== key) {
-    const data = applyChanges(source.adsSync(today()), state.ads.changes);
-    const advice = buildAdvice(data, state.settings.ads, today(), state.ads.decisions);
+    const raw = source.adsSync(today());
+    const data = raw.empty ? raw : applyChanges(raw, state.ads.changes);
+    const advice = raw.empty
+      ? { recs: [], status: {}, budget: {}, copy: [], summary: ['Your ads show here once Meta is connected in Settings.'] }
+      : buildAdvice(data, state.settings.ads, today(), state.ads.decisions);
     cache = { key, data, advice };
   }
   return cache;
@@ -24,7 +27,14 @@ export function getAds() {
 
 const openRecs = (advice) => advice.recs.filter((r) => !state.ads.decisions[r.id]);
 
+const EMPTY_CARD = (big) => `<section class="card${big ? '' : ' ads-mini'}">
+    <div class="card-head"><h3>${icon('spark', 16)} Ads</h3></div>
+    <p class="sub">Connect your Meta account in Settings and your ads briefing shows here: spend, ROAS, purchases, and plain-English advice each morning. Nothing changes in Meta unless you press Approve.</p>
+    <a href="#settings" class="mini-cta">Connect Meta in Settings ${icon('right', 14)}</a>
+  </section>`;
+
 export function adsMini() {
+  if (getAds().data.empty) return EMPTY_CARD(false);
   const { data, advice } = getAds();
   const a = accountWindow(data, today(), 7);
   const acts = openRecs(advice).filter((r) => r.action).length;
@@ -123,6 +133,7 @@ function adsTable(data, advice) {
 }
 
 export function view() {
+  if (getAds().data.empty) return `<header class="page-head"><div><h1>Ads</h1><p class="sub">Your Meta numbers in the order you check them, with plain-English advice.</p></div></header>${EMPTY_CARD(true)}`;
   const { data, advice } = getAds();
   const recs = openRecs(advice);
   const acting = recs.filter((r) => r.action);

@@ -92,6 +92,9 @@ export function briefLines(date, sorted, plan) {
 
   // Ads
   const { data } = getAds();
+  if (data.empty) {
+    lines.push({ k: 'Ads', text: 'Connect Meta in Settings and your ads briefing shows here.', say: 'Connect Meta in Settings and I will brief you on your ads each morning.' });
+  } else {
   const a = accountWindow(data, today(), 7);
   const t = state.settings.ads.targetRoas;
   const vs = a.roas >= t ? 'on target' : a.roas >= t - 0.1 ? `just under your ${num(t, 2)} target` : a.roas >= 1 ? `under your ${num(t, 2)} target` : 'below break-even';
@@ -102,6 +105,7 @@ export function briefLines(date, sorted, plan) {
     text: `Last 7 days: ${money(a.spend)} spent, ROAS ${num(a.roas, 2)}, ${vs}. ${waiting}`,
     say: `Ads, last 7 days. ${spokenMoney(a.spend)} spent, return on ad spend ${num(a.roas, 2)}, ${vs}. ${waiting.replace('OK', 'okay')}`,
   });
+  }
 
   // Money
   const ym = today().slice(0, 7);
