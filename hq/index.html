@@ -293,6 +293,50 @@ button.chip{cursor:pointer}
 #boot.still .car .glint{opacity:0}
 @media (prefers-reduced-motion: reduce){#boot *{animation:none!important;transition:none!important}.car .rim{stroke-dashoffset:0}.chip.run .stdot{animation:none}}
 
+/* pipeline board (Notion): drag cards between status columns on a laptop, tap a card for Move to on a phone */
+.pstate{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:-8px 0 14px}
+.pstate.warn{color:var(--warn)}
+.pstate .dot{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 10px rgba(52,211,153,.6)}
+.pstate.warn .dot{background:var(--warn);box-shadow:none}
+.ptools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ptools input{max-width:240px;padding:8px 12px;flex:1}
+.wkbar{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin:12px 0 6px}
+.wkbar i{height:10px;border-radius:6px;background:rgba(255,255,255,.07)}
+.wkbar i.on{background:var(--good);box-shadow:0 0 12px rgba(52,211,153,.4)}
+.pboard{display:flex;align-items:stretch;gap:12px;overflow-x:auto;padding-bottom:10px;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.pcol{flex:0 0 238px;display:flex;flex-direction:column;background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:14px;padding:10px;min-width:0;min-height:180px;transition:background .12s,border-color .12s}
+.pcol.over{background:rgba(92,200,245,.08);border-color:rgba(92,200,245,.65)}
+.pcol h3{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:14px;margin:2px 2px 4px;font-family:var(--head)}
+.pcol .tot{font:600 12px var(--mono);color:var(--muted);margin:0 2px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcol .tot b{color:var(--good)}
+.pcard{--st:var(--muted);padding:10px 11px;border:1px solid var(--line);border-left:3px solid var(--st);border-radius:12px;background:var(--card2);margin-bottom:8px;cursor:grab;user-select:none;-webkit-user-select:none;min-width:0;touch-action:pan-x pan-y}
+.pcard:hover,.pcard:focus-visible{border-color:rgba(92,200,245,.45);border-left-color:var(--st);background:#19263F;outline:none}
+.pcard.ro{cursor:pointer}
+.pcard.dragging{opacity:.3}
+.pcard.saving{opacity:.6}
+.pcard b{display:block;font-size:14px;overflow-wrap:anywhere}
+.pcard .who{color:var(--muted);font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcard .val{font-weight:700;font-size:13px;color:var(--good);margin-top:6px;font-variant-numeric:tabular-nums}
+.pcard .val.tbc{color:var(--muted);font-weight:600}
+.pcard .nx{font-size:12.5px;line-height:1.4;color:#C3CCDA;margin-top:6px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.pcard .nx.none{color:var(--warn)}
+.pcard .meta{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.pghost{position:fixed;z-index:120;pointer-events:none;width:226px;margin:0;transform:rotate(2deg);box-shadow:0 18px 44px rgba(0,0,0,.6);opacity:.96;cursor:grabbing}
+body.pdragging,body.pdragging *{cursor:grabbing!important}
+#pSheet{position:fixed;inset:0;z-index:80;display:none}
+#pSheet.show{display:block}
+#pSheet .psh-bg{position:absolute;inset:0;background:rgba(3,8,16,.62)}
+#pSheet .psh{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(460px,calc(100vw - 24px));max-height:86vh;overflow:auto;background:#0F1828;border:1px solid rgba(92,200,245,.4);border-radius:16px;padding:18px;box-shadow:0 24px 70px rgba(0,0,0,.6);overscroll-behavior:contain}
+#pSheet .grab{display:none;width:44px;height:5px;border-radius:9px;background:#33415a;margin:-6px auto 12px}
+#pSheet .psh-t{font-family:var(--head);font-size:19px;font-weight:700;display:block}
+#pSheet .psh-v{font-weight:700;color:var(--good);margin:12px 0 6px;font-variant-numeric:tabular-nums}
+#pSheet .psh-nx{font-size:14px;line-height:1.5;color:#D5DDEA;white-space:pre-wrap;overflow-wrap:anywhere}
+#pSheet h4{margin:16px 0 8px;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-family:var(--mono)}
+.psh-moves{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.psh-moves button{background:rgba(255,255,255,.03);color:var(--text);border:1px solid var(--line);border-left:3px solid var(--st);padding:9px 8px;font-size:13px;font-weight:600;text-align:left}
+.psh-moves button.on{background:rgba(92,200,245,.14);border-color:var(--accent);border-left-color:var(--st)}
+@media (max-width:700px){#pSheet .psh{left:0;right:0;bottom:0;top:auto;transform:none;width:auto;border-radius:20px 20px 0 0;padding-bottom:calc(18px + env(safe-area-inset-bottom))}#pSheet .grab{display:block}.pcol{flex-basis:78vw}.ptools input{max-width:none}}
+
 @media (max-width:1100px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:900px){
   .side{transform:translateX(-105%);transition:transform .22s ease;width:min(290px,86vw);box-shadow:0 20px 60px rgba(0,0,0,.5);z-index:90}
@@ -442,6 +486,7 @@ button.chip{cursor:pointer}
     <div class="brand"><svg><use href="#jsmark"/></svg><div><b>HQ</b><small id="hdrSub"></small></div></div>
     <a class="nav" href="#today" data-nav="today"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Today<span class="badge" id="navToday"></span></a>
     <a class="nav" href="#tasks" data-nav="tasks"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>Tasks<span class="badge" id="navTasks"></span></a>
+    <a class="nav" href="#pipeline" data-nav="pipeline"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="9.5" y="4" width="5" height="11" rx="1.5"/><rect x="16" y="4" width="5" height="7" rx="1.5"/></svg>Pipeline<span class="badge" id="navPipe"></span></a>
     <a class="nav" href="#crm" data-nav="crm"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.8c1.6.8 2.7 2.5 3 5.2"/></svg>CRM<span class="badge" id="navCrm"></span></a>
     <a class="nav" href="#calls" data-nav="calls"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z"/></svg>Calls</a>
     <a class="nav" href="#money" data-nav="money"><svg viewBox="0 0 24 24"><path d="M16 6.5A4 4 0 0 0 9 9v3H7m2 0h5M9 12v3c0 1.5-1 2.5-2 3h11"/></svg>Money</a>
@@ -924,8 +969,8 @@ $("#boot").addEventListener("click", () => BOOT.done && BOOT.done());
 document.addEventListener("keydown", () => { if (!$("#boot").classList.contains("hide") && BOOT.done) BOOT.done(); });
 
 /* ---------- app shell ---------- */
-const PAGES = { today: renderToday, tasks: renderTasks, crm: renderCRM, calls: renderCalls, money: renderMoney, outreach: renderOutreach, notes: renderNotes, training: renderHealth };
-const curTab = () => { let t = (location.hash || "#today").slice(1); if (t === "pipeline") t = "crm"; return PAGES[t] ? t : "today"; };
+const PAGES = { today: renderToday, tasks: renderTasks, pipeline: renderPipeline, crm: renderCRM, calls: renderCalls, money: renderMoney, outreach: renderOutreach, notes: renderNotes, training: renderHealth };
+const curTab = () => { let t = (location.hash || "#today").slice(1); return PAGES[t] ? t : "today"; };
 function route(){
   const tab = curTab();
   document.querySelectorAll("[data-nav]").forEach(a => a.classList.toggle("on", a.dataset.nav === tab));
@@ -950,7 +995,7 @@ function header(){
   const left = Math.max(0, Math.ceil((new Date(dl + "T23:59:59") - new Date()) / 864e5));
   $("#hdrSub").textContent = left + " DAYS TO " + fmtDay(dl).toUpperCase();
 }
-function navBadges(){ const c = todayCounts(); $("#navCrm").textContent = followUps().due.length || ""; $("#navToday").textContent = c.open || ""; $("#navTasks").textContent = S.tasks.filter(t => t.status !== "done" && !isPost(t)).length || ""; }
+function navBadges(){ const c = todayCounts(); $("#navCrm").textContent = followUps().due.length || ""; $("#navPipe").textContent = PL.deals.length ? PL.deals.filter(x => pipeOverdue(x)).length || "" : ""; $("#navToday").textContent = c.open || ""; $("#navTasks").textContent = S.tasks.filter(t => t.status !== "done" && !isPost(t)).length || ""; }
 async function refresh(){
   const active = document.activeElement;
   if (TD.pinned || (active && /INPUT|TEXTAREA|SELECT/.test(active.tagName) && active.value)) return; // never wipe what's being typed
@@ -963,6 +1008,166 @@ function ring(pct, big, small, color = "var(--hud)"){
   return `<svg viewBox="0 0 132 132" role="img" aria-label="${Math.round(p)}% ${esc(small)}"><circle cx="66" cy="66" r="${r}" fill="none" stroke="#18233A" stroke-width="11"/><circle cx="66" cy="66" r="${r}" fill="none" stroke="${color}" stroke-width="11" stroke-linecap="round" stroke-dasharray="${(c * p / 100).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 66 66)" style="filter:drop-shadow(0 0 6px rgba(92,225,255,.5))"/><text x="66" y="66" text-anchor="middle" fill="#E7ECF4" font-size="24" font-weight="800" font-family="Plus Jakarta Sans,Inter">${esc(big)}</text><text x="66" y="86" text-anchor="middle" fill="#8B97AD" font-size="11" font-family="Inter">${esc(small)}</text></svg>`;
 }
 function kpi(v, lab, sub, opts = {}){ return `<div class="kpi ${opts.hi ? "hi" : ""}"><b ${opts.k ? `data-k="${opts.k}"` : ""}>${v}</b><div class="lab">${lab}</div><div class="sub ${opts.warn ? "warn" : ""}">${sub}</div></div>`; }
+
+/* ---------- PIPELINE (Notion Pipeline DB, the CRM's source of truth) ----------
+   Read and moved through the hq-pipeline edge function, which holds the Notion token (never in this page).
+   Until that function is live the board shows HQ's own copy of the deals, read only. */
+const PIPE_COLS = ["Cold","Warm","Hot","Call booked","Proposal Sent","Won","Renewal","Lost"];
+const PL = { state: "idle", deals: [], week: null, today: null, err: "", showUnc: false, q: "", showAll: {}, at: 0, dragAt: 0 };
+async function pipeCall(body){
+  const { data, error } = await sb.functions.invoke("hq-pipeline", { body });
+  if (error) {
+    const e = new Error(error.message || "Request failed");
+    try { e.status = error.context && error.context.status; const j = await error.context.json(); if (j && j.error) e.message = j.error; e.code = j && j.code; } catch (_) {}
+    throw e;
+  }
+  return data;
+}
+async function loadPipe(){
+  PL.state = PL.deals.length ? "refresh" : "loading"; drawPipe();
+  try {
+    const r = await pipeCall({ mode: "list" });
+    PL.deals = r.deals || []; PL.week = r.week || null; PL.today = r.today || null; PL.state = "ok"; PL.at = Date.now(); PL.err = "";
+  } catch (e) {
+    PL.state = PL.deals.length ? "stale" : (e.code === "no_token" || e.status === 404 ? "off" : "error"); PL.err = e.message || "Request failed";
+  }
+  drawPipe(); navBadges();
+}
+function renderPipeline(el){ drawPipe(); if (PL.state === "idle" || (PL.state !== "loading" && PL.state !== "refresh" && Date.now() - PL.at > 60000)) loadPipe(); }
+const pipeRO = () => !PL.deals.length;
+const pipeSrc = () => PL.deals.length ? PL.deals : S.deals;
+const pipeDay = () => PL.today || today();
+function pipeOverdue(x, d = pipeDay()){ return !!x.next_date && x.next_date < d && !["Won","Renewal","Lost","Uncontacted"].includes(dealStatus(x)); }
+function pcard(x, d, ro){
+  const st = dealStatus(x), od = pipeOverdue(x, d);
+  const v = Number(x.value) || Number(x.monthly) ? `<div class="val">${valTxt(x)}</div>` : `<div class="val tbc">Value TBC</div>`;
+  const fd = x.next_date ? `<span class="chip ${od ? "bad" : x.next_date === d ? "hud" : ""}">${od ? "Overdue, " : x.next_date === d ? "Today, " : ""}${fmtDay(x.next_date)}</span>` : (["Won","Renewal","Lost"].includes(st) ? "" : `<span class="chip warn">No follow-up date</span>`);
+  return `<div class="pcard ${ro ? "ro" : ""} ${x._saving ? "saving" : ""}" data-pid="${esc(x.id)}" data-status="${esc(st)}" tabindex="0" role="button" aria-label="${esc(x.company)}, ${esc(st)}" style="--st:${STC[st] || "#6B7A93"}"><b>${esc(x.company)}</b><div class="who">${esc(x.contact || "") || "&nbsp;"}</div>${v}<div class="nx ${x.next_step ? "" : "none"}">${esc(x.next_step || "No next action")}</div>${fd ? `<div class="meta">${fd}</div>` : ""}</div>`;
+}
+function colTot(ds){ const v = sum(ds, "value"), mo = sum(ds, "monthly"); return v || mo ? `<b>${gbp(v)}</b>${mo ? ` + ${gbp(mo)}/mo` : ""}` : "£0"; }
+function drawPipe(){
+  if (curTab() !== "pipeline") return;
+  const el = $("#page"), ro = pipeRO(), src = pipeSrc(), d = pipeDay();
+  const hadFocus = document.activeElement && document.activeElement.id === "pSearch";
+  const qq = PL.q.trim().toLowerCase();
+  const match = x => !qq || [x.company, x.contact, x.role, x.next_step, x.product, x.channel].some(v => String(v || "").toLowerCase().includes(qq));
+  const deals = src.filter(match);
+  const unc = src.filter(x => dealStatus(x) === "Uncontacted").length;
+  const cols = (PL.showUnc ? ["Uncontacted"] : []).concat(PIPE_COLS);
+  const open = src.filter(inPipe), won = src.filter(x => ["Won","Renewal"].includes(dealStatus(x)));
+  const od = src.filter(x => pipeOverdue(x, d)).sort((a, b) => String(a.next_date).localeCompare(String(b.next_date)));
+  const wk = PL.week, booked = wk ? wk.booked : 0, target = wk ? wk.target : 5;
+  const stTxt = {
+    loading: `<div class="pstate"><span class="dot"></span>Loading from Notion</div>`,
+    refresh: `<div class="pstate"><span class="dot"></span>Refreshing from Notion</div>`,
+    ok: `<div class="pstate"><span class="dot"></span>Live from Notion, updated ${new Date(PL.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}. Drag a card to move it.</div>`,
+    stale: `<div class="pstate warn"><span class="dot"></span>Couldn't refresh from Notion (${esc(PL.err)}). Showing the last load.</div>`,
+    off: `<div class="pstate warn" id="pOff"><span class="dot"></span>Notion link not set up yet. Showing HQ's own copy of the deals, read only. Moves go live once the hq-pipeline link is switched on.</div>`,
+    error: `<div class="pstate warn" id="pOff"><span class="dot"></span>Couldn't reach Notion (${esc(PL.err)}). Showing HQ's own copy, read only.</div>`,
+    idle: "",
+  }[PL.state] || "";
+  el.innerHTML = phead("Drag deals through the stages", "Pipeline", `<div class="ptools"><input id="pSearch" type="search" placeholder="Search deals" value="${esc(PL.q)}" aria-label="Search deals"><button class="ghost" id="pUnc">${PL.showUnc ? "Hide" : "Show"} uncontacted (${unc})</button><button class="ghost" id="pRefresh">Refresh</button></div>`) + stTxt +
+  `<div class="kpis" id="pStats">
+    ${kpi(ro && !wk ? "?" : `${booked}<span class="muted" style="font-size:18px"> of ${target}</span>`, "Calls booked this week", wk ? (wk.items.length ? esc(wk.items.map(i => i.company).join(", ")) : "none yet, target 5 a week") : "counts once Notion is linked", { hi: booked >= target, k: "pweek" })}
+    ${kpi(gbp(sum(open, "value")), PIPE_LAB, `${open.length} ${open.length === 1 ? "deal" : "deals"}${open.filter(x => !Number(x.value)).length ? `, ${open.filter(x => !Number(x.value)).length} value TBC` : ""}${sum(open, "monthly") ? `, + ${gbp(sum(open, "monthly"))}/mo` : ""}`, { k: "ppipe" })}
+    ${kpi(gbp(sum(won, "value")), "Won", `${won.length} ${won.length === 1 ? "customer" : "customers"}${sum(won, "monthly") ? `, + ${gbp(sum(won, "monthly"))}/mo` : ""}`, { k: "pwon" })}
+    ${kpi(od.length, "Follow-ups overdue", od.length ? "oldest " + fmtDay(od[0].next_date) : "all on time", { warn: !!od.length, k: "pod" })}
+  </div>
+  <div class="card" id="pWeek" style="margin-bottom:16px"><div class="card-h"><h2>Calls booked this week</h2><span class="cnt">${wk ? `${fmtDay(wk.start)} to ${fmtDay(wk.end)}` : "target 5 a week"}</span></div>
+    <div class="wkbar" aria-label="${booked} of ${target} calls booked">${Array.from({ length: Math.max(target, booked) }, (_, i) => `<i class="${i < booked ? "on" : ""}"></i>`).join("")}</div>
+    <div class="muted small">${wk ? (wk.items.length ? wk.items.map(i => `<b style="color:var(--text)">${esc(i.company)}</b>${i.date ? " " + fmtDay(i.date) : ""}`).join(" &middot; ") : "No calls booked yet this week. 5 qualified calls a week is the target (SALES_SOP).") : "Counted from the Notion Touches once the link is on. Moving a card to Call booked logs one."}</div></div>
+  <div class="card"><div class="pboard" id="pBoard">${cols.map(st => {
+      const ds = deals.filter(x => dealStatus(x) === st).sort((a, b) => (pipeOverdue(b, d) - pipeOverdue(a, d)) || String(a.next_date || "9999").localeCompare(String(b.next_date || "9999")) || String(a.company).localeCompare(String(b.company)));
+      const lim = (st === "Lost" || st === "Uncontacted") && !PL.showAll[st] && !qq ? 6 : Infinity;
+      return `<div class="pcol" data-status="${st}"><h3><span><span class="stdot" style="color:${STC[st]}"></span> ${st}</span><span class="chip">${ds.length}</span></h3><div class="tot">${colTot(ds)}</div>${ds.slice(0, lim).map(x => pcard(x, d, ro)).join("") || '<div class="empty small">None</div>'}${ds.length > lim ? `<button class="ghost sm" data-pmore="${st}" style="width:100%">Show all ${ds.length}</button>` : ""}</div>`;
+    }).join("")}</div></div>`;
+  const sIn = $("#pSearch");
+  sIn.addEventListener("input", () => { PL.q = sIn.value; drawPipe(); });
+  if (hadFocus) { sIn.focus(); sIn.setSelectionRange(sIn.value.length, sIn.value.length); }
+  $("#pUnc").onclick = () => { PL.showUnc = !PL.showUnc; drawPipe(); };
+  $("#pRefresh").onclick = () => loadPipe();
+  document.querySelectorAll("[data-pmore]").forEach(b => b.onclick = () => { PL.showAll[b.dataset.pmore] = true; drawPipe(); });
+  bindPipeBoard();
+}
+function bindPipeBoard(){
+  const board = $("#pBoard"); if (!board) return;
+  board.addEventListener("click", e => {
+    const c = e.target.closest(".pcard"); if (!c || Date.now() - PL.dragAt < 350) return;
+    openPipeSheet(c.dataset.pid);
+  });
+  board.addEventListener("keydown", e => { const c = e.target.closest(".pcard"); if (c && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openPipeSheet(c.dataset.pid); } });
+  board.addEventListener("pointerdown", e => {
+    const card = e.target.closest(".pcard");
+    if (!card || e.button !== 0 || e.pointerType === "touch" || pipeRO()) return;
+    e.preventDefault();
+    const sx = e.clientX, sy = e.clientY, r0 = card.getBoundingClientRect();
+    let ghost = null, over = null, raf = 0, lastX = sx;
+    const colAt = (x, y) => { const hit = document.elementFromPoint(x, y); return hit && hit.closest ? hit.closest(".pcol") : null; };
+    const scrollTick = () => {
+      if (!ghost) return;
+      const br = board.getBoundingClientRect(), edge = 60;
+      if (lastX > br.right - edge) board.scrollLeft += 14; else if (lastX < br.left + edge) board.scrollLeft -= 14;
+      raf = requestAnimationFrame(scrollTick);
+    };
+    const move = ev => {
+      lastX = ev.clientX;
+      if (!ghost) {
+        if (Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return;
+        ghost = card.cloneNode(true); ghost.classList.add("pghost"); ghost.removeAttribute("data-pid"); document.body.appendChild(ghost);
+        card.classList.add("dragging"); document.body.classList.add("pdragging"); raf = requestAnimationFrame(scrollTick);
+      }
+      ghost.style.left = (ev.clientX - (sx - r0.left)) + "px"; ghost.style.top = (ev.clientY - (sy - r0.top)) + "px";
+      const c = colAt(ev.clientX, ev.clientY);
+      if (c !== over) { if (over) over.classList.remove("over"); over = c; if (over && over.dataset.status !== card.dataset.status) over.classList.add("over"); }
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
+      if (!ghost) return;
+      cancelAnimationFrame(raf); ghost.remove(); card.classList.remove("dragging"); document.body.classList.remove("pdragging"); PL.dragAt = Date.now();
+      if (over) over.classList.remove("over");
+      if (over && over.dataset.status !== card.dataset.status) movePipe(card.dataset.pid, over.dataset.status);
+    };
+    window.addEventListener("pointermove", move); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
+  });
+}
+async function movePipe(id, status){
+  const x = PL.deals.find(r => r.id === id); if (!x || pipeRO()) return;
+  if (x._saving) return toast("Still saving the last move");
+  const prev = { status: x.status, last_contact: x.last_contact };
+  x.status = status; x._saving = true; drawPipe();
+  try {
+    const r = await pipeCall({ mode: "move", id, status });
+    Object.assign(x, r.deal || {}, { _saving: false });
+    if (r.touch && PL.week && !PL.week.items.some(i => i.deal_id === id)) { PL.week.items.push({ company: x.company, date: pipeDay(), summary: "Call booked (moved in HQ)", deal_id: id }); PL.week.booked = PL.week.items.length; }
+    toast(`${x.company} moved to ${status}. Notion updated${r.touch ? ", call logged" : ""}`);
+  } catch (e) {
+    Object.assign(x, prev, { _saving: false });
+    toast("Not moved, Notion said: " + (e.message || "error"));
+  }
+  drawPipe(); navBadges();
+}
+function closePipeSheet(){ const m = $("#pSheet"); if (m) m.classList.remove("show"); }
+function openPipeSheet(id){
+  const x = pipeSrc().find(r => String(r.id) === String(id)); if (!x) return;
+  const ro = pipeRO(), st = dealStatus(x), d = pipeDay();
+  let m = $("#pSheet"); if (!m) { m = document.createElement("div"); m.id = "pSheet"; document.body.appendChild(m); }
+  const od = pipeOverdue(x, d);
+  m.innerHTML = `<div class="psh-bg" data-close></div><div class="psh" role="dialog" aria-modal="true" aria-label="${esc(x.company)}"><div class="grab"></div>
+    <div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:nowrap"><div style="min-width:0"><b class="psh-t">${esc(x.company)}</b><div class="muted small">${esc([x.contact, x.role].filter(Boolean).join(", "))}</div></div><button class="ghost sm" data-close>Close</button></div>
+    <div class="psh-v" ${Number(x.value) || Number(x.monthly) ? "" : 'style="color:var(--muted)"'}>${Number(x.value) || Number(x.monthly) ? valTxt(x) : "Value TBC"}</div>
+    <div class="psh-nx">${esc(x.next_step || "No next action")}</div>
+    <div class="row" style="gap:6px;margin-top:10px">${x.next_date ? `<span class="chip ${od ? "bad" : ""}">${od ? "Overdue, " : "Follow up "}${fmtDay(x.next_date)}</span>` : ""}<span class="chip">${esc(sinceTxt(x, d))}</span>${x.who_acts ? `<span class="chip">${esc(x.who_acts)} acts</span>` : ""}</div>
+    <h4>Move to</h4><div class="psh-moves" id="pMoves">${["Uncontacted"].concat(PIPE_COLS).map(s => `<button class="${s === st ? "on" : ""}" data-move="${s}" ${ro || s === st ? "disabled" : ""} style="--st:${STC[s]}">${s}</button>`).join("")}</div>
+    ${ro ? '<p class="muted small" style="margin:10px 0 0">Moving needs the Notion link switched on.</p>' : ""}
+    <div class="btnrow" style="margin-top:14px">${x.notion_url ? `<a class="btn" href="${esc(x.notion_url)}" target="_blank" rel="noopener">Open in Notion</a>` : ""}${x.phone ? `<a class="btn" href="tel:${esc(String(x.phone).replace(/[^0-9+]/g, ""))}">Call</a>` : ""}${x.email ? `<a class="btn" href="mailto:${esc(x.email)}">Email</a>` : ""}${x.linkedin ? `<a class="btn" href="${esc(x.linkedin)}" target="_blank" rel="noopener">LinkedIn</a>` : ""}</div></div>`;
+  m.classList.add("show");
+  m.onclick = e => {
+    if (e.target.closest("[data-close]")) return closePipeSheet();
+    const b = e.target.closest("[data-move]"); if (b && !b.disabled) { closePipeSheet(); movePipe(x.id, b.dataset.move); }
+  };
+  const f = m.querySelector("#pMoves button:not([disabled])") || m.querySelector("[data-close]"); if (f) f.focus();
+}
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#pSheet.show")) closePipeSheet(); });
 
 /* ---------- TODAY (main screen) ---------- */
 function renderToday(el){
