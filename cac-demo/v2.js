@@ -58,18 +58,21 @@
   var WIN = ['7 to 8:30', '8 to 10', '9 to 11', '10 to 12', '12 to 2', '1 to 3'];
   function eta(j) { return j.eta || WIN[hash(j.id) % WIN.length]; }
   function etaStart(j) { var m = /^(\d+)/.exec(eta(j)); var n = m ? +m[1] : 8; return n < 7 ? n + 12 : n; }
+  function etaEnd(j) { var m = /to\s*(\d+)(?::(\d+))?/.exec(eta(j)); if (!m) return etaStart(j) + 2; var n = +m[1] + (m[2] ? +m[2] / 60 : 0); return n < 7.5 ? n + 12 : n; }
   function contact(j) { var c = CS.cust(j.cust); return j.contact || { name: c.contact, phone: c.phone }; }
   function moveOn(j, d) { return j.exDay === d ? 'Exchange' : j.colDay === d ? 'Collection' : j.day === d ? 'Delivery' : null; }
   function track(j, d, what) {
     var now = new Date(), hr = now.getHours() + now.getMinutes() / 60, onWay = d === 0 && hr >= etaStart(j) - 1;
+    /* half an hour past the end of the supplier's window, a confirmed job shows as done, so an afternoon demo is not full of morning jobs still on the way */
+    var past = d === 0 && hr >= etaEnd(j) + 0.5;
     if (d !== 0) return j.status === 'booked' ? ['Waiting on supplier', 'amber', 0] : ['Confirmed', 'brand', 1];
     if (what === 'Delivery') {
       if (j.status === 'booked') return ['Waiting on supplier', 'amber', 0];
-      if (j.status === 'confirmed') return onWay ? ['On the way', 'mail', 2] : ['Confirmed', 'brand', 1];
+      if (j.status === 'confirmed') return past ? ['Delivered', 'ok', 3] : onWay ? ['On the way', 'mail', 2] : ['Confirmed', 'brand', 1];
       return ['Delivered', 'ok', 3];
     }
-    if (what === 'Exchange') return j.status === 'exchange' ? (onWay ? ['On the way', 'mail', 2] : ['Confirmed', 'brand', 1]) : ['Exchanged', 'ok', 3];
-    return j.status === 'collection' ? (onWay ? ['On the way', 'mail', 2] : ['Confirmed', 'brand', 1]) : ['Collected', 'ok', 3];
+    if (what === 'Exchange') return j.status === 'exchange' ? (past ? ['Exchanged', 'ok', 3] : onWay ? ['On the way', 'mail', 2] : ['Confirmed', 'brand', 1]) : ['Exchanged', 'ok', 3];
+    return j.status === 'collection' ? (past ? ['Collected', 'ok', 3] : onWay ? ['On the way', 'mail', 2] : ['Confirmed', 'brand', 1]) : ['Collected', 'ok', 3];
   }
   function movesOn(d) {
     return S().jobs.map(function (j) { var w = moveOn(j, d); return w ? { j: j, what: w, d: d } : null; }).filter(Boolean).sort(function (a, b) { return etaStart(a.j) - etaStart(b.j); });

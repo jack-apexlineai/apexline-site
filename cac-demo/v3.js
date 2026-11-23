@@ -576,5 +576,6 @@
       if (el.dataset && el.dataset.dia) { d = dia(); d[{ diaCust: 'cust', diaSup: 'sup', diaSvc: 'svc', diaStatus: 'status', diaPaid: 'paid' }[el.id]] = el.value; d.more = 1; H.render(); }
       if (el.id === 'billFile') A.billSample();
     });
+    if (window.CACIMP) window.CACIMP.init(H);
   };
 })();

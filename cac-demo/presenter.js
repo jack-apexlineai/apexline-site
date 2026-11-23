@@ -66,6 +66,8 @@
     chasing: function () { closeAll(); view('chasing'); },
     connections: function () { closeAll(); view('connections'); },
     phoneView: function () { closeAll(); A().phone(); },
+    importData: function () { closeAll(); A().importOpen({ dataset: { v: 'customers' } }); },
+    importSample: function () { closeAll(); A().importOpen({ dataset: { v: 'customers' } }); var b = el('[data-ai="sample"]'); if (b) b.click(); },
     custlink: function () { closeAll(); view('customers'); if (window.innerWidth >= 900) A().custLink({ dataset: { id: 'c1' } }); else { var c = el('#linkCard'); if (c) c.scrollIntoView(); } }
   };
 

@@ -78,7 +78,7 @@
     return '<p class="muted" style="font-size:13px;margin:0 0 6px">One login each. Everyone works from the same inbox and jobs, so a customer gets the same answer whoever picks it up.</p>' +
       row('JP', '#EB9347', 'John Pesci', 'Managing Director', 'Everything: margin, supplier costs, credit, the whole team\'s pipeline', '<span class="tag brand">Owner</span>') +
       row(CS.initials(bde), '#7A3FF2', bde, 'Business Development Executive', 'Leads, quotes and his own accounts. Sees the margin on what he sells', '<span class="tag amber">Starting soon</span>') +
-      extra.map(function (p) { return row(CS.initials(p.name), '#52525B', p.name, p.role, p.sees, '<span class="tag">' + ic('mail') + 'Invite sent</span>'); }).join('') +
+      extra.map(function (p) { return row(CS.initials(p.name), '#52525B', p.name, p.role, p.sees, p.imported ? '<span class="tag">Starting PIN set</span>' : '<span class="tag">' + ic('mail') + 'Invite sent</span>'); }).join('') +
       '<div class="card" style="box-shadow:none;margin-top:12px"><div class="bd"><b>Add the next hire</b><div class="grid g2" style="margin-top:8px"><div class="field"><label for="tmName">Name</label><input id="tmName" placeholder="First and last name"></div><div class="field"><label for="tmRole">Role</label><select id="tmRole"><option>Account manager</option><option>Office and accounts</option><option>Business Development Executive</option></select></div></div>' +
       '<p class="muted" style="font-size:12.5px;margin:0">They get a login link. Day one opens on a five minute walkthrough of their own screens, so nobody needs a training day.</p></div></div>';
   }
@@ -167,12 +167,12 @@
       CS.feed('Trade account opened for ' + co, 'user-plus'); CS.saved(25); CS.commit(); H.closeLayer();
       H.toast(h(co) + ' is on the books. Welcome message and their link sent on WhatsApp.', 'user-plus', { act: 'openCust', id: id, label: 'Open' });
     };
-    A.team = function () { H.closeLayer(); H.modal('Your team', teamBody(), '<button class="btn" data-act="close">Close</button><button class="btn pri" data-act="addTeam">' + ic('user-plus') + 'Send their login</button>'); };
+    A.team = function () { H.closeLayer(); H.modal('Your team', teamBody(), '<button class="btn" data-act="close">Close</button><button class="btn" data-act="importOpen" data-v="team">' + ic('download') + 'Import from a spreadsheet</button><button class="btn pri" data-act="addTeam">' + ic('user-plus') + 'Send their login</button>'); };
     A.addTeam = function () {
       var n = (H.$('#tmName').value || '').trim(), role = H.$('#tmRole').value;
       if (!n) { H.toast('Put their name in first', 'user'); return; }
       S().team = (S().team || []).concat([{ name: n, role: role, sees: ROLE_SEES[role] }]); CS.commit();
-      H.modal('Your team', teamBody(), '<button class="btn" data-act="close">Close</button><button class="btn pri" data-act="addTeam">' + ic('user-plus') + 'Send their login</button>');
+      H.modal('Your team', teamBody(), '<button class="btn" data-act="close">Close</button><button class="btn" data-act="importOpen" data-v="team">' + ic('download') + 'Import from a spreadsheet</button><button class="btn pri" data-act="addTeam">' + ic('user-plus') + 'Send their login</button>');
       H.toast(h(n.split(' ')[0]) + '\'s login is on its way (demo, nothing sent). Their first screen is the walkthrough.', 'mail');
     };
     if (window.CACQ) window.CACQ.init(H);

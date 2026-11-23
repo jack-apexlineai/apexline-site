@@ -26,7 +26,8 @@
     { k: 'trends', g: 'Money', n: 'Trends', ic: 'trending-up', sub: 'This month against last month, and where the month is heading' },
     { k: 'paperwork', g: 'Money', n: 'Duty of care', ic: 'certificate', sub: 'WTNs per job, supplier licences, audit packs' },
     { k: 'reports', g: 'Money', n: 'Waste and carbon', ic: 'leaf', sub: 'Tonnes, landfill diversion and carbon for every account and site' },
-    { k: 'connections', hide: true, n: 'Connections', ic: 'link', sub: 'What the system plugs into, and what each one needs from you' }
+    { k: 'connections', hide: true, n: 'Connections', ic: 'link', sub: 'What the system plugs into, and what each one needs from you' },
+    { k: 'import', hide: true, n: 'Import', ic: 'download', sub: 'Bring your team, customers, sites and suppliers in from a spreadsheet' }
   ];
   var PARTY_COL = { customer: ['#EB9347', '#C7672A', '#D9853A', '#B9773F'], supplier: ['#3F3F46', '#52525B', '#27272A'], lead: ['#7A3FF2', '#6D28D9'] };
 
@@ -70,9 +71,19 @@
   function renderNav() {
     var st = CS.stats(), ch = CS.chaseLists();
     var counts = { inbox: st.unread || st.needs, chasing: ch.total }, last = null;
+    /* menu groups fold away. Going to a page inside a folded group opens it again, so you always see where you are. */
+    var shut = S.settings.navShut || {}, curV = VIEWS.filter(function (x) { return x.k === (ui.view === 'pricebook' ? 'suppliers' : ui.view); })[0], curG = curV && curV.g;
+    if (curG && shut[curG] && ui.navSeen !== ui.view) { delete shut[curG]; CS.save(); }
+    ui.navSeen = ui.view;
+    function grpHead(g) {
+      var n = 0, red = false;
+      VIEWS.forEach(function (x) { if (x.g === g && !x.hide && counts[x.k]) n += counts[x.k]; });
+      if (g === 'Work' && st.unread) { red = true; n = st.unread; }   /* unread messages win: the red number means the same as it does on Inbox */
+      return '<button class="navg' + (shut[g] ? ' shut' : '') + (shut[g] && curG === g ? ' cur' : '') + '" data-act="navGroup" data-g="' + g + '" aria-expanded="' + (shut[g] ? 'false' : 'true') + '" title="' + (shut[g] ? 'Show ' : 'Hide ') + g + '"><span class="gl">' + g + '</span>' + (shut[g] && n ? '<span class="cnt' + (red ? ' red' : ' grey') + '">' + n + '</span>' : '') + '</button>';
+    }
     $('#nav').innerHTML = '<div class="navtop"><button class="navcta" data-act="newOrder" title="New order (O)">' + ic('plus') + '<span class="lb">New order</span></button><button class="navcta two" data-act="desk" title="New quote (Q)">' + ic('file-text') + '<span class="lb">Quote</span></button></div>' + VIEWS.filter(function (v) { return !v.hide; }).map(function (v) {
-      var c = counts[v.k], head = v.g && v.g !== last ? '<div class="navg">' + v.g + '</div>' : ''; last = v.g || last;
-      return head + '<button data-act="go" data-v="' + v.k + '" class="' + (ui.view === v.k || (v.k === 'suppliers' && ui.view === 'pricebook') ? 'on' : '') + '" title="' + v.n + '">' + ic(v.ic) + '<span class="lb">' + v.n + '</span>' + (c ? '<span class="cnt' + (v.k === 'chasing' ? ' grey' : (v.k === 'inbox' && st.unread ? ' red' : '')) + '">' + c + '</span>' : '') + '</button>';
+      var c = counts[v.k], head = v.g && v.g !== last ? grpHead(v.g) : ''; last = v.g || last;
+      return head + '<button data-act="go" data-v="' + v.k + '" class="' + (ui.view === v.k || (v.k === 'suppliers' && ui.view === 'pricebook') ? 'on' : '') + (v.g && shut[v.g] ? ' gshut' : '') + '" title="' + v.n + '">' + ic(v.ic) + '<span class="lb">' + v.n + '</span>' + (c ? '<span class="cnt' + (v.k === 'chasing' ? ' grey' : (v.k === 'inbox' && st.unread ? ' red' : '')) + '">' + c + '</span>' : '') + '</button>';
     }).join('');
   }
   function renderTop() {
@@ -461,6 +472,7 @@
   function openSup(id) {
     var s = CS.sup(id); var rates = [];
     s.services.forEach(function (k) { var r = s.rates[k];
+      if (r == null) return;   // a supplier brought in from a spreadsheet has no prices until their price sheet is uploaded
       if (k === 'skip') Object.keys(r).forEach(function (z) { rates.push([z + (z >= 20 ? ' yard RoRo' : ' yard skip'), money(r[z]), money(CS.sell('skip', r[z]))]); });
       else if (typeof r === 'number') rates.push([S.services[k].name + ' (per load)', money(r), money(CS.sell(k, r))]);
       else if (r.week != null) rates.push([S.services[k].name + ' (per ' + (k === 'fencing' ? 'panel per week' : 'week') + ', delivery ' + money(r.del) + ')', money(r.week, k === 'fencing'), money(CS.sell(k, r.week), k === 'fencing')]);
@@ -471,7 +483,7 @@
     drawer(h(s.name), h(s.contact) + ' · ' + h(s.base) + ' · ' + h(s.phone),
       '<div class="grid g3"><div class="card kpi"><small>On time</small><b>' + s.onTime + '%</b></div><div class="card kpi"><small>Confirms in</small><b>~' + s.resp + 'm</b></div><div class="card kpi"><small>WTNs back</small><b>' + (s.wtn ? s.wtn + '%' : 'n/a') + '</b></div></div>' +
       '<div class="sec"><h3>Covers</h3><div class="chips">' + coverText(s).split(', ').map(function (a) { return '<span class="tag">' + h(a) + '</span>'; }).join(' ') + '</div></div>' +
-      '<div class="sec"><h3>Rate card and your price</h3><div class="tw"><table class="t"><thead><tr><th>Item</th><th class="r">Their rate</th><th class="r">Your price</th></tr></thead><tbody>' + rates.map(function (r) { return '<tr><td>' + h(r[0]) + '</td><td class="r num">' + r[1] + '</td><td class="r num"><b>' + r[2] + '</b></td></tr>'; }).join('') + '</tbody></table></div></div>' +
+      '<div class="sec"><h3>Rate card and your price</h3><div class="tw"><table class="t"><thead><tr><th>Item</th><th class="r">Their rate</th><th class="r">Your price</th></tr></thead><tbody>' + (rates.length ? rates.map(function (r) { return '<tr><td>' + h(r[0]) + '</td><td class="r num">' + r[1] + '</td><td class="r num"><b>' + r[2] + '</b></td></tr>'; }).join('') : '<tr><td colspan="3" class="muted">No prices on file yet. Upload their price sheet and they show here.</td></tr>') + '</tbody></table></div></div>' +
       '<div class="sec"><h3>Licence</h3><dl class="kv"><dt>Carrier number</dt><dd>' + h(s.cbdu) + '</dd><dt>Expires</dt><dd>' + (s.licExp != null ? CS.fmtDay(s.licExp) : 'n/a') + ' ' + licTag(s) + '</dd></dl></div>' +
       '<div class="sec"><h3>Live jobs with them</h3>' + (jobs.filter(function (j) { return j.status !== 'done'; }).map(function (j) { return '<div class="rowline"><div class="bd"><b>' + j.id + ', ' + h(CS.jobDesc(j)) + '</b><small>' + h(CS.cust(j.cust).name) + ' · ' + CS.fmtDay(j.day) + '</small></div>' + stTag(j.status) + '</div>'; }).join('') || '<span class="muted">None right now.</span>') + '</div>',
       '<button class="btn pri" data-act="msgParty" data-type="supplier" data-id="' + s.id + '">' + ic('whatsapp') + 'Message on WhatsApp</button><button class="btn" data-act="supPref" data-id="' + s.id + '">' + ic('star') + (s.preferred ? 'Remove preferred' : 'Make preferred') + '</button>');
@@ -536,6 +548,7 @@
       '<div class="rowline"><div class="bd"><b>Reply tone</b><small>' + (st.tone === 'formal' ? '"Hello Dan, ... Kind regards, John Pesci"' : '"Hi Dan, yes no problem ... Cheers, John"') + '</small></div><div class="seg"><button data-act="tone" data-v="friendly" class="' + (st.tone !== 'formal' ? 'on' : '') + '">Short and friendly</button><button data-act="tone" data-v="formal" class="' + (st.tone === 'formal' ? 'on' : '') + '">Formal</button></div></div>' +
       '<div class="rowline"><div class="bd"><b>Your BDE\'s first name</b><small>Shown on Sales, leads and their replies</small></div><input id="bdeName" value="' + h(CS.bde()) + '" style="width:130px;border:1px solid var(--line2);border-radius:10px;padding:7px 10px;background:var(--panel2)" aria-label="BDE first name"></div>' +
       '<div class="rowline"><div class="bd"><b>Your team</b><small>John, your BDE and the next hires, with what each one sees</small></div><button class="btn sm" data-act="team">' + ic('users') + 'Team</button></div>' +
+      '<div class="rowline"><div class="bd"><b>Import from a spreadsheet</b><small>Your team, customers, sites and suppliers. Download the template, fill it in, upload it</small></div><button class="btn sm" data-act="importOpen">' + ic('download') + 'Import</button></div>' +
       '<div class="rowline"><div class="bd"><b>Connections</b><small>WhatsApp, email, your accounts and card payments, and what each needs</small></div><button class="btn sm" data-act="connections">' + ic('link') + 'Open</button></div>' +
       '<div class="rowline"><div class="bd"><b>Take the tour</b><small>Nine quick steps round the system</small></div><button class="btn sm" data-act="tour">' + ic('play') + 'Start</button></div>' +
       '<div class="rowline"><div class="bd"><b>Business</b><small>CAC Waste Management Ltd · broker CBDU650137 · 0330 122 5711</small></div></div>' +
@@ -584,6 +597,7 @@
   /* ---------- actions ---------- */
   var A = {
     go: function (el) { go(el.dataset.v); },
+    navGroup: function (el) { var g = el.dataset.g, m = S.settings.navShut || (S.settings.navShut = {}); if (m[g]) delete m[g]; else m[g] = true; CS.save(); renderNav(); var b = $('#nav .navg[data-g="' + g + '"]'); if (b) b.focus(); },
     tab: function (el) { ui.tab = el.dataset.v; render(); },
     sel: function (el) { selectThread(el.dataset.id); },
     openThread: function (el) { closeLayer(); selectThread(el.dataset.id); },

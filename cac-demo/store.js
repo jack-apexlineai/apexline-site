@@ -88,15 +88,17 @@
   }
   function supName(s, id) { var x = (s.suppliers || []).filter(function (q) { return q.id === id; })[0]; return x ? x.name : 'supplier'; }
 
+  var CLK = (window.CACCLOCK && window.CACCLOCK.shift) || 0;
   CS.load = function () {
     var s = null;
     try { s = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { s = null; }
-    if (!s || s.seededDay !== dayKey(today0()) || !s.threads) { s = seed(); CS.S = s; CS.save(); }
+    /* the sample data is rebuilt if the demo clock has changed (see clock.js), so no message is stamped in the future */
+    if (!s || s.seededDay !== dayKey(today0()) || !s.threads || (s.clk || 0) !== CLK) { s = seed(); s.clk = CLK; CS.S = s; CS.save(); }
     CS.S = s;
     return s;
   };
   CS.save = function () { try { localStorage.setItem(KEY, JSON.stringify(CS.S)); } catch (e) {} };
-  CS.reset = function () { CS.S = seed(); CS.save(); CS.emit(); };
+  CS.reset = function () { CS.S = seed(); CS.S.clk = CLK; CS.save(); CS.emit(); };
   CS.bde = function () { return (CS.S && CS.S.settings && CS.S.settings.bde) || 'Sam'; };
   CS.renameBde = function (name) {
     name = String(name || '').trim().split(/\s+/)[0]; if (!name) return;

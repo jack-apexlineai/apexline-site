@@ -151,6 +151,7 @@ kbd{background:#27272A;border:1px solid var(--line);border-radius:4px;padding:0 
   function h(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function $(s) { return document.querySelector(s); }
   var TOTAL = 30, DAY = (function () { try { return new URLSearchParams(location.search).get('day') || ''; } catch (e) { return ''; } })();
+  var AT = (function () { try { return new URLSearchParams(location.search).get('at') || ''; } catch (e) { return ''; } })();
 
   /* Minutes: questions 5, demo 11, the question 1, value and price 7, close 6. Thirty in all. */
   var SECS = { prep: { n: 'Before the call', end: 0 }, q: { n: 'Questions', end: 5 }, demo: { n: 'The demo', end: 16 }, ask: { n: 'The question', end: 17 }, val: { n: 'Value and price', end: 24 }, close: { n: 'Close', end: 30 } };
@@ -169,9 +170,12 @@ kbd{background:#27272A;border:1px solid var(--line);border-radius:4px;padding:0 
 
     { id: 'open', sec: 'q', t: 'Open the call, then dig', act: 'home', mins: 3,
       do: ['Camera on, smile, no screen share yet.', 'Say the opener, ask the one question, then stop talking.', 'Then dig, one question at a time. Only the ones you need. His exact words and numbers go in the box below.'],
-      say: ['Hi John, thanks for making the time. I know you said you\'re busy, and you said don\'t waste your 30, so I won\'t.',
-            'Before I show you anything, what made you want to take the call?',
-            { stage: 'Then silence. Count to five in your head if you need to. Let him fill it.' }],
+      say: ['John, thanks for making the time. You said you\'re busy and not to waste your 30, so I won\'t.',
+            'Before I show you anything. You guessed I was about to pitch you something for the admin side, and you still offered me half an hour.',
+            'So what were you hoping to get out of it?',
+            { stage: 'Then silence. Count to five in your head if you need to. Let him fill it. Do not offer him answers.' },
+            { stage: 'If he keeps it short ("just seeing what you\'ve got"), ask the next line, then silence again.' },
+            'Fair enough. When you said the admin side, what did you have in mind?'],
       say2H: 'Then dig (only what you need)',
       say2: ['Walk me through a job, from a builder getting in touch to the invoice going out. Who touches it?',
              'Where do enquiries come in today? WhatsApp, calls, the website?',
@@ -296,10 +300,10 @@ kbd{background:#27272A;border:1px solid var(--line);border-radius:4px;padding:0 
              ask: ['<b>"Why not just buy respond.io?"</b> Good inbox, but it doesn\'t know what a supplier, a postcode rate, a margin or a WTN is. It can\'t price a skip.',
                    '<b>"Why not a waste system?"</b> Waste Logics has no WhatsApp or email inbox and is built round lorries and weighbridges. Weighsoft is from £1,707 a month for 5 users on a multi-year term.',
                    '<b>"How long?"</b> Office side in about 3 weeks (confirm before the call). WhatsApp goes live when Meta verifies CAC, plan 1 to 3 weeks.'] },
-      after: { do: ['<b>Yes:</b> proposal and deposit invoice the same day. Ask for his supplier list with rates and postcode cover, his Microsoft 365 email, new WhatsApp number or keep his own, his invoicing software, and his credit terms.',
+      after: { do: ['<b>Yes:</b> proposal and deposit invoice inside ten minutes of the call. He pays the deposit by card on the pay link or by bank transfer.', 'Then ask: which email he runs the office on, a new WhatsApp number or keep his own, his invoicing software, and his credit terms.', 'Never ask him to send his supplier list, rates or customers. He loads them himself with the import. Say so: it is a selling point.',
                     '<b>Think about it:</b> book the follow up before he hangs up.',
                     'Paste the three links below into the Teams chat so he can try it on his phone.'],
-               say: ['Shall we say Thursday at 10?'] },
+               say: ['Your suppliers, rates and customers go in by you, with the import. I never need your list.', 'Shall we say Thursday at 10?'] },
       watch: ['Confirm the weeks figure before Monday. Don\'t say a date you can\'t hit.', 'On his phone he gets his own copy. It won\'t change what\'s on your screen. Don\'t promise that it will.', 'Don\'t send the demo link to anyone else.'] }
   ];
 
@@ -401,6 +405,13 @@ kbd{background:#27272A;border:1px solid var(--line);border-radius:4px;padding:0 
       do: ['Sales screen first: the pipeline. Drag a deal to the next stage. Tap <b>WhatsApp</b> or <b>Email</b> on a card to message them from there.', 'Under it: the BDE\'s calls, quotes and follow ups.', 'Then press <b>Show the Team screen</b> above. Add a name if he wants to.'],
       say: ['Every call, quote and follow up from your BDE, without asking him.', 'You said more roles are coming. Add someone, they get a login, day one opens on a five minute walkthrough. No training day.'] },
 
+    { id: 'import', b: 'How his data gets in', t: 'How his data gets in', act: 'importData', mins: 1,
+      extra: [{ l: 'Show a sample file being checked', act: 'importSample' }],
+      do: ['Import is open on Customers. Point at the two boxes: get the template, then upload it.', 'Press <b>Show a sample file being checked</b> above. Read down the list: what gets added, what is already there, and which rows have a problem and why.', 'Do not press the Add button unless he asks to see it finish.'],
+      say: ['You never send me your customer list. You download a spreadsheet, fill it in, upload it, and you check every row before anything is added.', 'Same for your team, your sites and your suppliers. If you only have one or two to add, you just type them in.'],
+      shows: 'Team, customers, sites and suppliers come in from a spreadsheet he fills in himself. The system matches his headings, says what is wrong with a row in plain words, and leaves alone anything already there.',
+      watch: ['In the demo the upload reads a sample file in the browser. Nothing is sent anywhere.', 'Say the template opens in Excel or Google Sheets. There is no one-click Google Sheets copy yet, so do not offer one.', 'Team starting PINs: this demo has no sign in. On his system each person signs in once with a starting PIN and then has to choose their own.', 'Supplier prices do not come in this way. They come from each supplier\'s own price sheet, in the handbook.'] },
+
     { id: 'connections', b: 'Connections', t: 'What it plugs into', act: 'connections', mins: 0.5,
       do: ['Connections is open. Read down the cards: WhatsApp, email, website enquiries, Xero or QuickBooks, card payments, Companies House.'],
       say: ['This is what it plugs into, and what each one needs from you. Mostly a sign in.'],
@@ -462,7 +473,7 @@ kbd{background:#27272A;border:1px solid var(--line);border-radius:4px;padding:0 
   }
   var demoWin = null;
   $('#openDemo').onclick = function () {
-    demoWin = window.open('index.html?boot=0' + (DAY ? '&day=' + encodeURIComponent(DAY) : ''), 'cacdemo', 'width=1280,height=820');
+    demoWin = window.open('index.html?boot=0' + (DAY ? '&day=' + encodeURIComponent(DAY) : '') + (AT ? '&at=' + encodeURIComponent(AT) : ''), 'cacdemo', 'width=1280,height=820');
     status('Demo window opening. Give it a second, then the dot goes green.');
     setTimeout(function () { var a = showing().act; if (a && mode !== 'paused') run(a); }, 1500);
   };

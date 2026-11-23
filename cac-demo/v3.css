@@ -7,15 +7,24 @@
 .nav{gap:1px;scrollbar-width:thin;scrollbar-color:#3A3A3F transparent}
 .nav button{padding:5px 11px;font-size:13.5px}
 .navtop .navcta .lb{white-space:nowrap}
-.navg{font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#77777E;padding:8px 11px 2px}
+.nav button.navg{font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#77777E;padding:8px 11px 2px;gap:6px;background:none;border-radius:8px}
+/* each menu group folds away when its title is pressed */
+.nav button.navg:hover{color:#C9C9CE;background:none}
+.nav button.navg .gl{flex:1}
+.nav button.navg::after{content:"";width:6px;height:6px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:rotate(45deg);margin:0 4px 3px 2px;transition:transform .15s;flex:none}
+.nav button.navg.shut{padding-bottom:6px}
+.nav button.navg.shut::after{transform:rotate(-45deg);margin-bottom:0}
+.nav button.navg.cur{color:var(--brand)}
+.nav button.navg:focus-visible{outline:2px solid var(--brand);outline-offset:-2px}
+.nav button.gshut{display:none}
 .nav .sep{margin:6px 6px}
 .side .logo{padding-bottom:12px}
 .side .me{padding:8px 10px;margin-top:6px}
 .side .me .who{flex:1;min-width:0}
 .megear{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:#C9C9CE;font-size:18px;flex:none}
 .megear:hover{background:var(--char3);color:#fff}
-@media (max-width:1199px){.side .me{flex-direction:column;gap:6px}.navtop{flex-direction:column}.navtop .navcta,.navtop .navcta.two{padding:10px;justify-content:center}.navg{font-size:0;padding:0;height:1px;background:#2E2E33;margin:6px 6px}.nav button{padding:8px}}
-@media (max-width:899px){.side .me{flex-direction:row}.navtop{flex-direction:row}.navtop .navcta{justify-content:flex-start;padding:10px 11px}.navg{font-size:10.5px;padding:9px 11px 3px;height:auto;background:none;margin:0}.nav button{padding:8px 11px}}
+@media (max-width:1199px){.side .me{flex-direction:column;gap:6px}.navtop{flex-direction:column}.navtop .navcta,.navtop .navcta.two{padding:10px;justify-content:center}.nav button{padding:8px}/* icon menu: the titles are taken out (nothing invisible to click or tab to) and a thin line is drawn above the first item of each group */.nav button.navg{display:none}.nav button.navg + button{margin-top:13px}.nav button.navg + button::after{content:"";position:absolute;left:6px;right:6px;top:-7px;height:1px;background:#2E2E33}.nav button.gshut{display:flex}}
+@media (max-width:899px){.side .me{flex-direction:row}.navtop{flex-direction:row}.navtop .navcta{justify-content:flex-start;padding:10px 11px}.nav button{padding:8px 11px}.nav button.navg{display:flex;padding:9px 11px 3px}.nav button.navg.shut{padding-bottom:6px}.nav button.navg + button{margin-top:0}.nav button.navg + button::after{content:none}.nav button.gshut{display:none}}
 
 /* home */
 .tiles.t3{grid-template-columns:repeat(4,minmax(0,1fr))}
@@ -172,3 +181,13 @@ label.btn{cursor:pointer}
 
 /* footers with several buttons wrap instead of running off the side */
 #layer .modal .mft,#layer .drawer .dft{flex-wrap:wrap;row-gap:8px}
+
+/* top bar on a laptop-sized window (the demo opens at 1280 wide): nothing squashed and nothing cut off with dots */
+@media (min-width:1024px) and (max-width:1500px){
+  .top .sub{display:none}
+  .top .btn.pri{width:38px;padding:0;flex:none}
+  .top .btn.pri .lb{display:none}
+  .top .ttl{flex:none}
+  .top .search{width:auto;flex:1 1 150px;min-width:150px;max-width:200px}
+  .top .iconbtn,.top .demo-badge,.top .livepill,.top .askbtn,.top .asstbtn{flex:none}
+}
