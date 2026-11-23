@@ -278,4 +278,5 @@ function boot() {
   window.__app = { state: () => state, render };
 }
 
-boot();
+if (window.PLANNER_CONFIG && window.PLANNER_CONFIG.mode === 'live') import('./live-boot.js').then((m) => m.liveBoot(boot));
+else boot();

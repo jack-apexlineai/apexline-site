@@ -39,12 +39,14 @@ export function defaultSettings() {
 
 function fresh() {
   const today = ymd();
+  // Live mode (his real login): start empty. Sample tasks, ticks and money are only for the practice version.
+  const live = typeof window !== 'undefined' && window.PLANNER_CONFIG && window.PLANNER_CONFIG.mode === 'live';
   return {
     v: 1,
     profile: { name: 'John', surname: 'Simpson', business: 'INFRNO / Musclefier', onboarded: false },
-    mode: 'sample',
+    mode: live ? 'real' : 'sample',
     settings: defaultSettings(),
-    ...sampleState(today),
+    ...(live ? { days: {}, habits: {}, money: { tx: [] }, seededFor: null } : sampleState(today)),
     timer: null, // { date, taskId, since }
     breakUntil: null,
     ads: { decisions: {}, changes: [] },
@@ -106,6 +108,18 @@ export function save() {
 export function onChange(fn) {
   listeners.add(fn);
   return () => listeners.delete(fn);
+}
+
+// Live mode: swap in a copy from the server (see live.js). Listeners get { remote: true }.
+export function replaceState(next) {
+  migrate(next);
+  state = next;
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+  } catch {
+    memoryFallback = state;
+  }
+  listeners.forEach((fn) => fn({ remote: true }));
 }
 
 export function resetAll(keepSettings = true) {
