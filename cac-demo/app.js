@@ -202,8 +202,8 @@
     var head = '<div class="ahd"><span class="spark">' + ic('sparkles') + '</span><b>Assistant</b><span class="sp"></span><span class="tag hide-sm">' + ic('shield-check') + 'Drafts only</span><button class="iconbtn sm" data-act="asstHide" aria-label="Hide the assistant" title="Hide the assistant">' + ic('x') + '</button></div>';
     var jd = ui.justDone[t.id];
     if (jd) {
-      return head + '<div class="donecard"><h3>' + ic('circle-check') + 'Done in one tap</h3>' + jd.steps.map(function (s, i) { return '<div class="st" style="animation-delay:' + (i * 0.28) + 's">' + ic('check') + '<span>' + h(s) + '</span></div>'; }).join('') +
-        '<div class="saved">About ' + jd.mins + ' minutes of admin done for you. Today so far: ' + hm(S.saved.mins) + '.</div>' +
+      return head + '<div class="donecard"><h3>' + ic('circle-check') + 'Sent</h3>' + jd.steps.map(function (s, i) { return '<div class="st" style="animation-delay:' + (i * 0.28) + 's">' + ic('check') + '<span>' + h(s) + '</span></div>'; }).join('') +
+
         '<div class="row" style="margin-top:8px;flex-wrap:wrap">' + (jd.job ? '<button class="btn sm" data-act="openJob" data-id="' + jd.job + '">' + ic('truck') + 'Open ' + jd.job + '</button>' : '') +
         '<button class="btn sm pri" data-act="nextMsg">' + ic('arrow-right') + 'Next message</button></div></div>';
     }

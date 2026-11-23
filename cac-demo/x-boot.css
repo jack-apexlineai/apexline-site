@@ -1,0 +1,24 @@
+/* The start-up screen (x-boot.js). Dark in both themes. */
+.boot.xb{background:radial-gradient(120% 90% at 50% 0%,#2A211A 0%,#17171A 55%,#101012 100%);cursor:pointer;overflow:hidden;transition:opacity .5s,transform .5s}
+.boot.xb.out{opacity:0;transform:scale(1.03);pointer-events:none}
+.xb-glow{position:absolute;left:50%;top:38%;width:680px;height:680px;max-width:120vw;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(235,147,71,.2) 0%,rgba(235,147,71,0) 62%);animation:xbglow 3.2s ease-in-out infinite alternate;pointer-events:none}
+.xb-in{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px;width:min(560px,100vw)}
+.xb-logo{height:92px;width:auto;animation:xblogo 1s cubic-bezier(.2,.8,.2,1) both}
+.xb-hi{font-size:34px;font-weight:800;letter-spacing:-.02em;color:#fff;margin:26px 0 4px;animation:xbup .55s .75s both}
+.xb-day{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#EB9347;animation:xbup .5s 1s both}
+.xb-list{list-style:none;margin:28px 0 0;padding:0;display:flex;flex-direction:column;gap:10px;width:100%;text-align:left}
+.xb-list li{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:13px 16px;font-size:16px;line-height:1.35;color:#D4D4D8;animation:xbrow .5s both}
+.xb-list li .ic{font-size:21px;color:#EB9347;flex:none}
+.xb-list li b{color:#fff;font-weight:800;font-variant-numeric:tabular-nums}
+.xb-bar{width:160px;height:3px;border-radius:3px;background:rgba(255,255,255,.1);margin-top:30px;overflow:hidden;animation:xbup .4s 1.4s both}
+.xb-bar i{display:block;height:100%;width:100%;background:#EB9347;border-radius:3px;transform-origin:left;animation:xbfill 4.9s 1.5s linear both}
+@keyframes xblogo{from{opacity:0;transform:scale(.72) translateY(10px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes xbup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes xbrow{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes xbfill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes xbglow{from{opacity:.55;transform:translate(-50%,-50%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1.06)}}
+@media (max-width:620px){.xb-logo{height:70px}.xb-hi{font-size:27px}.xb-list li{font-size:14.5px;padding:11px 13px}}
+@media (prefers-reduced-motion:reduce){.xb-logo,.xb-hi,.xb-day,.xb-list li,.xb-bar,.xb-bar i,.xb-glow{animation:none}}
+
+/* room under every page so the round Skipper button never sits on top of the last row */
+.main .view:not(.flush){padding-bottom:96px}

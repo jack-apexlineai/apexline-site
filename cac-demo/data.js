@@ -172,7 +172,7 @@
   ];
 
   var LEADS = [
-    { id: 'l1', company: 'Price and Rowe Builders', contact: 'Hannah Price', area: 'Wisbech PE13', type: 'General builder', source: 'Website', stage: 'new', value: 1800, next: 0, nextWhat: 'Send quote for skips', last: 0, lastWhat: 'Website enquiry' },
+    { id: 'l1', company: 'Price and Rowe Builders', contact: 'Hannah Price', area: 'Wisbech PE13', type: 'General builder', source: 'Website', stage: 'new', value: 1800, next: 0, nextWhat: 'Send quote for a 12 yard skip', last: 0, lastWhat: 'Website enquiry' },
     { id: 'l2', company: 'Brayfield Groundworks', contact: 'Craig Brayfield', area: 'King\'s Lynn PE30', type: 'Groundworks', source: 'LinkedIn', stage: 'quoted', value: 2400, next: 0, nextWhat: 'Follow up Q-2223', last: -2, lastWhat: 'Quote sent' },
     { id: 'l3', company: 'Fennick Homes', contact: 'Laura Fennick', area: 'Norwich NR4', type: 'Developer', source: 'Cold call', stage: 'contacted', value: 4200, next: -2, nextWhat: 'Call back about 3 sites', last: -5, lastWhat: 'Call, asked for price list' },
     { id: 'l4', company: 'Mardle Civils', contact: 'Ian Mardle', area: 'Dereham NR19', type: 'Civils', source: 'Referral', stage: 'trial', value: 3100, next: 2, nextWhat: 'Check first job went well', last: -1, lastWhat: 'First job booked' },
@@ -195,7 +195,7 @@
       msgs: [m('in', 'Hi John,\n\n12 yard dropped at the Heacham extension at 08:40, on the drive as asked. Waste transfer note attached.\n\nThanks, Sarah\nSaltmarsh Skips', 26, { att: [{ n: 'WTN-CAC-1043.pdf', t: 'wtn' }, { n: 'delivered-heacham.jpg', t: 'photo' }] })] },
     { id: 't3', party: { type: 'lead', id: 'l1' }, ch: 'web', unread: true, subject: 'Get a quote, cacwaste.co.uk', scn: { kind: 'parse', owner: 'john' },
       form: { 'Your name': 'Hannah Price', Company: 'Price and Rowe Builders', Email: 'hannah@priceandrowe.co.uk', Phone: '07700 900302', 'Site postcode': 'PE13 2RT', 'Service needed': 'Skip Hire', 'Came from': 'Google Ads, skip hire King\'s Lynn' },
-      msgs: [m('in', 'Two 12 yard skips for a 6 week job starting 1st December. On account if possible.', 34)] },
+      msgs: [m('in', 'Looking for a 12 yard skip for a 6 week job starting 1st December. On account if possible.', 3)] },
     { id: 't4', party: { type: 'supplier', id: 's3' }, ch: 'wa', unread: true, scn: { kind: 'reschedule', job: 'CAC-1045' },
       msgs: [m('out', 'Hi Martin, 8yd builders skip for Pellow Homes, Costessey plots NR5 0LY, {WDN:2} AM please. On the drive. Ref CAC-1045. Thanks, John (CAC)', 190, { by: 'John' }),
              m('in', 'John cant do {WDN:2} for Pellow NR5 now, driver off. {WDN:3} first thing ok?', 41)] },
@@ -218,8 +218,7 @@
     { id: 't14', party: { type: 'customer', id: 'c3' }, ch: 'wa', unread: true, scn: { kind: 'parse' },
       msgs: [m('in', 'John need another 20 yard roro at Oundle Rd {WDN:2} please', 64)] },
     { id: 't15', party: { type: 'customer', id: 'c6' }, ch: 'wa', unread: true, scn: { kind: 'parse' },
-      msgs: [m('in', 'Lee here. Need a grab at Histon {WDN:1}, 2 loads pls', 0, { yclock: '21:14' }),
-             m('out', 'Thanks Lee, got that. The office opens at 8 and John will confirm first thing. If it can\'t wait, ring 0330 122 5711.', 0, { yclock: '21:14', by: 'Auto reply, out of hours', auto: true })] },
+      msgs: [m('in', 'Hi mate, need a grab at Histon for tomorrow please if possible. Soil and clay. Ideally morning', 12)] },
     { id: 't12', party: { type: 'customer', id: 'c4' }, ch: 'wa', unread: false, done: true,
       msgs: [m('in', 'Can you collect the 6 yarder at Cliff Parade tomorrow John', 1500),
              m('out', 'No problem Rob, booked with Saltmarsh for tomorrow. Cheers, John', 1490, { by: 'John' })] },

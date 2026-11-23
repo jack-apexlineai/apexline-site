@@ -200,6 +200,16 @@
 
   /* ---------- credit control ---------- */
   var STOPLINE = 'No one can place an order for this customer. They are told to speak to the accounts team.';
+  var LATE_RED = 7;   // more than this many days late and the row goes red
+  function isOver(c, owed) { return !!c.limit && Math.round(owed) > c.limit; }
+  /* one bar per account: what they owe against their limit. Green under 80%, amber from 80%, red and full when over */
+  function limitBar(c, cr, owed) {
+    var o = Math.round(owed || 0), lim = c.limit || 0;
+    if (!lim) return '<div class="xp-lim none"><span class="xp-lim-t muted">' + (o ? '<b>' + money(o) + '</b> owed. ' : '') + (cr.card ? 'Pays by card, no credit limit' : 'No credit limit') + '</span></div>';
+    var over = o > lim, pct = o / lim, k = over ? 'over' : pct >= 0.8 ? 'warn' : 'ok', w = over ? 100 : o ? Math.max(3, Math.round(pct * 100)) : 0;
+    var txt = '<b>' + money(o) + '</b> of ' + money(lim) + ' limit' + (over ? ', <b class="bad">' + money(o - lim) + ' over</b>' : '');
+    return '<div class="xp-lim ' + k + '"><span class="xp-lim-track" aria-hidden="true"><i style="width:' + w + '%"></i></span><span class="xp-lim-t">' + txt + '</span></div>';
+  }
   V.credit = function () {
     var rows = S().customers.map(function (c) { return { c: c, cr: CS.credit(c.id, 0), ag: CS.aged(c.id) }; })
       .sort(function (a, b) { return (b.c.stop ? 1 : 0) - (a.c.stop ? 1 : 0) || (b.cr.overdue || 0) - (a.cr.overdue || 0) || b.ag.total - a.ag.total; });
@@ -209,24 +219,96 @@
       '<div class="card kpi"><small>' + ic('alert') + 'Overdue</small><b' + (stt.overdue ? ' style="color:var(--bad)"' : '') + '>' + money(stt.overdue) + '</b><span class="d">' + plural(lateN, 'customer') + ' paying late</span></div>' +
       '<div class="card kpi"><small>' + ic('lock') + 'On stop</small><b id="stopN"' + (stops ? ' style="color:var(--bad)"' : '') + '>' + stops + '</b><span class="d">no new orders for them</span></div></div>' +
       '<div class="card xp-credit" id="xpCredit"><div class="hd"><h2>' + ic('lock') + 'Every account</h2></div>' +
-      '<div class="xp-cr-hd"><span>Customer</span><span>Limit</span><span>Owed</span><span>How late</span><span></span></div>' +
+      '<div class="xp-cr-hd"><span>Customer</span><span>Owed against limit</span><span>How late</span><span></span></div>' +
       rows.map(function (r) {
         var c = r.c, cr = r.cr, owed = r.ag.total;
-        var late = cr.overdue > 0 ? '<b class="' + (cr.worst > 14 ? 'bad' : 'amber') + '">' + plural(cr.worst, 'day') + ' late</b>' : owed ? '<b class="muted">Not late</b>' : '<b class="muted">Nothing owed</b>';
+        var red = isOver(c, owed) || cr.worst > LATE_RED;
+        var late = cr.overdue > 0 ? '<b class="' + (cr.worst > LATE_RED ? 'bad' : 'amber') + '">' + plural(cr.worst, 'day') + ' late</b>' : owed ? '<b class="muted">Not late</b>' : '<b class="muted">Nothing owed</b>';
         var chip = c.stop ? '<span class="tag bad">' + ic('lock') + 'On stop</span>' : cr.hold ? '<span class="tag amber">On hold</span>' : '';
-        return '<div class="xp-cr' + (c.stop ? ' stop' : '') + '" data-id="' + h(c.id) + '"><div class="xp-cr-main">' +
+        return '<div class="xp-cr' + (c.stop ? ' stop' : '') + (red ? ' risk' : '') + '" data-id="' + h(c.id) + '"><div class="xp-cr-main">' +
           '<div class="who"><b data-act="openCust" data-id="' + h(c.id) + '">' + h(c.name) + '</b>' + chip + '</div>' +
-          '<div class="cell"><small>Limit</small>' + (c.limit ? '<b>' + money(c.limit) + '</b>' : '<b class="muted">' + (cr.card ? 'Pays by card' : 'None') + '</b>') + '</div>' +
-          '<div class="cell"><small>Owed</small><b>' + (owed ? money(owed) : '£0') + '</b></div>' +
+          limitBar(c, cr, owed) +
           '<div class="cell"><small>How late</small>' + late + '</div>' +
           '<button class="btn sm' + (c.stop ? ' pri' : '') + '" data-act="stopToggle" data-id="' + h(c.id) + '" aria-label="' + (c.stop ? 'Take ' + h(c.name) + ' off stop' : 'Put ' + h(c.name) + ' on stop') + '">' + ic(c.stop ? 'check' : 'lock') + (c.stop ? 'Take off stop' : 'Put on stop') + '</button></div>' +
           (c.stop ? '<div class="xp-cr-stop">' + ic('lock') + '<span>' + STOPLINE + '</span></div>' : '') + '</div>';
       }).join('') + '</div>' +
-      '<p class="muted xp-foot"><b>On hold</b> is automatic: over their limit, or an invoice more than 14 days late. <b>On stop</b> is your call, and you can take it off again here. Tap a name for their statement.</p>';
+      '<p class="muted xp-foot">The bar shows what they owe against their limit. A <b>red row</b> is over its limit, or more than ' + LATE_RED + ' days late. <b>On hold</b> is automatic: over their limit, or an invoice more than 14 days late. <b>On stop</b> is your call, and you can take it off again here. Tap a name for their statement.</p>';
+  };
+
+  /* ---------- customer portal, as a screen in the menu ---------- */
+  var PORTAL_LINE = 'What each customer sees when they log in, with your logo. They book a job, ask for a quote and find their own paperwork. Every request comes to you first.';
+  (function () {
+    var L = UI.VIEWS; if (!L || L.some(function (x) { return x.k === 'portal'; })) return;
+    var at = -1, i;
+    for (i = 0; i < L.length; i++) if (L[i].k === 'customers') at = i;
+    if (at < 0) for (i = 0; i < L.length; i++) if (L[i].g === 'Customers') at = i;
+    L.splice(at < 0 ? L.length : at + 1, 0, { k: 'portal', g: 'Customers', n: 'Customer portal', ic: 'world', sub: 'Each customer\'s own page, with your logo' });
+  })();
+  function portalCust() {
+    var cs = S().customers || [], id = st().portal;
+    function ok(x) { return cs.some(function (c) { return c.id === x; }); }
+    if (!id || !ok(id)) id = ok('c6') ? 'c6' : (cs[0] ? cs[0].id : '');
+    return id;
+  }
+  function portalUrl(id) { return 'portal.html?c=' + encodeURIComponent(id); }
+  V.portal = function () {
+    var id = portalCust(), cs = S().customers || [];
+    return '<div class="xp-ptl-hd"><div class="xp-ptl-tt"><h2>' + ic('world') + 'Customer portal</h2><p>' + PORTAL_LINE + '</p></div>' +
+      '<a class="btn" id="xpPortalOpen" href="' + h(portalUrl(id)) + '" target="_blank" rel="noopener">' + ic('external') + 'Open in a new tab</a></div>' +
+      '<div class="xp-ptl-pick" id="xpPortalPick" role="group" aria-label="Choose which customer to view">' + cs.map(function (c) {
+        var on = c.id === id;
+        return '<button type="button" class="btn sm' + (on ? ' on' : '') + '" data-act="xpPortal" data-id="' + h(c.id) + '"' + (on ? ' aria-pressed="true"' : '') + '>' + h(c.name) + '</button>';
+      }).join('') + '</div>';
+  };
+  /* The portal sits in its own box just under the screen, so it is not thrown away and loaded again every time the screen redraws. */
+  var pHost = null, pFrame = null, pWant = '';
+  function portalSync() {
+    var on = ui.view === 'portal', view = document.getElementById('view');
+    document.body.classList.toggle('xp-ptl-on', on);
+    if (!on || !view || !view.parentNode) { if (pHost) pHost.hidden = true; return; }
+    var id = portalCust(), c = CS.cust(id), theme = (S().settings && S().settings.theme) === 'dark' ? 'dark' : 'light';
+    var want = portalUrl(id) + '&theme=' + theme;
+    if (!pHost) {
+      pHost = document.createElement('div'); pHost.id = 'xpPortalHost'; pHost.className = 'xp-ptl-host';
+      pFrame = document.createElement('iframe'); pFrame.id = 'xpPortalFrame'; pFrame.setAttribute('loading', 'eager');
+      pFrame.src = want; pWant = want;
+      pHost.appendChild(pFrame);
+    }
+    if (pHost.parentNode !== view.parentNode || pHost.previousElementSibling !== view) view.parentNode.insertBefore(pHost, view.nextSibling);
+    pHost.hidden = false;
+    pFrame.title = 'Customer portal' + (c ? ' for ' + c.name : '');
+    if (pWant !== want) {
+      pWant = want;
+      try { pFrame.contentWindow.location.replace(want); } catch (e) { pFrame.src = want; }   // replace, so Back still belongs to the main screen
+    }
+    var cur = document.querySelector('#xpPortalPick .on');
+    if (cur && cur.parentNode.scrollWidth > cur.parentNode.clientWidth) cur.parentNode.scrollLeft = Math.max(0, cur.offsetLeft - cur.parentNode.offsetLeft - 12);
+  }
+  A.xpPortal = function (el) { var id = el.dataset.id; if (!CS.cust(id)) return; st().portal = id; UI.render(); };
+  (function () {
+    var view = document.getElementById('view'); if (!view || !window.MutationObserver) return;
+    new MutationObserver(portalSync).observe(view, { childList: true });
+  })();
+  if (location.hash === '#portal') ui.view = 'portal';
+
+  /* ---------- connections: one more card ---------- */
+  var oldConn = V.connections;
+  if (oldConn) V.connections = function () {
+    var old = oldConn();
+    if (old.indexOf('data-xp="credit"') > -1) return old;
+    var card = '<div class="card pad conn" data-xp="credit"><div class="row"><span class="cic">' + ic('checks') + '</span><h2 style="flex:1">Credit checks</h2><span class="tag">Not connected</span></div>' +
+      '<p>Link your own credit reference account (for example Creditsafe) so every account is watched. If a customer\'s risk changes, a flag shows next to their name.</p>' +
+      '<small class="muted"><b>What it needs.</b> Your own account with the agency, with API access. To confirm on your plan before we start.</small>' +
+      '<button class="btn sm" data-act="' + (A.connGo ? 'connGo' : 'go') + '" data-v="credit">' + ic('eye') + 'See credit control</button></div>';
+    var box = document.createElement('div'); box.innerHTML = old;
+    var grid = box.querySelector('.cgrid');
+    if (!grid) return old + '<div class="cgrid" style="margin-top:16px">' + card + '</div>';
+    grid.insertAdjacentHTML('beforeend', card);
+    return box.innerHTML;
   };
 
   /* ---------- wiring ---------- */
-  A.xpMode = function (el) { var k = el.dataset.k, v = el.dataset.v; if (k !== 'cust' && k !== 'sup') return; st()[k] = v === 'table' ? 'table' : 'cards'; UI.render(); };
+  A.xpMode =function (el) { var k = el.dataset.k, v = el.dataset.v; if (k !== 'cust' && k !== 'sup') return; st()[k] = v === 'table' ? 'table' : 'cards'; UI.render(); };
   document.addEventListener('input', function (e) { if (e.target && e.target.id === 'xpSupQ') { st().supQ = e.target.value; filterSup(); } });
   document.addEventListener('keydown', function (e) {
     var el = e.target;
