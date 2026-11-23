@@ -136,7 +136,10 @@
   var QTY = { grab: ['Loads', 1], muck: ['Loads', 1], aggregates: ['Loads', 1], welfare: ['Weeks', 4], container: ['Weeks', 4], toilet: ['Weeks', 4], fencing: ['Panels', 40], sweeper: ['Hours', 4], concrete: ['Cubic metres', 6], plant: ['Weeks', 1] };
   var TIMES = ['Any time', '7 to 8:30', '8 to 12', '12 to 4'];
   /* what goes in the skip. Soil, rubble or concrete in anything over 8 yards is too heavy to lift, so it warns */
-  var MATS = ['Mixed general', 'Soil and rubble', 'Concrete or hardcore', 'Green waste', 'Wood', 'Plasterboard'], HEAVY = /soil|concrete|hardcore|rubble/i;
+  var MATS = ['Mixed general', 'Soil and stones', 'Concrete and rubble', 'Green waste', 'Wood', 'Plasterboard', 'Metal'], HEAVY = /soil|concrete|hardcore|rubble/i;
+  var EWC = { 'Mixed general': '17 09 04', 'Soil and stones': '17 05 04', 'Concrete and rubble': '17 01 07', 'Green waste': '20 02 01', 'Wood': '17 02 01', 'Plasterboard': '17 08 02', 'Metal': '17 04 07' };
+  function wasteSvc(svc) { return svc === 'skip' || svc === 'grab' || svc === 'muck'; }
+  CS.ewcOf = function (m) { return EWC[m] || ''; };
   function heavyWarn() {
     if (O.svc !== 'skip' || !O.mat || !HEAVY.test(O.mat) || !(O.size > 8) || O.size >= 20) return '';
     return '<div class="note xwheavy" id="ordHeavy" role="alert" style="background:var(--warn-l,#FEF3C7);margin-top:8px">' + ic('alert') + '<span><b>Too heavy to lift.</b> A ' + O.size + ' yard skip full of ' + h(O.mat.toLowerCase()) + ' is over the lorry\'s lifting weight. Suggest an 8 yard or smaller, or a grab. If they want the ' + O.size + ' yard, it can only be half filled.</span></div>';
@@ -239,8 +242,9 @@
       (c ? '' : '<div class="field"><label for="ordEmail">Email, for the confirmation and receipt</label><input id="ordEmail" type="email" value="' + h(O.email || '') + '" placeholder="name@example.com" autocomplete="off"></div>') +
       '<div class="field"><label>Service</label><div class="chips">' + SVCS.map(function (k) { return pk('ordSvc', k, O.svc === k, h(S().services[k].short)); }).join('') + '</div></div>' +
       (O.svc === 'skip' ? '<div class="field"><label>Size</label><div class="chips">' + SIZES.map(function (z) { return pk('ordSize', z, O.size === z, z + ' yd'); }).join('') + '</div></div>' +
-        '<div class="field"><label>Material</label><div class="chips">' + MATS.map(function (m) { return pk('ordMat', m, O.mat === m, h(m)); }).join('') + '</div>' + heavyWarn() + '</div>'
+        ''
         : '<div class="field" style="max-width:180px"><label for="ordQty">' + q2[0] + '</label><input id="ordQty" inputmode="numeric" value="' + h(O.qty || q2[1]) + '"></div>') +
+      (wasteSvc(O.svc) ? '<div class="field"><label>Waste stream</label><div class="chips">' + MATS.map(function (m) { return pk('ordMat', m, O.mat === m, h(m)); }).join('') + '</div>' + (O.mat ? '<small class="muted" style="display:block;margin-top:6px">EWC ' + EWC[O.mat] + ', goes on the order, the supplier\'s booking and the waste transfer note</small>' : '') + heavyWarn() + '</div>' : '') +
       dayField() +
       '<div class="field"><label>Time on site</label><div class="chips">' + TIMES.map(function (t) { return pk('ordTime', t, O.time === t, t); }).join('') + pk('ordTime', '__custom', O.timeC, 'Custom time') + '</div>' +
         (O.timeC ? '<input id="ordTimeC" value="' + h(O.timeC === true ? '' : O.timeC) + '" placeholder="For example 10:30 to 11:30, or before 7am" style="margin-top:8px;max-width:320px" autocomplete="off">' : '') + '</div>' +
@@ -282,7 +286,7 @@
     var c = CS.cust(j.cust), s = CS.jobSite(j), ct = contact(j), inv = S().invoices.filter(function (i) { return i.jobs.indexOf(j.id) >= 0; })[0];
     return '<div class="doc v2doc"><div class="dh2"><img src="brand/cac-logo.svg" alt="CAC Waste Management"><div><b>Order confirmation</b><small>' + j.id + ' · ' + dateOf(0) + '</small></div></div>' +
       '<dl class="kv"><dt>Customer</dt><dd>' + h(c.name) + '</dd><dt>Site address</dt><dd>' + h(j.addr ? j.addr + ', ' : (s.name && s.name !== s.pc ? s.name + ', ' : '')) + h(s.pc) + '</dd><dt>Site contact</dt><dd>' + h(ct.name) + ' · ' + h(ct.phone || '') + '</dd>' +
-      (j.po ? '<dt>PO number</dt><dd>' + h(j.po) + '</dd>' : '') + '<dt>What</dt><dd>' + h(CS.jobDesc(j)) + '</dd><dt>When</dt><dd>' + CS.fmtDayLong(j.day) + (eta(j) !== 'Any time' ? ', ' + h(eta(j)) : '') + '</dd>' + (j.note ? '<dt>Notes</dt><dd>' + h(j.note) + '</dd>' : '') +
+      (j.po ? '<dt>PO number</dt><dd>' + h(j.po) + '</dd>' : '') + '<dt>What</dt><dd>' + h(CS.jobDesc(j)) + '</dd>' + (j.mat ? '<dt>Waste stream</dt><dd>' + h(j.mat) + ', EWC ' + h(EWC[j.mat] || '') + '</dd>' : '') + '<dt>When</dt><dd>' + CS.fmtDayLong(j.day) + (eta(j) !== 'Any time' ? ', ' + h(eta(j)) : '') + '</dd>' + (j.note ? '<dt>Notes</dt><dd>' + h(j.note) + '</dd>' : '') +
       '<dt>Price</dt><dd>' + money(j.sell, true) + ' + VAT (' + money(j.sell * 1.2, true) + ' with VAT)</dd><dt>Invoice</dt><dd>' + (inv ? inv.id + (inv.status === 'paid' ? ', paid by card' : inv.pay === 'link' ? ', pay by card link on the invoice' : ', on your ' + h(c.terms.toLowerCase())) : j.invLater ? 'Raised when the job is complete' : 'To follow') + '</dd></dl>' +
       '<p style="color:#666;font-size:12.5px;margin:12px 0 0">We will confirm the delivery window once the driver is planned. Your waste transfer note follows after delivery. Any changes, reply to this message or call 0330 122 5711.</p></div>';
   }
@@ -300,8 +304,8 @@
     var other = O.site === 'other', id = CS.nextId('job', 'CAC-'), su = r.pick.sup, it = r.it;
     var j = { id: id, cust: c.id, site: other ? null : Number(O.site), siteName: other ? (fullAddr() || r.pc.toUpperCase()) : null, pc: other ? r.pc.toUpperCase() : null, addr: other ? fullAddr() : '', svc: it.svc, size: it.size, qty: it.qty || 1, weeks: it.weeks, panels: it.panels, ft: it.ft, m3: it.m3, hours: it.hours,
       sup: su.id, cost: r.cost, sell: r.sell, status: 'booked', day: O.day, bookedAt: Date.now(), wtn: /skip|grab|muck/.test(it.svc) ? 'pending' : null, owner: 'john', log: [],
-      contact: { name: O.cname || c.contact, phone: O.cphone || c.phone }, note: [O.mat && it.svc === 'skip' ? O.mat : '', O.note].filter(Boolean).join('. '), eta: O.time === 'Any time' ? null : O.time };
-    if (O.mat && it.svc === 'skip') j.mat = O.mat;
+      contact: { name: O.cname || c.contact, phone: O.cphone || c.phone }, note: [O.mat && wasteSvc(it.svc) ? O.mat + ' (EWC ' + EWC[O.mat] + ')' : '', O.note].filter(Boolean).join('. '), eta: O.time === 'Any time' ? null : O.time };
+    if (O.mat && wasteSvc(it.svc)) j.mat = O.mat;
     var po = String(O.po || '').trim(); if (po) j.po = po;
     if (!other) { delete j.siteName; delete j.pc; }
     CS.jobLog(j, 'Order placed by John'); s.jobs.push(j);

@@ -127,7 +127,7 @@
       var live = c ? CS.S.jobs.filter(function (j) { return j.cust === c.id && ['booked', 'confirmed', 'onhire', 'exchange', 'collection'].indexOf(j.status) >= 0; }).length : 0, L = lsups(t);
       if (!t.lxSup && L[0]) t.lxSup = L[0].id;
       return '<div class="gx-h"><span class="gx-sp">' + ic('sparkles') + '</span><b>Next step: ask the supplier</b><span class="tag bad">Hot</span><span class="gx-want">Wants to book</span></div>' +
-        '<ul class="gx-facts"><li>' + ic('users') + '<span>Existing customer: <b>' + h(c ? c.name : '') + '</b>, ' + live + ' live jobs</span></li><li>' + ic('map-pin') + '<span>Site already on his account: <b>' + h(F.site) + ', ' + h(F.pc) + '</b>. Soil and clay, tomorrow, morning asked for.</span></li></ul>' +
+        '<ul class="gx-facts"><li>' + ic('users') + '<span>Existing customer: <b>' + h(c ? c.name : '') + '</b>, ' + live + ' live jobs</span></li><li>' + ic('map-pin') + '<span>Site already on his account: <b>' + h(F.site) + ', ' + h(F.pc) + '</b>. Soil and clay, tomorrow, morning asked for.</span></li><li>' + ic('stack') + '<span>Waste stream: <b>Soil and stones</b>, EWC 17 05 04. Goes on the booking and the waste transfer note.</span></li></ul>' +
         '<div class="lx-sups">' + L.map(function (x, i) { return '<label class="lx-sup' + (x.id === t.lxSup ? ' on' : '') + '"><input type="radio" name="lxSup" value="' + x.id + '"' + (x.id === t.lxSup ? ' checked' : '') + '><span><b>' + h(x.name) + '</b>' + (i === 0 ? '<span class="tag ok">Best pick</span>' : '') + '<small>' + (x.onTime ? x.onTime + '% on time · ' : '') + 'buy ' + money(x.cost) + '</small></span><b class="lx-p">' + money(x.sell - x.cost) + '<small>gross profit</small></b></label>'; }).join('') + '</div>' +
         '<textarea id="lxSupText" rows="3" aria-label="Message to the supplier">' + h(t.lxSupDraft != null ? t.lxSupDraft : lsupMsg(t, s)) + '</textarea>' +
         '<div class="gx-b"><button class="btn pri" data-act="lxAsk">' + ic('whatsapp') + 'Ask ' + h(s.name.split(' ')[0]) + '</button><small>Goes to them on WhatsApp. Book Lee in once they say yes.</small></div>';
@@ -172,6 +172,7 @@
       (An.drafts || []).forEach(function (d, i) { if (d.to === 'customer') ed[i] = txt; else if (d.to === 'supplier') ed[i] = 'Thanks ' + s.contact + ', that\'s booked in. Ref {JOB}. Cheers, John (CAC)'; });
       try { CS.approve(t.id, ed); } catch (e) { return; }
       t.lx = 3; t.lxDoneAt = Date.now(); t.sxJob = CS.S.counters.job > jb ? 'CAC-' + jb : null; t.done = true; t.unread = false;
+      var lj = t.sxJob ? CS.job(t.sxJob) : null; if (lj) { lj.mat = 'Soil and stones'; CS.jobLog(lj, 'Waste stream: Soil and stones, EWC 17 05 04'); }
       var th = CS.thread(t.lxSupTid); if (th) { th.done = true; th.unread = false; }
       ui.scrollMsgs = true;
       /* the same booked screen as every other order: what was booked, the PO, the invoice, who was told */
@@ -279,7 +280,7 @@
     A.gxBook = function () {
       var t = gem(); if (!t) return; var F = facts(t), c = CS.cust('c7');
       hideBubble(); t.unread = false; CS.save(); ui.gxBooking = t.id;
-      V2.x.order({ cust: 'c7', site: 0, cname: c.contact, cphone: c.phone, svc: 'grab', qty: 1, sell: F.sell, day: F.day, time: '8 to 12', pay: 'account', send: 'email', note: 'Clean soil. From Gemma\'s email.' });
+      V2.x.order({ cust: 'c7', site: 0, cname: c.contact, cphone: c.phone, svc: 'grab', qty: 1, sell: F.sell, mat: 'Soil and stones', day: F.day, time: '8 to 12', pay: 'account', send: 'email', note: 'Clean soil. From Gemma\'s email.' });
     };
     var op = A.ordPlace;
     A.ordPlace = function (el) {

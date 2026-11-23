@@ -1,5 +1,5 @@
 // Service worker: works offline, shows notifications, and (phase 2) receives push.
-const CACHE = 'command-v4';
+const CACHE = 'command-v5';
 const SHELL = [
   './', 'index.html', 'config.js', 'manifest.webmanifest', 'css/app.css',
   'js/app.js', 'js/util.js', 'js/store.js', 'js/sample.js', 'js/planner.js', 'js/sergeant.js', 'js/advice.js',
@@ -12,8 +12,9 @@ self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
 });
 
+// Only clear this app's old caches: other apps on the same website keep theirs.
 self.addEventListener('activate', (e) => {
-  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k.startsWith('command-') && k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
 // Network first so updates show straight away, cache when offline.

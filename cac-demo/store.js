@@ -642,7 +642,7 @@
       CS.feed('Moved ' + j5.id + ' to ' + CS.fmtDay(S.day), 'calendar');
     } else if (k === 'paid') {
       var inv = CS.inv(S.inv); inv.status = 'paid'; inv.paidDay = 0;
-      steps.push(inv.id + ' marked paid'); steps.push('Ready to sync to Xero'); steps.push('Removed from the chase list');
+      steps.push(inv.id + ' marked paid'); steps.push('Ready to go to Sage'); steps.push('Removed from the chase list');
       CS.feed(inv.id + ' paid, ' + CS.money(inv.amount, true), 'pound');
     } else if (k === 'pack') {
       drafts[0].att = S.att; sendDraft(drafts[0]);

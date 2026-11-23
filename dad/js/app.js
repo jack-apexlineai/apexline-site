@@ -269,7 +269,10 @@ function boot() {
   setInterval(loop, 1000);
   setTimeout(reminders, 1500);
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-    navigator.serviceWorker.register('sw.js').catch(() => { /* offline support is a bonus */ });
+    // Resolved from this file, not the page address, so the worker always sits next to index.html
+    // and its scope is this app's folder only (never the whole website).
+    const base = new URL('../', import.meta.url);
+    navigator.serviceWorker.register(new URL('sw.js', base).href, { scope: base.pathname }).catch(() => { /* offline support is a bonus */ });
   }
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { everySecond(); render(); } });
   window.__app = { state: () => state, render };

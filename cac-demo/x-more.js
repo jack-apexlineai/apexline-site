@@ -377,6 +377,8 @@
       function f(id, label, ph, extra) { return '<div class="field"><label for="' + id + '">' + label + '</label><input id="' + id + '" placeholder="' + ph + '" autocomplete="off"' + (extra || '') + '></div>'; }
       return '<div class="grid g2">' + f('nsName', 'Company name', 'For example Saltmarsh Skips') + f('nsContact', 'Main contact', 'Who you book with') + '</div>' +
         '<div class="field"><label>Main services</label><div class="chips" id="nsSvc">' + keys.map(function (k) { return '<button type="button" class="pk' + (NS.svc[k] ? ' on' : '') + '" data-act="nsSvc" data-v="' + k + '">' + h(SV[k].short) + '</button>'; }).join('') + '</div></div>' +
+        '<div class="field"><label>Their price list</label><label class="drop xm-drop" for="nsFile">' + ic('download') + '<b>Drop their price list here</b><span>Excel, CSV, PDF, Word or a photo of it. Every price and postcode is read in for you to check.</span><input type="file" id="nsFile" accept=".xlsx,.xls,.csv,.pdf,.doc,.docx,.png,.jpg,.jpeg,.heic" hidden></label>' +
+          '<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><span class="muted" style="font-size:12.5px">No file to hand?</span><button type="button" class="btn sm" data-act="nsSample">' + ic('file-text') + 'Try the sample: their price list, photographed</button></div><div id="nsRead"></div></div>' +
         '<div class="grid g2">' + f('nsAreas', 'Main area, postcodes covered', 'PE30, PE31, NR') + f('nsBase', 'Yard or base town', 'Heacham') + '</div>' +
         '<div class="grid g2">' + f('nsPh', 'WhatsApp number, if they use it', '07...', ' inputmode="tel"') + f('nsTel', 'Office phone', '01...', ' inputmode="tel"') + '</div>' +
         '<div class="grid g2">' + f('nsPo', 'Email to send purchase orders to', 'bookings@...', ' type="email"') + f('nsAcc', 'Accounts email, for bills and queries', 'accounts@...', ' type="email"') + '</div>' +
@@ -385,19 +387,71 @@
         '<p class="muted" style="font-size:12.5px;margin:10px 0 0">Their prices go in next: upload their price sheet, or forward their email and it gets read in. Until then they get starter prices you can change.</p>';
     }
     A.addSup = function () { NS = { svc: { skip: true } }; modal('Add a supplier', ic('warehouse') + ' Add a supplier', nsBody(), '<button class="btn" data-act="close">Cancel</button><span class="sp"></span><button class="btn pri" data-act="saveSup" id="nsSave">' + ic('check') + 'Add supplier</button>', true); };
+    var NSR = { 4: 160, 6: 190, 8: 215, 10: 250, 12: 275, 14: 300, 16: 325, 20: 430, 40: 575 }, NSA = ['PE30', 'PE31', 'PE32', 'PE33', 'PE34', 'PE36', 'PE37', 'PE38', 'NR21'];
+    function nsRead(name) {
+      var box = q('#nsRead'); if (!box) return;
+      box.innerHTML = '<div class="note" style="margin-top:10px">' + ic('sparkles') + '<span>Reading ' + h(name) + '...</span></div>';
+      setTimeout(function () {
+        var b = q('#nsRead'); if (!b) return;
+        NS.rates = { skip: JSON.parse(JSON.stringify(NSR)) }; NS.svc.skip = true;
+        var ar = q('#nsAreas'); if (ar && !ar.value.trim()) ar.value = NSA.join(', ');
+        [].forEach.call(document.querySelectorAll('#nsSvc .pk'), function (x) { if (x.dataset.v === 'skip') x.classList.add('on'); });
+        b.innerHTML = '<div class="note" style="margin-top:10px;background:var(--ok-l)">' + ic('circle-check') + '<span><b>Read ' + Object.keys(NSR).length + ' skip prices and ' + NSA.length + ' postcodes from ' + h(name) + '.</b> Check them, change any that are wrong, then add the supplier.</span></div>' +
+          '<table class="dt" style="margin-top:8px"><thead><tr><th>Size</th><th class="r">Their price</th></tr></thead><tbody>' + Object.keys(NSR).map(function (z) { return '<tr><td>' + (z >= 20 ? z + ' yard RoRo' : z + ' yard skip') + '</td><td class="r">' + money(NSR[z]) + '</td></tr>'; }).join('') + '</tbody></table>' +
+          '<p class="muted" style="font-size:12px;margin:6px 0 0">Sample result. Live, the AI reads their real file, whatever the format, and you check each price before it saves.</p>';
+      }, 900);
+    }
+    A.nsSample = function () { nsRead('price list photo.jpg'); };
+    document.addEventListener('change', function (e) { if (e.target && e.target.id === 'nsFile' && e.target.files && e.target.files[0]) nsRead(e.target.files[0].name); });
     A.nsSvc = function (el) { var k = el.dataset.v; NS.svc[k] = !NS.svc[k]; el.classList.toggle('on', !!NS.svc[k]); };
     A.saveSup = function () {
       function v(id) { return String((q('#' + id) || {}).value || '').trim(); }
       var n = v('nsName'); if (!n) { toast('Put the company name in.', 'alert'); var f = q('#nsName'); if (f) f.focus(); return; }
       var svcs = Object.keys(NS.svc).filter(function (k) { return NS.svc[k]; }); if (!svcs.length) { toast('Pick at least one service.', 'alert'); return; }
       var areas = v('nsAreas').toUpperCase().split(/[ ,]+/).filter(Boolean); if (!areas.length) { toast('Put in the postcodes they cover.', 'alert'); var g = q('#nsAreas'); if (g) g.focus(); return; }
-      var rates = {}; svcs.forEach(function (k) { var o = S().suppliers.filter(function (s) { return s.rates && s.rates[k]; })[0]; if (o) rates[k] = JSON.parse(JSON.stringify(o.rates[k])); });
+      var rates = {}; svcs.forEach(function (k) { if (NS.rates && NS.rates[k]) { rates[k] = NS.rates[k]; return; } var o = S().suppliers.filter(function (s) { return s.rates && s.rates[k]; })[0]; if (o) rates[k] = JSON.parse(JSON.stringify(o.rates[k])); });
       var hire = parseInt(v('nsHire'), 10) || 14, wa = v('nsPh'), id = 's' + (100 + S().suppliers.length);
       var su = { id: id, name: n, contact: v('nsContact') || 'Bookings', phone: wa || v('nsTel') || '', wa: !!wa, office: v('nsTel'), base: v('nsBase'), services: svcs, areas: areas, rates: rates, hireDays: hire, weekRate: 25, resp: 30, onTime: 95, wtn: 95, jobs: 0, cbdu: v('nsCbdu') || 'CBDU to follow', licExp: 365, recov: 90 };
       S().suppliers.push(su);
       try { var x = X.hb(su); if (v('nsPo')) x.opsEmail = v('nsPo'); if (v('nsAcc')) x.accEmail = v('nsAcc'); x.terms = v('nsTerms') || x.terms; } catch (e) {}
       CS.commit();
-      doneList(n + ' added', [h(svcs.map(function (k) { return S().services[k].short; }).join(', ')) + ' in ' + h(areas.join(', ')), 'Bookings go ' + (wa ? 'by WhatsApp to ' + h(wa) : 'by email') + (v('nsPo') ? ', purchase orders to ' + h(v('nsPo')) : ''), 'They now show in Find a supplier and on every quote and order for those postcodes', 'Starter prices in until their price sheet is uploaded']);
+      doneList(n + ' added', [h(svcs.map(function (k) { return S().services[k].short; }).join(', ')) + ' in ' + h(areas.join(', ')), 'Bookings go ' + (wa ? 'by WhatsApp to ' + h(wa) : 'by email') + (v('nsPo') ? ', purchase orders to ' + h(v('nsPo')) : ''), 'They now show in Find a supplier and on every quote and order for those postcodes', (NS.rates ? 'Their prices read in from the price list' : 'Starter prices in until their price sheet is uploaded')]);
+    };
+
+    /* ---------- team: what sales, admin and finance are doing, with commission ---------- */
+    (function () {
+      var L = UI.VIEWS; if (!L || L.some(function (x) { return x.k === 'team'; })) return;
+      var at = -1; L.forEach(function (x, i) { if (x.k === 'trends') at = i; });
+      L.splice(at < 0 ? L.length : at + 1, 0, { k: 'team', g: 'Money', n: 'Team', ic: 'users', sub: 'What sales, admin and finance are doing, and commission' });
+    })();
+    function teamData() {
+      var js = S().jobs, qs = S().quotes, wk = function (d) { return d != null && d <= 0 && d >= -6; };
+      function sales(o) {
+        var won = qs.filter(function (x) { return x.owner === o && x.status === 'won'; }), sent = qs.filter(function (x) { return x.owner === o && (x.status === 'sent' || x.status === 'won' || x.status === 'lost'); });
+        var mine = js.filter(function (j) { return j.owner === o && wk(j.day); }), rev = mine.reduce(function (a, j) { return a + (j.sell || 0); }, 0), gp = mine.reduce(function (a, j) { return a + (j.sell || 0) - (j.cost || 0); }, 0);
+        return { orders: mine.length, rev: rev, gp: gp, sent: sent.length, won: won.length, rate: sent.length ? Math.round(won.length / sent.length * 100) : 0 };
+      }
+      var bde = CS.bde();
+      return [
+        { n: 'John Pesci', r: 'Managing Director', c: '#EB9347', k: 'sales', s: sales('john'), kpi: null },
+        { n: bde, r: 'Business Development Executive', c: '#7A3FF2', k: 'sales', s: sales('sam'), com: true },
+        { n: 'Ellie Ward', r: 'Office admin', c: '#0E9F6E', k: 'admin', a: { msgs: 64, reply: 7, orders: 18, etas: 22, wtn: 11 } },
+        { n: 'Kate Moss', r: 'Accounts', c: '#2563EB', k: 'fin', f: { inv: 31, chased: 9, cash: 6480, over: 1150, bills: 14 } }
+      ];
+    }
+    var COMM = 10;
+    function tk(lbl, val, sub) { return '<div class="xm-tk"><small>' + lbl + '</small><b>' + val + '</b>' + (sub ? '<span>' + sub + '</span>' : '') + '</div>'; }
+    V.team = function () {
+      var T = teamData();
+      return '<div class="xm-teamhd"><div><b>' + ic('users') + 'This week, Monday to today</b><small>Logged as people work: every order, quote, message, chase and invoice is counted against whoever did it. Sample figures.</small></div></div>' +
+        '<div class="xm-team">' + T.map(function (p) {
+          var body = '';
+          if (p.k === 'sales') body = tk('Orders placed', p.s.orders) + tk('Revenue booked', money(p.s.rev)) + tk('Gross profit', money(p.s.gp)) + tk('Quotes won', p.s.won + ' of ' + p.s.sent, p.s.rate + '% win rate') + (p.com ? tk('Commission', money(p.s.gp * COMM / 100), COMM + '% of gross profit, your setting') : '');
+          if (p.k === 'admin') body = tk('Messages answered', p.a.msgs) + tk('Average reply', p.a.reply + ' min') + tk('Orders placed', p.a.orders) + tk('ETAs chased', p.a.etas) + tk('Notes filed', p.a.wtn);
+          if (p.k === 'fin') body = tk('Invoices sent', p.f.inv) + tk('Payments chased', p.f.chased) + tk('Cash collected', money(p.f.cash)) + tk('Overdue cleared', money(p.f.over)) + tk('Supplier bills checked', p.f.bills);
+          return '<div class="card xm-tm"><div class="xm-tmh"><span class="av" style="--c:' + p.c + '">' + h(CS.initials(p.n)) + '</span><div><b>' + h(p.n) + '</b><small>' + h(p.r) + '</small></div></div><div class="xm-tks">' + body + '</div></div>';
+        }).join('') + '</div>' +
+        '<p class="muted" style="font-size:12.5px;margin:12px 0 0">Each person sees their own figures. Only you and your ops manager see everyone. Commission works off the gross profit on what each salesperson brings in, at the rate you set.</p>';
     };
 
     /* ---------- Take card now: the card is taken first, then the order books and the receipt goes by email ---------- */

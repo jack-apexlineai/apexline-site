@@ -9,7 +9,7 @@
   var cid = params.get('c') || 'c1'; if (!CS.cust(cid)) cid = 'c1';
   var qid = params.get('q');
   var asked = {};
-  var VIEWS = ['home', 'book', 'orders', 'docs'];
+  var VIEWS = ['home', 'book', 'orders', 'docs', 'green'];
   var view = (location.hash || '').replace('#', ''); if (view === 'documents') view = 'docs'; if (VIEWS.indexOf(view) < 0) view = 'home';
   var docTab = 'wtn', docQ = '', ordF = 'all', B = null;
 
@@ -50,7 +50,7 @@
     $('#callBtn').innerHTML = ic('phone') + '0330 122 5711';
   }
   function nav() {
-    var items = [['home', 'home', 'Home'], ['orders', 'list', 'Orders'], ['docs', 'file-text', 'Documents']];
+    var items = [['home', 'home', 'Home'], ['orders', 'list', 'Orders'], ['docs', 'file-text', 'Documents'], ['green', 'leaf', 'Recycling']];
     $('#cpnav').innerHTML = items.map(function (x) { return '<button data-act="go" data-v="' + x[0] + '" class="' + (view === x[0] ? 'on' : '') + '">' + ic(x[1]) + x[2] + '</button>'; }).join('');
     $('#bookTop').innerHTML = ic('plus') + 'Book a job';
     var tabs = [['home', 'home', 'Home'], ['book', 'plus', 'Book'], ['orders', 'list', 'Orders'], ['docs', 'file-text', 'Documents']];
@@ -70,7 +70,7 @@
     var ae = document.activeElement, fid = ae && ae.id && $('#cview').contains(ae) ? ae.id : null, ss = null;
     if (fid) { try { ss = ae.selectionStart; } catch (e) {} }
     nav();
-    $('#cview').innerHTML = (view === 'book' ? vBook() : view === 'orders' ? vOrders() : view === 'docs' ? vDocs() : vHome()) + foot();
+    $('#cview').innerHTML = (view === 'book' ? vBook() : view === 'orders' ? vOrders() : view === 'docs' ? vDocs() : view === 'green' ? vGreen() : vHome()) + foot();
     if (fid) { var el = document.getElementById(fid); if (el) { el.focus(); try { if (ss != null) el.setSelectionRange(ss, ss); } catch (e2) {} } }
   }
 
@@ -119,9 +119,38 @@
       '<div><div class="cp-sec" style="margin-bottom:10px">' + ic('shield-check') + 'Compliance</div><div class="cp-card"><div class="cp-kv">' +
       '<div><small>Notes on file</small><b>' + wtns.length + '</b></div><div><small>Notes still to come</small><b>' + toCome.length + '</b></div>' +
       '<div><small>Waste moved</small><b>' + r.tonnes + ' t</b></div><div><small>Kept out of landfill</small><b>' + (r.moves ? r.pct + '%' : 'n/a') + '</b></div></div>' +
-      '<div class="cp-foot">Worked out from the waste transfer notes on file. <a class="link" data-act="docTab" data-tab="wtn">See the notes</a></div></div></div>' +
+      '<div class="cp-foot">Worked out from the waste transfer notes on file. <a class="link" data-act="go" data-v="green">See your recycling</a></div></div></div>' +
       '<div><div class="cp-sec" style="margin-bottom:10px">' + ic('list') + 'Latest orders<span class="sp"></span><a class="link" data-act="go" data-v="orders">All orders</a></div><div class="cp-card">' + (recent.map(orderRow).join('') || '<div class="cp-none">No orders yet.</div>') + '</div></div>' +
       '</div>';
+  }
+
+  /* ---------- recycling: this customer's own waste, landfill diversion and carbon, from the notes on file ---------- */
+  function bars(rows, unit) {
+    var mx = Math.max.apply(null, rows.map(function (r) { return r[1]; }).concat([1]));
+    return rows.map(function (r) { return '<div class="cp-bar"><span class="l">' + h(r[0]) + '</span><span class="t"><i style="width:' + (r[1] > 0 ? Math.max(3, Math.round(r[1] / mx * 100)) : 0) + '%"></i></span><b>' + (Math.round(r[1] * 10) / 10) + unit + '</b>' + (r[2] != null ? '<small>' + r[2] + '% recycled</small>' : '') + '</div>'; }).join('');
+  }
+  function greenRep() {
+    var r = CS.report(cid), months = [], now = CS.dayDate(0), i;
+    for (i = 5; i >= 0; i--) { var d = new Date(now.getFullYear(), now.getMonth() - i, 1); months.push([MON[d.getMonth()], 0, d.getMonth(), d.getFullYear()]); }
+    r.jobs.forEach(function (j) { var d = CS.dayDate(j.day); months.forEach(function (m) { if (m[2] === d.getMonth() && m[3] === d.getFullYear()) m[1] += CS.tonnes(j); }); });
+    r.months = months.map(function (m) { return [m[0], m[1]]; });
+    return r;
+  }
+  function vGreen() {
+    var c = CS.cust(cid), r = greenRep();
+    var sites = Object.keys(r.sites).map(function (k) { var x = r.sites[k]; return [k, x.t, x.t ? Math.round(x.d / x.t * 100) : 0]; });
+    var streams = Object.keys(r.streams).map(function (k) { return [k, r.streams[k]]; });
+    return '<div class="cp-hero"><div class="bd"><h1>Your recycling</h1><p>' + h(c.name) + '. Every load we have moved for you, where it went and how much was kept out of landfill.</p></div><button class="btn pri" data-act="greenCsv">' + ic('download') + 'Download your report</button></div>' +
+      '<div class="cp-stats">' +
+      '<div class="cp-stat"><small>' + ic('truck') + 'Waste moved</small><b>' + r.tonnes + ' t</b><span>' + r.moves + (r.moves === 1 ? ' load' : ' loads') + ' with a note on file</span></div>' +
+      '<div class="cp-stat"><small>' + ic('leaf') + 'Kept out of landfill</small><b>' + (r.moves ? r.pct + '%' : 'n/a') + '</b><span>recycled or recovered</span></div>' +
+      '<div class="cp-stat"><small>' + ic('refresh') + 'Recycled</small><b>' + Math.round(r.diverted * 10) / 10 + ' t</b><span>by weight</span></div>' +
+      '<div class="cp-stat"><small>' + ic('trending-up') + 'Carbon, estimated</small><b>' + Math.round(r.co2).toLocaleString('en-GB') + ' kg</b><span>CO2e from your waste</span></div>' +
+      '</div>' +
+      '<div class="cp-two"><div><div class="cp-sec" style="margin-bottom:10px">' + ic('map-pin') + 'By site</div><div class="cp-card cp-bars">' + (sites.length ? bars(sites, ' t') : '<div class="cp-none">No notes on file yet.</div>') + '</div></div>' +
+      '<div><div class="cp-sec" style="margin-bottom:10px">' + ic('stack') + 'By waste stream</div><div class="cp-card cp-bars">' + (streams.length ? bars(streams, ' t') : '<div class="cp-none">No notes on file yet.</div>') + '</div></div></div>' +
+      '<div class="cp-sec" style="margin-bottom:10px">' + ic('calendar') + 'Month by month</div><div class="cp-card cp-bars">' + bars(r.months, ' t') + '</div>' +
+      '<p class="cp-note">Worked out from the waste transfer notes and weighbridge tickets on file, with each recycling site\'s own recovery rate. Carbon is an estimate.</p>';
   }
 
   /* ---------- orders ---------- */
@@ -370,6 +399,14 @@
     book: function (el) { B = newB(el.dataset.site != null ? +el.dataset.site : null); go('book'); },
     ordF: function (el) { ordF = el.dataset.f; go('orders', view === 'orders'); },
     docTab: function (el) { docTab = el.dataset.tab; docQ = ''; go('docs', view === 'docs'); },
+    greenCsv: function () {
+      var r = greenRep(), c = CS.cust(cid), rows = [['Date', 'Order', 'Site', 'What', 'Tonnes', 'Recycled %']];
+      r.jobs.forEach(function (j) { rows.push([dNum(j.day), j.id, siteLine(j), CS.jobDesc(j), CS.tonnes(j), CS.sup(j.sup).recov || 90]); });
+      rows.push([]); rows.push(['Total', '', '', '', r.tonnes, r.pct]);
+      var csv = rows.map(function (x) { return x.map(function (v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(','); }).join('\n');
+      try { var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = c.name.replace(/[^A-Za-z0-9]+/g, '-') + '-recycling-report.csv'; document.body.appendChild(a); a.click(); setTimeout(function () { a.remove(); }, 500); } catch (e) {}
+      toast('Your recycling report is downloading.', 'download');
+    },
     swap: function (el) { request('exchange', el.dataset.id); },
     collect: function (el) { request('collect', el.dataset.id); },
     wtn: function (el) { D.wtn(el.dataset.id); },

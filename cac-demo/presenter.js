@@ -73,6 +73,11 @@
     quotes: function () { closeAll(); view('quotes'); },
     lee: function () { closeAll(); view('inbox'); thread('t15'); },
     portalInbox: function () { closeAll(); view('inbox'); var l = S().threads.filter(function (x) { return x.portalReq && !x.done; }); if (!l.length && window.CACPX) window.CACPX.demo(); l = S().threads.filter(function (x) { return x.portalReq; }); if (l.length) thread(l[l.length - 1].id); },
+    team: function () { closeAll(); view('team'); },
+    portalGreen: function () {
+      closeAll(); view('portal');
+      setTimeout(function () { var f = document.querySelector('#xpPortalHost iframe, #view iframe'); if (f) { var u = f.getAttribute('src').replace(/#.*$/, '').replace(/[?&]g=\d+/, ''); f.setAttribute('src', u + (u.indexOf('?') >= 0 ? '&' : '?') + 'g=' + Date.now() + '#green'); } }, 150);
+    },
     unpaid: function () { closeAll(); view('home'); if (A().xu430) A().xu430(); },
     /* the customer's own page, shown at laptop size inside the demo so one shared window is enough. Hexley has the fullest paperwork. */
     portal: function () {
