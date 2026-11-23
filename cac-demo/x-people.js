@@ -140,9 +140,9 @@
   function supCard(r, q) {
     var su = r.su, hs = hay(su), ar = areaText(su);
     return '<div class="card xp-card xp-sup xp-click" role="button" tabindex="0" data-act="openSup" data-id="' + h(su.id) + '" data-s="' + h(hs) + '" aria-label="Open ' + h(su.name) + '"' + (match(hs, q) ? '' : ' hidden') + '>' +
-      '<div class="xp-top"><div class="xp-name"><b>' + h(su.name) + '</b><small>' + h(svcText(su)) + '</small><small>' + ic('map-pin') + h(su.base || 'No town on file') + (ar ? ' · ' + h(ar) : '') + '</small></div>' + (su.preferred ? '<span class="tag brand">' + ic('star') + 'Preferred</span>' : '') + '</div>' +
-      '<div class="xp-stats">' + stat('On time', r.has ? su.onTime + '%' : 'n/a') + stat('Confirms in', su.resp != null ? '~' + su.resp + ' min' : 'n/a') + '<span><small>Price</small>' + priceCell(r.idx) + '</span></div>' +
-      '<div class="xp-cardfoot">' + docChip(r) + '<span class="sp"></span>' + (A.supScore && r.has ? '<button type="button" class="btn sm" data-act="supScore" data-id="' + h(su.id) + '">' + ic('list') + 'Scorecard</button>' : '') + '</div></div>';
+      '<div class="xp-top"><div class="xp-name"><b>' + h(su.name) + '</b><small>' + h(svcText(su)) + '</small><small>' + ic('map-pin') + h(su.base || 'No town on file') + (ar ? ' · ' + h(ar) : '') + '</small></div>' + (su.preferred ? '<span class="tag brand">' + ic('star') + 'Preferred</span>' : su.onTime != null && su.onTime < 75 ? '<span class="tag bad">' + ic('alert') + 'Avoid</span>' : '') + '</div>' +
+      '<div class="xp-stats">' + stat('On time', r.has ? '<i class="rag ' + (su.onTime >= 92 ? 'g' : su.onTime >= 75 ? 'a' : 'r') + '">' + su.onTime + '%</i>' : 'n/a') + stat('Confirms in', su.resp != null ? '<i class="rag ' + (su.resp <= 30 ? 'g' : su.resp <= 90 ? 'a' : 'r') + '">~' + (su.resp >= 120 ? Math.round(su.resp / 60) + ' hours' : su.resp + ' min') + '</i>' : 'n/a') + '<span><small>Price</small>' + priceCell(r.idx) + '</span></div>' +
+      '<div class="xp-cardfoot">' + docChip(r) + '<span class="tag">' + ic(su.pref === 'email' ? 'mail' : 'whatsapp') + (su.pref === 'email' ? 'Books by email' : 'Books on WhatsApp') + '</span><span class="sp"></span>' + (A.supScore && r.has ? '<button type="button" class="btn sm" data-act="supScore" data-id="' + h(su.id) + '">' + ic('list') + 'Scorecard</button>' : '') + '</div></div>';
   }
   function bestCard(k, icon, title, sub, list, fig) {
     if (!list.length) return '';

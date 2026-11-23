@@ -17,7 +17,7 @@
       var what = ''; try { what = CS.jobDesc(j); } catch (e) { what = 'Your order'; }
       var txt = 'Hi ' + (c.first || 'there') + ',\n\nYour booking is confirmed.\n\nOrder: ' + j.id + '\nWhat: ' + what + '\nSite: ' + (s.name || '') + (s.pc ? ', ' + s.pc : '') + '\nDate: ' + when + (j.time && !/any/i.test(j.time) ? ', ' + j.time : '') + '\nPrice: ' + money(j.sell) + ' + VAT' + (j.po ? '\nYour PO: ' + j.po : '') +
         '\n\nThe order confirmation is attached. I will let you know the delivery window as soon as the supplier gives it.\n\nCheers, John\nCAC Waste Management';
-      try { var th = CS.threadFor({ type: 'customer', id: c.id }, 'email'); CS.addMsg(th, 'out', txt, { by: 'John', att: [{ n: 'Order confirmation ' + j.id + '.pdf', t: 'doc' }], conf: j.id }); th.done = true; th.unread = false; } catch (e) {}
+      try { var th = CS.newThread({ type: 'customer', id: c.id }, 'email', 'Order confirmation ' + j.id); CS.addMsg(th, 'out', txt, { by: 'John', att: [{ n: 'Order confirmation ' + j.id + '.pdf', t: 'doc' }], conf: j.id }); th.done = true; th.unread = false; } catch (e) {}
       j.log = j.log || []; j.log.push({ t: 'Order confirmation emailed to ' + (c.email || c.contact || 'the customer'), at: Date.now() });
     }
     var ap = CS.approve;

@@ -1,7 +1,7 @@
 /* CAC demo store: state in this browser only, the message reader, supplier lookup, pricing, drafts and approvals.
    Nothing is ever sent anywhere. "Send" in this demo only adds the message to the screen. */
 (function () {
-  var KEY = 'cac-demo-v5', LKEY = 'cac-demo-leader';
+  var KEY = 'cac-demo-v6', LKEY = 'cac-demo-leader';
   var CS = window.CS = {};
   var listeners = [];
   var ME = Math.random().toString(36).slice(2);
@@ -546,6 +546,12 @@
     if (!t) { t = { id: 't' + (CS.S.counters.thread++), party: party, ch: ch, msgs: [], unread: false, last: Date.now() }; CS.S.threads.push(t); }
     return t;
   };
+  /* a fresh email conversation, for confirmations and other standard emails that must not land in a customer's own thread */
+  CS.newThread = function (party, ch, subject) {
+    var t = { id: 't' + (CS.S.counters.thread++), party: party, ch: ch || 'email', msgs: [], unread: false, done: true, last: Date.now() };
+    if (subject) t.subject = subject; CS.S.threads.push(t); return t;
+  };
+  CS.cap1 = function (s) { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); };
   CS.feed = function (text, ic) { CS.S.feed.unshift({ at: Date.now(), t: text, ic: ic || 'sparkles' }); CS.S.feed = CS.S.feed.slice(0, 40); };
   CS.saved = function (mins) { CS.S.saved.mins += mins || 0; CS.S.saved.actions++; };
   CS.schedule = function (secs, ev) { ev.due = Date.now() + secs * 1000; CS.S.events.push(ev); };

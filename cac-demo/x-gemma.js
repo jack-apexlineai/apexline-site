@@ -41,7 +41,7 @@
         '<ul class="gx-facts"><li>' + ic('map-pin') + '<span>Site already on her account: <b>' + h(F.site) + ', ' + h(F.pc) + '</b></span></li>' +
         '<li>' + ic('truck') + '<span><b>' + h(F.supName) + '</b> covers ' + h(CS.outward(F.pc)) + (F.onTime ? ', ' + F.onTime + '% on time' : '') + '</span></li>' +
         '<li>' + ic('calendar') + '<span>' + h(F.dayLong) + ' is a week away, so it should be no problem. Check with the supplier when you book.</span></li></ul>' +
-        '<div class="gx-money"><span><small>Their price</small><b>' + money(F.sell) + '</b></span><span><small>Supplier cost</small><b>' + money(F.cost) + '</b></span><span class="gp"><small>Gross profit</small><b>' + money(F.sell - F.cost) + '</b></span></div>' +
+        money3(F, 'gx') +
         '<textarea id="gxText" rows="6" aria-label="Suggested reply to Gemma">' + h(draft(t)) + '</textarea>' +
         '<div class="gx-b"><button class="btn pri" data-act="gxSend">' + ic('send') + 'Send reply</button><small>Goes by email, the way she wrote in. Change anything first.</small></div>';
     }
@@ -85,13 +85,28 @@
       try { L = (CS.lookup(CS.outward(F.pc), { svc: 'grab', qty: 1 }) || []).slice(0, 3); } catch (e) {}
       return L.map(function (x) { var su = x.sup && x.sup.id ? x.sup : CS.sup(x.sup); return { id: su.id, name: su.name, contact: su.contact || 'there', cost: x.cost, sell: x.sell, onTime: su.onTime }; });
     }
-    function lpick(t) { var L = lsups(t); return L.filter(function (s) { return s.id === t.lxSup; })[0] || L[0] || { id: sfacts(t).sup, name: sfacts(t).supName, contact: 'there', cost: sfacts(t).cost, sell: sfacts(t).sell }; }
+    function lpick(t) { var L = lsups(t), s = L.filter(function (s) { return s.id === t.lxSup; })[0] || L[0] || { id: sfacts(t).sup, name: sfacts(t).supName, contact: 'there', cost: sfacts(t).cost, sell: sfacts(t).sell }; if (t.lxSell) s.sell = t.lxSell; return s; }
     function lsupMsg(t, s) {
       var F = sfacts(t);
       return 'Hi ' + s.contact + ', can you do a grab lorry for soil and clay at ' + F.site + ', ' + F.pc + ' tomorrow, AM if possible? Confirming ' + money(s.cost) + ' as per your price. Ref CAC-' + CS.S.counters.job + '. Thanks, John (CAC)';
     }
     function lcustMsg(t) { var s = lpick(t); return t.lxDraft != null ? t.lxDraft : 'Hi Lee, yes no problem mate. Grab booked in for tomorrow at the Histon site, ' + money(s.sell) + ' + VAT. Have requested AM, will confirm the window as soon as possible.'; }
-    function money3(s) { return '<div class="gx-money"><span><small>Their price</small><b>' + money(s.sell) + '</b></span><span><small>Supplier cost</small><b>' + money(s.cost) + '</b></span><span class="gp"><small>Gross profit</small><b>' + money(s.sell - s.cost) + '</b></span></div>'; }
+    /* their price can be typed over: the gross profit and the message change with it */
+    function money3(s, k) {
+      return '<div class="gx-money" data-cost="' + s.cost + '"><span><small>Their price</small><label class="gx-pin">£<input class="gx-price" data-k="' + (k || '') + '" value="' + Math.round(s.sell) + '" inputmode="numeric" aria-label="Their price"></label></span><span><small>Supplier cost</small><b>' + money(s.cost) + '</b></span><span class="gp"><small>Gross profit</small><b class="gx-gp">' + money(s.sell - s.cost) + ' <em>' + (s.sell ? Math.round((s.sell - s.cost) / s.sell * 100) : 0) + '%</em></b></span></div>';
+    }
+    function tel(p) { return '<a class="gx-tel" href="tel:' + String(p).replace(/[^\d+]/g, '') + '">' + h(p) + '</a>'; }
+    document.addEventListener('input', function (e) {
+      var el = e.target; if (!el || !el.classList || !el.classList.contains('gx-price')) return;
+      var nv = parseInt(String(el.value).replace(/[^\d]/g, ''), 10); if (!(nv > 0)) return;
+      var k = el.dataset.k, t, old, ta, box = el.closest('.gx-money'), cost = Number(box && box.dataset.cost) || 0;
+      if (k === 'gx') { t = gem(); if (!t) return; var G = facts(t); old = G.sell; G.sell = nv; ta = document.getElementById('gxText'); }
+      else if (k === 'lx') { t = CS.thread('t15'); if (!t) return; old = lpick(t).sell; t.lxSell = nv; t.priceOverride = { 0: nv }; ta = document.getElementById('lxText'); }
+      else { t = ui.sel && CS.thread(ui.sel); if (!t) return; var X = sfacts(t); old = X.sell; X.sell = nv; t.priceOverride = { 0: nv }; ta = document.getElementById('sxText'); }
+      if (ta && old !== nv) { ta.value = ta.value.split(money(old)).join(money(nv)); ta.dispatchEvent(new Event('input', { bubbles: true })); }
+      var gp = box && box.querySelector('.gx-gp'); if (gp) gp.innerHTML = money(nv - cost) + ' <em>' + Math.round((nv - cost) / nv * 100) + '%</em>';
+      CS.save();
+    });
     /* every step stays on the card, so the history of the job is there to read: asked, answered, booked */
     function lhist(t, s) {
       var r = [];
@@ -106,7 +121,7 @@
         '<div class="gx-b">' + undoBtn(t.id) + '<button class="btn sm" data-act="xh2Dia" data-v="1">Open tomorrow</button><small>Demo, nothing is really sent.</small></div>';
       if (t.lx === 1) return '<div class="gx-h"><span class="gx-sp">' + ic('clock') + '</span><b>Waiting for ' + h(s.name) + '</b><span class="tag">Asked</span></div>' + lhist(t, s) + '<div class="gx-b">' + undoBtn(t.id) + '</div>';
       if (t.lx === 2) return '<div class="gx-h"><span class="gx-sp">' + ic('sparkles') + '</span><b>' + h(s.name) + ' can do it</b><span class="tag ok">Ready to book</span></div>' +
-        lhist(t, s) + money3(s) +
+        lhist(t, s) + money3(s, 'lx') +
         '<textarea id="lxText" rows="3" aria-label="Reply to Lee">' + h(lcustMsg(t)) + '</textarea>' +
         '<div class="gx-b"><button class="btn pri" data-act="lxBook">' + ic('check') + 'Book it</button><small>Books ' + h(s.name) + ', sends Lee this on WhatsApp and emails his confirmation.</small>' + undoBtn(t.id) + '</div>';
       var live = c ? CS.S.jobs.filter(function (j) { return j.cust === c.id && ['booked', 'confirmed', 'onhire', 'exchange', 'collection'].indexOf(j.status) >= 0; }).length : 0, L = lsups(t);
@@ -171,9 +186,9 @@
       var first = t.msgs[0] || {}, lead = CS.party(t.party), ph = (t.form && t.form.Phone) || (lead && lead.phone) || '';
       return '<div class="gx-h"><span class="gx-sp">' + ic('sparkles') + '</span><b>Suggested reply</b><span class="tag bad">Hot</span><span class="gx-want">Wants a price</span></div>' +
         '<ul class="gx-facts"><li>' + ic('clock') + '<span>Came in <b>' + ago(first.at || Date.now()) + '</b> from your website. She found you on Google Ads.</span></li>' +
-        '<li>' + ic('phone') + '<span>New lead. <b>Ring her now' + (ph ? ' on ' + h(ph) : '') + '</b> while it is fresh, or send this.</span></li>' +
+        '<li>' + ic('phone') + '<span>New lead. <b>Ring her now</b>' + (ph ? ' on ' + tel(ph) : '') + ' while it is fresh, or send this.</span></li>' +
         '<li>' + ic('truck') + '<span><b>' + h(F.supName) + '</b> covers ' + h(CS.outward(F.pc)) + (F.onTime ? ', ' + F.onTime + '% on time' : '') + '</span></li></ul>' +
-        money3({ sell: F.sell, cost: F.cost }) +
+        money3({ sell: F.sell, cost: F.cost }, 'sx') +
         '<textarea id="sxText" rows="6" aria-label="Suggested reply">' + h(sdraft(t)) + '</textarea>' +
         '<div class="gx-b"><button class="btn pri" data-act="sxSend" data-id="' + t.id + '">' + ic('send') + 'Send quote</button><small>Goes by email to the address on her form. Change anything first.</small></div>';
     }
@@ -253,7 +268,7 @@
     A.gxBook = function () {
       var t = gem(); if (!t) return; var F = facts(t), c = CS.cust('c7');
       hideBubble(); t.unread = false; CS.save(); ui.gxBooking = t.id;
-      V2.x.order({ cust: 'c7', site: 0, cname: c.contact, cphone: c.phone, svc: 'grab', qty: 1, day: F.day, time: '8 to 12', pay: 'account', send: 'email', note: 'Clean soil. From Gemma\'s email.' });
+      V2.x.order({ cust: 'c7', site: 0, cname: c.contact, cphone: c.phone, svc: 'grab', qty: 1, sell: F.sell, day: F.day, time: '8 to 12', pay: 'account', send: 'email', note: 'Clean soil. From Gemma\'s email.' });
     };
     var op = A.ordPlace;
     A.ordPlace = function (el) {

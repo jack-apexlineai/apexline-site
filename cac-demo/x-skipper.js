@@ -263,6 +263,9 @@
   }
   function fire(id) {
     var tp = isHot(id); if (!tp || (ui.view === 'inbox' && ui.sel === id)) return;
+    /* never on top of the guided tour or another bubble: the tour shows its own moments */
+    var ws = window.CACWALK && window.CACWALK.state && window.CACWALK.state(); if (ws && ws.i >= 0 && !ws.paused && ws.i < window.CACWALK.steps.length) return;
+    if ($('#gxNudge') || $('#lxNudge') || $('#xpNudge')) return;
     nudged[id] = true; hideNudge();
     var p = CS.party(CS.thread(id).party), msg = 'It looks like ' + h(p.first || firstName(p.name)) + ' ' + h(lc1(tp.line)) + '.';
     var btns = '<button class="btn sm pri" data-act="skNudgeOpen" data-id="' + id + '">Open</button><button class="btn sm ghost" data-act="skNudgeX">Dismiss</button>';

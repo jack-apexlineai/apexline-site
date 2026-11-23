@@ -19,12 +19,16 @@
   /* ---------- pricing rules ---------- */
   function rules() {
     var st = S().settings; st.pricing = st.pricing || {};
-    SVC_ORDER.forEach(function (k) { if (!st.pricing[k] && CS.svc(k)) st.pricing[k] = { mk: Math.round((CS.svc(k).markup || 0.25) * 100), floor: FLOOR[k] }; });
+    SVC_ORDER.forEach(function (k) { if (!st.pricing[k] && CS.svc(k)) st.pricing[k] = { gp: 20, floor: FLOOR[k] }; if (st.pricing[k] && st.pricing[k].gp == null) st.pricing[k].gp = 20; });
     return st.pricing;
   }
+  /* every price is set from the target gross profit (20% unless changed), rounded up to the nearest £5. Any price can still be changed by hand. */
+  function gpOf(svc) { try { var r = rules()[svc]; var g = r && r.gp != null ? Number(r.gp) : 20; return isNaN(g) ? 20 : Math.max(0, Math.min(80, g)); } catch (e) { return 20; } }
+  CS.sell = function (svc, cost) { return c5(cost / (1 - gpOf(svc) / 100)); };
+  CS.targetGp = gpOf;
   function ladder(svc, cost) {
-    var r = rules()[svc] || { mk: 25, floor: 25 };
-    var ideal = c5(cost * (1 + r.mk / 100)), floor = c5(cost + r.floor), stretch = c5(ideal * 1.08);
+    var r = rules()[svc] || { gp: 20, floor: 25 };
+    var ideal = CS.sell(svc, cost), floor = c5(cost + r.floor), stretch = c5(ideal * 1.08);
     if (floor >= ideal) floor = ideal - 5;
     return { cost: cost, floor: floor, ideal: ideal, stretch: stretch };
   }
@@ -222,10 +226,10 @@
       '<button class="card kpi" data-act="upload" data-v="customer"><small>' + ic('lock') + 'A customer\'s agreed rates</small><b style="font-size:17px">Upload one</b><span class="d">Their trade rates, used automatically on every quote for them.</span></button>' +
       '<button class="card kpi hero" data-act="desk"><small>' + ic('plus') + 'On the phone now?</small><b style="font-size:17px">New quote</b><span class="d">Postcode and size. The price is there before they finish asking.</span></button></div>' +
       '<div class="card" style="margin-bottom:16px"><div class="hd"><h2>' + ic('list') + 'Your skip prices, every area</h2><span class="muted" style="font-size:12.5px">Ideal price from today\'s best supplier and your rules. Tap any price to quote it.</span></div><div class="tw"><table class="t pbook"><thead><tr><th>Area</th>' + [4, 6, 8, 12, 16, 20, 40].map(function (z) { return '<th class="r">' + (z >= 20 ? z + 'yd RoRo' : z + ' yard') + '</th>'; }).join('') + '</tr></thead><tbody>' + REGIONS.map(row).join('') + '</tbody></table></div></div>' +
-      '<div class="card"><div class="hd"><h2>' + ic('settings') + 'Your pricing rules</h2><span class="muted" style="font-size:12.5px">Change a number and every price in the system follows</span></div><div class="tw"><table class="t"><thead><tr><th>Service</th><th class="r">Ideal markup</th><th class="r">Floor, at least</th><th class="hide-sm">Means</th></tr></thead><tbody>' +
+      '<div class="card"><div class="hd"><h2>' + ic('settings') + 'Your pricing rules</h2><span class="muted" style="font-size:12.5px">Set your target gross profit. Every price is worked out to give you that, rounded up to the nearest £5. You can still change any price by hand.</span></div><div class="tw"><table class="t"><thead><tr><th>Service</th><th class="r">Target gross profit</th><th class="r">Floor, at least</th><th class="hide-sm">Means</th></tr></thead><tbody>' +
       SVC_ORDER.map(function (k) {
         var r = R[k]; var ex = k === 'skip' ? (function () { var b = (CS.lookup('PE31', { svc: 'skip', size: 8, qty: 1 }) || [])[0]; if (!b) return ''; var L = ladder('skip', b.cost); return 'PE31 8 yard: buy ' + money(L.cost) + ', floor ' + money(L.floor) + ', ideal ' + money(L.ideal) + ', stretch ' + money(L.stretch); })() : '';
-        return '<tr><td><b>' + h(CS.svc(k).name) + '</b></td><td class="r"><input class="rin" data-rule="mk" data-k="' + k + '" value="' + r.mk + '" inputmode="numeric" aria-label="' + h(CS.svc(k).name) + ' markup"> %</td><td class="r">£ <input class="rin" data-rule="floor" data-k="' + k + '" value="' + r.floor + '" inputmode="numeric" aria-label="' + h(CS.svc(k).name) + ' floor"></td><td class="hide-sm"><small class="muted">' + h(ex) + '</small></td></tr>';
+        return '<tr><td><b>' + h(CS.svc(k).name) + '</b></td><td class="r"><input class="rin" data-rule="gp" data-k="' + k + '" value="' + r.gp + '" inputmode="numeric" aria-label="' + h(CS.svc(k).name) + ' target gross profit"> %</td><td class="r">£ <input class="rin" data-rule="floor" data-k="' + k + '" value="' + r.floor + '" inputmode="numeric" aria-label="' + h(CS.svc(k).name) + ' floor"></td><td class="hide-sm"><small class="muted">' + h(ex) + '</small></td></tr>';
       }).join('') + '</tbody></table></div></div>';
   };
   function uploadBody(kind) {

@@ -135,6 +135,12 @@
   var SIZES = [4, 6, 8, 10, 12, 14, 16, 20, 40];
   var QTY = { grab: ['Loads', 1], muck: ['Loads', 1], aggregates: ['Loads', 1], welfare: ['Weeks', 4], container: ['Weeks', 4], toilet: ['Weeks', 4], fencing: ['Panels', 40], sweeper: ['Hours', 4], concrete: ['Cubic metres', 6], plant: ['Weeks', 1] };
   var TIMES = ['Any time', '7 to 8:30', '8 to 12', '12 to 4'];
+  /* what goes in the skip. Soil, rubble or concrete in anything over 8 yards is too heavy to lift, so it warns */
+  var MATS = ['Mixed general', 'Soil and rubble', 'Concrete or hardcore', 'Green waste', 'Wood', 'Plasterboard'], HEAVY = /soil|concrete|hardcore|rubble/i;
+  function heavyWarn() {
+    if (O.svc !== 'skip' || !O.mat || !HEAVY.test(O.mat) || !(O.size > 8) || O.size >= 20) return '';
+    return '<div class="note xwheavy" id="ordHeavy" role="alert" style="background:var(--warn-l,#FEF3C7);margin-top:8px">' + ic('alert') + '<span><b>Too heavy to lift.</b> A ' + O.size + ' yard skip full of ' + h(O.mat.toLowerCase()) + ' is over the lorry\'s lifting weight. Suggest an 8 yard or smaller, or a grab. If they want the ' + O.size + ' yard, it can only be half filled.</span></div>';
+  }
   function itemOf(d) {
     var it = { svc: d.svc, qty: 1 }, n = Number(d.qty) || (QTY[d.svc] || [0, 1])[1];
     if (d.svc === 'skip') it.size = Number(d.size) || 8;
@@ -148,15 +154,18 @@
   }
   function descOf(it) { return cap(CS.itemText(it).replace(/^(an|a) /i, '')); }
   function freshOrder(pre) {
-    var c = S().customers[0];
-    O = { cust: c.id, site: 0, addr: '', town: '', pc: '', cname: c.contact, cphone: c.phone, newName: '', svc: 'skip', size: 8, qty: '', day: null, time: TIMES[0], sup: null, sell: null, pay: /card/i.test(c.terms) ? 'link' : 'account', send: 'email', note: '', po: '' };
+    /* a new order opens blank: no customer picked, Take card now picked, until someone is chosen */
+    O = { cust: '', site: 'other', house: '', addr: '', town: '', pc: '', cname: '', cphone: '', email: '', newName: '', svc: 'skip', size: 8, qty: '', day: null, time: TIMES[0], sup: null, sell: null, pay: 'card', send: 'email', note: '', po: '' };
     if (pre) for (var k in pre) O[k] = pre[k];
     /* paperwork always goes by email; a day only counts once one is picked */
     O.send = 'email'; O.day = (O.day == null || O.day === '' || isNaN(Number(O.day))) ? null : Number(O.day);
     return O;
   }
   /* the full site address line: road (and house number) plus the town */
-  function fullAddr() { return [O.addr, O.town].map(function (x) { return String(x || '').trim(); }).filter(Boolean).join(', '); }
+  function fullAddr() {
+    var hs = String(O.house || '').trim(), rd = String(O.addr || '').trim(), line = hs && rd ? (/^\d+[a-z]?$/i.test(hs) ? hs + ' ' + rd : hs + ', ' + rd) : (hs || rd);
+    return [line, O.town].map(function (x) { return String(x || '').trim(); }).filter(Boolean).join(', ');
+  }
   /* ---------- postcode finds the road: postcodes.io for the place, OpenStreetMap for the road ---------- */
   var PCC = {};
   function pcKey(v) { v = String(v || '').toUpperCase().replace(/\s+/g, ''); return /^[A-Z]{1,2}\d[A-Z\d]?\d[A-Z]{2}$/.test(v) ? v : ''; }
@@ -164,7 +173,7 @@
     var k = pcKey(O && O.pc), x = k && PCC[k]; if (!x) return '';
     if (x.st === 'busy') return '<span class="xwspin" aria-hidden="true"></span>Finding the road...';
     if (x.st === 'ok') return 'Found from the postcode';
-    return '<span class="xwpcbad">Could not find that postcode, type the road in</span>';
+    return '<span class="xwpcbad">Address not found. Type it in by hand, or book it and check the address later.</span>';
   }
   function pcPaint() { var s = q('#ordPcSt'); if (s) s.innerHTML = pcStHtml(); }
   function pcFill(k) {
@@ -220,18 +229,21 @@
   function pk(act, v, on, label) { return '<button type="button" class="pk' + (on ? ' on' : '') + '" data-act="' + act + '" data-v="' + h(v) + '">' + label + '</button>'; }
   function ordLeft() {
     var c = ordCust(), q2 = QTY[O.svc];
-    return '<div class="field"><label for="ordCust">Customer</label><select id="ordCust">' + S().customers.map(function (x) { return '<option value="' + x.id + '"' + (x.id === O.cust ? ' selected' : '') + '>' + h(x.name) + ' (' + h(x.contact) + ')</option>'; }).join('') + '<option value="new"' + (O.cust === 'new' ? ' selected' : '') + '>New customer</option></select></div>' +
+    return '<div class="field"><label for="ordCust">Customer</label><select id="ordCust"><option value=""' + (O.cust === '' ? ' selected' : '') + '>Pick a customer, or fill in a new one below</option>' + S().customers.map(function (x) { return '<option value="' + x.id + '"' + (x.id === O.cust ? ' selected' : '') + '>' + h(x.name) + ' (' + h(x.contact) + ')</option>'; }).join('') + '</select></div>' +
       (c && c.stop ? '<div class="xwstop" id="ordStop" role="alert">' + ic('lock') + '<span><b>On stop. Speak to the accounts team.</b><small>' + h(c.name) + ' are on stop in Credit control, so no order can be placed for them.</small></span></div>' : '') +
       (c ? '' : '<div class="field"><label for="ordNew">Customer or company name</label><input id="ordNew" value="' + h(O.newName) + '" placeholder="For example Harlow Builders"></div>') +
       (c ? '<div class="field"><label for="ordSite">Site</label><select id="ordSite">' + c.sites.map(function (s, i) { return '<option value="' + i + '"' + (String(O.site) === String(i) ? ' selected' : '') + '>' + h(s.name) + ', ' + h(s.pc) + '</option>'; }).join('') + '<option value="other"' + (O.site === 'other' ? ' selected' : '') + '>A different address</option></select></div>' : '') +
       (!c || O.site === 'other' ? '<div class="field xwpc"><label for="ordPc">Postcode</label><input id="ordPc" value="' + h(O.pc) + '" placeholder="PE36 5AB" autocomplete="off" autocapitalize="characters" spellcheck="false"><div class="xwpcst" id="ordPcSt" aria-live="polite">' + pcStHtml() + '</div></div>' +
-        '<div class="frow"><div class="field" style="flex:2"><label for="ordAddr">Site address</label><input id="ordAddr" value="' + h(O.addr) + '" placeholder="12 Mill Lane"></div><div class="field" style="flex:1"><label for="ordTown">Town</label><input id="ordTown" value="' + h(O.town || '') + '" placeholder="Hunstanton"></div></div>' : '') +
+        '<div class="frow"><div class="field" style="flex:1"><label for="ordHouse">House name or number</label><input id="ordHouse" value="' + h(O.house || '') + '" placeholder="15, or Rose Cottage"></div><div class="field" style="flex:1.4"><label for="ordAddr">Street</label><input id="ordAddr" value="' + h(O.addr) + '" placeholder="Found from the postcode"></div><div class="field" style="flex:1"><label for="ordTown">Town</label><input id="ordTown" value="' + h(O.town || '') + '" placeholder="Found from the postcode"></div></div>' : '') +
       '<div class="frow"><div class="field" style="flex:1"><label for="ordCn">Site contact name</label><input id="ordCn" value="' + h(O.cname) + '"></div><div class="field" style="flex:1"><label for="ordCp">Site contact number</label><input id="ordCp" value="' + h(O.cphone) + '" inputmode="tel"></div></div>' +
+      (c ? '' : '<div class="field"><label for="ordEmail">Email, for the confirmation and receipt</label><input id="ordEmail" type="email" value="' + h(O.email || '') + '" placeholder="name@example.com" autocomplete="off"></div>') +
       '<div class="field"><label>Service</label><div class="chips">' + SVCS.map(function (k) { return pk('ordSvc', k, O.svc === k, h(S().services[k].short)); }).join('') + '</div></div>' +
-      (O.svc === 'skip' ? '<div class="field"><label>Size</label><div class="chips">' + SIZES.map(function (z) { return pk('ordSize', z, O.size === z, z + ' yd'); }).join('') + '</div></div>'
+      (O.svc === 'skip' ? '<div class="field"><label>Size</label><div class="chips">' + SIZES.map(function (z) { return pk('ordSize', z, O.size === z, z + ' yd'); }).join('') + '</div></div>' +
+        '<div class="field"><label>Material</label><div class="chips">' + MATS.map(function (m) { return pk('ordMat', m, O.mat === m, h(m)); }).join('') + '</div>' + heavyWarn() + '</div>'
         : '<div class="field" style="max-width:180px"><label for="ordQty">' + q2[0] + '</label><input id="ordQty" inputmode="numeric" value="' + h(O.qty || q2[1]) + '"></div>') +
       dayField() +
-      '<div class="field"><label>Time on site</label><div class="chips">' + TIMES.map(function (t) { return pk('ordTime', t, O.time === t, t); }).join('') + '</div></div>' +
+      '<div class="field"><label>Time on site</label><div class="chips">' + TIMES.map(function (t) { return pk('ordTime', t, O.time === t, t); }).join('') + pk('ordTime', '__custom', O.timeC, 'Custom time') + '</div>' +
+        (O.timeC ? '<input id="ordTimeC" value="' + h(O.timeC === true ? '' : O.timeC) + '" placeholder="For example 10:30 to 11:30, or before 7am" style="margin-top:8px;max-width:320px" autocomplete="off">' : '') + '</div>' +
       '<div class="field"><label for="ordPo">PO number (optional)</label><input id="ordPo" value="' + h(O.po || '') + '" placeholder="The customer\'s purchase order number" autocomplete="off" maxlength="40"></div>' +
       '<div class="field"><label for="ordNote">Notes for the driver (optional)</label><input id="ordNote" value="' + h(O.note) + '" placeholder="Gate code, where to put it, who to ring"></div>';
   }
@@ -282,13 +294,14 @@
     O.send = 'email';
     if (!c) {
       var nm = (O.newName || '').trim(); if (!nm) { H.toast('Put the customer\'s name in', 'alert'); var f = q('#ordNew'); if (f) f.focus(); return; }
-      c = { id: 'c' + (s.customers.length + 40), limit: 0, name: nm, contact: O.cname || nm, first: first(O.cname || nm), phone: O.cphone, email: '', type: 'Builder', terms: 'Card on order', owner: 'john', sites: [{ name: fullAddr() || CS.outward(r.pc), pc: r.pc.toUpperCase() }] };
+      c = { id: 'c' + (s.customers.length + 40), limit: 0, name: nm, contact: O.cname || nm, first: first(O.cname || nm), phone: O.cphone, email: String(O.email || '').trim(), type: 'Builder', terms: 'Card on order', owner: 'john', sites: [{ name: fullAddr() || CS.outward(r.pc), pc: r.pc.toUpperCase() }] };
       s.customers.push(c); O.site = 0;
     }
     var other = O.site === 'other', id = CS.nextId('job', 'CAC-'), su = r.pick.sup, it = r.it;
     var j = { id: id, cust: c.id, site: other ? null : Number(O.site), siteName: other ? (fullAddr() || r.pc.toUpperCase()) : null, pc: other ? r.pc.toUpperCase() : null, addr: other ? fullAddr() : '', svc: it.svc, size: it.size, qty: it.qty || 1, weeks: it.weeks, panels: it.panels, ft: it.ft, m3: it.m3, hours: it.hours,
       sup: su.id, cost: r.cost, sell: r.sell, status: 'booked', day: O.day, bookedAt: Date.now(), wtn: /skip|grab|muck/.test(it.svc) ? 'pending' : null, owner: 'john', log: [],
-      contact: { name: O.cname || c.contact, phone: O.cphone || c.phone }, note: O.note, eta: O.time === 'Any time' ? null : O.time };
+      contact: { name: O.cname || c.contact, phone: O.cphone || c.phone }, note: [O.mat && it.svc === 'skip' ? O.mat : '', O.note].filter(Boolean).join('. '), eta: O.time === 'Any time' ? null : O.time };
+    if (O.mat && it.svc === 'skip') j.mat = O.mat;
     var po = String(O.po || '').trim(); if (po) j.po = po;
     if (!other) { delete j.siteName; delete j.pc; }
     CS.jobLog(j, 'Order placed by John'); s.jobs.push(j);
@@ -299,14 +312,16 @@
     CS.jobLog(j, 'Invoiced on ' + inv + (paid ? ', paid by card' : ''));
     }
     var site = CS.jobSite(j), when = CS.fmtDayLong(O.day) + (j.eta ? ', ' + j.eta : '');
-    var ts = CS.threadFor({ type: 'supplier', id: su.id }, 'wa');
-    CS.addMsg(ts, 'out', 'Hi ' + su.contact + ', can you do ' + CS.itemText(it) + ' for ' + c.name + ', ' + (j.addr ? j.addr + ', ' : '') + site.pc + ', ' + when + ' please. Site contact ' + j.contact.name + ' ' + (j.contact.phone || '') + '.' + (O.note ? ' ' + O.note + '.' : '') + ' Ref ' + id + '. Thanks, John (CAC)', { by: 'John' });
+    var ts = CS.threadFor({ type: 'supplier', id: su.id }, su.pref === 'email' ? 'email' : 'wa');
+    CS.addMsg(ts, 'out', 'Hi ' + su.contact + ', can you do ' + CS.itemText(it) + ' at ' + (j.addr ? j.addr + ', ' : '') + site.pc + ', ' + when + ' please. Site contact ' + j.contact.name + ' ' + (j.contact.phone || '') + '.' + (j.note ? ' ' + j.note + '.' : '') + ' Ref ' + id + '. Thanks, John (CAC)', { by: 'John' });
     CS.schedule(6 + Math.random() * 2, { type: 'supReply', sup: su.id, job: id, text: 'Yes no problem, ' + CS.dayPhrase(O.day).replace(/^on /, '') + (j.eta ? ' ' + j.eta : ' AM') + ' for ' + id });
-    var ch = 'email', tc = CS.threadFor({ type: 'customer', id: c.id }, ch); if (ch === 'email' && !tc.subject) tc.subject = 'Your order ' + id;
-    if (later) CS.addMsg(tc, 'out', 'Hi ' + c.first + ', that\'s booked: ' + CS.itemText(it) + ' at ' + site.pc + ', ' + when + ', ' + money(r.sell) + ' + VAT. Ref ' + id + '. Order confirmation attached. The invoice follows once the job is complete. Cheers, John',
-      { by: 'John', att: [{ n: 'Order-confirmation-' + id + '.pdf', t: 'order', job: id }] });
-    else CS.addMsg(tc, 'out', 'Hi ' + c.first + ', that\'s booked: ' + CS.itemText(it) + ' at ' + site.pc + ', ' + when + ', ' + money(r.sell) + ' + VAT. Ref ' + id + '. Order confirmation and invoice ' + inv + ' attached' + (O.pay === 'link' ? ', you can pay by card with the link on the invoice' : paid ? ', paid by card, thank you' : '') + '. Cheers, John',
-      { by: 'John', att: [{ n: 'Order-confirmation-' + id + '.pdf', t: 'order', job: id }, { n: inv + '.pdf', t: 'inv', job: inv }] });
+    /* the confirmation is always its own email, the standard template, never a reply in the customer's conversation */
+    var ch = 'email', tc = CS.newThread({ type: 'customer', id: c.id }, ch, 'Order confirmation ' + id);
+    var body = 'Hi ' + c.first + ',\n\nYour order is booked.\n\nOrder: ' + id + '\nWhat: ' + CS.cap1(CS.itemText(it)) + '\nSite: ' + (j.addr ? j.addr + ', ' : (site.name && site.name !== site.pc ? site.name + ', ' : '')) + site.pc + '\nDate: ' + CS.cap1(when) + (j.eta ? ', ' + j.eta : '') + '\nPrice: ' + money(r.sell) + ' + VAT (' + money(r.sell * 1.2) + ' with VAT)' + (j.po ? '\nYour PO: ' + j.po : '') + '\n\n';
+    if (later) CS.addMsg(tc, 'out', body + 'Your order confirmation is attached. The invoice follows once the job is complete.\n\nThanks,\nJohn\nCAC Waste Management',
+      { by: 'John', conf: id, att: [{ n: 'Order-confirmation-' + id + '.pdf', t: 'order', job: id }] });
+    else CS.addMsg(tc, 'out', body + 'Your order confirmation and invoice ' + inv + ' are attached' + (O.pay === 'link' ? '. You can pay by card with the link on the invoice.' : paid ? '. Paid by card, thank you. Your receipt is attached.' : ', on your account.') + '\n\nThanks,\nJohn\nCAC Waste Management',
+      { by: 'John', conf: id, att: [{ n: 'Order-confirmation-' + id + '.pdf', t: 'order', job: id }, { n: inv + '.pdf', t: 'inv', job: inv }] });
     tc.done = true; tc.unread = false;
     CS.feed('Order ' + id + ' placed for ' + c.name + ', ' + money(r.sell), 'truck'); CS.saved(12); CS.commit();
     H.ui.flash = id;
@@ -461,7 +476,9 @@
   function hbBlock(su) {
     var x = hb(su), ds = docs(su), rows = rateRows(su);
     return '<div class="hbk" id="hbk"><div class="sec"><h3>Contacts</h3></div>' +
-      '<div class="rowline"><div class="bd"><b>' + h(su.contact) + ', bookings</b><small>' + h(su.phone) + ' · ' + h(x.opsEmail) + '</small></div><button class="btn sm" data-act="msgParty" data-type="supplier" data-id="' + su.id + '">' + ic('whatsapp') + 'WhatsApp</button></div>' +
+      '<div class="rowline"><div class="bd"><b>' + h(su.contact) + ', bookings</b><small>' + h(su.phone) + ' · ' + h(x.opsEmail) + '</small><small>' + (su.pref === 'email' ? 'Prefers email. Purchase orders go to ' + h(x.opsEmail) : 'Prefers WhatsApp') + '</small></div>' +
+        (su.pref === 'email' ? '<button class="btn sm pri" data-act="msgParty" data-ch="email" data-type="supplier" data-id="' + su.id + '">' + ic('mail') + 'Email</button><button class="btn sm" data-act="msgParty" data-ch="wa" data-type="supplier" data-id="' + su.id + '">' + ic('whatsapp') + 'WhatsApp</button>'
+          : '<button class="btn sm pri" data-act="msgParty" data-ch="wa" data-type="supplier" data-id="' + su.id + '">' + ic('whatsapp') + 'WhatsApp</button><button class="btn sm" data-act="msgParty" data-ch="email" data-type="supplier" data-id="' + su.id + '">' + ic('mail') + 'Email</button>') + '</div>' +
       '<div class="rowline"><div class="bd"><b>' + h(x.acc) + ', accounts team</b><small>' + h(x.accPhone) + ' · ' + h(x.accEmail) + ' · pays on ' + h(x.terms) + '</small></div></div>' +
       '<div class="sec"><h3>Hire and surcharges</h3></div><div class="frow">' +
       (su.hireDays ? '<div class="field" style="flex:1"><label for="hbHire">Standard hire period</label><select id="hbHire" data-id="' + su.id + '">' + [7, 14, 21, 28].map(function (d) { return '<option value="' + d + '"' + (su.hireDays === d ? ' selected' : '') + '>' + weeks(d) + '</option>'; }).join('') + '</select></div>' : '') +
@@ -570,7 +587,7 @@
     }
     return t.id;
   };
-  W.onSite = onSite; W.warnings = warnings; W.todo = todo; W.order = function () { return O; };
+  W.onSite = onSite; W.warnings = warnings; W.todo = todo; W.order = function () { return O; }; W.calc = function () { return O ? ordCalc() : null; };
   W.x = { hb: hb, docs: docs, onSite: onSite, eta: eta, contact: contact, track: track, movesOn: movesOn, warnings: warnings, dateOf: dateOf, weeks: weeks, inWords: inWords, hash: hash, first: first, cap: cap, D: D, itemOf: itemOf, descOf: descOf, raiseLater: raiseLater,
     order: function (pre) { H.A.closeSide(); freshOrder(pre); ordDraw(); } };
 
@@ -599,7 +616,11 @@
     A.ordSvc = function (el) { O.svc = el.dataset.v; O.qty = ''; O.sup = null; O.sell = null; ordDraw(); };
     A.ordSize = function (el) { O.size = Number(el.dataset.v); O.sup = null; O.sell = null; ordDraw(); };
     A.ordDay = function (el) { O.day = Number(el.dataset.v); ordDraw(); };
-    A.ordTime = function (el) { O.time = el.dataset.v; ordDraw(); };
+    A.ordTime = function (el) {
+      if (el.dataset.v === '__custom') { O.timeC = O.timeC || true; O.time = typeof O.timeC === 'string' ? O.timeC : 'Any time'; ordDraw(); var f = q('#ordTimeC'); if (f) f.focus(); return; }
+      O.timeC = false; O.time = el.dataset.v; ordDraw();
+    };
+    A.ordMat = function (el) { O.mat = O.mat === el.dataset.v ? '' : el.dataset.v; ordDraw(); };
     A.ordSup = function (el) { O.sup = el.dataset.v; O.sell = null; ordRes(); };
     A.ordPay = function (el) { O.pay = el.dataset.v; ordRes(); };
     A.ordInv = function (el) { O.inv = el.dataset.v === 'later' ? 'later' : 'now'; ordRes(); };
@@ -711,18 +732,21 @@
       if (O && document.querySelector('#layer #ordL')) {
         if (el.id === 'ordNew') O.newName = el.value;
         if (el.id === 'ordAddr') O.addr = el.value;
+        if (el.id === 'ordHouse') O.house = el.value;
+        if (el.id === 'ordEmail') O.email = el.value;
         if (el.id === 'ordTown') O.town = el.value;
         if (el.id === 'ordPc') { O.pc = el.value; O.sup = null; O.sell = null; ordRes(); pcLook(); }
         if (el.id === 'ordCn') O.cname = el.value;
         if (el.id === 'ordCp') O.cphone = el.value;
         if (el.id === 'ordNote') O.note = el.value;
         if (el.id === 'ordPo') O.po = el.value;
+        if (el.id === 'ordTimeC') { O.timeC = el.value || true; O.time = el.value.trim() || 'Any time'; }
         if (el.id === 'ordQty') { O.qty = el.value; O.sell = null; ordRes(); }
       }
     });
     document.addEventListener('change', function (e) {
       var el = e.target;
-      if (el.id === 'ordCust') { O.cust = el.value; O.sup = null; O.sell = null; O.stopOk = false; var c = ordCust(); O.site = c ? 0 : 'other'; if (c) { O.cname = c.contact; O.cphone = c.phone; O.pay = /card/i.test(c.terms) ? 'link' : 'account'; } else { O.cname = ''; O.cphone = ''; O.pay = 'link'; } ordDraw(); }
+      if (el.id === 'ordCust') { O.cust = el.value; O.sup = null; O.sell = null; O.stopOk = false; var c = ordCust(); O.site = c ? 0 : 'other'; if (c) { O.cname = c.contact; O.cphone = c.phone; O.pay = /card/i.test(c.terms) ? 'card' : 'account'; } else { O.cname = ''; O.cphone = ''; O.pay = 'card'; } ordDraw(); }
       if (el.id === 'ordSite') { O.site = el.value === 'other' ? 'other' : Number(el.value); O.sup = null; O.sell = null; ordDraw(); }
       if (el.id === 'ordDate' && O && document.querySelector('#layer #ordL')) { var off = offOf(el.value); if (off != null && off >= 0 && off <= 730) { O.day = off; ordDraw(); } }
       if (el.id === 'ordSell') { var v = parseFloat(String(el.value).replace(/[^\d.]/g, '')); if (!isNaN(v)) { O.sell = v; ordRes(); } }

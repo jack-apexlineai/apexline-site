@@ -69,6 +69,11 @@
     customers: function () { closeAll(); view('customers'); },
     skipper: function () { closeAll(); A().ask(); fill('#askQ', 'Read my latest email about a quote'); },
     gemmaBook: function () { closeAll(); view('home'); if (window.CACGX) window.CACGX.force(); },
+    hannah: function () { closeAll(); view('inbox'); thread('t3'); },
+    quotes: function () { closeAll(); view('quotes'); },
+    lee: function () { closeAll(); view('inbox'); thread('t15'); },
+    portalInbox: function () { closeAll(); view('inbox'); var l = S().threads.filter(function (x) { return x.portalReq && !x.done; }); if (!l.length && window.CACPX) window.CACPX.demo(); l = S().threads.filter(function (x) { return x.portalReq; }); if (l.length) thread(l[l.length - 1].id); },
+    unpaid: function () { closeAll(); view('home'); if (A().xu430) A().xu430(); },
     /* the customer's own page, shown at laptop size inside the demo so one shared window is enough. Hexley has the fullest paperwork. */
     portal: function () {
       closeAll();
