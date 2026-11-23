@@ -34,6 +34,8 @@
       x: [{ l: 'Show credit control', act: 'creditctl' }] },
     { id: 'chasing', act: 'chasing', t: 'Chasing',
       p: 'Everything waiting on someone else, with the chase message already written.' },
+    { id: 'carbon', act: 'carbon', t: 'Waste and carbon',
+      p: 'Tonnes, the share kept out of landfill and carbon for every account and site, built from the transfer notes your suppliers send back. Each customer\'s report goes out under your logo. Carbon is an estimate.' },
     { id: 'skipper', act: 'skipper', t: 'Skipper',
       p: 'Ask it in plain words. It finds the message, suggests the reply, and sends it only when you say so. Press Enter to ask.' }
   ];
