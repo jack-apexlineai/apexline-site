@@ -180,7 +180,7 @@
       '<div class="field"><label for="ordNote">Notes for the driver (optional)</label><input id="ordNote" value="' + h(O.note) + '" placeholder="Gate code, where to put it, who to ring"></div>';
   }
   function ordRight() {
-    var r = ordCalc(), c = ordCust();
+    var r = ordCalc(), c = ordCust(), later = invLaterOn();
     if (c && c.stop) return '<div class="xwstop">' + ic('lock') + '<span><b>On stop. Speak to the accounts team.</b><small>Suppliers and prices are hidden while this customer is on stop.</small></span></div>';
     if (!r.pc) return '<div class="note">' + ic('map-pin') + '<span>Put the site postcode in and the suppliers who cover it show here, with their price and yours.</span></div>';
     if (!r.pick) return '<div class="note">' + ic('alert') + '<span>No supplier on file covers ' + h(CS.outward(r.pc)) + ' for ' + h(S().services[O.svc].name.toLowerCase()) + '. Add one in the Supplier handbook, or pick a different service.</span></div>';
@@ -192,8 +192,20 @@
       '<div class="tot"><div><small>Customer</small><b class="num">' + money(r.sell) + '</b></div><div><small>Supplier</small><b class="num">' + money(r.cost) + '</b></div><div class="m"><small>Margin</small><b class="num">' + money(r.margin) + ' <span style="font-size:12px">' + CS.pct(r.margin, r.sell) + '%</span></b></div></div></div>' +
       (cr && cr.hold && !(c && c.stop) ? '<div class="note" style="margin-top:10px;background:var(--bad-l)">' + ic('alert') + '<span><b>' + h(c.name) + ' are on hold.</b> ' + h(cr.why) + ' You can still place it, it is your call.</span></div>' : '') +
       '<div class="field" style="margin-top:14px"><label>How they pay</label><div class="chips">' + pk('ordPay', 'account', O.pay === 'account', 'On account') + pk('ordPay', 'link', O.pay === 'link', 'Send a payment link') + pk('ordPay', 'card', O.pay === 'card', 'Take card now') + '</div></div>' +
+      (O.pay === 'account' ? '<div class="field" id="ordInvWhen"><label>When to invoice</label><div class="chips">' + pk('ordInv', 'now', !later, 'Invoice now') + pk('ordInv', 'later', later, 'Invoice when the job is complete') + '</div></div>' : '') +
       '<div class="field"><label>Send the paperwork by</label><div class="chips">' + pk('ordSend', 'wa', O.send === 'wa', ic('whatsapp') + 'WhatsApp') + pk('ordSend', 'email', O.send === 'email', ic('mail') + 'Email') + '</div></div>' +
-      '<div class="note">' + ic('sparkles') + '<span>One tap books it with ' + h(r.pick.sup.name) + ', raises the invoice, and sends ' + h(first(O.cname || (c ? c.first : 'the customer'))) + ' the order confirmation' + (O.pay === 'account' ? ' and the invoice.' : O.pay === 'link' ? ' and the invoice with a pay by card link.' : '. The card is taken first.') + '</span></div>';
+      (later ? '<div class="note" id="ordInvNote">' + ic('sparkles') + '<span>One tap books it with ' + h(r.pick.sup.name) + ' and sends ' + h(first(O.cname || (c ? c.first : 'the customer'))) + ' the order confirmation. No invoice yet. It is raised when the job is marked complete.</span></div>' : '') +
+      (later ? '' : '<div class="note">' + ic('sparkles') + '<span>One tap books it with ' + h(r.pick.sup.name) + ', raises the invoice, and sends ' + h(first(O.cname || (c ? c.first : 'the customer'))) + ' the order confirmation' + (O.pay === 'account' ? ' and the invoice.' : O.pay === 'link' ? ' and the invoice with a pay by card link.' : '. The card is taken first.') + '</span></div>');
+  }
+  /* on account only: hold the invoice back until the job is marked complete */
+  function invLaterOn() { return O.pay === 'account' && O.inv === 'later'; }
+  /* raise the invoice that was held back. Same shape as the one place() makes. */
+  function raiseLater(j) {
+    if (!j || !j.invLater) return null;
+    var inv = CS.nextId('inv', 'INV-');
+    S().invoices.unshift({ id: inv, cust: j.cust, amount: j.sell, issued: 0, due: 30, status: 'unpaid', paidDay: undefined, jobs: [j.id], pay: 'account' });
+    delete j.invLater; CS.jobLog(j, 'Invoiced on ' + inv + ', raised when the job was marked complete');
+    return inv;
   }
   function ordFoot() { var r = ordCalc(), c = ordCust(), stop = c && c.stop; return '<button class="btn" data-act="close">Cancel</button><span class="sp"></span><button class="btn pri lg" id="ordGo" data-act="ordPlace"' + (r.pick && !stop ? '' : ' disabled') + '>' + ic(stop ? 'lock' : 'check') + (stop ? 'On stop' : 'Place the order' + (r.pick ? ', ' + money(r.sell) : '')) + '</button>'; }
   function ordDraw() { H.modal('New order', '<div class="ord"><div id="ordL">' + ordLeft() + '</div><div class="res" id="ordR">' + ordRight() + '</div></div>', ordFoot(), true); }
@@ -203,7 +215,7 @@
     return '<div class="doc v2doc"><div class="dh2"><img src="brand/cac-logo.svg" alt="CAC Waste Management"><div><b>Order confirmation</b><small>' + j.id + ' · ' + dateOf(0) + '</small></div></div>' +
       '<dl class="kv"><dt>Customer</dt><dd>' + h(c.name) + '</dd><dt>Site address</dt><dd>' + h(j.addr ? j.addr + ', ' : (s.name && s.name !== s.pc ? s.name + ', ' : '')) + h(s.pc) + '</dd><dt>Site contact</dt><dd>' + h(ct.name) + ' · ' + h(ct.phone || '') + '</dd>' +
       (j.po ? '<dt>PO number</dt><dd>' + h(j.po) + '</dd>' : '') + '<dt>What</dt><dd>' + h(CS.jobDesc(j)) + '</dd><dt>When</dt><dd>' + CS.fmtDayLong(j.day) + (eta(j) !== 'Any time' ? ', ' + h(eta(j)) : '') + '</dd>' + (j.note ? '<dt>Notes</dt><dd>' + h(j.note) + '</dd>' : '') +
-      '<dt>Price</dt><dd>' + money(j.sell, true) + ' + VAT (' + money(j.sell * 1.2, true) + ' with VAT)</dd><dt>Invoice</dt><dd>' + (inv ? inv.id + (inv.status === 'paid' ? ', paid by card' : inv.pay === 'link' ? ', pay by card link on the invoice' : ', on your ' + h(c.terms.toLowerCase())) : 'To follow') + '</dd></dl>' +
+      '<dt>Price</dt><dd>' + money(j.sell, true) + ' + VAT (' + money(j.sell * 1.2, true) + ' with VAT)</dd><dt>Invoice</dt><dd>' + (inv ? inv.id + (inv.status === 'paid' ? ', paid by card' : inv.pay === 'link' ? ', pay by card link on the invoice' : ', on your ' + h(c.terms.toLowerCase())) : j.invLater ? 'Raised when the job is complete' : 'To follow') + '</dd></dl>' +
       '<p style="color:#666;font-size:12.5px;margin:12px 0 0">We will confirm the delivery window once the driver is planned. Your waste transfer note follows after delivery. Any changes, reply to this message or call 0330 122 5711.</p></div>';
   }
   function place() {
@@ -222,24 +234,30 @@
     var po = String(O.po || '').trim(); if (po) j.po = po;
     if (!other) { delete j.siteName; delete j.pc; }
     CS.jobLog(j, 'Order placed by John'); s.jobs.push(j);
-    var inv = CS.nextId('inv', 'INV-'), paid = O.pay === 'card';
+    var later = invLaterOn(), inv = later ? null : CS.nextId('inv', 'INV-'), paid = O.pay === 'card';
+    if (later) { j.invLater = true; CS.jobLog(j, 'Invoice held back. It is raised when the job is marked complete'); }
+    else {
     s.invoices.unshift({ id: inv, cust: c.id, amount: r.sell, issued: 0, due: O.pay === 'account' ? 30 : 0, status: paid ? 'paid' : 'unpaid', paidDay: paid ? 0 : undefined, jobs: [id], pay: O.pay });
     CS.jobLog(j, 'Invoiced on ' + inv + (paid ? ', paid by card' : ''));
+    }
     var site = CS.jobSite(j), when = CS.fmtDayLong(O.day) + (j.eta ? ', ' + j.eta : '');
     var ts = CS.threadFor({ type: 'supplier', id: su.id }, 'wa');
     CS.addMsg(ts, 'out', 'Hi ' + su.contact + ', can you do ' + CS.itemText(it) + ' for ' + c.name + ', ' + (j.addr ? j.addr + ', ' : '') + site.pc + ', ' + when + ' please. Site contact ' + j.contact.name + ' ' + (j.contact.phone || '') + '.' + (O.note ? ' ' + O.note + '.' : '') + ' Ref ' + id + '. Thanks, John (CAC)', { by: 'John' });
     CS.schedule(6 + Math.random() * 2, { type: 'supReply', sup: su.id, job: id, text: 'Yes no problem, ' + CS.dayPhrase(O.day).replace(/^on /, '') + (j.eta ? ' ' + j.eta : ' AM') + ' for ' + id });
     var ch = O.send === 'email' ? 'email' : 'wa', tc = CS.threadFor({ type: 'customer', id: c.id }, ch); if (ch === 'email' && !tc.subject) tc.subject = 'Your order ' + id;
-    CS.addMsg(tc, 'out', 'Hi ' + c.first + ', that\'s booked: ' + CS.itemText(it) + ' at ' + site.pc + ', ' + when + ', ' + money(r.sell) + ' + VAT. Ref ' + id + '. Order confirmation and invoice ' + inv + ' attached' + (O.pay === 'link' ? ', you can pay by card with the link on the invoice' : paid ? ', paid by card, thank you' : '') + '. Cheers, John',
+    if (later) CS.addMsg(tc, 'out', 'Hi ' + c.first + ', that\'s booked: ' + CS.itemText(it) + ' at ' + site.pc + ', ' + when + ', ' + money(r.sell) + ' + VAT. Ref ' + id + '. Order confirmation attached. The invoice follows once the job is complete. Cheers, John',
+      { by: 'John', att: [{ n: 'Order-confirmation-' + id + '.pdf', t: 'order', job: id }] });
+    else CS.addMsg(tc, 'out', 'Hi ' + c.first + ', that\'s booked: ' + CS.itemText(it) + ' at ' + site.pc + ', ' + when + ', ' + money(r.sell) + ' + VAT. Ref ' + id + '. Order confirmation and invoice ' + inv + ' attached' + (O.pay === 'link' ? ', you can pay by card with the link on the invoice' : paid ? ', paid by card, thank you' : '') + '. Cheers, John',
       { by: 'John', att: [{ n: 'Order-confirmation-' + id + '.pdf', t: 'order', job: id }, { n: inv + '.pdf', t: 'inv', job: inv }] });
     tc.done = true; tc.unread = false;
     CS.feed('Order ' + id + ' placed for ' + c.name + ', ' + money(r.sell), 'truck'); CS.saved(12); CS.commit();
     H.ui.flash = id;
     var steps = ['Job ' + id + ' created: ' + descOf(it) + ', ' + CS.fmtDay(O.day), 'Booking sent to ' + su.name + ' on WhatsApp, chased until they confirm',
       'Invoice ' + inv + ' raised for ' + money(r.sell) + ' + VAT' + (paid ? ' and marked paid by card' : O.pay === 'link' ? ' with a pay by card link' : ', on their account'), 'Order confirmation and invoice sent to ' + c.first + ' by ' + (ch === 'email' ? 'email' : 'WhatsApp')];
+    if (later) steps.splice(2, 2, 'Order confirmation sent to ' + c.first + ' by ' + (ch === 'email' ? 'email' : 'WhatsApp'), 'No invoice yet. It is raised when ' + id + ' is marked complete on Live jobs');
     H.modal('Order placed', '<div class="donecard" style="margin:0"><h3>' + ic('circle-check') + id + ' is booked</h3>' + steps.map(function (x, i) { return '<div class="st" style="animation-delay:' + (i * 0.22) + 's">' + ic('check') + '<span>' + h(x) + '</span></div>'; }).join('') +
       '<div class="saved">About 12 minutes of typing and copying, done in one tap.</div></div>',
-      '<button class="btn" data-act="ordView" data-id="' + id + '">' + ic('file-text') + 'Order confirmation</button><button class="btn" data-act="openInv" data-id="' + inv + '">' + ic('receipt') + 'Invoice</button><button class="btn" data-act="openJob" data-id="' + id + '">' + ic('truck') + 'Open the job</button><span class="sp"></span><button class="btn pri" data-act="close">Done</button>');
+      '<button class="btn" data-act="ordView" data-id="' + id + '">' + ic('file-text') + 'Order confirmation</button>' + (later ? '' : '<button class="btn" data-act="openInv" data-id="' + inv + '">' + ic('receipt') + 'Invoice</button>') + '<button class="btn" data-act="openJob" data-id="' + id + '">' + ic('truck') + 'Open the job</button><span class="sp"></span><button class="btn pri" data-act="close">Done</button>');
     return id;
   }
 
@@ -489,13 +507,13 @@
     var s = S(), t = s.threads.filter(function (x) { return x.party.type === 'customer' && x.party.id === 'c7' && !x.done && CS.needsYou(x); })[0];
     if (!t) {
       var i = -1; s.live.forEach(function (L, k) { if (k >= (s.liveIdx || 0) && L.party && L.party.id === 'c7') i = k; });
-      var L = i >= 0 ? s.live.splice(i, 1)[0] : { party: { type: 'customer', id: 'c7' }, ch: 'email', subject: 'Welfare and loos for Wells', text: 'Hi John,\n\nCan we get a welfare unit and 2 toilets at the Wells site NR23 for 8 weeks from Monday?\n\nThanks, Gemma' };
+      var L = i >= 0 ? s.live.splice(i, 1)[0] : { party: { type: 'customer', id: 'c7' }, ch: 'email', subject: 'Grab for the Wells site', text: 'Hi John,\n\nCan we get 2 grab loads of clean soil taken from the Wells site NR23 on Monday? How much would that be?\n\nThanks, Gemma' };
       t = CS.incoming(L); t.fresh = false; CS.commit();
     }
     return t.id;
   };
   W.onSite = onSite; W.warnings = warnings; W.todo = todo; W.order = function () { return O; };
-  W.x = { hb: hb, docs: docs, onSite: onSite, eta: eta, contact: contact, track: track, movesOn: movesOn, warnings: warnings, dateOf: dateOf, weeks: weeks, inWords: inWords, hash: hash, first: first, cap: cap, D: D, itemOf: itemOf, descOf: descOf,
+  W.x = { hb: hb, docs: docs, onSite: onSite, eta: eta, contact: contact, track: track, movesOn: movesOn, warnings: warnings, dateOf: dateOf, weeks: weeks, inWords: inWords, hash: hash, first: first, cap: cap, D: D, itemOf: itemOf, descOf: descOf, raiseLater: raiseLater,
     order: function (pre) { H.A.closeSide(); freshOrder(pre); ordDraw(); } };
 
   /* ---------- wiring ---------- */
@@ -526,6 +544,7 @@
     A.ordTime = function (el) { O.time = el.dataset.v; ordDraw(); };
     A.ordSup = function (el) { O.sup = el.dataset.v; O.sell = null; ordRes(); };
     A.ordPay = function (el) { O.pay = el.dataset.v; ordRes(); };
+    A.ordInv = function (el) { O.inv = el.dataset.v === 'later' ? 'later' : 'now'; ordRes(); };
     A.ordSend = function (el) { O.send = el.dataset.v; ordRes(); };
     A.ordPlace = function () { place(); };
     A.ordView = function (el) { var j = CS.job(el.dataset.id); if (!j) return; H.modal('Order confirmation ' + j.id, ordDoc(j), '<button class="btn" data-act="openJob" data-id="' + j.id + '">' + ic('truck') + 'Open the job</button><span class="sp"></span><button class="btn pri" data-act="close">Close</button>'); };

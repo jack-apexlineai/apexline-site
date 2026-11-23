@@ -172,7 +172,7 @@
   ];
 
   var LEADS = [
-    { id: 'l1', company: 'Price and Rowe Builders', contact: 'Hannah Price', area: 'Wisbech PE13', type: 'General builder', source: 'Website', stage: 'new', value: 1800, next: 0, nextWhat: 'Send quote for skips and fencing', last: 0, lastWhat: 'Website enquiry' },
+    { id: 'l1', company: 'Price and Rowe Builders', contact: 'Hannah Price', area: 'Wisbech PE13', type: 'General builder', source: 'Website', stage: 'new', value: 1800, next: 0, nextWhat: 'Send quote for skips', last: 0, lastWhat: 'Website enquiry' },
     { id: 'l2', company: 'Brayfield Groundworks', contact: 'Craig Brayfield', area: 'King\'s Lynn PE30', type: 'Groundworks', source: 'LinkedIn', stage: 'quoted', value: 2400, next: 0, nextWhat: 'Follow up Q-2223', last: -2, lastWhat: 'Quote sent' },
     { id: 'l3', company: 'Fennick Homes', contact: 'Laura Fennick', area: 'Norwich NR4', type: 'Developer', source: 'Cold call', stage: 'contacted', value: 4200, next: -2, nextWhat: 'Call back about 3 sites', last: -5, lastWhat: 'Call, asked for price list' },
     { id: 'l4', company: 'Mardle Civils', contact: 'Ian Mardle', area: 'Dereham NR19', type: 'Civils', source: 'Referral', stage: 'trial', value: 3100, next: 2, nextWhat: 'Check first job went well', last: -1, lastWhat: 'First job booked' },
@@ -193,9 +193,9 @@
              m('in', 'Morning John, can you swap the 8 yarder at Docking Rd tomorrow? its full to the brim', 18)] },
     { id: 't2', party: { type: 'supplier', id: 's1' }, ch: 'email', unread: true, subject: 'Delivered CAC-1043 Heacham', scn: { kind: 'wtn', job: 'CAC-1043' },
       msgs: [m('in', 'Hi John,\n\n12 yard dropped at the Heacham extension at 08:40, on the drive as asked. Waste transfer note attached.\n\nThanks, Sarah\nSaltmarsh Skips', 26, { att: [{ n: 'WTN-CAC-1043.pdf', t: 'wtn' }, { n: 'delivered-heacham.jpg', t: 'photo' }] })] },
-    { id: 't3', party: { type: 'lead', id: 'l1' }, ch: 'web', unread: true, subject: 'Get a quote, cacwaste.co.uk', scn: { kind: 'parse', owner: 'sam' },
+    { id: 't3', party: { type: 'lead', id: 'l1' }, ch: 'web', unread: true, subject: 'Get a quote, cacwaste.co.uk', scn: { kind: 'parse', owner: 'john' },
       form: { 'Your name': 'Hannah Price', Company: 'Price and Rowe Builders', Email: 'hannah@priceandrowe.co.uk', Phone: '07700 900302', 'Site postcode': 'PE13 2RT', 'Service needed': 'Skip Hire', 'Came from': 'Google Ads, skip hire King\'s Lynn' },
-      msgs: [m('in', 'Two 12 yard skips and around 40 panels of Heras fencing for a 6 week job starting 1st December. On account if possible.', 34)] },
+      msgs: [m('in', 'Two 12 yard skips for a 6 week job starting 1st December. On account if possible.', 34)] },
     { id: 't4', party: { type: 'supplier', id: 's3' }, ch: 'wa', unread: true, scn: { kind: 'reschedule', job: 'CAC-1045' },
       msgs: [m('out', 'Hi Martin, 8yd builders skip for Pellow Homes, Costessey plots NR5 0LY, {WDN:2} AM please. On the drive. Ref CAC-1045. Thanks, John (CAC)', 190, { by: 'John' }),
              m('in', 'John cant do {WDN:2} for Pellow NR5 now, driver off. {WDN:3} first thing ok?', 41)] },
@@ -234,7 +234,7 @@
       form: { 'Your name': 'Jordan Blake', Company: 'Blake Extensions', Email: 'jordan@blakeextensions.co.uk', Phone: '07700 900318', 'Site postcode': 'PE36 5BW', 'Service needed': 'Readymix Concrete', 'Came from': 'cacwaste.co.uk, Readymix page' },
       text: '6m3 of C25 concrete for footings Thursday morning. No pump needed, chute is fine.' },
     { at: 68, party: { type: 'supplier', id: 's11' }, ch: 'wa', text: 'Yes 8yd for Kilner L8 confirmed {WDN:1} AM', scn: { kind: 'confirm', job: 'CAC-1047' } },
-    { at: 98, party: { type: 'customer', id: 'c7' }, ch: 'email', subject: 'Welfare and loos for Wells', text: 'Hi John,\n\nCan we get a welfare unit and 2 toilets at the Wells site NR23 for 8 weeks from Monday?\n\nThanks, Gemma' }
+    { at: 98, party: { type: 'customer', id: 'c7' }, ch: 'email', subject: 'Grab for the Wells site', text: 'Hi John,\n\nCan we get 2 grab loads of clean soil taken from the Wells site NR23 on Monday? How much would that be?\n\nThanks, Gemma' }
   ];
 
   /* Extras the suppliers billed, or that built up, and nobody has recharged yet. */

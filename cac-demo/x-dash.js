@@ -64,20 +64,18 @@
       return [s, t];
     }
     function dayStrip() {
-      var H0 = 7, H1 = 17, moves = X2.movesOn(0), lanes = [], rows = '', n = { ok: 0, mail: 0, brand: 0, amber: 0 };
-      moves.forEach(function (m) {
-        var w = win(m.j), tk = X2.track(m.j, 0, m.what), lane = 0, c = CS.cust(m.j.cust);
-        while (lanes[lane] != null && lanes[lane] > w[0] - 0.05) lane++;
-        lanes[lane] = w[1];
-        n[tk[1]] = (n[tk[1]] || 0) + 1;
-        var left = (Math.max(H0, w[0]) - H0) / (H1 - H0) * 100, wid = (Math.min(H1, w[1]) - Math.max(H0, w[0])) / (H1 - H0) * 100;
-        rows += '<button class="xd-job ' + tk[1] + '" data-act="openJob" data-id="' + h(m.j.id) + '" style="left:' + left.toFixed(2) + '%;width:' + wid.toFixed(2) + '%;top:' + (lane * 34) + 'px" title="' + h(m.what + ': ' + CS.jobDesc(m.j) + ', ' + c.name + ', ' + X2.eta(m.j) + ', ' + tk[0]) + '"><b>' + h(CS.jobDesc(m.j)) + '</b><span>' + h(c.name) + '</span></button>';
-      });
-      var hours = ''; for (var hh = H0; hh <= H1; hh++) hours += '<span style="left:' + ((hh - H0) / (H1 - H0) * 100).toFixed(2) + '%">' + (hh > 12 ? hh - 12 : hh) + (hh < 12 ? 'am' : 'pm') + '</span>';
-      var d = new Date(), now = d.getHours() + d.getMinutes() / 60, nowL = now >= H0 && now <= H1 ? '<i class="xd-now" style="left:' + ((now - H0) / (H1 - H0) * 100).toFixed(2) + '%"><em>Now</em></i>' : '';
-      var chips = [['ok', 'done'], ['mail', 'on the way'], ['brand', 'confirmed'], ['amber', 'waiting on a supplier']].filter(function (x) { return n[x[0]]; }).map(function (x) { return '<span class="xd-chip ' + x[0] + '"><i></i>' + n[x[0]] + ' ' + x[1] + '</span>'; }).join('');
-      return '<section class="card xd-day" id="homeDay"><div class="xd-dh"><h2>' + ic('truck') + 'Today, hour by hour</h2><div class="xd-chips">' + chips + '</div><button class="btn sm" data-act="jobTab" data-v="live">Live jobs' + ic('chevron-right') + '</button></div>' +
-        (moves.length ? '<div class="xd-scroll"><div class="xd-track"><div class="xd-hours">' + hours + '</div><div class="xd-lanes" style="height:' + (lanes.length * 34 + 2) + 'px">' + nowL + rows + '</div></div></div><p class="xd-note">Each bar sits on the window the supplier gave. It is not vehicle tracking.</p>' : '<div class="empty">Nothing moving today.</div>') + '</section>';
+      var moves = X2.movesOn(0), d = new Date(), now = d.getHours() + d.getMinutes() / 60, left = [], done = 0;
+      moves.forEach(function (m) { var tk = X2.track(m.j, 0, m.what); if (tk[2] >= 3) done++; else left.push({ m: m, tk: tk, w: win(m.j) }); });
+      var pct = moves.length ? Math.round(done / moves.length * 100) : 0;
+      var rows = left.slice(0, 4).map(function (x) {
+        var j = x.m.j, c = CS.cust(j.cust), su = CS.sup(j.sup), late = now > x.w[1] + 0.25, waiting = x.tk[1] === 'amber';
+        var flag = waiting ? '<span class="tag amber">Waiting on supplier</span>' : late ? '<span class="tag bad">Running behind</span>' : '<span class="tag ' + (x.tk[1] === 'mail' ? 'web' : '') + '">' + h(x.tk[0]) + '</span>';
+        return '<button class="xd-left" data-act="openJob" data-id="' + h(j.id) + '"><b class="w">' + h(X2.eta(j)) + '</b><span class="d"><b>' + h(CS.jobDesc(j)) + '</b><small>' + h(c.name) + ' · ' + h(su.name) + '</small></span>' + flag + '</button>';
+      }).join('');
+      return '<section class="card xd-day" id="homeDay"><div class="xd-sum"><small class="k">Jobs today</small><b class="n">' + done + '<i> of ' + moves.length + '</i></b><span class="l">complete</span><div class="xd-bar"><i style="width:' + pct + '%"></i></div>' +
+        '<button class="btn sm" data-act="jobTab" data-v="live">Live jobs' + ic('chevron-right') + '</button></div>' +
+        '<div class="xd-rest"><small class="k">' + (left.length ? left.length + ' still to go' : 'All done for today') + '</small>' + (rows || '<div class="xd-none">Nothing left to do today.</div>') +
+        (left.length > 4 ? '<small class="more">and ' + (left.length - 4) + ' more on Live jobs</small>' : '') + '<small class="xd-n">Times are the window the supplier gave. Not vehicle tracking.</small></div></section>';
     }
     function countUp() {
       var el = document.querySelector('#homeChart [data-count]'); if (!el) return;

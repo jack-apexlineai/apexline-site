@@ -85,7 +85,7 @@
   function fromJob(j) {
     var inv = invOf(j.id);
     return { src: 'j', id: j.id, off: j.day, cust: j.cust, site: j.site, siteName: j.siteName, pc: j.pc, svc: j.svc, size: j.size, qty: j.qty, weeks: j.weeks, panels: j.panels, ft: j.ft, m3: j.m3, hours: j.hours, mix: j.mix,
-      sup: j.sup, cost: j.cost, sell: j.sell, status: j.status, owner: j.owner, po: j.po || '', job: j, inv: inv ? inv.id : null, pay: inv ? (inv.status === 'paid' ? 'paid' : 'unpaid') : (j.day > 0 ? 'none' : 'unpaid') };
+      sup: j.sup, cost: j.cost, sell: j.sell, status: j.status, owner: j.owner, po: j.po || '', job: j, inv: inv ? inv.id : null, pay: inv ? (inv.status === 'paid' ? 'paid' : 'unpaid') : (j.day > 0 || j.invLater ? 'none' : 'unpaid') };
   }
   function all() { return hist().concat(S().jobs.map(fromJob)).sort(function (a, b) { return a.off - b.off || (a.id < b.id ? -1 : 1); }); }
   function find(id) { return all().filter(function (o) { return o.id === id; })[0] || null; }
@@ -143,13 +143,40 @@
     return '<p class="dsum"><b>' + dLong(d.off) + '.</b> ' + (l.length ? plural(t.n, 'order') + ', ' + money(t.rev) + ' sales, ' + money(t.margin) + ' margin.' : 'No orders ' + (d.off > 0 ? 'booked yet.' : 'that day.')) + '</p>' +
       (l.length ? '<div class="card">' + tableOf(l, false) + '</div>' : '<div class="card"><div class="empty">' + ic('calendar') + 'Nothing here.' + (d.off >= 0 ? ' <button class="btn sm pri" data-act="newOrder" style="margin-left:8px">' + ic('plus') + 'New order</button>' : '') + '</div></div>');
   }
+  /* one matcher for the diary list and the search box in the top bar: order number, PO number, customer, site, postcode, supplier, service.
+     Order numbers and postcodes also match with the space or the dash left out. */
+  function norm(x) { return String(x || '').toLowerCase().replace(/[\s-]+/g, ''); }
+  function ordMatch(o, s) {
+    var st = CS.jobSite(o), n = norm(s);
+    return (o.id + ' ' + custName(o) + ' ' + supName(o) + ' ' + CS.jobDesc(o) + ' ' + st.name + ' ' + st.pc + ' ' + (o.po || '')).toLowerCase().indexOf(s) >= 0 ||
+      (n.length >= 2 && (norm(o.id).indexOf(n) >= 0 || norm(st.pc).indexOf(n) >= 0 || (!!o.po && norm(o.po).indexOf(n) >= 0)));
+  }
+  function ordHits(text) {
+    var s = String(text || '').trim().toLowerCase(), n = norm(s); if (n.length < 2) return [];
+    return all().filter(function (o) { return ordMatch(o, s); }).sort(function (a, b) { return (norm(b.id) === n) - (norm(a.id) === n) || Math.abs(a.off) - Math.abs(b.off) || (a.id < b.id ? 1 : -1); });
+  }
+  /* adds an Orders section to the top of the results the search box already shows. Each one opens the order's own page. */
+  function ordSearch() {
+    var inp = q('#q'), box = q('#sres'); if (!inp || !box) return;
+    Array.prototype.forEach.call(box.querySelectorAll('.xdso,.xdsh'), function (x) { x.remove(); });
+    var hits = ordHits(inp.value); if (!hits.length) return;
+    var show = hits.slice(0, 4), ids = {}; show.forEach(function (o) { ids[o.id] = 1; });
+    var none = box.querySelector('.empty'); if (none) none.remove();
+    Array.prototype.forEach.call(box.querySelectorAll('button[data-act="srch"][data-k="job"]'), function (b) { if (ids[b.getAttribute('data-id')]) b.remove(); });
+    var rest = box.querySelectorAll('button[data-act="srch"]').length;
+    box.insertAdjacentHTML('afterbegin', '<div class="xdsh">Orders<span>' + hits.length + '</span></div>' + show.map(function (o) {
+      var st = CS.jobSite(o);
+      return '<button class="xdso" data-act="ordFind" data-id="' + o.id + '">' + ic('file-text') + '<span><b>' + o.id + ' · ' + h(shortOf(o)) + '</b><small>' + h(custName(o)) + ' · ' + h(st.pc) + ' · ' + dShort(o.off) + (o.po ? ' · PO ' + h(o.po) : '') + '</small></span></button>';
+    }).join('') + (hits.length > show.length ? '<button class="xdso xdsall" data-act="ordFindAll">' + ic('calendar') + '<span><b>See all ' + hits.length + ' in the order diary</b></span></button>' : '') + (rest ? '<div class="xdsh">Everything else</div>' : ''));
+    box.hidden = false;
+  }
   function filt(d, list) {
     var s = d.q.trim().toLowerCase();
     return list.filter(function (o) {
       if (d.cust && o.cust !== d.cust) return false; if (d.sup && o.sup !== d.sup) return false; if (d.svc && o.svc !== d.svc) return false;
       if (d.status && GROUP[o.status] !== d.status) return false;
       if (d.paid && (d.paid === 'paid') !== (o.pay === 'paid')) return false;
-      if (s) { var st = CS.jobSite(o); if ((o.id + ' ' + custName(o) + ' ' + supName(o) + ' ' + CS.jobDesc(o) + ' ' + st.name + ' ' + st.pc).toLowerCase().indexOf(s) < 0) return false; }
+      if (s && !ordMatch(o, s)) return false;
       return true;
     });
   }
@@ -161,7 +188,7 @@
   }
   function listView(d, list) {
     var s = S();
-    return '<div class="card pad dfil"><div class="field grow"><label for="diaQ">Search</label><input id="diaQ" value="' + h(d.q) + '" placeholder="Order number, customer, postcode, supplier" autocomplete="off"></div>' +
+    return '<div class="card pad dfil"><div class="field grow"><label for="diaQ">Search</label><input id="diaQ" value="' + h(d.q) + '" placeholder="Order number, PO number, customer, postcode" autocomplete="off"></div>' +
       sel('diaCust', 'Customer', d.cust, s.customers.map(function (c) { return [c.id, c.name]; })) +
       sel('diaSup', 'Supplier', d.sup, s.suppliers.map(function (c) { return [c.id, c.name]; })) +
       sel('diaSvc', 'Service', d.svc, Object.keys(s.services).map(function (k) { return [k, s.services[k].name]; })) +
@@ -198,7 +225,7 @@
     if (j.exDay != null) st('Exchange', (j.status === 'exchange' ? 'Booked for ' : '') + dShort(j.exDay), j.status !== 'exchange');
     if (hire) st('Collected', j.colDay != null ? (j.status === 'collection' ? 'Booked for ' : '') + dShort(j.colDay) : '', j.status === 'done', j.status === 'onhire' ? 'On site now' : '');
     if (waste) st('Waste transfer note in', '', j.wtn === 'received', j.wtn === 'missing' ? 'Not back yet' : j.wtn === 'chased' ? 'Chased' : '');
-    st('Invoiced', inv ? dShort(inv.issued) : '', !!inv, inv ? inv.id : ''); st('Paid', inv && inv.status === 'paid' ? dShort(inv.paidDay || 0) : '', !!inv && inv.status === 'paid');
+    st('Invoiced', inv ? dShort(inv.issued) : '', !!inv, inv ? inv.id : j.invLater ? 'Raised when the job is marked complete' : ''); st('Paid', inv && inv.status === 'paid' ? dShort(inv.paidDay || 0) : '', !!inv && inv.status === 'paid');
     return out;
   }
   function chat(o) {
@@ -210,24 +237,58 @@
   }
   function orderPage(o) {
     var c = CS.cust(o.cust), s = CS.jobSite(o), su = CS.sup(o.sup), m = o.sell - o.cost, tl = steps(o), ct = o.job ? X2.contact(o.job) : { name: c.contact, phone: c.phone }, waste = WASTE[o.svc];
-    var docs = [['file-text', 'Order confirmation', o.src === 'j' ? 'ordView' : 'histDoc', 'order', o.id]];
-    if (waste && (o.src === 'h' || o.job.wtn === 'received')) docs.push(['certificate', 'Waste transfer note', 'histDoc', 'wtn', o.id]);
-    if (o.inv) docs.push(['receipt', 'Invoice ' + o.inv, o.src === 'j' ? 'openInv' : 'histDoc', 'inv', o.src === 'j' ? o.inv : o.id]);
-    var body = '<div class="opage"><div><div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:12px">' + H.stTag(o.status) + payTag(o) + H.margTag(m, o.sell) + '</div>' +
+    var body = '<div class="opage" data-oid="' + o.id + '"><div><div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:12px">' + H.stTag(o.status) + payTag(o) + H.margTag(m, o.sell) + '</div>' +
       '<dl class="kv"><dt>Customer</dt><dd>' + h(c.name) + '</dd><dt>Site</dt><dd>' + h(s.name) + ', ' + h(s.pc) + '</dd><dt>Site contact</dt><dd>' + h(ct.name) + ' · ' + h(ct.phone || '') + '</dd><dt>What</dt><dd>' + h(CS.jobDesc(o)) + '</dd>' +
       '<dt>Delivery</dt><dd>' + dLong(o.off) + '</dd><dt>Supplier</dt><dd>' + h(su.name) + '</dd>' + (o.po ? '<dt>PO number</dt><dd id="ordPoShow">' + h(o.po) + '</dd>' : '') + '</dl>' +
       '<div class="sec"><h3>Money</h3></div><div class="money"><div class="tot"><div><small>Customer</small><b class="num">' + money(o.sell) + '</b></div><div><small>Supplier</small><b class="num">' + money(o.cost) + '</b></div><div class="m"><small>Margin</small><b class="num">' + money(m) + ' <span style="font-size:12px">' + CS.pct(m, o.sell) + '%</span></b></div></div></div>' +
-      '<div class="sec"><h3>Documents</h3></div>' + docs.map(function (x) { return '<div class="rowline"><div class="bd"><b>' + ic(x[0]) + ' ' + h(x[1]) + '</b></div><button class="btn sm" data-act="' + x[2] + '" data-k="' + x[3] + '" data-id="' + x[4] + '">' + ic('eye') + 'View</button></div>'; }).join('') +
+      '<div class="sec"><h3>Documents</h3></div>' + docsBlock(o) +
       (o.src === 'h' ? '<div class="sec"><h3>Messages</h3></div><div class="ochat">' + chat(o).map(function (x) { return '<div class="ob ' + x[0] + '"><small>' + h(x[1]) + '</small>' + h(x[2]) + '</div>'; }).join('') + '</div>'
         : '<div class="sec"><h3>What has happened</h3></div>' + o.job.log.slice(-5).map(function (l) { return '<div class="rowline"><div class="bd"><b>' + h(l.t) + '</b><small>' + CS.ago(l.at) + '</small></div></div>'; }).join('')) + '</div>' +
       '<div><div class="sec" style="margin-top:0"><h3>Start to finish</h3></div><div class="otl">' + tl.map(function (x) { return '<div class="os' + (x.done ? ' done' : '') + '"><i>' + (x.done ? ic('check') : '') + '</i><span><b>' + x.t + '</b><small>' + h([x.when, x.note].filter(Boolean).join(' · ') || (x.done ? 'Done' : 'Not yet')) + '</small></span></div>'; }).join('') + '</div></div></div>';
     H.modal('Order ' + o.id, body, (o.src === 'j' ? '<button class="btn" data-act="openJob" data-id="' + o.id + '">' + ic('truck') + 'Open the job</button>' : '') + '<span class="sp"></span><button class="btn" data-act="close">Close</button><button class="btn pri" data-act="ordRepeat" data-id="' + o.id + '">' + ic('refresh') + 'Repeat this order</button>', true);
   }
+  /* ---------- an order's three documents, and the waste transfer note on CAC's own template ---------- */
+  function wtnBack(o) { return o.src === 'h' || (!!o.job && o.job.wtn === 'received'); }
+  function docRow(id, icon, title, sub, btn) { return '<div class="xdrow" id="' + id + '"><span class="xdic">' + ic(icon) + '</span><div class="bd"><b>' + title + '</b><small>' + sub + '</small></div>' + (btn || '') + '</div>'; }
+  function docBtn(act, k, id) { return '<button class="btn sm" data-act="' + act + '" data-k="' + k + '" data-id="' + id + '">' + ic('eye') + 'View</button>'; }
+  function docsBlock(o) {
+    var j = o.job, su = CS.sup(o.sup);
+    return '<div class="xdocs" id="ordDocs">' +
+      docRow('ordDocConf', 'file-text', 'Order confirmation', 'What was booked, where and when', docBtn(j ? 'ordView' : 'histDoc', 'order', o.id)) +
+      (o.inv ? docRow('ordDocInv', 'receipt', 'Invoice ' + h(o.inv), o.pay === 'paid' ? 'Paid' : 'Not paid yet', docBtn(j ? 'openInv' : 'histDoc', 'inv', j ? o.inv : o.id))
+        : j && j.invLater ? docRow('ordDocInv', 'receipt', 'Invoice: raised when the job is marked complete', 'Held back on account. Set the job to Complete on Live jobs and it is raised then.')
+        : docRow('ordDocInv', 'receipt', 'Invoice', 'Not raised yet')) +
+      (!WASTE[o.svc] ? docRow('ordDocWtn', 'certificate', 'Waste transfer note', 'Not needed. No waste is moved on this order.')
+        : docRow('ordDocWtn', 'certificate', 'Waste transfer note', wtnBack(o) ? 'Back from ' + h(su.name) + ' and filed' : 'Not back from the supplier yet' + (j && j.wtn === 'chased' ? ', chased' : ''), docBtn('histDoc', 'wtn', o.id))) + '</div>';
+  }
+  function bx(label, a, b) { return '<div class="bx"><small>' + label + '</small>' + a + (b ? '<span>' + b + '</span>' : '') + '</div>'; }
+  function wtnPaper(o) {
+    var c = CS.cust(o.cust), s = CS.jobSite(o), su = CS.sup(o.sup), sv = CS.svc(o.svc), j = o.job, x = X2.hb(su), po = o.po || (j && j.po) || '';
+    var t = Math.round(CS.tonnes(j || o) * 100) / 100, day = j ? j.day : o.off + (o.svc === 'skip' ? 2 : 0);
+    return '<div class="doc v2doc xdwtn" id="wtnPaper"><div class="dh2"><img src="brand/cac-logo.svg" alt="CAC Waste Management"><div><b>Waste transfer note</b><small>Note number WTN-' + h(String(o.id).replace(/^CAC-/, '')) + '</small></div></div><div class="dg">' +
+      bx('Description of waste', h(sv.waste || 'Not on the job'), sv.ewc ? 'EWC code ' + h(sv.ewc) : '') +
+      bx(o.svc === 'skip' ? 'Container' : 'Quantity', h(CS.jobDesc(o)), t ? 'Net weight ' + t + ' tonnes' : '') +
+      bx('Collected from', (j && j.addr ? h(j.addr) + ', ' : s.name && s.name !== s.pc ? h(s.name) + ', ' : '') + h(s.pc), 'Producer: ' + h(c.name)) +
+      bx('Carrier', h(su.name), 'Waste carrier registration ' + h(su.cbdu)) +
+      bx('Broker', 'CAC Waste Management Ltd', 'Registration CBDU650137') +
+      (x.permit ? bx('Taken to', h(su.name) + ', ' + h(su.base), 'Environmental permit ' + h(x.permit)) : bx('Taken to', 'Not on the note')) +
+      bx('Date of transfer', dLong(day)) + bx('Order', h(o.id), po ? 'PO number ' + h(po) : '') + '</div>' +
+      '<div class="xdsigs"><div><span class="sig">' + h(c.contact) + '</span><small>Signed for the producer</small></div><div><span class="sig">' + h(su.contact) + '</span><small>Signed for the carrier</small></div></div></div>' +
+      '<p class="xdnote">Your own template. Filled in from the job.</p>';
+  }
+  function wtnModal(o, back) {
+    var j = o.job, su = CS.sup(o.sup), chase = !!j && (j.wtn === 'missing' || j.wtn === 'chased');
+    var body = wtnBack(o) && WASTE[o.svc] ? wtnPaper(o) : '<div class="xdwait" id="wtnWait" data-id="' + o.id + '"><span class="xdic">' + ic('clock') + '</span><b>Not back from the supplier yet</b>' +
+      '<p>' + (!WASTE[o.svc] ? 'No waste is moved on this order, so there is no note to come back.' : chase ? h(su.name) + ' have not sent the waste transfer note for ' + o.id + ' back.' + (j.wtn === 'chased' ? ' They have been chased already.' : ' One tap chases them on WhatsApp.') : 'The note for ' + o.id + ' comes from ' + h(su.name) + ' once the job is done. There is nothing to chase yet.') + '</p>' +
+      (chase ? '<button class="btn pri" data-act="chaseWtn" data-id="' + o.id + '">' + ic('whatsapp') + (j.wtn === 'chased' ? 'Chase again' : 'Chase ' + h(su.contact)) + '</button>' : '') + '</div>' +
+      '<p class="xdnote">When it comes back it is filed against this order and shown here on your own template.</p>';
+    H.modal('Waste transfer note, ' + o.id, body, (back ? '<button class="btn" data-act="ordOpen" data-id="' + o.id + '">' + ic('chevron-left') + 'Back to the order</button>' : '') + '<span class="sp"></span><button class="btn pri" data-act="close">Close</button>');
+  }
   function histDoc(o, k) {
-    var c = CS.cust(o.cust), s = CS.jobSite(o), su = CS.sup(o.sup), sv = CS.svc(o.svc), t = Math.round((2.2 + (X2.hash(o.id) % 30) / 10) * 100) / 100;
-    var title = k === 'wtn' ? 'Waste transfer note' : k === 'inv' ? 'Invoice ' + o.inv : 'Order confirmation';
-    var rows = k === 'wtn' ? [['Job', o.id], ['Collected from', s.name + ', ' + s.pc], ['Waste', (sv.waste || 'Mixed waste') + ' (EWC ' + (sv.ewc || '17 09 04') + ')'], ['Net weight', t + ' tonnes'], ['Carrier', su.name + ', ' + su.cbdu], ['Date', dLong(o.off + (o.svc === 'skip' ? 2 : 0))]]
-      : k === 'inv' ? [['To', c.name], ['For', CS.jobDesc(o) + ', ' + s.name + ', ' + s.pc], ['Job', o.id], ['Net', money(o.sell, true)], ['VAT at 20%', money(o.sell * 0.2, true)], ['Total', money(o.sell * 1.2, true)], ['Status', o.pay === 'paid' ? 'Paid' : 'Not paid yet']]
+    if (k === 'wtn') return wtnModal(o, true);
+    var c = CS.cust(o.cust), s = CS.jobSite(o);
+    var title = k === 'inv' ? 'Invoice ' + o.inv : 'Order confirmation';
+    var rows = k === 'inv' ? [['To', c.name], ['For', CS.jobDesc(o) + ', ' + s.name + ', ' + s.pc], ['Job', o.id], ['Net', money(o.sell, true)], ['VAT at 20%', money(o.sell * 0.2, true)], ['Total', money(o.sell * 1.2, true)], ['Status', o.pay === 'paid' ? 'Paid' : 'Not paid yet']]
       : [['Customer', c.name], ['Site address', s.name + ', ' + s.pc], ['What', CS.jobDesc(o)], ['When', dLong(o.off)], ['Price', money(o.sell, true) + ' + VAT']];
     H.modal(title + ', ' + o.id, '<div class="doc v2doc"><div class="dh2"><img src="brand/cac-logo.svg" alt="CAC Waste Management"><div><b>' + h(title) + '</b><small>' + o.id + ' · ' + dShort(o.off) + '</small></div></div><dl class="kv">' + rows.map(function (r) { return '<dt>' + h(r[0]) + '</dt><dd>' + h(r[1]) + '</dd>'; }).join('') + '</dl></div>',
       '<button class="btn" data-act="ordOpen" data-id="' + o.id + '">' + ic('chevron-left') + 'Back to the order</button><span class="sp"></span><button class="btn pri" data-act="close">Close</button>');
@@ -524,7 +585,19 @@
       X2.order({ cust: c.id, site: x.site != null ? x.site : 0, cname: c.contact, cphone: c.phone, svc: x.svc, size: x.size || 8, qty: x.svc === 'grab' || x.svc === 'muck' || x.svc === 'aggregates' ? x.qty : (x.weeks || x.panels || x.hours || x.m3 || ''), pay: /card/i.test(c.terms) ? 'link' : 'account' });
       H.toast('Same again for ' + h(c.name) + '. Check the date, then place it.', 'refresh');
     };
-    A.histDoc = function (el) { var x = find(el.dataset.id); if (!x) return; if (el.dataset.k === 'wtn' && x.src === 'j') return A.viewWtn({ dataset: { id: x.id } }); histDoc(x, el.dataset.k); };
+    A.histDoc = function (el) { var x = find(el.dataset.id); if (!x) return; histDoc(x, el.dataset.k); };
+    /* one waste transfer note everywhere: the View WTN buttons on jobs open the same template as the order page */
+    A.viewWtn = function (el) { var x = find(el.dataset.id); if (x) wtnModal(x, false); };
+    var chase0 = A.chaseWtn; A.chaseWtn = function (el) {
+      var w = q('#wtnWait'), id = w && el && w.contains(el) ? w.getAttribute('data-id') : null, bk = !!q('#layer .mft [data-act="ordOpen"]');
+      chase0(el); if (id) { var x = find(id); if (x) wtnModal(x, bk); }
+    };
+    A.ordFind = function (el) { var b = q('#sres'), i = q('#q'); if (b) b.hidden = true; if (i) i.value = ''; A.ordOpen(el); };
+    A.ordFindAll = function () {
+      var b = q('#sres'), i = q('#q'), v = i ? i.value.trim() : ''; if (b) b.hidden = true; if (i) i.value = '';
+      toOrders(function (d) { d.mode = 'list'; d.from = null; d.q = v; d.cust = ''; d.sup = ''; d.svc = ''; d.status = ''; d.paid = ''; d.more = 1; });
+    };
+    var qi = q('#q'); if (qi) qi.placeholder = 'Search orders or PO';
     var place = A.ordPlace; A.ordPlace = function (el) {
       var n = S().jobs.length; place(el); if (S().jobs.length === n) return;
       var j = S().jobs[S().jobs.length - 1], m = S().months[S().months.length - 1];
@@ -583,6 +656,11 @@
       var el = e.target;
       if (el.id === 'diaQ') { var d = dia(); d.q = el.value; d.more = 1; var b = q('#diaList'); if (b) b.innerHTML = listBody(d, all()); }
       if (el.id === 'findPc') { fnd().pc = el.value; var r = q('#findRes'); if (r) r.innerHTML = findRes(); }
+      if (el.id === 'q') setTimeout(ordSearch, 0);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' || !e.target || e.target.id !== 'q') return;
+      var first = q('#sres:not([hidden]) .xdso'); if (first) { e.preventDefault(); first.click(); }
     });
     document.addEventListener('change', function (e) {
       var el = e.target, d;

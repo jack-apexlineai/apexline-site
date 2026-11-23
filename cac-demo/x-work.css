@@ -54,8 +54,46 @@
 .xwstop b{display:block;font-weight:800}
 .xwstop small{display:block;color:var(--ink2);font-size:12.5px;margin-top:2px}
 
+/* an order's documents: three rows in one block */
+.xdocs{border:1px solid var(--line);border-radius:12px;background:var(--panel2);overflow:hidden}
+.xdrow{display:flex;align-items:center;gap:12px;padding:11px 12px;border-bottom:1px solid var(--line)}
+.xdrow:last-child{border-bottom:0}
+.xdrow .bd{flex:1;min-width:0}
+.xdrow .bd b{display:block;font-size:13.5px;line-height:1.3;color:var(--ink)}
+.xdrow .bd small{display:block;color:var(--muted);font-size:12.5px;line-height:1.35;margin-top:2px}
+.xdrow .btn{flex:none}
+.xdic{flex:none;width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:var(--brand-l);color:var(--brand-ink);font-size:18px}
+
+/* the waste transfer note on CAC's own template. Paper stays white in both themes, like the other documents. */
+.xdwtn .dg{gap:10px}
+.xdwtn .bx{font-weight:700;overflow-wrap:anywhere}
+.xdwtn .bx span{display:block;font-weight:400;color:#555}
+.xdsigs{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.xdsigs div{display:flex;flex-direction:column;min-width:0}
+.xdsigs .sig{border-bottom:1px solid #999;padding:0 2px 2px;min-height:30px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xdsigs small{color:#777;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-top:5px}
+.xdnote{color:var(--muted);font-size:12px;margin:10px 2px 0}
+.xdwait{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;border:1px dashed var(--line2);border-radius:12px;background:var(--panel2);padding:26px 18px}
+.xdwait .xdic{background:var(--amber-l);color:var(--amber);width:42px;height:42px;font-size:22px}
+.xdwait b{font-size:17px;font-weight:800;color:var(--ink)}
+.xdwait p{margin:0;color:var(--ink2);font-size:13.5px;max-width:420px}
+.xdwait .btn{margin-top:6px}
+
+/* orders in the search box in the top bar */
+.sres:has(.xdso){min-width:340px;max-height:min(600px,calc(100vh - 84px))}
+.sres .xdsh{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:8px 8px 4px}
+.sres .xdsh span{background:var(--sunk);border-radius:999px;padding:1px 8px;letter-spacing:0}
+.sres .xdso>.ic{flex:none;color:var(--brand-ink)}
+.sres .xdso>span{min-width:0}
+.sres .xdso b{display:block;color:var(--ink)}
+.sres .xdsall b{font-weight:700;color:var(--ink2)}
+
 @media (max-width:899px){
   .xwdate b{font-size:22px}
+}
+@media (max-width:480px){
+  .xdwtn .dg{grid-template-columns:1fr}
+  .xdsigs{gap:12px}
 }
 @media (max-width:560px){
   .xwsm{display:block!important}

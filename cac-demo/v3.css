@@ -223,6 +223,7 @@ label.btn{cursor:pointer}
 #walk{position:fixed;left:12px;bottom:12px;width:212px;z-index:400;background:#26262B;color:#F4F4F5;border:1px solid #3A3A40;border-radius:14px;padding:12px;box-shadow:0 14px 34px rgba(0,0,0,.35);font-size:13px}
 #walk .wk-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 #walk .wk-n{flex:1;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--brand)}
+#walk .wk-m{font-size:10.5px;color:#8E8E95;white-space:nowrap}
 #walk .wk-t{display:block;font-size:15px;font-weight:800;line-height:1.25;margin-bottom:4px}
 #walk .wk-p{margin:0 0 10px;font-size:12.5px;line-height:1.45;color:#C9C9CE}
 #walk .wk-x{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
@@ -247,5 +248,9 @@ body:has(#boot) #walk{display:none}
   body.walking .side{padding-bottom:calc(var(--walkh,0px) + 24px)}
   body.walking .modal{left:calc(50% + 118px);max-width:calc(100vw - 260px)}
 }
+/* the customer's own page shown inside the demo at laptop size */
+.modal.xport{width:min(1180px,calc(100vw - 24px));height:calc(100vh - 60px);max-height:none;display:flex;flex-direction:column;overflow:hidden}
+.modal.xport .mhd{flex:none;gap:10px}
+.modal.xport iframe{flex:1;width:100%;border:0;background:#fff}
 @media (max-width:1199px){#walk{width:250px}}
-@media (max-width:899px){#walk{left:8px;right:8px;bottom:8px;width:auto}body.walking .fab{bottom:calc(var(--walkh,0px) + 20px)}body.walking .view{padding-bottom:calc(var(--walkh,0px) + 30px)}}
+@media (max-width:899px){#walk{left:8px;right:8px;bottom:8px;width:auto}body.walking .modal{top:calc(50% - (var(--walkh,0px) + 8px) / 2);max-height:calc(100vh - var(--walkh,0px) - 40px)}body.walking .drawer{bottom:calc(var(--walkh,0px) + 12px)}body.walking .fab{bottom:calc(var(--walkh,0px) + 20px)}body.walking .view{padding-bottom:calc(var(--walkh,0px) + 30px)}}

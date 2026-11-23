@@ -68,6 +68,14 @@
     diaryMonth: function () { closeAll(); if (UI().ui.view !== 'orders') view('orders'); A().diaMode({ dataset: { v: 'month' } }); },
     customers: function () { closeAll(); view('customers'); },
     skipper: function () { closeAll(); A().ask(); fill('#askQ', 'Read my latest email about a quote'); },
+    gemmaBook: function () { closeAll(); view('home'); if (window.CACGX) window.CACGX.force(); },
+    /* the customer's own page, shown at laptop size inside the demo so one shared window is enough. Hexley has the fullest paperwork. */
+    portal: function () {
+      closeAll(); view('customers');
+      if (window.innerWidth < 900) { var lc = el('#linkCard'); if (lc) lc.scrollIntoView(); return; }   /* on a phone the link card is shown, the page itself opens from there */
+      var c = window.CS.cust('c6'), nm = (c && c.name) || 'your customer';
+      el('#layer').innerHTML = '<div class="scrim" data-act="close"></div><div class="modal wide xport" role="dialog" aria-label="Customer page"><div class="mhd"><h2>What ' + window.CS.esc(nm) + ' see</h2><span class="tag">Their own page, with your logo</span><button class="iconbtn" data-act="close" aria-label="Close">&times;</button></div><iframe src="portal.html?c=c6" title="Customer page"></iframe></div>';
+    },
     phoneView: function () { closeAll(); A().phone(); },
     importData: function () { closeAll(); A().importOpen({ dataset: { v: 'customers' } }); },
     importSample: function () { closeAll(); A().importOpen({ dataset: { v: 'customers' } }); var b = el('[data-ai="sample"]'); if (b) b.click(); },

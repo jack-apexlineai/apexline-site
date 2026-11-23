@@ -111,8 +111,12 @@
     var el = e.target, id = el && el.getAttribute && el.getAttribute('data-xwst'); if (!id) return;
     var j = CS.job(id), v = el.value; if (!j || ST.indexOf(v) < 0) return;
     j.liveSt = v; j.liveStWas = j.status; CS.jobLog(j, 'Status set to ' + v);
+    /* an account job that was held back for invoicing: the invoice is raised now the job is complete */
+    var inv = v === 'Complete' && j.invLater && X.raiseLater ? X.raiseLater(j) : null, cu = inv ? CS.cust(j.cust) : null;
+    if (inv) CS.feed('Invoice ' + inv + ' raised for ' + (cu ? cu.name : 'the customer') + ', ' + j.id + ' is complete', 'receipt');
     CS.commit();
-    if (v === 'On the way') askText(j); else toast(j.id + ' set to ' + v + '.', 'check');
+    if (inv) toast(j.id + ' set to Complete. Invoice ' + inv + ' is raised and ready for ' + h(cu ? cu.name : 'the customer') + '.', 'receipt');
+    else if (v === 'On the way') askText(j); else toast(j.id + ' set to ' + v + '.', 'check');
   });
 
   /* ---------- the order diary opens on a day ---------- */
