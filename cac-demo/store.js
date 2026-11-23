@@ -1,7 +1,7 @@
 /* CAC demo store: state in this browser only, the message reader, supplier lookup, pricing, drafts and approvals.
    Nothing is ever sent anywhere. "Send" in this demo only adds the message to the screen. */
 (function () {
-  var KEY = 'cac-demo-v4', LKEY = 'cac-demo-leader';
+  var KEY = 'cac-demo-v5', LKEY = 'cac-demo-leader';
   var CS = window.CS = {};
   var listeners = [];
   var ME = Math.random().toString(36).slice(2);

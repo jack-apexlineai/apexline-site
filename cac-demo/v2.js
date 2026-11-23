@@ -565,7 +565,7 @@
     var s = S(), t = s.threads.filter(function (x) { return x.party.type === 'customer' && x.party.id === 'c7' && !x.done && CS.needsYou(x); })[0];
     if (!t) {
       var i = -1; s.live.forEach(function (L, k) { if (k >= (s.liveIdx || 0) && L.party && L.party.id === 'c7') i = k; });
-      var L = i >= 0 ? s.live.splice(i, 1)[0] : { party: { type: 'customer', id: 'c7' }, ch: 'email', subject: 'Grab for the Wells site', text: 'Hi John,\n\nCan we get 2 grab loads of clean soil taken from the Wells site NR23 on Monday? How much would that be?\n\nThanks, Gemma' };
+      var L = i >= 0 ? s.live.splice(i, 1)[0] : { party: { type: 'customer', id: 'c7' }, ch: 'email', subject: 'Grab for the Wells site', text: 'Hi John,\n\nCan we get a grab lorry to take clean soil from the Wells site NR23 on Monday? How much would that be?\n\nThanks, Gemma' };
       t = CS.incoming(L); t.fresh = false; CS.commit();
     }
     return t.id;

@@ -59,8 +59,9 @@
         if (u !== USER) { err.textContent = 'No one with that username. Try ' + USER + '.'; user.focus(); return; }
         if (pin.value.length < 4) { err.textContent = 'Enter your 4 digit PIN.'; pin.focus(); return; }
         if (pin.value !== PIN) { err.textContent = 'That PIN is not right. Try again.'; pin.value = ''; paint(); w.querySelector('.xs-card').classList.remove('shake'); void w.offsetWidth; w.querySelector('.xs-card').classList.add('shake'); pin.focus(); return; }
-        done = true; err.textContent = ''; w.classList.add('ok');
-        setTimeout(function () { then(); setTimeout(function () { if (w.parentNode) w.parentNode.removeChild(w); }, 60); }, 380);
+        done = true; err.textContent = '';
+        then();   /* the start-up goes in underneath first, so nothing else shows while the sign-in fades */
+        requestAnimationFrame(function () { w.classList.add('ok'); setTimeout(function () { if (w.parentNode) w.parentNode.removeChild(w); }, 400); });
       }
       pin.addEventListener('input', function () { pin.value = pin.value.replace(/\D/g, '').slice(0, 4); err.textContent = ''; paint(); if (pin.value.length === 4) setTimeout(go, 160); });
       pin.addEventListener('focus', paint); pin.addEventListener('blur', function () { [].forEach.call(cells, function (c, i) { c.className = i < pin.value.length ? 'on' : ''; }); });

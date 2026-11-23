@@ -29,7 +29,7 @@
       areas: range('NR', 1, 18).concat(range('IP', 24, 27), range('CB', 21, 25)),
       rates: { skip: { 4: 155, 6: 185, 8: 210, 10: 245, 12: 270, 14: 295, 16: 320, 20: 430, 40: 575 } },
       resp: 41, onTime: 88, wtn: 81, jobs: 44, cbdu: 'CBDU402981', licExp: 410 },
-    { id: 's2', recov: 97, hireDays: 14, weekRate: 25, name: 'Fenreach Grab and Haulage', contact: 'Lee', phone: '07700 900127', base: 'King\'s Lynn', services: ['grab', 'muck', 'aggregates'],
+    { id: 's2', recov: 97, hireDays: 14, weekRate: 25, name: 'Fenreach Grab and Haulage', contact: 'Dean', phone: '07700 900127', base: 'King\'s Lynn', services: ['grab', 'muck', 'aggregates'],
       areas: ['PE', 'CB', 'NR'], rates: { grab: 275, muck: 320, aggregates: 360 },
       resp: 22, onTime: 95, wtn: 96, jobs: 52, cbdu: 'CBDU355960', licExp: 820, preferred: true },
     { id: 's4', name: 'Wherrydale Welfare Hire', contact: 'Jo', phone: '07700 900133', base: 'Norwich', services: ['welfare', 'container', 'toilet', 'fencing'],
@@ -204,7 +204,7 @@
     { id: 't6', party: { type: 'customer', id: 'c2' }, ch: 'email', unread: false, subject: 'Remittance advice INV-2207', scn: { kind: 'paid', inv: 'INV-2207' },
       msgs: [m('in', 'Hello,\n\nPlease find attached remittance for INV-2207, £1,284.00 paid by BACS today.\n\nKind regards\nAccounts, Pellow Homes', 70, { att: [{ n: 'Remittance-INV-2207.pdf', t: 'doc' }] })] },
     { id: 't7', party: { type: 'supplier', id: 's2' }, ch: 'wa', unread: false, scn: { kind: 'confirm', job: 'CAC-1048' },
-      msgs: [m('out', 'Hi Lee, grab lorry for Dunmore Groundworks, Lynn Road plots, Snettisham PE31 7PB, {WDN:3} 8am please. Ref CAC-1048. Thanks, John (CAC)', 95, { by: 'John' }),
+      msgs: [m('out', 'Hi Dean, grab lorry for Dunmore Groundworks, Lynn Road plots, Snettisham PE31 7PB, {WDN:3} 8am please. Ref CAC-1048. Thanks, John (CAC)', 95, { by: 'John' }),
              m('in', 'Grab booked {WDN:3} 8am for Dunmore at Lynn Rd Snettisham, driver will ring 30 min before', 85)] },
     { id: 't8', party: { type: 'customer', id: 'c6' }, ch: 'email', unread: true, subject: 'WTNs for Plot 4 Histon', scn: { kind: 'pack', site: 0 },
       msgs: [m('in', 'Hi John,\n\nThe client\'s QS wants every waste transfer note for Plot 4 for the last month before they sign off the valuation. Can you send them over today?\n\nCheers, Lee', 110)] },
@@ -233,7 +233,7 @@
       form: { 'Your name': 'Jordan Blake', Company: 'Blake Extensions', Email: 'jordan@blakeextensions.co.uk', Phone: '07700 900318', 'Site postcode': 'PE36 5BW', 'Service needed': 'Readymix Concrete', 'Came from': 'cacwaste.co.uk, Readymix page' },
       text: '6m3 of C25 concrete for footings Thursday morning. No pump needed, chute is fine.' },
     { at: 68, party: { type: 'supplier', id: 's11' }, ch: 'wa', text: 'Yes 8yd for Kilner L8 confirmed {WDN:1} AM', scn: { kind: 'confirm', job: 'CAC-1047' } },
-    { at: 98, party: { type: 'customer', id: 'c7' }, ch: 'email', subject: 'Grab for the Wells site', text: 'Hi John,\n\nCan we get 2 grab loads of clean soil taken from the Wells site NR23 on Monday? How much would that be?\n\nThanks, Gemma' }
+    { at: 98, party: { type: 'customer', id: 'c7' }, ch: 'email', subject: 'Grab for the Wells site', text: 'Hi John,\n\nCan we get a grab lorry to take clean soil from the Wells site NR23 on Monday? How much would that be?\n\nThanks, Gemma' }
   ];
 
   /* Extras the suppliers billed, or that built up, and nobody has recharged yet. */

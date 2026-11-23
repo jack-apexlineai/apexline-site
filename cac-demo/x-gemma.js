@@ -11,32 +11,32 @@
     function h(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
     function money(n) { return '£' + Math.round(n).toLocaleString('en-GB'); }
     function gem() {
-      var l = CS.S.threads.filter(function (t) { return t.party && t.party.type === 'customer' && t.party.id === 'c7' && (t.gx != null || /grab loads of clean soil/i.test((t.msgs[0] || {}).text || '')); });
+      var l = CS.S.threads.filter(function (t) { return t.party && t.party.type === 'customer' && t.party.id === 'c7' && (t.gx != null || /grab (loads of|lorry to take) clean soil/i.test((t.msgs[0] || {}).text || '')); });
       return l[0] || null;
     }
     /* the price, supplier and day come from the system's own reading of her first message, worked out once and kept */
     function facts(t) {
       if (t.gxF) return t.gxF;
-      var c = CS.cust('c7'), site = (c.sites && c.sites[0]) || { name: 'Wells quay site', pc: 'NR23 1AT' }, F = { qty: 2, site: site.name, pc: site.pc, day: 7, sell: 0, cost: 0, sup: null };
+      var c = CS.cust('c7'), site = (c.sites && c.sites[0]) || { name: 'Wells quay site', pc: 'NR23 1AT' }, F = { qty: 1, site: site.name, pc: site.pc, day: 7, sell: 0, cost: 0, sup: null };
       try {
         var an = CS.analyse(t), ln = an && an.lines && an.lines[0];
         if (ln) { F.sell = an.sell || ln.sell; F.cost = an.cost || ln.cost; F.sup = ln.sup; }
         if (an && an.parsed && typeof an.parsed.day === 'number' && an.parsed.day > 0) F.day = an.parsed.day;
       } catch (e) {}
-      if (!F.sell || !F.sup) { try { var b = (CS.lookup(CS.outward(site.pc), { svc: 'grab', qty: 2 }) || [])[0]; if (b) { F.sell = b.sell; F.cost = b.cost; F.sup = b.sup.id; } } catch (e2) {} }
+      if (!F.sell || !F.sup) { try { var b = (CS.lookup(CS.outward(site.pc), { svc: 'grab', qty: 1 }) || [])[0]; if (b) { F.sell = b.sell; F.cost = b.cost; F.sup = b.sup.id; } } catch (e2) {} }
       var su = F.sup ? CS.sup(F.sup) : null; F.supName = su ? su.name : 'your grab supplier'; F.onTime = su ? su.onTime : null;
       F.dayLong = CS.dayDate(F.day).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
       t.gxF = F; return F;
     }
     function draft(t) {
       var F = facts(t);
-      return t.gxDraft != null ? t.gxDraft : 'Hi Gemma,\n\nYes, no problem. 2 grab loads of clean soil from the ' + F.site + ' on ' + F.dayLong + ' comes to ' + money(F.sell) + ' + VAT.\n\nShall I book it in?\n\nCheers, John';
+      return t.gxDraft != null ? t.gxDraft : 'Hi Gemma,\n\nYes, no problem. A grab lorry for the clean soil at the ' + F.site + ' on ' + F.dayLong + ' is ' + money(F.sell) + ' + VAT.\n\nShall I book it in?\n\nCheers, John';
     }
     function card(t) {
       var F = facts(t);
       if (t.gx === 1) return '<div class="gx-line">' + ic('send') + '<span><b>Reply sent to Gemma by email.</b> Waiting for her answer. Demo, nothing is really sent.</span></div>';
-      if (t.gx === 2) return '<div class="gx-h"><span class="gx-sp">' + ic('sparkles') + '</span><b>Gemma wants to book</b><span class="tag ok">Ready to book</span></div><p class="gx-p">' + h(F.dayLong) + ', between 8 and 12, on account. 2 grab loads from the ' + h(F.site) + ' with ' + h(F.supName) + '.</p><div class="gx-b"><button class="btn pri" data-act="gxBook">' + ic('check') + 'Open and book</button></div>';
-      if (t.gx === 3) return '<div class="gx-line ok">' + ic('circle-check') + '<span><b>Booked' + (t.gxJob ? ', ' + h(t.gxJob) : '') + '.</b> 2 grab loads, ' + h(F.dayLong) + ', 8 to 12, with ' + h(F.supName) + '.</span><button class="btn sm" data-act="go" data-v="orders">Open the diary</button></div>';
+      if (t.gx === 2) return '<div class="gx-h"><span class="gx-sp">' + ic('sparkles') + '</span><b>Gemma wants to book</b><span class="tag ok">Ready to book</span></div><p class="gx-p">' + h(F.dayLong) + ', between 8 and 12, on account. A grab lorry at the ' + h(F.site) + ' with ' + h(F.supName) + '.</p><div class="gx-b"><button class="btn pri" data-act="gxBook">' + ic('check') + 'Open and book</button></div>';
+      if (t.gx === 3) return '<div class="gx-line ok">' + ic('circle-check') + '<span><b>Booked' + (t.gxJob ? ', ' + h(t.gxJob) : '') + '.</b> Grab lorry, ' + h(F.dayLong) + ', 8 to 12, with ' + h(F.supName) + '.</span><button class="btn sm" data-act="go" data-v="orders">Open the diary</button></div>';
       return '<div class="gx-h"><span class="gx-sp">' + ic('sparkles') + '</span><b>Suggested reply</b><span class="tag bad">Hot</span><span class="gx-want">Wants a price</span></div>' +
         '<ul class="gx-facts"><li>' + ic('map-pin') + '<span>Site already on her account: <b>' + h(F.site) + ', ' + h(F.pc) + '</b></span></li>' +
         '<li>' + ic('truck') + '<span><b>' + h(F.supName) + '</b> covers ' + h(CS.outward(F.pc)) + (F.onTime ? ', ' + F.onTime + '% on time' : '') + '</span></li>' +
@@ -92,12 +92,21 @@
     }
     function lcustMsg(t) { var s = lpick(t); return t.lxDraft != null ? t.lxDraft : 'Hi Lee, yes no problem mate. Grab booked in for tomorrow at the Histon site, ' + money(s.sell) + ' + VAT. Have requested AM, will confirm the window as soon as possible.'; }
     function money3(s) { return '<div class="gx-money"><span><small>Their price</small><b>' + money(s.sell) + '</b></span><span><small>Supplier cost</small><b>' + money(s.cost) + '</b></span><span class="gp"><small>Gross profit</small><b>' + money(s.sell - s.cost) + '</b></span></div>'; }
+    /* every step stays on the card, so the history of the job is there to read: asked, answered, booked */
+    function lhist(t, s) {
+      var r = [];
+      if (t.lxAt) r.push('<li>' + ic('whatsapp') + '<span><b>' + at(t.lxAt) + ' John asked ' + h(s.name) + '</b><q>' + h(t.lxSent || '') + '</q></span></li>');
+      if (t.lxReplyAt) r.push('<li>' + ic('message') + '<span><b>' + at(t.lxReplyAt) + ' ' + h(s.name) + ' replied</b><q>' + h(t.lxReply || '') + '</q></span></li>');
+      if (t.lxDoneAt) r.push('<li class="ok">' + ic('circle-check') + '<span><b>' + at(t.lxDoneAt) + ' Booked' + (t.sxJob ? ' ' + h(t.sxJob) : '') + ' by John</b>Lee has his reply on WhatsApp and the confirmation by email. ' + h(s.name) + ' has the booking.</span></li>');
+      return r.length ? '<ul class="lx-hist">' + r.join('') + '</ul>' : '';
+    }
     function lcard(t) {
       var F = sfacts(t), c = CS.cust(t.party.id), s = lpick(t);
-      if (t.lx === 3) return '<div class="gx-line ok">' + ic('circle-check') + '<span><b>Booked' + (t.sxJob ? ' ' + h(t.sxJob) : '') + ' at ' + at(t.lxDoneAt) + ' by John.</b> ' + h(s.name) + ', tomorrow AM. Lee has his reply on WhatsApp and the confirmation by email. Demo, nothing is really sent.</span>' + undoBtn(t.id) + '<button class="btn sm" data-act="xh2Dia" data-v="1">Open tomorrow</button></div>';
-      if (t.lx === 1) return '<div class="gx-line">' + ic('clock') + '<span><b>Asked ' + h(s.name) + ' at ' + at(t.lxAt) + ' on WhatsApp.</b> Waiting for their answer.</span>' + undoBtn(t.id) + '</div>';
+      if (t.lx === 3) return '<div class="gx-h"><span class="gx-sp">' + ic('circle-check') + '</span><b>Booked, tomorrow AM with ' + h(s.name) + '</b><span class="tag ok">Done</span></div>' + lhist(t, s) +
+        '<div class="gx-b">' + undoBtn(t.id) + '<button class="btn sm" data-act="xh2Dia" data-v="1">Open tomorrow</button><small>Demo, nothing is really sent.</small></div>';
+      if (t.lx === 1) return '<div class="gx-h"><span class="gx-sp">' + ic('clock') + '</span><b>Waiting for ' + h(s.name) + '</b><span class="tag">Asked</span></div>' + lhist(t, s) + '<div class="gx-b">' + undoBtn(t.id) + '</div>';
       if (t.lx === 2) return '<div class="gx-h"><span class="gx-sp">' + ic('sparkles') + '</span><b>' + h(s.name) + ' can do it</b><span class="tag ok">Ready to book</span></div>' +
-        '<p class="gx-quote">"' + h(t.lxReply || '') + '"</p>' + money3(s) +
+        lhist(t, s) + money3(s) +
         '<textarea id="lxText" rows="3" aria-label="Reply to Lee">' + h(lcustMsg(t)) + '</textarea>' +
         '<div class="gx-b"><button class="btn pri" data-act="lxBook">' + ic('check') + 'Book it</button><small>Books ' + h(s.name) + ', sends Lee this on WhatsApp and emails his confirmation.</small>' + undoBtn(t.id) + '</div>';
       var live = c ? CS.S.jobs.filter(function (j) { return j.cust === c.id && ['booked', 'confirmed', 'onhire', 'exchange', 'collection'].indexOf(j.status) >= 0; }).length : 0, L = lsups(t);
@@ -113,7 +122,7 @@
       snap(t.id);
       var txt = ((ta && ta.value) || lsupMsg(t, s)).trim(), th = CS.threadFor({ type: 'supplier', id: s.id }, 'wa');
       CS.addMsg(th, 'out', txt, { by: 'John' }); th.done = true; th.unread = false;
-      t.lx = 1; t.lxAt = Date.now(); t.lxSupTid = th.id; t.unread = false; CS.commit(); tick('Sent to ' + s.name);
+      t.lx = 1; t.lxAt = Date.now(); t.lxSent = txt; t.lxSupTid = th.id; t.unread = false; CS.commit(); tick('Sent to ' + s.name);
     };
     document.addEventListener('change', function (e) {
       if (e.target && e.target.name === 'lxSup') { var t = CS.thread('t15'); if (t) { t.lxSup = e.target.value; t.lxSupDraft = null; CS.save(); UI.render(); } }
@@ -123,7 +132,7 @@
       if (e.target.id === 'lxSupText') t.lxSupDraft = e.target.value;
       if (e.target.id === 'lxText') t.lxDraft = e.target.value;
     });
-    var supDelay = (function () { var v = parseFloat(new URLSearchParams(location.search).get('nudge')); return (v > 0 ? Math.min(v, 6) : 6) * 1000; })();
+    var supDelay = (function () { var v = parseFloat(new URLSearchParams(location.search).get('nudge')); return (v > 0 ? Math.min(v, 3) : 3) * 1000; })();   /* the supplier answers about 3 seconds after John asks */
     function lbubble(t) {
       var s = lpick(t), old = document.getElementById('lxNudge'); if (old) old.remove();
       var d = document.createElement('div'); d.className = 'sk-nudge gx-nudge'; d.id = 'lxNudge'; d.setAttribute('role', 'status');
@@ -134,7 +143,7 @@
     setInterval(function () {
       var t = CS.thread('t15'); if (!t || t.lx !== 1 || !t.lxAt || Date.now() - t.lxAt < supDelay) return;
       var s = lpick(t), th = CS.thread(t.lxSupTid) || CS.threadFor({ type: 'supplier', id: s.id }, 'wa');
-      t.lxReply = 'Hi John, yes we can do that, no problem. AM is fine.';
+      t.lxReply = 'Hi John, yes we can do that, no problem. AM is fine.'; t.lxReplyAt = Date.now();
       CS.addMsg(th, 'in', t.lxReply); th.done = true; th.unread = false;
       t.lx = 2; CS.commit(); lbubble(t);
     }, 500);
@@ -190,7 +199,7 @@
       if (ui.gxSel !== t.id) { ui.gxSel = t.id; if (ui.asst !== false) { ui.asst = false; UI.render(); return true; } }
       var comp = document.querySelector('#view .compose'); if (!comp) return true;
       if (old) old.remove();
-      var d = document.createElement('div'); d.id = 'gxCard'; d.className = 'gx s' + ((t.sx === 1 || t.lx === 1 || t.lx === 3) ? 3 : 0); d.innerHTML = scard(t);
+      var d = document.createElement('div'); d.id = 'gxCard'; d.className = 'gx s' + (t.sx === 1 ? 3 : 0); d.innerHTML = scard(t);
       comp.parentNode.insertBefore(d, comp);
       return true;
     }
@@ -244,7 +253,7 @@
     A.gxBook = function () {
       var t = gem(); if (!t) return; var F = facts(t), c = CS.cust('c7');
       hideBubble(); t.unread = false; CS.save(); ui.gxBooking = t.id;
-      V2.x.order({ cust: 'c7', site: 0, cname: c.contact, cphone: c.phone, svc: 'grab', qty: 2, day: F.day, time: '8 to 12', pay: 'account', send: 'email', note: 'Clean soil. From Gemma\'s email.' });
+      V2.x.order({ cust: 'c7', site: 0, cname: c.contact, cphone: c.phone, svc: 'grab', qty: 1, day: F.day, time: '8 to 12', pay: 'account', send: 'email', note: 'Clean soil. From Gemma\'s email.' });
     };
     var op = A.ordPlace;
     A.ordPlace = function (el) {
