@@ -28,6 +28,7 @@
         '<ul class="xb-list">' + lines().map(function (l, i) { return '<li style="animation-delay:' + (1.5 + i * 0.5).toFixed(2) + 's">' + ic(l[0]) + '<span>' + l[1] + '</span></li>'; }).join('') + '</ul>' +
         '<div class="xb-bar"><i></i></div></div>';
       document.body.appendChild(b);
+      document.documentElement.classList.remove('xb-pre');   /* the start-up is now on top, so the dark cover can go */
       var total = RM ? 1800 : 6400, t = setTimeout(end, total), gone = false;
       function end() {
         if (gone) return; gone = true; clearTimeout(t); document.removeEventListener('keydown', key, true);
@@ -40,6 +41,7 @@
     A.boot = function () { try { A.close(); } catch (e) {} run(); };
     /* it plays every time the page loads, including a refresh and the guided tour, unless ?boot=0 is in the address
        or the guided tour is part way through (a refresh mid-demo keeps your place without replaying it) */
+    setTimeout(function () { document.documentElement.classList.remove('xb-pre'); }, 2500);   /* never leave the cover up if something goes wrong */
     var q = new URLSearchParams(location.search);
     var first = document.getElementById('boot');
     if (q.get('boot') !== '0') setTimeout(run, 200);   /* every load, a refresh too. A moment's wait so the guided inbox is calmed first and the figures match */
