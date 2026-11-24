@@ -1,0 +1,110 @@
+/* CAC demo, people screens: customer cards, supplier cards, the Best for strip and credit control */
+.xp-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;min-width:0}
+.xp-bar h2{font-size:15px;margin:0;display:flex;align-items:center;gap:8px}
+.xp-bar h2 .muted{font-weight:600}
+.xp-bar .sp{flex:1}
+.xp-hint{font-size:12.5px}
+.xp-search{position:relative;flex:1 1 240px;max-width:440px;min-width:0;display:block}
+.xp-search .ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.xp-search input{width:100%;height:40px;border:1px solid var(--line2);border-radius:10px;background:var(--panel);padding:0 12px 0 36px;outline:none;font-size:14px}
+.xp-search input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-l)}
+.xp-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr))}
+.xp-card{display:flex;flex-direction:column;gap:12px;padding:16px;cursor:pointer;min-width:0;transition:border-color .15s,transform .12s}
+.xp-card:hover,.xp-bc:hover{border-color:var(--brand);transform:translateY(-1px)}
+.xp-click:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.xp-top{display:flex;align-items:flex-start;gap:10px;min-width:0}
+.xp-top>.tag{flex:none;margin-top:1px}
+.xp-av{flex:none;width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:var(--brand-l);color:var(--brand-ink);font-weight:800;font-size:13px;letter-spacing:.02em}
+.xp-name{flex:1;min-width:0}
+.xp-name b{display:block;font-size:15px;font-weight:800;line-height:1.25;overflow-wrap:anywhere}
+.xp-name small{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:12.5px;margin-top:2px;min-width:0}
+.xp-name small .ic{flex:none}
+.xp-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 10px;border-top:1px solid var(--line);padding-top:12px}
+.xp-stats>span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.xp-stats small{font-size:11px;color:var(--muted);font-weight:600;line-height:1.2}
+.xp-stats b{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em;white-space:nowrap}
+.xp-price{display:flex;align-items:baseline;gap:0}
+.xp-price i{font-style:normal;color:var(--line2)}
+.xp-price i.on{color:var(--ink)}
+.xp-price em{font-style:normal;font-size:12px;font-weight:700;color:var(--muted);margin-left:6px;letter-spacing:0}
+.xp-cardfoot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:auto}
+.xp-cardfoot .sp{flex:1}
+.xp-foot{font-size:12.5px;margin:12px 0 0}
+.xp-none{padding:22px 16px;text-align:center;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:8px}
+.xp-listhd{margin-top:4px}
+
+.xp-best{display:grid;gap:12px;grid-template-columns:repeat(5,minmax(0,1fr));margin-bottom:18px}
+.xp-bc{padding:13px 14px;cursor:pointer;display:flex;flex-direction:column;gap:2px;min-width:0;transition:border-color .15s,transform .12s;border-top:3px solid var(--brand)}
+.xp-bc .k{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:flex;gap:6px;align-items:center}
+.xp-bc .k .ic{color:var(--brand-ink)}
+.xp-bc .n{font-size:14.5px;font-weight:800;line-height:1.25;margin-top:6px;overflow-wrap:anywhere}
+.xp-bc .f{font-size:13px;font-weight:700;color:var(--brand-ink)}
+.xp-ru{display:flex;flex-direction:column;gap:3px;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.xp-ru>span{display:flex;align-items:baseline;gap:6px;font-size:12px;color:var(--ink2);min-width:0}
+.xp-ru>span:hover em{text-decoration:underline}
+.xp-ru i{font-style:normal;font-weight:800;color:var(--faint);flex:none}
+.xp-ru em{font-style:normal;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xp-ru u{text-decoration:none;font-weight:700;color:var(--muted);flex:none;font-variant-numeric:tabular-nums}
+.xp-bc .s{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.3}
+@media (max-width:1439px){.xp-best{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}}
+@media (max-width:560px){.xp-best{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.xp-bc{padding:11px 12px}.xp-bc .s{display:none}.xp-stats b{font-size:15px}}
+
+.xp-kpis{display:grid;gap:16px;grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:16px}
+.xp-credit{overflow:hidden}
+.xp-cr-hd,.xp-cr-main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1.9fr) minmax(0,.8fr) 150px;gap:12px 20px;align-items:center;padding:13px 16px}
+.xp-cr-hd{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;background:var(--panel2);border-bottom:1px solid var(--line);padding-top:9px;padding-bottom:9px}
+.xp-cr{border-bottom:1px solid var(--line);border-left:3px solid transparent}
+.xp-cr:last-child{border-bottom:0}
+.xp-cr.stop,.xp-cr.risk{background:var(--bad-l);border-left-color:var(--bad)}
+.xp-lim{display:flex;flex-direction:column;gap:6px;min-width:0}
+.xp-lim-track{display:block;height:8px;border-radius:99px;background:var(--sunk);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden}
+.xp-cr.stop .xp-lim-track,.xp-cr.risk .xp-lim-track{background:var(--panel)}
+.xp-lim-track i{display:block;height:100%;border-radius:99px;background:var(--ok)}
+.xp-lim.warn .xp-lim-track i{background:var(--amber)}
+.xp-lim.over .xp-lim-track i{background:var(--bad)}
+.xp-lim-t{font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums;line-height:1.3;overflow-wrap:anywhere}
+.xp-lim-t.muted{color:var(--muted)}
+.xp-lim-t b{font-weight:800;color:var(--ink)}
+.xp-lim-t b.bad{color:var(--bad)}
+.xp-cr .who{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.xp-cr .who b{cursor:pointer;font-weight:700;font-size:14px;overflow-wrap:anywhere}
+.xp-cr .who b:hover{text-decoration:underline}
+.xp-cr .cell{min-width:0}
+.xp-cr .cell small{display:none}
+.xp-cr .cell b{font-weight:700;font-variant-numeric:tabular-nums}
+.xp-cr .cell b.muted{font-weight:600}
+.xp-cr .cell b.bad{color:var(--bad)}
+.xp-cr .cell b.amber{color:var(--amber)}
+.xp-cr .btn{width:100%}
+.xp-cr-stop{display:flex;gap:8px;align-items:flex-start;padding:0 16px 13px;font-size:13px;color:var(--ink);font-weight:600}
+.xp-cr-stop .ic{color:var(--bad);margin-top:2px;flex:none}
+@media (max-width:760px){
+  .xp-kpis{gap:8px}
+  .xp-kpis .kpi{padding:11px 12px}
+  .xp-kpis .kpi b{font-size:19px}
+  .xp-kpis .kpi .d{display:none}
+  .xp-cr-hd{display:none}
+  .xp-cr-main{grid-template-columns:minmax(0,1fr) auto;gap:10px}
+  .xp-cr .who,.xp-cr .xp-lim{grid-column:1/-1}
+  .xp-cr .btn{width:auto}
+  .xp-cr .cell small{display:block;font-size:11px;color:var(--muted);font-weight:600}
+}
+
+/* customer portal screen */
+.xp-ptl-hd{display:flex;align-items:flex-start;gap:12px 16px;flex-wrap:wrap;margin:0 0 12px;min-width:0}
+.xp-ptl-tt{flex:1 1 320px;min-width:0}
+.xp-ptl-tt h2{font-size:15px;margin:0;display:flex;align-items:center;gap:8px}
+.xp-ptl-tt p{margin:4px 0 0;font-size:13.5px;color:var(--ink2);max-width:720px}
+.xp-ptl-hd>.btn{flex:none;text-decoration:none}
+.xp-ptl-pick{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.xp-ptl-pick .btn{flex:none;white-space:nowrap}
+.xp-ptl-pick .btn.on{background:var(--ink);border-color:var(--ink);color:var(--panel)}
+body.xp-ptl-on #view{flex:none;padding-bottom:12px}
+/* the box takes the room left between the buttons and the foot of the page (about 100vh less 230px), so the page itself does not scroll on a normal screen */
+.xp-ptl-host{display:flex;margin:0 22px 6px;flex:1 0 520px;min-height:520px;border:1px solid var(--line2);border-radius:14px;overflow:hidden;background:var(--panel);box-shadow:var(--shadow);min-width:0}
+.xp-ptl-host iframe{display:block;flex:1 1 auto;min-width:0;width:100%;height:auto;border:0;background:var(--panel)}
+@media (max-width:899px){
+  .xp-ptl-host{margin:0 14px 84px}   /* room to scroll the portal's own bottom menu clear of the round buttons */
+  .xp-ptl-pick{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -14px;padding:0 14px 2px}
+  .xp-ptl-pick::-webkit-scrollbar{display:none}
+}

@@ -1,0 +1,86 @@
+/* The supplier's onboarding link. Phone first: big taps, 16px inputs so phones do not zoom, one thing per card. */
+.jbody{background:var(--bg)}
+.jtop{border-bottom:1px solid var(--line)}
+.jsafe{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--muted)}
+.jsafe .ic{width:14px;height:14px}
+.jmain{padding:12px 14px 110px;gap:14px}
+.jhero{padding:18px 4px 4px}
+.jhero h1{font-size:24px;line-height:1.2;letter-spacing:-.01em;margin:0 0 10px}
+.jhero p{margin:0 0 10px;font-size:15.5px;color:var(--ink2)}
+.jhero.ok{text-align:center}
+.jbigic{display:inline-flex;width:64px;height:64px;border-radius:50%;background:var(--ok-l);color:var(--ok);align-items:center;justify-content:center;margin-bottom:10px}
+.jbigic .ic{width:36px;height:36px}
+.jlist{list-style:none;margin:14px 0;padding:0;display:grid;gap:8px}
+.jlist li{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-weight:700;font-size:15px}
+.jlist .ic{color:var(--brand-ink);width:20px;height:20px;flex:none}
+.jsmall{font-size:13.5px;color:var(--muted);margin:0;display:flex;gap:6px;align-items:flex-start}
+.jsmall .ic{width:16px;height:16px;flex:none;margin-top:2px}
+.jbig{width:100%;justify-content:center;font-size:17px;padding:14px 18px}
+.jdemo{display:flex;align-items:center;justify-content:center;gap:6px;margin:4px auto 0;padding:8px 12px;border-radius:999px;border:1px dashed var(--line2);background:transparent;color:var(--muted);font-size:12.5px;font-weight:700;cursor:pointer}
+.jdemo .ic{width:14px;height:14px}
+.jprog{position:sticky;top:59px;z-index:10;background:var(--bg);padding:6px 2px 8px}
+.jpt{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-bottom:6px}
+.jpt span{color:var(--muted);font-weight:700;text-align:right}
+.jpb{height:6px;border-radius:99px;background:var(--line)}
+.jpb i{display:block;height:100%;border-radius:99px;background:var(--brand);transition:width .3s}
+.jcard{padding:16px 16px 6px;min-width:0}
+.jch{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px}
+.jci{width:38px;height:38px;border-radius:11px;background:var(--brand-l);color:var(--brand-ink);display:inline-flex;align-items:center;justify-content:center;flex:none}
+.jci .ic{width:20px;height:20px}
+.jch h2{font-size:17px;margin:0}
+.jch p{margin:3px 0 0;font-size:13.5px;color:var(--muted)}
+.jf label{font-size:13px}
+.jf input,.jf textarea,.jcard input:not([type=checkbox]){font-size:16px;padding:12px 12px;border-radius:11px;min-height:46px;font-family:inherit}
+.jf textarea{resize:vertical;min-height:70px}
+.jf.bad input,.jf.bad textarea{border-color:var(--bad);background:var(--bad-l)}
+.jopt{font-weight:600;color:var(--faint);text-transform:none}
+.jhint{display:block;color:var(--muted);font-size:12.5px;margin:-1px 0 2px}
+.jerr{display:flex;align-items:center;gap:5px;color:var(--bad);font-weight:700;font-size:13px;margin-top:2px}
+.jerr .ic{width:14px;height:14px;flex:none}
+.jchips{gap:8px}
+.jpk{height:42px;padding:0 14px;font-size:14px}
+.jpk .ic{width:15px;height:15px}
+.jtick{display:flex;align-items:flex-start;gap:10px;font-size:14.5px;font-weight:600;margin:2px 0 14px;cursor:pointer}
+.jtick input{width:22px;height:22px;flex:none;accent-color:var(--brand);margin-top:1px}
+.jtick.big span{display:flex;flex-direction:column;gap:2px;font-weight:500}
+.jtick.big b{font-size:15px}
+.jlink{display:inline-flex;align-items:center;gap:6px;background:none;border:0;color:var(--brand-ink);font-weight:700;font-size:14px;padding:6px 0 14px;cursor:pointer}
+.jlink .ic{width:16px;height:16px}
+.jrow{position:relative;border-top:1px dashed var(--line);padding-top:12px;margin-top:2px}
+.jrow:first-of-type{border-top:0;padding-top:0}
+.jgrid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:0 10px}
+.jx{position:absolute;right:-4px;top:6px;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--panel);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.jtip .jgrid{padding-right:30px}
+.jx .ic{width:15px;height:15px}
+.jup{display:flex;flex-direction:column;gap:8px;margin:0 0 14px}
+.jup .btn{justify-content:center;min-height:46px;font-size:15px}
+.jup.bad .btn{border-color:var(--bad)}
+.jfile{display:flex;align-items:center;gap:6px;font-weight:700;font-size:14px;color:var(--ok);word-break:break-all}
+.jfile .ic{width:16px;height:16px;flex:none}
+.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.jread{background:var(--sunk);border-radius:12px;padding:12px;margin:0 0 12px}
+.jread b{display:flex;gap:6px;align-items:center;font-size:14px;margin-bottom:8px}
+.jread b .ic{width:16px;height:16px;color:var(--ai)}
+.jrates{display:grid;gap:6px}
+.jrates label{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;font-weight:600}
+.jgbp{display:inline-flex;align-items:center;gap:4px;font-weight:800}
+.jrates input{width:96px!important;min-height:40px!important;padding:8px 10px!important;text-align:right;border:1px solid var(--line2);border-radius:10px;background:var(--panel)}
+.jsec{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:6px 2px -4px}
+.jcons{border:1px solid var(--line);border-radius:12px;padding:12px 12px 4px;margin-bottom:12px}
+.jcons.on{border-color:var(--ok);background:var(--ok-l)}
+.jcons.bad{border-color:var(--bad)}
+.jcons .jtick{margin-bottom:8px}
+.jcons details{margin:0 0 8px 32px;font-size:13.5px;color:var(--ink2)}
+.jcons summary{cursor:pointer;font-weight:700;color:var(--brand-ink)}
+.jcons ul{margin:6px 0 0;padding-left:18px;display:grid;gap:4px}
+.jseg{margin:0 0 12px}
+.jseg button{min-height:40px;padding:0 16px;font-size:14px}
+.jsig{font-family:"Caveat",cursive;font-size:38px;line-height:1.1;padding:4px 12px 10px;border-bottom:2px solid var(--ink);margin:-4px 0 12px;color:var(--ink);word-break:break-word}
+.jpad{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;align-items:flex-start}
+.jpad canvas{width:100%;height:auto;aspect-ratio:64/22;background:#fff;border:1px solid var(--line2);border-radius:12px;touch-action:none}
+.jsteps{margin:0 0 12px;padding-left:20px;display:grid;gap:8px;font-size:14.5px}
+.jbar{position:sticky;bottom:0;display:grid;grid-template-columns:1fr 1.6fr;gap:10px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:var(--panel);border-top:1px solid var(--line);z-index:20}
+.jbar:empty{display:none}
+.jbar .btn{justify-content:center;min-height:50px;font-size:16px}
+.pbody.embed .jprog{top:59px}
+@media (max-width:360px){.jgrid{grid-template-columns:1fr}.jhero h1{font-size:21px}}

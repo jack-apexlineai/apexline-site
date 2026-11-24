@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#1A1A1A">
+<title>CAC Waste Management · Office</title>
+<link rel="icon" href="brand/cac-favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css?v=58">
+<link rel="stylesheet" href="v2.css?v=58">
+<link rel="stylesheet" href="v3.css?v=58">
+<link rel="stylesheet" href="apx-import.css?v=58">
+<link rel="stylesheet" href="x-work.css?v=58">
+<link rel="stylesheet" href="x-people.css?v=58">
+<link rel="stylesheet" href="x-skipper.css?v=58">
+<link rel="stylesheet" href="x-dash.css?v=58">
+<link rel="stylesheet" href="x-help.css?v=58">
+<link rel="stylesheet" href="x-gemma.css?v=58">
+<link rel="stylesheet" href="x-more.css?v=58">
+<link rel="stylesheet" href="x-boot.css?v=58">
+<script>/* dark cover from the first frame, so the start-up screen comes before the dashboard is seen (x-boot.js lifts it) */if(!/[?&]boot=0/.test(location.search))document.documentElement.classList.add("xb-pre");</script>
+<style>html.xb-pre body::before{content:"";position:fixed;inset:0;z-index:199;background:#101012}html.xb-pre #walk,html.xb-pre .toasts,html.xb-pre .fab{visibility:hidden}</style>
+<script>try{var s=JSON.parse(localStorage.getItem('cac-e3-v1')||'null');var p=new URLSearchParams(location.search).get('theme');document.documentElement.setAttribute('data-theme',p||(s&&s.settings&&s.settings.theme)||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}</script>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <a class="logo" href="#home" aria-label="CAC Waste Management"><img src="brand/cac-logo-inverted.svg" alt="CAC Waste Management"></a>
+    <nav class="nav" id="nav" aria-label="Main"></nav>
+    <div class="me"><span class="av" style="--c:#EB9347">JP</span><span class="who"><b>John Pesci</b><small>Managing Director</small></span><button class="megear" data-act="settings" title="Settings and connections" aria-label="Settings and connections"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/></svg></button></div>
+  </aside>
+  <div class="main">
+    <header class="top">
+      <button class="iconbtn menubtn" data-act="menu" aria-label="Menu"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      <div class="ttl"><h1 id="title">Inbox</h1><span class="sub" id="sub"></span></div>
+      <span class="sp"></span>
+      <div class="search"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg><input id="q" placeholder="Search jobs, customers, postcodes" autocomplete="off" aria-label="Search"><div class="sres" id="sres" hidden></div></div>
+      <button class="btn askbtn" data-act="ask" title="Ask CAC (/)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6z"/></svg><span class="lb">Ask CAC</span></button>
+      <button class="btn asstbtn" id="asstBtn" data-act="assistant" title="Assistant: what needs doing"></button>
+      <button class="livepill" id="livePill" data-act="livePill" title="Live sample messages on or off"></button>
+      <button class="btn pri" data-act="tryIt" title="Send a test WhatsApp as a customer"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.65 -3.8a9 9 0 1 1 3.4 2.9l-5.05 .9"/></svg><span class="lb">Send a test WhatsApp</span></button>
+      <button class="iconbtn hide-sm" data-act="phone" title="Phone view" aria-label="Phone view"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 5a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2v-14z"/><path d="M11 4h2"/><path d="M12 17v.01"/></svg></button>
+      <button class="iconbtn" id="themeBtn" data-act="themeToggle" title="Light or dark" aria-label="Switch light or dark"></button>
+      <span class="demo-badge hide-md">Sample data</span>
+    </header>
+    <main class="view" id="view"></main>
+    <div class="foot">Built for CAC Waste Management by <b>ApexLine</b> · Demo with sample data. Suppliers and customers are made up. Nothing here is sent anywhere.</div>
+  </div>
+</div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div id="layer"></div>
+<script src="clock.js?v=58"></script>
+<script src="icons.js?v=58"></script>
+<script src="data.js?v=58"></script>
+<script src="store.js?v=58"></script>
+<script src="onboard-core.js?v=58"></script>
+<script src="more.js?v=58"></script>
+<script src="plus.js?v=58"></script>
+<script src="v2.js?v=58"></script>
+<script src="v3.js?v=58"></script>
+<script src="apx-import.js?v=58"></script>
+<script src="imp.js?v=58"></script>
+<script src="desk.js?v=58"></script>
+<script src="app.js?v=58"></script>
+<script src="presenter.js?v=58"></script>
+<script src="x-work.js?v=58"></script>
+<script src="x-people.js?v=58"></script>
+<script src="x-skipper.js?v=58"></script>
+<script src="x-dash.js?v=58"></script>
+<script src="x-help.js?v=58"></script>
+<script src="x-gemma.js?v=58"></script>
+<script src="x-boot.js?v=58"></script>
+<script src="walk.js?v=58"></script>
+<script src="words.js?v=58"></script>
+<link rel="stylesheet" href="x-quotes.css?v=58">
+<link rel="stylesheet" href="x-cancel.css?v=58">
+<link rel="stylesheet" href="x-history.css?v=58">
+<link rel="stylesheet" href="x-confirm.css?v=58">
+<link rel="stylesheet" href="x-home.css?v=58">
+<script src="x-quotes.js?v=58"></script>
+<script src="x-cancel.js?v=58"></script>
+<script src="x-history.js?v=58"></script>
+<script src="x-confirm.js?v=58"></script>
+<script src="x-home.js?v=58"></script>
+<script src="x-more.js?v=58"></script>
+<script src="x-quiet.js?v=58"></script>
+<link rel="stylesheet" href="x-onboard.css?v=58">
+<script src="x-onboard.js?v=58"></script>
+</body>
+</html>
