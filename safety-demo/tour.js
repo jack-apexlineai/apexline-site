@@ -1,15 +1,18 @@
-/* Guided tour of the Coastal safety demo: the wow moments only, in the order that sells.
-   Seven steps over the real screens: the operative phone (in the office's phone view) and the office.
+/* Guided tours of the Coastal safety demo, over the real screens.
+   Phone tour: LOTOTO on the operative phone, then the office sign-off. Office tour: every office tab,
+   with live moments where something is done on the phone and lands in the office.
+   Each step has a short caption and a "why it matters" line tied to what Tristan told us.
    Spotlight, a short caption, Next, Back, Skip, the step count, arrow keys and Esc.
    Nothing is read out by the tour: the speakers still only play when someone taps them.
-   Start: the Guided tour button in the office top bar, or office.html?tour=1. */
+   Start: the Guided tour button in the office top bar, office.html?tour=1 (phone) or ?tour=office. */
 (function(){
 'use strict';
-var DEAN = 'o1', STEP = 2;   /* Dean, and step 3 of the LOTOTO procedure (Isolate) */
 var mob = function(){ return window.innerWidth <= 760; };
-var $ = function(s){ return document.querySelector(s); };
 
-/* ---------- the phone inside the office ---------- */
+/* ---------- the phone inside the office ----------
+   Every move the tour makes on the phone is slow enough to watch and talk over:
+   one tap, a pause, the next tap. Nothing moves until Next is pressed. */
+var PACE = 650, KEY_PACE = 380;
 function frame(){ return window.CSO && CSO.phoneFrame(); }
 function D(){ var f = frame(); try { return f && f.contentDocument && f.contentWindow.CS ? f.contentDocument : null; } catch (e) { return null; } }
 function q(s){ var d = D(); return d ? d.querySelector(s) : null; }
@@ -23,69 +26,81 @@ function waitFor(test, ms, done){
   })();
 }
 function later(ms, fn){ setTimeout(fn, ms); }
+/* run a list of moves one after another, with a pause after each */
+function seq(list, done){ var i = 0; (function one(){ if (i >= list.length) return done(); var f = list[i++]; f(function(){ later(PACE, one); }); })(); }
 function stepNo(){ var c = q('.swphead .code'), st = q('.step'); return c && st ? +c.textContent.split('/')[0] : 0; }
 function isLang(l){ var b = q('[data-lang-set="' + l + '"]'); return !!(b && b.classList.contains('on')); }
-function setLang(l, done){ if (!q('[data-lang-set]') || isLang(l)) return done(); tap('[data-lang-set="' + l + '"]'); later(150, done); }
+function setLang(l, done){ if (!q('[data-lang-set]') || isLang(l)) return done(); tap('[data-lang-set="' + l + '"]'); later(400, done); }
+function whoIs(){ var h = q('.me h1'); return h ? h.textContent.replace(/^Hi\s+/, '').trim() : ''; }
 
 /* a fresh phone on the Who are you screen */
 function freshPhone(done){
   if (!window.CSO) return done();
   if (!frame()) CSO.openPhone(); else frame().src = 'phone.html';
-  waitFor(function(){ return q('[data-op]'); }, 6000, function(){ later(150, done); });
+  waitFor(function(){ return q('[data-op]'); }, 6000, function(){ later(250, done); });
 }
-/* Dean logs in: his tile, then the PIN typed one number at a time */
-function login(done){
+function openPhone(done){ if (!window.CSO) return done(); if (!frame()) { CSO.openPhone(); waitFor(function(){ return q('#view .screen'); }, 6000, function(){ later(250, done); }); } else done(); }
+/* someone logs in: their tile, then the PIN typed one number at a time */
+function loginAs(id, done){
   if (!q('[data-op]')) return done();
-  tap('[data-op="' + DEAN + '"]');
+  tap('[data-op="' + id + '"]');
   waitFor(function(){ return q('[data-k]'); }, 3000, function(){
     var keys = '1234'.split(''), i = 0;
-    (function key(){
-      if (i >= keys.length) return waitFor(function(){ return q('.act[data-go="swp"]'); }, 3000, function(){ later(150, done); });
-      tap('[data-k="' + keys[i++] + '"]'); later(170, key);
-    })();
+    later(KEY_PACE, function key(){
+      if (i >= keys.length) return waitFor(function(){ return q('.me'); }, 3000, function(){ later(300, done); });
+      tap('[data-k="' + keys[i++] + '"]'); later(KEY_PACE, key);
+    });
   });
 }
-/* from the home screen: Procedures, the LOTOTO one, then forward to step n (0 based) */
-function openLototo(n, done){
-  tap('.act[data-go="swp"]');
-  waitFor(function(){ return q('[data-p="lototo"]'); }, 3000, function(){
-    tap('[data-p="lototo"]');
-    waitFor(function(){ return stepNo() === 1; }, 3000, function(){ forwardTo(n, done); });
+/* get the phone to this person's home screen without logging in twice */
+function homeOf(id, first, done){
+  openPhone(function(){
+    if (q('.me') && whoIs() === first) return done();
+    var hb = q('#homeBtn');
+    if (hb && !hb.hidden && q('.crumbs .crumb')) { tap(hb); return waitFor(function(){ return q('.me'); }, 3000, function(){ if (whoIs() === first) return later(200, done); toWho(function(){ loginAs(id, done); }); }); }
+    toWho(function(){ loginAs(id, done); });
   });
 }
+function toWho(done){
+  if (q('[data-op]')) return done();
+  if (q('.me') && q('#backBtn') && !q('#backBtn').hidden) { tap('#backBtn'); return waitFor(function(){ return q('[data-op]'); }, 3000, function(){ later(250, done); }); }
+  freshPhone(done);
+}
+/* LOTOTO step n (1 based), in English unless asked; walks forward one step at a time */
+function onLototo(){ return !!(q('.swphead .tt') && q('.step') && q('[data-lang-set]')); }
 function forwardTo(n, done){
   (function more(){
-    if (stepNo() >= n + 1 || !q('[data-next]')) return later(120, done);
-    tap('[data-next]'); later(90, more);
+    if (stepNo() >= n || !q('[data-next]')) return later(200, done);
+    tap('[data-next]'); later(PACE, more);
   })();
 }
-function rebuildToStep(n, done){ freshPhone(function(){ login(function(){ openLototo(n, done); }); }); }
-function onLototo(){ var h = q('.swphead .tt'); return !!(h && q('.step') && q('[data-lang-set]')); }
-
-/* LOTOTO step 3, in the language asked for */
-function toStep(lang, done){
-  var go = function(){ setLang(lang, done); };
-  if (onLototo() && stepNo() === STEP + 1) return go();
-  rebuildToStep(STEP, go);
+function lototo(n, lang, done){
+  var go = function(){ setLang(lang || 'en', done); };
+  if (onLototo() && stepNo() === n) return go();
+  if (onLototo() && stepNo() < n) return setLang('en', function(){ forwardTo(n, go); });
+  homeOf('o1', 'Dean', function(){
+    seq([function(d){ tap('.act[data-go="swp"]'); waitFor(function(){ return q('[data-p="lototo"]'); }, 3000, d); },
+         function(d){ tap('[data-p="lototo"]'); waitFor(function(){ return stepNo() === 1; }, 3000, d); }],
+      function(){ if (n > 1) forwardTo(n, go); else go(); });
+  });
 }
 /* the picture check, in English */
 function toQuiz(done){
   if (q('.qo')) return setLang('en', done);
-  if (q('[data-again]') && !q('.signbox.signed')) { tap('[data-again]'); return waitFor(function(){ return stepNo() === 1; }, 3000, function(){ toQuiz(done); }); }
-  if (onLototo()) return setLang('en', function(){ forwardTo(99, function(){ tap('[data-next]'); waitFor(function(){ return q('.qo'); }, 3000, function(){ later(120, done); }); }); });
-  rebuildToStep(0, function(){ toQuiz(done); });
+  if (q('[data-sign]') || q('.done')) return lototo(1, 'en', function(){ toQuiz(done); });
+  lototo(stepNo() || 1, 'en', function(){ forwardTo(9, function(){ tap('[data-next]'); waitFor(function(){ return q('.qo'); }, 3000, function(){ later(250, done); }); }); });
 }
 /* answer the picture questions right, whatever has been tapped so far, to reach the sign box */
 function answerQuiz(done){
   var tries = 0;
   (function one(){
-    if (q('[data-sign]') || q('.done') || ++tries > 6) return later(120, done);
+    if (q('[data-sign]') || q('.done') || ++tries > 6) return later(250, done);
     var w = D() && D().defaultView, c = q('.swphead .code');
     if (!q('.qo') || !w || !c) return later(200, one);
     var qi = +c.textContent.split('/')[0] - 1, qs = (w.CS.QUIZ.lototo || []), right = -1;
     if (qs[qi]) qs[qi].a.forEach(function(a, i){ if (a.ok) right = i; });
     tap('.qo[data-q="' + Math.max(0, right) + '"]');
-    later(950, one);
+    later(1300, one);
   })();
 }
 function toSign(done){
@@ -96,53 +111,173 @@ function sign(done){
   if (q('.done')) return done();
   var b = q('[data-sign]');
   if (b && !b.classList.contains('signed')) tap(b);
-  waitFor(function(){ return q('.done'); }, 3000, function(){ later(150, done); });
+  waitFor(function(){ return q('.done'); }, 3000, function(){ later(400, done); });
 }
 function closePhone(){ if (window.CSO && frame()) CSO.closePhone(); }
+function office(t){ return function(done){ closePhone(); if (window.CSO) CSO.tab(t); later(250, done); }; }
 
-/* ------------------------------ the steps ------------------------------ */
-var STEPS = [
+/* the lock question, in plain English (also on the phone, under the question) */
+var LOCK_WHY = 'Only the person who put a lock on can take it off. So nobody can switch the machine back on while someone is working on it.';
+
+/* ------------------------------ phone tour: LOTOTO ------------------------------ */
+var PHONE = [
   { id: 'login', phone: true,
     prep: freshPhone,
     title: 'Log in with a tap',
-    body: 'Each operative taps their own name, then a 4 number PIN. No usernames, no passwords.',
+    body: 'Each person taps their own name, then a 4 number PIN. No usernames, no passwords.',
+    why: 'Everyone at both sites is on the system, and every check, lock and signature is logged against their name.',
     target: ['.tiles'], area: ['.ask'],
-    next: login },
+    next: function(done){ toWho(function(){ loginAs('o1', done); }); } },
+  { id: 'home', phone: true,
+    prep: function(done){ homeOf('o1', 'Dean', done); },
+    title: 'Dean\'s own page',
+    body: 'His checks due today, the procedures he still has to sign, the machines he is trained on and his training dates.',
+    why: 'Your pre and post shift checks start here, on his phone, instead of a paper sheet.',
+    target: ['.acts'], area: ['.me'] },
+  { id: 'procedure', phone: true,
+    prep: function(done){ lototo(1, 'en', done); },
+    title: 'Your LOTOTO procedure',
+    body: 'One step per screen, with a big picture. LOTOTO means lock out, tag out, try out: switch it off, lock it, prove it is dead.',
+    why: 'LOTOTO is your focus. Every operative gets the same steps, the same way, every time.',
+    target: ['.step'] },
   { id: 'readout', phone: true,
-    prep: function(done){ toStep('en', done); },
-    title: 'Every SWP step, read out',
-    body: 'Your LOTOTO procedure, one step at a time with a big picture. Tap a speaker and it reads the step out, as often as he likes.',
+    prep: function(done){ lototo(3, 'en', done); },
+    title: 'Every step, read out',
+    body: 'Step 3, Isolate: switch the baler off at its main switch. Tap the speaker and it reads the step out, as often as he likes.',
+    why: 'Nobody has to be a strong reader to follow it properly.',
     target: ['.step'] },
   { id: 'polish', phone: true,
-    prep: function(done){ toStep('pl', done); },
+    prep: function(done){ lototo(3, 'pl', done); },
     title: 'The same step, in Polish',
     body: 'One tap switches the words and the voice to Polish. Add whichever languages your lads speak.',
+    why: 'Many of your operatives are Polish speakers. The record shows which language each person signed in.',
     target: ['.step'], area: ['.langbar'] },
   { id: 'quiz', phone: true,
     prep: toQuiz,
     title: 'Did he take it in?',
-    body: 'Picture questions check he understood, not just signed. Tap a wrong answer and it plays that step again.',
+    body: 'Picture questions check he understood, not just signed. A wrong answer plays that step again.',
+    body2: '"Who can take your lock off?" ' + LOCK_WHY,
+    why: 'For your ISO 45001 audit: proof each person understood the procedure, not just a signature.',
     target: ['.quiz'], area: ['.ask'] },
   { id: 'sign', phone: true,
     prep: toSign,
     title: 'Tap to sign',
-    body: 'Passed? One big tap signs it, with his name and the time. A finger signature is there too if you want one.',
+    body: 'Passed? One big tap signs it, with his name, the time and the version.',
+    why: 'No chasing paper sign-off sheets round two sites.',
     target: ['[data-sign]', '.done'], area: ['.quizok'],
     next: sign },
   { id: 'office',
-    prep: function(done){ closePhone(); if (window.CSO) CSO.tab('sign'); later(200, done); },
+    prep: office('sign'),
     title: 'The office sees it straight away',
-    body: 'Who has signed, when, and how they did on the picture check. Anyone who still has not signed is named.',
+    body: 'Who has signed, when, in which language, and how they did on the picture check. Anyone not signed yet is named.',
+    why: 'Everything logged and ready for your BSI auditor, in one click.',
     target: [function(){ var r = document.querySelectorAll('#view tr[data-new-sign]'); return r[0]; }, '#view .swpc.new'] },
   { id: 'end', end: true,
-    prep: function(done){ closePhone(); if (window.CSO) CSO.tab('board'); later(150, done); },
+    prep: office('board'),
     title: 'This is the demo',
     body: 'The hard part is wiring up the back end, and that\'s what I handle. The look is the easy part: any change you want is five minutes.',
     body2: 'It\'s a custom build, so every section is built round Coastal: you tell me your SWPs, checks, sites and languages.' }
 ];
 
+/* ------------------------------ office tour: the live link ------------------------------ */
+var OFFICE = [
+  { id: 'board',
+    prep: function(done){ closePhone(); if (window.CSO) { CSO.reset(); CSO.tab('board'); } later(300, done); },
+    title: 'The morning board, both sites',
+    body: 'Every machine and lorry. Green is ready, amber needs attention, red is Do not use. A missing pre-shift check shows straight away.',
+    why: 'Your pre and post shift checks, digital: you see what has been checked before the shift gets going.',
+    target: ['#boardPanel .mgrid'], area: ['#boardPanel .sitehead'] },
+  { id: 'attention',
+    prep: office('board'),
+    title: 'Needs attention',
+    body: 'Serious defects, missing checks and overdue inspections, worst first.',
+    why: 'Problems come to you. Nobody walks the yard chasing sheets.',
+    target: ['#attPanel'] },
+  { id: 'defect', phone: true,
+    prep: function(done){ homeOf('o1', 'Dean', function(){ seq([
+      function(d){ tap('.act[data-go="voice"]'); waitFor(function(){ return q('[data-sample]'); }, 3000, d); },
+      function(d){ tap('[data-sample]'); d(); },
+      function(d){ tap('[data-tidy]'); waitFor(function(){ return q('.vcard'); }, 3000, d); }], done); }); },
+    title: 'Live: Dean reports a defect',
+    body: 'On his phone, Dean says the reversing alarm on Shovel 2 is cutting out. It is tidied into a proper report and read back to him.',
+    why: 'Defects go in the moment they are found, in his own words.',
+    target: ['.vcard', '.done'],
+    next: function(done){ if (q('[data-ok]') && !q('[data-ok]').disabled) tap('[data-ok]'); later(1500, done); } },
+  { id: 'landed',
+    prep: office('board'),
+    title: 'It lands in the office',
+    body: 'Shovel 2 has turned red on the board, Do not use, and it is in Needs attention with his exact words. Steve the fitter has the job.',
+    why: 'Everything is logged, and nobody takes out a machine with a serious defect.',
+    target: ['[data-m="m2"]'] },
+  { id: 'iso',
+    prep: office('iso'),
+    title: 'Who has a lock on what',
+    body: 'Isolating means switching a machine off at its main switch and putting your own padlock on it. This shows every lock and permit to work, live.',
+    why: 'LOTOTO, your focus: you see who is working inside which machine, right now.',
+    target: ['#view .panel.iso'] },
+  { id: 'sick', phone: true,
+    prep: function(done){ homeOf('o14', 'Wayne', function(){ tap('.act[data-go="sick"]'); waitFor(function(){ return q('[data-sick]') || q('.sickcard'); }, 3000, function(){ later(250, done); }); }); },
+    title: 'Live: Wayne is off sick',
+    body: 'Wayne, a lorry driver, taps Off sick on his phone. No ringing round at six in the morning.',
+    why: 'Drivers off sick this week: the office knows in seconds, not when the lorry fails to turn up.',
+    target: ['[data-sick]', '.sickcard'], area: ['.sickcard', '.ask'],
+    next: function(done){ if (q('[data-sick]')) tap('[data-sick]'); later(1500, done); } },
+  { id: 'cover',
+    prep: office('cover'),
+    title: 'Who can cover Lorry 1',
+    body: 'Only people trained and allowed to drive Lorry 1, who is free, and his jobs. One click asks them on their phones.',
+    why: 'Cover comes from the training records, so nobody untrained ends up on a lorry.',
+    target: ['#view .gap.open', '#view .gap'],
+    next: function(done){ var b = $('#view [data-askall]'); if (b) b.click(); later(600, done); } },
+  { id: 'yes', phone: true,
+    prep: function(done){ homeOf('o16', 'Craig', done); },
+    title: 'Live: Craig gets the ask',
+    body: 'Craig taps Yes on his phone. The first person to say yes gets it.',
+    why: 'One click from the office instead of ten phone calls.',
+    target: ['.askcard'],
+    next: function(done){ if (q('[data-cy]')) tap('[data-cy]'); later(1500, done); } },
+  { id: 'covered',
+    prep: office('cover'),
+    title: 'Covered, and logged',
+    body: 'The office sees Craig is covering. A breakdown works the same way: Do not use, the fitter told, and a spare suggested with a trained driver.',
+    why: 'Breakdowns this week: each one is logged per vehicle, so you can see which lorry keeps costing you.',
+    target: ['#view .gap.ok', '#view .gap'] },
+  { id: 'signoffs',
+    prep: office('sign'),
+    title: 'Sign-offs and the briefing record',
+    body: 'Who has signed the new LOTOTO procedure, when, which version, in which language. One click prints it.',
+    why: 'ISO 45001 evidence for your BSI audit, without a binder.',
+    target: ['#view .swpc.new'], area: ['#view [data-brief]'] },
+  { id: 'insp',
+    prep: office('insp'),
+    title: 'Inspection dates',
+    body: 'PUWER: machines kept safe and inspected. LOLER: anything that lifts examined by a competent person, usually every year. Red is overdue.',
+    why: 'Helps you meet PUWER and LOLER, with the dates in one place.',
+    target: ['#view .panel'] },
+  { id: 'people',
+    prep: office('people'),
+    title: 'Who can use what',
+    body: 'Who is trained on each machine and lorry, and who is allowed to lock off. Amber and red training shows here.',
+    why: 'The phone blocks anyone not trained, and only trained people are offered cover.',
+    target: ['#view .panel'] },
+  { id: 'records',
+    prep: office('rec'),
+    title: 'Records and audit pack',
+    body: 'Every check record, ready to print. Pick a machine and build its audit pack: checks, defects, locks and inspections in one file.',
+    why: 'When an inspector, insurer or your director asks, it is one click.',
+    target: ['#view .auditp'] },
+  { id: 'end', end: true,
+    prep: office('board'),
+    title: 'This is the skeleton',
+    body: 'If you want to move forward, we build it out round Coastal, as full or as simple as you want.',
+    body2: 'Who else at Coastal would need to see this?' }
+];
+var TOURS = { phone: PHONE, office: OFFICE };
+var STEPS = PHONE;
+
 /* --------------------------- the engine --------------------------- */
-var run = null, spot, card, ticker;
+var run = null, spot, card, ticker, menu = null;
+var $ = function(s){ return document.querySelector(s); };
 var visible = function(el){ if (!el || !el.isConnected) return false; var r = el.getBoundingClientRect(); return r.width > 2 && r.height > 2; };
 function find(s, sel){
   if (typeof sel === 'function') return sel();
@@ -241,7 +376,8 @@ function paint(){
     '<button type="button" class="tr-skip" data-tr="skip">' + (last ? 'Close' : 'Skip tour') + '</button></div>' +
     '<div class="tr-bar"><i style="width:' + Math.round((run.i + 1) / n * 100) + '%"></i></div>' +
     '<h2 class="tr-h">' + esc(s.title) + '</h2>' +
-    '<p class="tr-p">' + esc(s.body) + '</p>' + (s.body2 ? '<p class="tr-p">' + esc(s.body2) + '</p>' : '') +
+    '<p class="tr-p">' + esc(s.body) + '</p>' + (s.body2 ? '<p class="tr-p' + (s.end ? '' : ' tr-p2') + '">' + esc(s.body2) + '</p>' : '') +
+    (s.why ? '<p class="tr-why"><b>Why it matters</b>' + esc(s.why) + '</p>' : '') +
     '<div class="tr-btns"><button type="button" class="tr-back" data-tr="back"' + (run.i === 0 ? ' disabled' : '') + '>Back</button>' +
     '<button type="button" class="tr-next" data-tr="' + (last ? 'skip' : 'next') + '">' + (last ? 'Done' : 'Next') + '</button></div>';
   card.querySelectorAll('[data-tr]').forEach(function(b){
@@ -301,24 +437,46 @@ function stop(){
   teardown();
   window.__tourDone = true;
 }
-function start(){
+function start(which){
+  closeMenu();
   if (run) stop();
   if (window.CSO) { var lay = document.getElementById('layer'); if (lay) lay.innerHTML = ''; }
-  run = { steps: STEPS, i: 0, busy: false };
+  var steps = TOURS[which] || PHONE;
+  run = { steps: steps, i: 0, busy: false, which: TOURS[which] ? which : 'phone' };
   window.__tourDone = false; window.__tourMissing = [];
   document.documentElement.classList.add('touring');
   build();
   show(0);
 }
-window.CSTour = { start: start, stop: stop, next: next, back: back, active: function(){ return !!run; }, busy: function(){ return !!(run && run.busy); }, step: function(){ return run ? run.steps[run.i].id : null; }, steps: function(){ return STEPS.map(function(s){ return s.id; }); } };
+window.CSTour = { start: start, stop: stop, next: next, back: back, menu: openMenu, active: function(){ return !!run; }, busy: function(){ return !!(run && run.busy); }, which: function(){ return run ? run.which : null; }, step: function(){ return run ? run.steps[run.i].id : null; }, steps: function(w){ return (TOURS[w] || PHONE).map(function(s){ return s.id; }); } };
+
+/* pick a tour: the phone (LOTOTO) or the office (the live link) */
+function closeMenu(){ if (menu) { menu.remove(); menu = null; document.removeEventListener('keydown', menuKey, true); } }
+function menuKey(e){ if (e.key === 'Escape') { e.preventDefault(); closeMenu(); } }
+function openMenu(){
+  if (run) stop();
+  closeMenu();
+  menu = document.createElement('div'); menu.className = 'tr-menu'; menu.setAttribute('role', 'dialog'); menu.setAttribute('aria-label', 'Choose a guided tour');
+  menu.innerHTML = '<div class="tr-mcard"><div class="tr-top"><span class="tr-n">Guided tour</span><button type="button" class="tr-skip" data-tm="close">Close</button></div>' +
+    '<h2 class="tr-h">Which tour?</h2><p class="tr-p">Each one moves only when you press Next, so you can talk over every step.</p>' +
+    '<button type="button" class="tr-pick" data-tour="phone"><b>Phone tour: LOTOTO</b><span>Log in, the procedure read out in English and Polish, the picture check, tap to sign. ' + PHONE.length + ' steps.</span></button>' +
+    '<button type="button" class="tr-pick" data-tour="office"><b>Office tour: the live link</b><span>The board, a defect, a driver off sick and cover, isolations, sign-offs, inspections, people, records. ' + OFFICE.length + ' steps. Starts from fresh sample data.</span></button></div>';
+  document.body.appendChild(menu);
+  menu.addEventListener('click', function(e){ if (e.target === menu) closeMenu(); });
+  menu.querySelector('[data-tm="close"]').onclick = closeMenu;
+  menu.querySelectorAll('[data-tour]').forEach(function(b){ b.onclick = function(){ start(b.getAttribute('data-tour')); }; });
+  document.addEventListener('keydown', menuKey, true);
+  try { menu.querySelector('[data-tour="phone"]').focus({ preventScroll: true }); } catch (e) {}
+}
 
 /* the Guided tour button, in the office top bar */
 var btn = document.createElement('button');
 btn.type = 'button'; btn.id = 'tourBtn'; btn.className = 'smallbtn pri tourbtn';
-btn.title = 'A short guided tour of the best bits';
+btn.title = 'A guided tour: the phone or the office';
 btn.innerHTML = ic('player-play') + '<span>Guided tour</span>';
-btn.addEventListener('click', start);
+btn.addEventListener('click', openMenu);
 var ph = document.getElementById('openPhone');
 if (ph && ph.parentNode) ph.parentNode.insertBefore(btn, ph);
-if (/[?&]tour=1\b/.test(location.search)) setTimeout(start, 500);
+var tq = (location.search.match(/[?&]tour=(\w+)/) || [])[1];
+if (tq) setTimeout(function(){ start(tq === 'office' ? 'office' : 'phone'); }, 500);
 })();

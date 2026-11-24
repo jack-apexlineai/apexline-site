@@ -161,13 +161,13 @@ var SWPS = [
     steps: [
       { i: 'users-group', t: 'Tell people', s: 'Tell everyone who works on or near the baler that you are going to isolate it. Tell the shovel driver to stop feeding it.' },
       { i: 'player-stop', t: 'Stop the machine', s: 'Stop the baler at the control panel with the normal stop button. Wait for the ram to stop moving.' },
-      { i: 'power', t: 'Isolate', s: 'Go to the main isolator for the baler. Turn it to off.' },
-      { i: 'lock', t: 'Your lock and tag', s: 'Fit your own padlock to the isolator. Fit your own tag with your name and the date. One person, one lock. Never use someone else\'s lock.', lockAction: true },
-      { i: 'arrows-down', t: 'Release stored energy', s: 'Release the hydraulic pressure with the dump valve. Check the gauge reads zero. Lower or block the ram and the platen, so nothing can fall or move.' },
-      { i: 'hand-click', t: 'Try out', s: 'Try to start the baler. Nothing should happen. Check the gauge again. This proves there is zero energy. Put the start control back to off.' },
+      { i: 'power', t: 'Isolate', s: 'Go to the main isolator for the baler and turn it off.' },
+      { i: 'lock', t: 'Your lock and tag', s: 'Put your own padlock on the isolator, and your own tag with your name and the date. One person, one lock. Never use someone else\'s lock.', lockAction: true },
+      { i: 'arrows-down', t: 'Release stored energy', s: 'Release the hydraulic pressure with the dump valve, and check the gauge reads zero. Then lower or block the ram and the platen, so nothing can fall or move.' },
+      { i: 'hand-click', t: 'Try out', s: 'Try to start the baler. Nothing should happen. Check the gauge again, to prove there is no energy left. Then put the start control back to off.' },
       { i: 'tools', t: 'Do the work', s: 'Now do the work. If you leave the area, your lock stays on.' },
-      { i: 'lock-open', t: 'Only you remove your lock', s: 'When you have finished, only you take your lock off. Never remove someone else\'s lock. If a lock is left on, tell your supervisor.' },
-      { i: 'clipboard-check', t: 'Back into service', s: 'Guards back on and closed. Tools and people clear. Tell everyone the baler is starting. Then do a pre shift check before use.' }
+      { i: 'lock-open', t: 'Only you remove your lock', s: 'When you have finished, you take your own lock off. Nobody else can. Never remove someone else\'s lock. If a lock has been left on, tell your supervisor.' },
+      { i: 'clipboard-check', t: 'Back into service', s: 'Put the guards back on and close them. Make sure tools and people are clear. Tell everyone the baler is starting, then do a pre shift check before you use it.' }
     ] },
   { id: 'refuel', code: 'SWP-006', ver: 'Version 2', icon: 'gas-station',
     title: 'Refuelling the loading shovel', sub: 'At the fuel bowser', mins: 2, machineKind: 'shovel',
@@ -243,7 +243,7 @@ function inspWorst(mid){ var l = inspections(mid); return l.some(function(x){ re
 /* Picture questions after each SWP. A signature shows they were given it; this shows they took it in. */
 var QUIZ = {
   lototo: [
-    { q: 'Who can take your lock off?', say: 'Who can take your lock off? Tap the picture.', step: 7, a: [ { i: 'user', t: 'Only me', ok: true }, { i: 'users', t: 'My supervisor' }, { i: 'users-group', t: 'Anyone' } ] },
+    { q: 'Who can take your lock off?', say: 'Who can take your lock off? Tap the picture.', why: 'Only the person who put a lock on can take it off. So nobody can switch the machine back on while someone is working on it.', step: 7, a: [ { i: 'user', t: 'Only me', ok: true }, { i: 'users', t: 'My supervisor' }, { i: 'users-group', t: 'Anyone' } ] },
     { q: 'Lock is on. What next?', say: 'Your lock is on. What do you do next? Tap the picture.', step: 5, a: [ { i: 'tools', t: 'Start the work' }, { i: 'hand-click', t: 'Try to start it', ok: true }, { i: 'arrow-right', t: 'Walk away' } ] }
   ],
   refuel: [ { q: 'Fuel spilt. What now?', say: 'You spill fuel. What do you do? Tap the picture.', step: 3, a: [ { i: 'droplet-exclamation', t: 'Spill kit, tell supervisor', ok: true }, { i: 'clock', t: 'Leave it to dry' }, { i: 'gas-station', t: 'Keep filling' } ] } ],

@@ -38,3 +38,15 @@ html.touring .pmsteps,html.touring .pmx{display:none}
   html.touring .pmwrap{align-items:flex-start;padding:10px 12px}
   .pmwrap{padding:12px}
 }
+/* why it matters, and the second paragraph */
+.tr-p2{font-size:13px;color:var(--ink2);background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:8px 10px}
+.tr-why{font-size:13px;line-height:1.45;color:var(--ink);margin:0 0 12px;padding:8px 10px;border-left:3px solid var(--brand-hi);background:rgba(16,151,111,.12);border-radius:0 10px 10px 0}
+.tr-why b{display:block;font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--brand-hi);margin-bottom:2px}
+/* the tour picker */
+.tr-menu{position:fixed;inset:0;z-index:2147482999;background:rgba(3,6,5,.62);display:grid;place-items:center;padding:12px}
+.tr-mcard{width:420px;max-width:100%;box-sizing:border-box;background:var(--card2);color:var(--ink);border:1px solid var(--line2);border-radius:16px;padding:16px 18px;box-shadow:0 20px 60px rgba(0,0,0,.5);font-family:var(--font)}
+.tr-pick{display:block;width:100%;text-align:left;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line2);border-radius:12px;padding:12px 14px;margin-top:10px;cursor:pointer}
+.tr-pick:hover,.tr-pick:focus-visible{border-color:var(--brand);outline:none}
+.tr-pick b{display:block;font-size:15px;font-weight:800}
+.tr-pick span{display:block;font-size:12.5px;color:var(--ink2);margin-top:3px;line-height:1.4}
+@media (max-width:760px){.tr-p2,.tr-why{font-size:12.5px;margin-bottom:8px}}

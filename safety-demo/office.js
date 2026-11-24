@@ -209,7 +209,7 @@ function attention(){
       items.push({ w: 0.8, h: '<div class="att" data-mrow="' + m.id + '"><span class="ai red">' + ic('calendar') + '</span><div class="tx"><b>' + esc(m.name) + ': ' + esc(x.name) + ' overdue</b><br>' + esc(x.label) + '. Do not use it for lifting until it has been examined.<small>' + esc(x.every) + ' · last report ' + esc(x.ref) + ' · ' + esc(CS.site(m.site).name) + '</small></div></div>' }); });
   });
   items.sort(function(a, b){ return a.w - b.w; });
-  return '<section class="panel"><div class="ph"><h2>' + ic('alert-triangle') + 'Needs attention</h2><span class="sp"></span><span class="note">' + items.length + ' items</span></div>' +
+  return '<section class="panel" id="attPanel"><div class="ph"><h2>' + ic('alert-triangle') + 'Needs attention</h2><span class="sp"></span><span class="note">' + items.length + ' items</span></div>' +
     (items.length ? items.map(function(i){ return i.h; }).join('') : '<div class="empty">All clear</div>') + '</section>';
 }
 function feed(){
@@ -220,7 +220,7 @@ function feed(){
 
 /* ---------- tabs ---------- */
 function pageBoard(){
-  return filters() + kpis() + '<div class="grid2"><div>' + '<section class="panel"><div class="ph"><h2>' + ic('layout-dashboard') + 'Plant board</h2><span class="sp"></span><span class="note">Tap a machine for its checks, defects and locks</span></div>' + board() + '</section></div>' +
+  return filters() + kpis() + '<div class="grid2"><div>' + '<section class="panel" id="boardPanel"><div class="ph"><h2>' + ic('layout-dashboard') + 'Plant board</h2><span class="sp"></span><span class="note">Tap a machine for its checks, defects and locks</span></div>' + board() + '</section></div>' +
     '<div>' + isoPanel() + attention() + feed() + '</div></div>';
 }
 function pageIso(){
@@ -555,7 +555,8 @@ window.CSO = {
   closePhone: closePhoneView,
   phoneFrame: function(){ return phoneMask ? phoneMask.querySelector('iframe') : null; },
   fit: phoneSize,
-  tab: function(t){ closeLayer(); tab = t; siteF = 'all'; render(); window.scrollTo(0, 0); }
+  tab: function(t){ closeLayer(); tab = t; siteF = 'all'; render(); window.scrollTo(0, 0); },
+  reset: function(){ CS.reset(); prevStatus = snapshot(); seenEvents = {}; CS.state.events.forEach(function(e){ seenEvents[e.id] = 1; }); closeLayer(); render(); }
 };
 
 /* Keep the lock timers and ages fresh. */

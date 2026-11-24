@@ -15,7 +15,7 @@ var busy = false;      /* blocks double taps during animations */
 /* ---------- helpers ---------- */
 function $(sel, root){ return (root || view).querySelector(sel); }
 function $$(sel, root){ return Array.prototype.slice.call((root || view).querySelectorAll(sel)); }
-function buzz(ms){ try { if (navigator.vibrate) navigator.vibrate(ms || 25); } catch (e) {} }
+function buzz(ms){ try { if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return; if (navigator.vibrate) navigator.vibrate(ms || 25); } catch (e) {} }
 function toast(t){ var d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(function(){ d.remove(); }, 2600); }
 
 /* Nothing is read out unless the person taps a speaker (Jack, 18 Nov). quiet() is where auto speech used to be. */
@@ -909,6 +909,7 @@ function swpQuiz(qi){
   return {
     html: langBar() + '<div' + (lg ? ' lang="' + lg + '"' : '') + '><div class="swphead">' + ic(sw.p.icon).replace('class="ic ', 'style="font-size:26px;color:var(--brand-hi)" class="ic ') + '<span class="tt">' + (U ? U.quick : 'Quick check') + '</span><span class="code">' + (qi + 1) + '/' + qs.length + '</span></div>' +
       askHead(qq, qsay, lg) +
+      ((LQ ? LQ.why : q.why) ? '<div class="lockwhy">' + ic('lock') + '<span class="lwt">' + esc(LQ ? LQ.why : q.why) + '</span>' + spk(LQ ? LQ.why : q.why, '', lg) + '</div>' : '') +
       (wrong ? '<div class="unsure">' + ic('repeat') + '<div><b>' + (U ? U.notQuite : 'Not quite. Listen to this step again') + '</b><small>' + esc(stepS) + '</small></div>' + spk(stepS, '', lg) + '</div>' : '') +
       '<div class="quiz">' + q.a.map(function(o, i){ var t = LQ ? LQ.a[i] : o.t; return '<button class="qo" data-q="' + i + '">' + ic(o.i) + '<b>' + esc(t) + '</b>' + spk(t, 'onbtn', lg) + '</button>'; }).join('') + '</div>' +
       '<div class="honest">' + ic('shield-check') + '<span>' + (U ? U.honest : 'A signature shows they were given it. A picture question shows they took it in.') + '</span></div></div>',

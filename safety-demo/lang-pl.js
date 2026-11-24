@@ -12,16 +12,16 @@ var PL = {
       steps: [
         { t: 'Powiadom ludzi', s: 'Powiedz wszystkim, którzy pracują przy prasie lub w jej pobliżu, że zamierzasz ją odizolować. Powiedz operatorowi ładowarki, żeby przestał podawać do niej materiał.' },
         { t: 'Zatrzymaj maszynę', s: 'Zatrzymaj prasę na panelu sterowania zwykłym przyciskiem stop. Poczekaj, aż tłok przestanie się ruszać.' },
-        { t: 'Odizoluj', s: 'Podejdź do głównego wyłącznika izolującego prasy. Ustaw go w pozycji wyłączonej.' },
-        { t: 'Twoja kłódka i zawieszka', s: 'Załóż własną kłódkę na wyłącznik. Załóż własną zawieszkę ostrzegawczą ze swoim imieniem, nazwiskiem i datą. Jedna osoba, jedna kłódka. Nigdy nie używaj cudzej kłódki.' },
-        { t: 'Uwolnij zgromadzoną energię', s: 'Zrzuć ciśnienie hydrauliczne zaworem upustowym. Sprawdź, czy manometr wskazuje zero. Opuść albo zablokuj tłok i płytę dociskową, żeby nic nie mogło spaść ani się poruszyć.' },
-        { t: 'Próba uruchomienia', s: 'Spróbuj uruchomić prasę. Nic nie powinno się stać. Sprawdź manometr jeszcze raz. To dowód, że w maszynie nie ma energii. Przestaw przełącznik startu z powrotem na wyłączony.' },
+        { t: 'Odizoluj', s: 'Podejdź do głównego wyłącznika izolującego prasy i ustaw go w pozycji wyłączonej.' },
+        { t: 'Twoja kłódka i zawieszka', s: 'Załóż własną kłódkę na wyłącznik, a do niej własną zawieszkę ze swoim imieniem, nazwiskiem i datą. Jedna osoba, jedna kłódka. Nigdy nie używaj cudzej kłódki.' },
+        { t: 'Uwolnij zgromadzoną energię', s: 'Zrzuć ciśnienie hydrauliczne zaworem upustowym i sprawdź, czy manometr wskazuje zero. Potem opuść albo zablokuj tłok i płytę dociskową, żeby nic nie mogło spaść ani się poruszyć.' },
+        { t: 'Próba uruchomienia', s: 'Spróbuj uruchomić prasę. Nic nie powinno się stać. Sprawdź manometr jeszcze raz, żeby mieć pewność, że w maszynie nie ma energii. Potem przestaw przełącznik startu z powrotem na wyłączony.' },
         { t: 'Wykonaj pracę', s: 'Teraz wykonaj pracę. Jeśli odchodzisz od maszyny, twoja kłódka zostaje na miejscu.' },
-        { t: 'Tylko ty zdejmujesz swoją kłódkę', s: 'Kiedy skończysz, tylko ty zdejmujesz swoją kłódkę. Nigdy nie zdejmuj cudzej kłódki. Jeśli czyjaś kłódka została na wyłączniku, powiedz przełożonemu.' },
-        { t: 'Powrót do pracy', s: 'Osłony założone i zamknięte. Narzędzia i ludzie z dala od maszyny. Powiedz wszystkim, że prasa rusza. Potem, przed użyciem, wykonaj kontrolę przed zmianą.' }
+        { t: 'Tylko ty zdejmujesz swoją kłódkę', s: 'Kiedy skończysz, sam zdejmujesz swoją kłódkę. Nikt inny nie może tego zrobić. Nigdy nie zdejmuj cudzej kłódki. Jeśli czyjaś kłódka została na wyłączniku, powiedz przełożonemu.' },
+        { t: 'Powrót do pracy', s: 'Załóż i zamknij osłony. Upewnij się, że narzędzia i ludzie są z dala od maszyny. Powiedz wszystkim, że prasa rusza, a potem, przed użyciem, wykonaj kontrolę przed zmianą.' }
       ],
       quiz: [
-        { q: 'Kto może zdjąć twoją kłódkę?', say: 'Kto może zdjąć twoją kłódkę? Dotknij obrazka.', a: ['Tylko ja', 'Mój przełożony', 'Każdy'] },
+        { q: 'Kto może zdjąć twoją kłódkę?', say: 'Kto może zdjąć twoją kłódkę? Dotknij obrazka.', why: 'Kłódkę może zdjąć tylko osoba, która ją założyła. Dzięki temu nikt nie włączy maszyny, kiedy ktoś przy niej pracuje.', a: ['Tylko ja', 'Mój przełożony', 'Każdy'] },
         { q: 'Kłódka założona. Co dalej?', say: 'Twoja kłódka jest założona. Co robisz dalej? Dotknij obrazka.', a: ['Zacznij pracę', 'Spróbuj uruchomić', 'Odejdź'] }
       ]
     }

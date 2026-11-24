@@ -797,3 +797,6 @@ table.t.tsm{min-width:0}
 table.t td.nw{white-space:nowrap}
 
 .att .smallbtn.act{min-height:0;flex-direction:row;align-items:center;justify-content:center;gap:6px;padding:7px 11px;border-radius:10px;background:var(--card);overflow:visible}
+
+.lockwhy{display:flex;align-items:center;gap:10px;background:var(--hivis-l);border:1px solid rgba(255,210,31,.4);border-radius:14px;padding:10px 12px;margin:0 0 12px;font-size:13.5px;line-height:1.4;color:var(--ink)}
+.lockwhy>.ic{font-size:22px;color:var(--hivis);flex:0 0 auto}.lockwhy .lwt{flex:1;min-width:0}.lockwhy .spk{margin:0}
