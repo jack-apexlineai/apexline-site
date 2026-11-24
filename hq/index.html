@@ -311,6 +311,15 @@ button.chip{cursor:pointer}
 .clh{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
 .clh .cln{font-size:16px}
 .clnx{color:var(--text);opacity:.9;overflow-wrap:anywhere}
+.clm{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0 8px}
+.clm>div{background:rgba(255,255,255,.03);border:1px solid var(--line,rgba(255,255,255,.08));border-radius:10px;padding:8px 10px;min-width:0}
+.clm b{display:block;font-size:17px;line-height:1.2}
+.clm span{font-size:11px;opacity:.7}
+.clbar{height:6px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;margin:2px 0 4px}
+.clbar i{display:block;height:100%;background:#34D399}
+.cltrack{display:flex;gap:3px;margin:10px 0 2px}
+.cltrack i{flex:1;height:4px;border-radius:3px;background:rgba(255,255,255,.1)}
+.cltrack i.on{background:var(--st)}
 /* payments calendar: month grid on a laptop, agenda list on a phone */
 .pnav{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .pnav button{padding:8px 14px}
@@ -1386,11 +1395,41 @@ function clientTasks(x){
   const keys = [x.contact, x.company].filter(Boolean).map(k => String(k).split(/[\s(,]/)[0].toLowerCase()).filter(k => k.length > 2);
   return S.tasks.filter(t => t.status !== "done" && !isPost(t) && keys.some(k => (t.title || "").toLowerCase().includes(k))).sort((a, b) => String(a.due || "9999").localeCompare(String(b.due || "9999")) || String(a.due_time || "99").localeCompare(String(b.due_time || "99")));
 }
+/* money per client (Jack, 24 Nov): build value, cash collected from paid invoices, still to come, monthly and a year of it, and where it is on the road to live */
+const CL_STEPS = ["Lead", "Demo", "Proposal", "Deposit", "Building", "Live"];
+function clientMoney(x){
+  const invs = S.invoices.filter(i => i.deal_id === x.id && i.status !== "void");
+  const paid = invs.filter(i => i.status === "paid"), due = invs.filter(i => i.status !== "paid");
+  const collected = paid.reduce((a, i) => a + Number(i.amount || 0), 0);
+  const build = Number(x.value || 0), mo = Number(x.monthly || 0);
+  const next = due.sort((a, b) => String(a.due_on || "9999").localeCompare(String(b.due_on || "9999")))[0] || null;
+  const st = dealStatus(x), sg = String(x.stage || "").toLowerCase(), d = today();
+  let step = 0;
+  if (/demo/.test(sg)) step = 1;
+  if (/demo done|proposal/.test(sg) || st === "Proposal Sent") step = 2;
+  if (collected > 0 || st === "Won" || st === "Renewal") step = 3;
+  if (sg === "building") step = 4;
+  if (sg === "live" || (x.live_on && x.live_on <= d && (st === "Won" || st === "Renewal"))) step = 5;
+  return { collected, build, mo, toCome: Math.max(0, build - collected), next, step, label: step === 1 && /booked/.test(sg) ? "Demo booked" : CL_STEPS[step] };
+}
+function clientMoneyHtml(x){
+  const m = clientMoney(x), pct = m.build ? Math.min(100, Math.round(m.collected / m.build * 100)) : 0;
+  return `<div class="clm">
+      <div><span>Build</span><b>${m.build ? gbp(m.build) : "TBC"}</b></div>
+      <div><span>Cash collected</span><b style="color:${m.collected ? "#34D399" : "inherit"}">${gbp(m.collected)}</b></div>
+      <div><span>Still to come</span><b>${gbp(m.toCome)}</b></div>
+    </div>
+    ${m.build ? `<div class="clbar" title="${pct}% of the build collected"><i style="width:${pct}%"></i></div>` : ""}
+    <div class="muted small">${m.mo ? `<b style="color:var(--text)">${gbp(m.mo)}/mo</b>, ${gbp(m.mo * 12)} a year` : "No monthly set"}${m.next ? ` · next: ${esc(m.next.number)} ${gbp(m.next.amount)} ${m.next.status === "scheduled" ? esc(m.next.trigger || "scheduled") : "sent"}${m.next.due_on ? " (" + fmtDay(m.next.due_on) + ")" : ""}` : ""}</div>
+    <div class="cltrack" title="${m.label}">${CL_STEPS.map((s, i) => `<i class="${i <= m.step ? "on" : ""}"></i>`).join("")}</div>
+    <div class="muted small">Stage: <b style="color:var(--st)">${m.label}</b></div>`;
+}
 function clientCard(x){
   const st = dealStatus(x), ts = clientTasks(x).slice(0, 3), nx = x.next_step || "";
   return `<div class="card clc" style="--st:${STC[st] || "#6B7A93"}">
     <div class="clh" data-deal="${x.id}"><div class="grow"><b class="cln">${esc(x.company)}</b><div class="muted small">${esc([x.contact, x.role].filter(Boolean).join(", ")) || "&nbsp;"}</div></div><span class="chip" style="border-color:var(--st);color:var(--st)">${esc(x.stage && SIGNED_STAGES.includes(x.stage) ? x.stage : st)}</span></div>
-    <div class="meta" style="margin:10px 0">${Number(x.value) ? `<span class="chip good">${gbp(x.value)} build</span>` : '<span class="chip">Value TBC</span>'}${Number(x.monthly) ? `<span class="chip good">${gbp(x.monthly)}/mo</span>` : ""}${x.product ? `<span class="chip">${esc(x.product)}</span>` : ""}${x.live_on ? `<span class="chip violet">Live ${fmtDay(x.live_on)}</span>` : ""}${x.next_date ? fuChip(x) : '<span class="chip warn">No follow-up date</span>'}</div>
+    ${clientMoneyHtml(x)}
+    <div class="meta" style="margin:10px 0">${x.product ? `<span class="chip">${esc(x.product)}</span>` : ""}${x.live_on ? `<span class="chip violet">Live ${fmtDay(x.live_on)}</span>` : ""}${x.next_date ? fuChip(x) : '<span class="chip warn">No follow-up date</span>'}</div>
     <div class="small clnx">${esc(nx.slice(0, 260))}${nx.length > 260 ? "…" : ""}</div>
     ${ts.length ? `<div class="eyebrow" style="margin:12px 0 4px">Next for them</div>${ts.map(t => taskCard(t, { compact: true })).join("")}` : ""}
     <div class="muted small" style="margin-top:10px">${sinceTxt(x)}${x.notion_url ? ` · <a href="${esc(x.notion_url)}" target="_blank" rel="noopener">Notion</a>` : ""}</div>
@@ -1403,7 +1442,9 @@ function renderClients(el){
   const sec = (title, list, sub) => list.length ? `<div class="card-h" style="margin:6px 0 10px"><h2>${title}</h2><span class="cnt">${sub}</span></div><div class="clgrid">${list.map(clientCard).join("")}</div>` : "";
   el.innerHTML = phead("Clients", "Every build and live lead", `<div class="pnav"><button class="${CLV.show === "active" ? "" : "ghost"}" id="clAct">Active</button><button class="${CLV.show === "arch" ? "" : "ghost"}" id="clArc">Archived (${arch.length})</button></div>`) +
   `<div class="kpis">
-    ${kpi(won.length, "Clients", gbp(sum(won, "monthly")) + " a month signed")}
+    ${kpi(gbp(won.concat(hot, warm).reduce((a, x) => a + clientMoney(x).collected, 0)), "Cash collected", "paid invoices on client builds")}
+    ${kpi(gbp(won.reduce((a, x) => a + clientMoney(x).toCome, 0)), "Still to come", "signed builds, not paid yet")}
+    ${kpi(won.length, "Clients", gbp(sum(won, "monthly")) + " a month signed, " + gbp(sum(won, "monthly") * 12) + " a year")}
     ${kpi(hot.length, "Hot and booked", gbp(sum(hot, "value")) + " in builds")}
     ${kpi(warm.length, "Warm", gbp(sum(warm, "value")) + " in builds")}
     ${kpi(all.filter(r => r.g !== "arch" && !r.x.next_date).length, "No follow-up date", "give each one a date", { warn: all.some(r => r.g !== "arch" && !r.x.next_date) })}
