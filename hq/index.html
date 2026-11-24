@@ -146,6 +146,22 @@ th:first-child,td:first-child{text-align:left}
 .dc b{display:block;font-size:14px;overflow-wrap:anywhere}
 .dc .who{color:var(--muted);font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dc .meta{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.sylist{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(330px,100%),1fr));gap:12px}
+.syc{border:1px solid var(--line);border-radius:14px;background:var(--card2);padding:14px;min-width:0;transition:opacity .15s}
+.syc.saving{opacity:.5;pointer-events:none}
+.syh{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.syh b{font-size:15px}
+.sygrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin:12px 0}
+.sygrid>div{display:flex;flex-direction:column;gap:3px;font-size:13px;min-width:0}
+.sygrid .lab{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;font-family:var(--mono)}
+.sdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.syflags{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-direction:column;gap:5px}
+.syflags li{font-size:13px;padding:6px 10px;border-radius:8px;border:1px solid var(--line)}
+.syflags li.warn{color:var(--warn)}.syflags li.bad{color:var(--bad)}
+.sy-note{margin:0 0 10px}
+.syact{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.syact select{padding:6px 10px;font-size:13px;width:auto;max-width:100%}
+button.danger{color:var(--bad)}
+.addp{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px}.addp.big{margin:12px 0 4px;padding:10px;border:1px dashed var(--line);border-radius:12px}.addp .muted{margin-right:2px}
 .dcrow{cursor:pointer}
 .dcrow:hover b{color:var(--accent)}
 .sbar{display:grid;grid-template-columns:104px 1fr 34px;gap:10px;align-items:center;margin:7px 0;font-size:13px}
@@ -572,6 +588,7 @@ body.pdragging,body.pdragging *{cursor:grabbing!important}
     <a class="nav" href="#tasks" data-nav="tasks"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>Tasks<span class="badge" id="navTasks"></span></a>
     <a class="nav" href="#pipeline" data-nav="pipeline"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="9.5" y="4" width="5" height="11" rx="1.5"/><rect x="16" y="4" width="5" height="7" rx="1.5"/></svg>Pipeline<span class="badge" id="navPipe"></span></a>
     <a class="nav" href="#clients" data-nav="clients"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 12h18"/></svg>Clients</a>
+    <a class="nav" href="#systems" data-nav="systems"><svg viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="6.5" rx="2"/><rect x="3.5" y="13.5" width="17" height="6.5" rx="2"/><path d="M7 7.25h.01M7 16.75h.01M11 7.25h5M11 16.75h5"/></svg>Systems<span class="badge" id="navSys"></span></a>
     <a class="nav" href="#crm" data-nav="crm"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.8c1.6.8 2.7 2.5 3 5.2"/></svg>CRM<span class="badge" id="navCrm"></span></a>
     <a class="nav" href="#calls" data-nav="calls"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z"/></svg>Calls</a>
     <a class="nav" href="#money" data-nav="money"><svg viewBox="0 0 24 24"><path d="M16 6.5A4 4 0 0 0 9 9v3H7m2 0h5M9 12v3c0 1.5-1 2.5-2 3h11"/></svg>Money</a>
@@ -730,7 +747,7 @@ function fuChip(x, d = today()){
 }
 function dealCard(x){
   const st = dealStatus(x);
-  return `<div class="dc" data-deal="${x.id}" tabindex="0" style="--st:${STC[st] || "#6B7A93"}"><b>${esc(x.company)}</b><div class="who">${esc([x.contact, x.role].filter(Boolean).join(", ")) || "&nbsp;"}</div><div class="meta">${Number(x.value) ? `<span class="chip good">${gbp(x.value)}${Number(x.monthly) ? " + " + gbp(x.monthly) + "/mo" : ""}</span>` : ""}${st !== "Uncontacted" && st !== "Lost" ? fuChip(x) : ""}${x.product ? `<span class="chip">${esc(x.product)}</span>` : ""}</div></div>`;
+  return `<div class="dc" data-deal="${x.id}" tabindex="0" style="--st:${STC[st] || "#6B7A93"}"><b>${esc(x.company)}</b><div class="who">${esc([x.contact, x.role].filter(Boolean).join(", ")) || "&nbsp;"}</div><div class="meta">${Number(x.value) ? `<span class="chip good">${gbp(x.value)}${Number(x.monthly) ? " + " + gbp(x.monthly) + "/mo" : ""}</span>` : ""}${st !== "Uncontacted" && st !== "Lost" ? fuChip(x) : ""}${x.product ? `<span class="chip">${esc(x.product)}</span>` : ""}</div>${["Uncontacted","Cold"].includes(st) ? `<div class="addp" data-addp="${x.id}"><button class="ghost sm" data-addpipe="${x.id}">+ Add to pipeline</button></div>` : ""}</div>`;
 }
 function fuRow(x){
   const nx = x.next_step || "";
@@ -823,6 +840,10 @@ document.addEventListener("click", async e => {
   if (tc) { openCard("task", tc.dataset.id, tc, true); return; }
   const pc = e.target.closest("[data-pchip]");
   if (pc && !e.target.closest("#td")) { openCard("pay", pc.dataset.pchip, pc, true); return; }
+  const ap = e.target.closest("[data-addpipe]");
+  if (ap) { e.stopPropagation(); const box = ap.closest("[data-addp]") || ap.parentElement; box.innerHTML = `<span class="muted small">Add as</span>${PIPE_IN.map(s => `<button class="ghost sm" data-pipeto="${s}" data-pid="${ap.dataset.addpipe}">${s}</button>`).join("")}`; return; }
+  const pt = e.target.closest("[data-pipeto]");
+  if (pt) { e.stopPropagation(); const x = S.deals.find(y => y.id === pt.dataset.pid); if (x) { pt.disabled = true; await addToPipeline(x, pt.dataset.pipeto); } return; }
   const dd = e.target.closest("[data-deal]");
   if (dd && !e.target.closest("#td")) { if (e.target.closest("a")) return; openCard("deal", dd.dataset.deal, dd.matches(".dc, .dcrow") ? dd : null, true); return; }
   if (!e.target.isConnected) return; // the card redrew itself under this click (e.g. Edit), so it was inside
@@ -1065,7 +1086,7 @@ $("#boot").addEventListener("click", () => BOOT.done && BOOT.done());
 document.addEventListener("keydown", () => { if (!$("#boot").classList.contains("hide") && BOOT.done) BOOT.done(); });
 
 /* ---------- app shell ---------- */
-const PAGES = { today: renderToday, calendar: renderCalendar, tasks: renderTasks, pipeline: renderPipeline, clients: renderClients, crm: renderCRM, calls: renderCalls, money: renderMoney, payments: renderPayments, outreach: renderOutreach, notes: renderNotes, training: renderHealth };
+const PAGES = { today: renderToday, calendar: renderCalendar, tasks: renderTasks, pipeline: renderPipeline, clients: renderClients, systems: renderSystems, crm: renderCRM, calls: renderCalls, money: renderMoney, payments: renderPayments, outreach: renderOutreach, notes: renderNotes, training: renderHealth };
 const curTab = () => { let t = (location.hash || "#today").slice(1); return PAGES[t] ? t : "today"; };
 function route(){
   const tab = curTab();
@@ -1109,6 +1130,8 @@ function kpi(v, lab, sub, opts = {}){ return `<div class="kpi ${opts.hi ? "hi" :
    Read and moved through the hq-pipeline edge function, which holds the Notion token (never in this page).
    Until that function is live the board shows HQ's own copy of the deals, read only. */
 const PIPE_COLS = ["Cold","Warm","Hot","Call booked","Proposal Sent","Won","Renewal","Lost"];
+/* The board only shows live deals (Jack, 24 Nov): cold, uncontacted and lost leads live in the CRM until they are added to the pipeline. */
+const BOARD_COLS = ["Warm","Hot","Call booked","Proposal Sent","Won","Renewal"];
 const PL = { state: "idle", deals: [], week: null, today: null, err: "", showUnc: false, q: "", showAll: {}, at: 0, dragAt: 0 };
 async function pipeCall(body){
   const { data, error } = await sb.functions.invoke("hq-pipeline", { body });
@@ -1148,8 +1171,8 @@ function drawPipe(){
   const qq = PL.q.trim().toLowerCase();
   const match = x => !qq || [x.company, x.contact, x.role, x.next_step, x.product, x.channel].some(v => String(v || "").toLowerCase().includes(qq));
   const deals = src.filter(match);
-  const unc = src.filter(x => dealStatus(x) === "Uncontacted").length;
-  const cols = (PL.showUnc ? ["Uncontacted"] : []).concat(PIPE_COLS);
+  const unc = src.filter(x => ["Uncontacted","Cold"].includes(dealStatus(x))).length;
+  const cols = BOARD_COLS;
   const open = src.filter(inPipe), won = src.filter(x => ["Won","Renewal"].includes(dealStatus(x)));
   const od = src.filter(x => pipeOverdue(x, d)).sort((a, b) => String(a.next_date).localeCompare(String(b.next_date)));
   const wk = PL.week, booked = wk ? wk.booked : 0, target = wk ? wk.target : 5;
@@ -1162,7 +1185,7 @@ function drawPipe(){
     error: `<div class="pstate warn" id="pOff"><span class="dot"></span>Couldn't reach Notion (${esc(PL.err)}). Showing HQ's own copy, read only.</div>`,
     idle: "",
   }[PL.state] || "";
-  el.innerHTML = phead("Drag deals through the stages", "Pipeline", `<div class="ptools"><input id="pSearch" type="search" placeholder="Search deals" value="${esc(PL.q)}" aria-label="Search deals"><button class="ghost" id="pUnc">${PL.showUnc ? "Hide" : "Show"} uncontacted (${unc})</button><button class="ghost" id="pRefresh">Refresh</button></div>`) + stTxt +
+  el.innerHTML = phead("Drag deals through the stages", "Pipeline", `<div class="ptools"><input id="pSearch" type="search" placeholder="Search deals" value="${esc(PL.q)}" aria-label="Search deals"><a class="btn ghost" id="pCrm" href="#crm">Cold leads are in the CRM (${unc})</a><button class="ghost" id="pRefresh">Refresh</button></div>`) + stTxt +
   `<div class="kpis" id="pStats">
     ${kpi(ro && !wk ? "?" : `${booked}<span class="muted" style="font-size:18px"> of ${target}</span>`, "Calls booked this week", wk ? (wk.items.length ? esc(wk.items.map(i => i.company).join(", ")) : "none yet, target 5 a week") : "counts once Notion is linked", { hi: booked >= target, k: "pweek" })}
     ${kpi(gbp(sum(open, "value")), PIPE_LAB, `${open.length} ${open.length === 1 ? "deal" : "deals"}${open.filter(x => !Number(x.value)).length ? `, ${open.filter(x => !Number(x.value)).length} value TBC` : ""}${sum(open, "monthly") ? `, + ${gbp(sum(open, "monthly"))}/mo` : ""}`, { k: "ppipe" })}
@@ -1180,7 +1203,6 @@ function drawPipe(){
   const sIn = $("#pSearch");
   sIn.addEventListener("input", () => { PL.q = sIn.value; drawPipe(); });
   if (hadFocus) { sIn.focus(); sIn.setSelectionRange(sIn.value.length, sIn.value.length); }
-  $("#pUnc").onclick = () => { PL.showUnc = !PL.showUnc; drawPipe(); };
   $("#pRefresh").onclick = () => loadPipe();
   document.querySelectorAll("[data-pmore]").forEach(b => b.onclick = () => { PL.showAll[b.dataset.pmore] = true; drawPipe(); });
   bindPipeBoard();
@@ -1983,6 +2005,17 @@ function renderCRM(el){
   srch.addEventListener("input", () => { CV.q = srch.value; const pos = srch.selectionStart; rerender(); const n = $("#cSearch"); if (n) { n.focus(); n.setSelectionRange(pos, pos); } });
   el.querySelectorAll("[data-more]").forEach(b => b.onclick = () => { CV.showAll[b.dataset.more] = true; rerender(); });
 }
+/* Add a CRM lead to the pipeline: moves it in Notion (the Pipeline board's source) and in HQ's copy. */
+const PIPE_IN = ["Warm","Hot","Call booked"];
+async function addToPipeline(x, s2){
+  if (!PIPE_IN.includes(s2)) return;
+  const nid = (String(x.notion_url || "").match(/[0-9a-f]{32}/i) || [])[0];
+  let notionFail = false;
+  if (nid) { try { await pipeCall({ mode: "move", id: nid, status: s2 }); } catch (e) { notionFail = true; } }
+  await setDeal(x, { status: s2, stage: STAGE_FROM[s2] || x.stage });
+  PL.at = 0;
+  toast(notionFail ? x.company + " is " + s2 + " in HQ, but Notion didn't update. Try again from the deal card." : x.company + " added to the pipeline as " + s2);
+}
 async function setDeal(x, v){ await q(sb.from("hq_deals").update(v).eq("id", x.id)); Object.assign(x, v); rerender(); drawDeal(); }
 function drawDeal(){
   const x = S.deals.find(d => d.id === TD.id); if (!x) return closeTask();
@@ -1996,6 +2029,7 @@ function drawDeal(){
     <div class="muted small">${esc([x.contact, x.role].filter(Boolean).join(", "))}${x.vertical ? `<br>${esc(x.vertical)}` : ""}</div>
     <div style="margin-top:8px"><span class="chip" style="color:${STC[st]};border-color:${STC[st]}66">${esc(st)}</span> ${fuChip(x)} <span class="chip">${sinceTxt(x)}</span>${x.channel ? ` <span class="chip">${esc(x.channel)}</span>` : ""}</div>
     <div class="btnrow">${x.phone ? `<a class="btn" href="tel:${esc(String(x.phone).replace(/\s/g, ""))}">Call ${esc(x.phone)}</a>` : ""}${x.email ? `<a class="btn" href="mailto:${esc(x.email)}">Email</a>` : ""}${x.linkedin ? `<a class="btn" href="${esc(x.linkedin)}" target="_blank" rel="noopener">LinkedIn</a>` : ""}${x.notion_url ? `<a class="btn" href="${esc(x.notion_url)}" target="_blank" rel="noopener">Notion</a>` : ""}</div>
+    ${["Uncontacted","Cold","Lost"].includes(st) ? `<div class="addp big" data-addp="${x.id}"><span class="muted small">Add to pipeline as</span>${PIPE_IN.map(s => `<button class="ghost sm" data-pipeto="${s}" data-pid="${x.id}">${s}</button>`).join("")}</div>` : ""}
     <div class="td-meta">
       <label class="f">Status<select id="dStatus">${CRM_STATUSES.concat(st === "Renewal" ? ["Renewal"] : []).map(s => `<option ${s === st ? "selected" : ""}>${s}</option>`).join("")}</select></label>
       <label class="f">Follow-up<input id="dNextDate" type="date" value="${x.next_date || ""}"></label>
@@ -2038,6 +2072,125 @@ function drawDeal(){
     if (ch !== "Note" && x.last_contact !== d) await setDeal(x, { last_contact: d }); else { rerender(); drawDeal(); }
   };
   $("#dDel").onclick = async () => { if (!confirm("Delete " + x.company + " and its timeline?")) return; await q(sb.from("hq_deals").delete().eq("id", x.id)); S.deals = S.deals.filter(y => y.id !== x.id); closeTask(); rerender(); };
+}
+
+/* ---------- SYSTEMS: every customer's live system (WasteLine licences today) ----------
+   Read and changed through the hq-licences edge function, which holds the server key (never in this page).
+   The function enforces the licence rules: no blank plans except an explicit lock, no past paid-until dates, every change logged. */
+const SYS = { state: "idle", installs: [], log: [], err: "", showOwn: false, at: 0, busy: "" };
+const SYS_PAID = ["core","fleet","full"];
+const PLAN_LAB = { core: "Core", fleet: "Fleet", full: "Full Yard", free: "Free ordering", "": "No plan" };
+async function sysCall(body){
+  const { data, error } = await sb.functions.invoke("hq-licences", { body });
+  if (error) {
+    const e = new Error(error.message || "Request failed");
+    try { e.status = error.context && error.context.status; const j = await error.context.json(); if (j && j.error) e.message = j.error; } catch (_) {}
+    throw e;
+  }
+  return data;
+}
+async function loadSys(){
+  SYS.state = SYS.installs.length ? "refresh" : "loading"; drawSys();
+  try { const r = await sysCall({ mode: "list" }); SYS.installs = r.installs || []; SYS.log = r.log || []; SYS.state = "ok"; SYS.at = Date.now(); SYS.err = ""; }
+  catch (e) { SYS.state = SYS.installs.length ? "stale" : (e.status === 404 ? "off" : "error"); SYS.err = e.message || "Request failed"; }
+  drawSys();
+}
+function renderSystems(el){ drawSys(); if (SYS.state === "idle" || (!["loading","refresh"].includes(SYS.state) && Date.now() - SYS.at > 60000)) loadSys(); }
+function sysAgo(t){
+  if (!t) return "never";
+  const m = Math.round((Date.now() - new Date(t)) / 6e4);
+  if (m < 2) return "just now"; if (m < 60) return m + " min ago";
+  const h = Math.round(m / 60); if (h < 24) return h + (h === 1 ? " hour" : " hours") + " ago";
+  const d = Math.round(h / 24); return d + (d === 1 ? " day" : " days") + " ago";
+}
+function sysStatus(x){
+  if (x.status === "trial") return { t: "Trial, " + x.trial_days_left + (x.trial_days_left === 1 ? " day" : " days") + " left", c: "var(--hud)" };
+  if (x.status === "active") return x.plan === "free" ? { t: "Free ordering", c: "var(--muted)" } : { t: "Active", c: "var(--good)" };
+  return { t: "Locked out", c: "var(--bad)" };
+}
+function sysCard(x){
+  const s = sysStatus(x), sd = x.days_since_seen, paid = SYS_PAID.includes(x.plan_set);
+  const dot = sd === null ? "var(--muted)" : sd < 3 ? "var(--good)" : sd < 7 ? "var(--warn)" : "var(--bad)";
+  const day = t => t ? fmtDay(String(t).slice(0, 10)) : "";
+  const dates = x.status === "trial" ? ["Trial ends", day(x.trial_ends)] : ["Paid until", x.paid_until ? day(x.paid_until) : paid ? "No end date" : "Not charged"];
+  return `<div class="syc ${SYS.busy === x.key ? "saving" : ""}" data-sys="${esc(x.key)}">
+    <div class="syh"><div><b>${esc(x.yard_name)}</b><div class="muted small">${esc(PLAN_LAB[x.plan_set] !== undefined ? PLAN_LAB[x.plan_set] : x.plan_set)}${x.hide_yard ? ", yard pages hidden" : ""}</div></div><span class="chip" style="color:${s.c};border-color:${s.c}">${esc(s.t)}</span></div>
+    <div class="sygrid">
+      <div><span class="lab">Last opened</span><span><i class="sdot" style="background:${dot}"></i>${esc(sysAgo(x.last_seen))}</span></div>
+      <div><span class="lab">${dates[0]}</span><span>${esc(dates[1])}</span></div>
+      <div><span class="lab">Emails this month</span><span>${x.email_service ? `${x.mail_month_count} of ${x.mail_month_cap}` : "Own Gmail"}</span></div>
+      <div><span class="lab">Signed up</span><span>${esc(day(x.created_at))}</span></div>
+    </div>
+    ${x.flags && x.flags.length ? `<ul class="syflags">${x.flags.map(f => `<li class="${f.level === "bad" ? "bad" : "warn"}">${esc(f.text)}</li>`).join("")}</ul>` : ""}
+    ${x.notes ? `<div class="muted small sy-note">${esc(x.notes)}</div>` : ""}
+    <div class="syact">
+      ${paid ? `<button class="ghost sm" data-sya="paid_month">Paid a month</button><button class="ghost sm" data-sya="paid_year">Paid a year</button>` : ""}
+      <button class="ghost sm" data-sya="extend_trial">Extend trial 14 days</button>
+      <select data-syplan aria-label="Change plan"><option value="">Change plan</option>${SYS_PAID.map(p => `<option value="${p}" ${p === x.plan_set ? "disabled" : ""}>${PLAN_LAB[p]}</option>`).join("")}</select>
+      ${x.plan_set !== "free" ? `<button class="ghost sm" data-sya="to_free">Drop to free ordering</button>` : ""}
+      <button class="ghost sm" data-sya="email">Email service ${x.email_service ? "on" : "off"}</button>
+      <button class="ghost sm" data-sya="note">Note</button>
+      ${x.status !== "expired" ? `<button class="ghost sm danger" data-sya="lock">Lock out</button>` : ""}
+    </div></div>`;
+}
+async function sysChange(x, action, value, extra = {}){
+  if (SYS.busy) return toast("Still saving the last change");
+  SYS.busy = x.key; drawSys();
+  try {
+    const r = await sysCall({ mode: "change", key: x.key, action, value, ...extra });
+    const i = SYS.installs.findIndex(y => y.key === x.key); if (i >= 0) SYS.installs[i] = r.install;
+    if (r.log) SYS.log.unshift(r.log);
+    toast(x.yard_name + ": " + (r.log ? r.log.detail : "saved") + (r.warning ? ". " + r.warning : ""));
+  } catch (e) { toast("Not changed: " + e.message); }
+  SYS.busy = ""; drawSys();
+}
+function sysAct(x, a, v){
+  const n = x.yard_name;
+  if (a === "paid_month" && confirm(`Mark ${n} as paid for a month? Their paid-until date moves a month on.`)) return sysChange(x, "paid_month");
+  if (a === "paid_year" && confirm(`Mark ${n} as paid for a year? Their paid-until date moves a year on.`)) return sysChange(x, "paid_year");
+  if (a === "extend_trial" && confirm(`Extend ${n}'s trial by 14 days? Their plan stays as it is.`)) return sysChange(x, "extend_trial", 14);
+  if (a === "set_plan" && confirm(`Change ${n} to ${PLAN_LAB[v]}?${x.paid_until ? "" : " With no paid-until date it won't lapse until you set one."}`)) return sysChange(x, "set_plan", v);
+  if (a === "to_free" && confirm(`Drop ${n} to free ordering? They keep orders and card payments and lose the paid pages. Takes effect next time the app opens, within about 10 minutes.`)) return sysChange(x, "to_free");
+  if (a === "email" && confirm(`Turn the ApexLine email service ${x.email_service ? "off" : "on"} for ${n}?${x.email_service ? " Their emails go back through their own Gmail, 100 a day." : ""}`)) return sysChange(x, "set_flag", { field: "email_service", on: !x.email_service });
+  if (a === "lock" && confirm(`Lock ${n} out completely? Everything turns off, ordering included, next time the app opens. If they were promised free ordering, use Drop to free ordering instead.`)) return sysChange(x, "lock", null, { confirm: "LOCK" });
+  if (a === "note") { const t = prompt("Note for " + n, x.notes || ""); if (t !== null) return sysChange(x, "set_note", t); }
+}
+function drawSys(){
+  if (curTab() !== "systems") return;
+  const el = $("#page");
+  const cust = SYS.installs.filter(x => !x.own), own = SYS.installs.filter(x => x.own);
+  const paying = cust.filter(x => x.status === "active" && SYS_PAID.includes(x.plan)), trial = cust.filter(x => x.status === "trial");
+  const locked = cust.filter(x => x.status === "expired"), look = cust.filter(x => x.flags && x.flags.length);
+  const names = a => esc(a.map(x => x.yard_name).join(", "));
+  const stTxt = {
+    loading: `<div class="pstate"><span class="dot"></span>Loading from the licence server</div>`,
+    refresh: `<div class="pstate"><span class="dot"></span>Refreshing</div>`,
+    ok: `<div class="pstate"><span class="dot"></span>Live from the licence server, updated ${new Date(SYS.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}. Yards check in every 10 minutes while the app is open.</div>`,
+    stale: `<div class="pstate warn"><span class="dot"></span>Couldn't refresh (${esc(SYS.err)}). Showing the last load.</div>`,
+    off: `<div class="pstate warn" id="syOff"><span class="dot"></span>The hq-licences link isn't switched on yet.</div>`,
+    error: `<div class="pstate warn" id="syOff"><span class="dot"></span>Couldn't reach the licence server (${esc(SYS.err)}).</div>`,
+    idle: "",
+  }[SYS.state] || "";
+  el.innerHTML = phead("Every customer system, live", "Systems", `<div class="ptools"><button class="ghost" id="syRefresh">Refresh</button></div>`) + stTxt +
+  `<div class="kpis" id="syStats">
+    ${kpi(paying.length, "Paying", paying.length ? names(paying) : "nobody on a paid plan yet", { k: "sypay" })}
+    ${kpi(trial.length, "On trial", trial.length ? names(trial) : "none right now", { k: "sytrial" })}
+    ${kpi(locked.length, "Locked out", locked.length ? names(locked) : "nobody", { warn: !!locked.length, k: "sylock" })}
+    ${kpi(look.length, "Need a look", look.length ? names(look) : "all fine", { warn: !!look.length, k: "sylook" })}
+  </div>
+  <div class="card"><div class="card-h"><h2>WasteLine yards</h2><span class="cnt">${cust.length} ${cust.length === 1 ? "yard" : "yards"}</span></div>
+    <div class="sylist" id="syList">${cust.map(sysCard).join("") || `<div class="empty small">${SYS.state === "ok" ? "No customer yards yet." : "Nothing loaded yet."}</div>`}</div>
+    ${own.length ? `<button class="ghost sm" id="syOwn" style="margin-top:12px">${SYS.showOwn ? "Hide" : "Show"} your demo and test installs (${own.length})</button>${SYS.showOwn ? `<div class="sylist" id="syOwnList" style="margin-top:12px">${own.map(sysCard).join("")}</div>` : ""}` : ""}
+  </div>
+  <div class="dash" style="margin-top:16px">
+    <div class="col"><div class="card"><div class="card-h"><h2>Custom builds</h2></div><div class="muted small">Each custom build runs on its own database and its own domain. They show here with uptime and last use once they go live, Noble Commercial first.</div></div></div>
+    <div class="col"><div class="card"><div class="card-h"><h2>Change log</h2><span class="cnt">last ${SYS.log.length}</span></div><ul class="lines" id="syLog">${SYS.log.map(l => `<li><span class="muted small" style="flex:none">${esc(ukTime(l.at, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }))}</span><span><b>${esc(l.yard_name || "")}</b> ${esc(l.detail)}</span></li>`).join("") || '<li class="muted small">No changes yet.</li>'}</ul></div></div>
+  </div>`;
+  $("#navSys").textContent = look.length || "";
+  $("#syRefresh").onclick = () => loadSys();
+  const so = $("#syOwn"); if (so) so.onclick = () => { SYS.showOwn = !SYS.showOwn; drawSys(); };
+  el.querySelectorAll("[data-sya]").forEach(b => b.onclick = () => { const x = SYS.installs.find(y => y.key === b.closest("[data-sys]").dataset.sys); if (x) sysAct(x, b.dataset.sya); });
+  el.querySelectorAll("[data-syplan]").forEach(sel => sel.onchange = () => { const x = SYS.installs.find(y => y.key === sel.closest("[data-sys]").dataset.sys); const v = sel.value; sel.value = ""; if (x && v) sysAct(x, "set_plan", v); });
 }
 
 /* ---------- CALLS and sales assets ---------- */
