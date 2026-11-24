@@ -129,6 +129,59 @@ function adTargets() {
   </section>`;
 }
 
+// ---------- Ask Command: his own Anthropic key (live only) ----------
+// The key goes straight to his backend (the ai-key function), which checks it with Anthropic and
+// keeps it in Supabase Vault. The app never stores or shows it: only the last 4 characters.
+let ai = { status: null, loading: false, busy: false, editing: false, msg: '' };
+
+const aiError = (e) => (e && e.status === 404 ? 'Ask Command is not switched on yet. Jack is setting it up.'
+  : e && e.kind === 'offline' ? 'You are offline. Try again when you have internet.'
+    : (e && e.status === 400 && e.message) || 'Could not reach your account just now. Try again in a minute.');
+
+async function loadAi() {
+  if (ai.loading) return;
+  ai.loading = true;
+  try {
+    const { live } = await import('./live.js');
+    const r = await live.aiKey.status();
+    ai.status = { set: !!r.set, hint: r.hint || '' };
+  } catch (e) {
+    ai.status = { error: true };
+    ai.msg = aiError(e);
+  }
+  ai.loading = false;
+  refreshAi();
+}
+
+function refreshAi() {
+  const el = document.getElementById('ask-command');
+  if (el) el.outerHTML = aiCard();
+}
+
+function aiCard() {
+  if (!LIVE) return '';
+  if (!ai.status && !ai.loading) setTimeout(loadAi, 0);
+  const st = ai.status;
+  const on = st && st.set;
+  let body;
+  if (!st) body = '<p class="muted small">Checking...</p>';
+  else if (on && !ai.editing) {
+    body = `<p><strong>Key saved</strong> <span class="muted">(ending ${esc(st.hint)})</span>. Ask Command is on: tap Ask and type your question.</p>
+      <div class="row gap wrap"><button class="btn ghost sm" data-act="ai-key-change">Paste a new key</button><button class="btn danger-ghost sm" data-act="ai-key-clear" ${ai.busy ? 'disabled' : ''}>Remove key</button></div>`;
+  } else {
+    body = `<form data-form="ai-key" class="form" autocomplete="off" novalidate>
+        <label class="field"><span>Your Anthropic API key</span><input name="key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-..." ${ai.busy ? 'disabled' : ''}></label>
+        <div class="row gap wrap"><button class="btn primary sm" type="submit" ${ai.busy ? 'disabled' : ''}>${ai.busy ? 'Checking the key...' : 'Save key'}</button>${on ? '<button type="button" class="btn ghost sm" data-act="ai-key-cancel">Cancel</button>' : ''}</div>
+      </form>`;
+  }
+  return `<section class="card" id="ask-command">
+    <div class="card-head"><h3>${icon('chat', 18)} Ask Command</h3>${on ? pill('On', 'good') : pill('Needs your key', 'mute')}</div>
+    <p class="muted small">Ask Command answers how-to questions about the app and questions about your day. It runs on your own Anthropic account, so Anthropic bills you directly, a fraction of a penny a question. Paste your key once: it is checked with Anthropic and kept safely in your account. Nobody can see it again, Jack included, only its last 4 characters.</p>
+    ${body}
+    ${ai.msg ? `<p class="form-err" role="alert">${esc(ai.msg)}</p>` : ''}
+  </section>`;
+}
+
 function lookAndData() {
   return `<div class="grid-2">
     <section class="card">
@@ -145,11 +198,11 @@ function lookAndData() {
     </section>
     <section class="card">
       <div class="card-head"><h3>${icon('download', 18)} Your data</h3></div>
-      <p class="muted small">Right now everything is saved on this device only. Once your login is set up it is kept safely online and works on your phone and laptop together.</p>
+      <p class="muted small">${LIVE ? 'Everything is saved on this device and in your account online, so your phone and laptop share it. The other one catches up within 2 minutes while it is open, or as soon as you switch back to it.' : 'Right now everything is saved on this device only. Once your login is set up it is kept safely online and works on your phone and laptop together.'}</p>
       <div class="row gap wrap">
         <button class="btn ghost sm" data-act="tour-again">${icon('play', 15)} Take the tour again</button>
         <button class="btn ghost sm" data-act="export">${icon('download', 15)} Download a backup</button>
-        <button class="btn ghost sm" data-act="reset-sample">${icon('refresh', 15)} Reset the sample data</button>
+        <button class="btn ghost sm sample-only" data-act="reset-sample">${icon('refresh', 15)} Reset the sample data</button>
         <button class="btn danger-ghost sm" data-act="wipe">${icon('trash', 15)} Start empty</button>
       </div>
     </section>
@@ -160,12 +213,13 @@ export function view() {
   return `
   <header class="page-head"><div><p class="eyebrow">Settings</p><h1>Set it up your way</h1><p class="sub">Your accounts, reminders, your fixed day and targets.</p></div></header>
   ${connections()}
+  ${aiCard()}
   <div class="grid-2 settings-grid">
     <div class="col">${reminders()}</div>
     <div class="col">${fixedDay()}${deepCard()}${adTargets()}</div>
   </div>
   ${lookAndData()}
-  <p class="muted small foot-note">Built for John by Jack at ApexLine. Version 1, sample data.</p>`;
+  <p class="muted small foot-note">Built for John by Jack at ApexLine. Version 1${LIVE ? '' : ', sample data'}.</p>`;
 }
 
 export function applyTheme() {
@@ -231,13 +285,27 @@ export const actions = {
     notify.toast('Fixed day reset.', { kind: 'info' });
   },
   export: () => doExport(),
+  'ai-key-change': () => { ai.editing = true; ai.msg = ''; refreshAi(); document.querySelector('#ask-command input[name=key]')?.focus(); },
+  'ai-key-cancel': () => { ai.editing = false; ai.msg = ''; refreshAi(); },
+  'ai-key-clear': async () => {
+    ai.busy = true; ai.msg = ''; refreshAi();
+    try {
+      const { live } = await import('./live.js');
+      await live.aiKey.clear();
+      ai.status = { set: false, hint: '' };
+      notify.toast('Key removed. Ask Command is off until you paste a key again.', { kind: 'info' });
+    } catch (e) {
+      ai.msg = aiError(e);
+    }
+    ai.busy = false; ai.editing = false; refreshAi();
+  },
   'reset-sample': () => {
     openSheet(`<div class="explain"><h2>Reset the sample data?</h2><p>Tasks, ticks, money and ad approvals go back to the starting sample. Your settings stay.</p>
       <div class="row gap sheet-actions"><button class="btn primary" data-act="reset-yes">Reset</button><button class="btn ghost" data-close>Cancel</button></div></div>`, { id: 'confirm' });
   },
   'reset-yes': () => { closeSheet(true); doReset(); notify.toast('Sample data reset.', { kind: 'good' }); },
   wipe: () => {
-    openSheet(`<div class="explain"><h2>Start with an empty app?</h2><p>This clears every task, tick, transaction and approval on this device so you can start using it for real. Ads stay on sample numbers until Meta is connected. This cannot be undone, so download a backup first if you want one.</p>
+    openSheet(`<div class="explain"><h2>Start with an empty app?</h2><p>${LIVE ? 'This clears every task, tick and transaction in your account, on your phone and your laptop. It cannot be undone. Download a backup first if you want one.' : `This clears every task, tick, transaction and approval on this device so you can start using it for real. Ads stay on sample numbers until Meta is connected. This cannot be undone, so download a backup first if you want one.`}</p>
       <div class="row gap sheet-actions"><button class="btn danger" data-act="wipe-yes">Clear everything</button><button class="btn ghost" data-close>Cancel</button></div></div>`, { id: 'confirm' });
   },
   'wipe-yes': () => {
@@ -296,6 +364,22 @@ export function setDeep(days, start = state.settings.deep.start) {
 }
 
 export const forms = {
+  'ai-key': async (f) => {
+    const key = f.key.value.trim();
+    f.key.value = ''; // never left on screen or kept in the app
+    if (!key) { ai.msg = 'Paste your key first. It starts with sk-ant-.'; refreshAi(); return; }
+    ai.busy = true; ai.msg = ''; refreshAi();
+    try {
+      const { live } = await import('./live.js');
+      const r = await live.aiKey.set(key);
+      ai.status = { set: true, hint: (r && r.hint) || '' };
+      ai.editing = false;
+      notify.toast('Key saved. Ask Command is on.', { kind: 'good' });
+    } catch (e) {
+      ai.msg = aiError(e);
+    }
+    ai.busy = false; refreshAi();
+  },
   fixed: (f) => {
     const err = f.querySelector('#fixed-err');
     err.textContent = '';

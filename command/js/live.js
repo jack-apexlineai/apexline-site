@@ -515,11 +515,23 @@ export function summarise(state, extras = {}) {
   const sumOf = (type) => Math.round(tx.filter((t) => t.type === type).reduce((a, t) => a + (Number(t.amount) || 0), 0));
   const s = state.settings || {};
   const th = (state.thinking && state.thinking.sessions) || [];
+  // Nearby days (3 back, 7 ahead) that have tasks, so "where did my task go" can be answered.
+  const shift = (n) => { const d = new Date(`${date}T12:00:00`); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  const otherDays = [];
+  for (let i = -3; i <= 7; i++) {
+    const k = i && shift(i);
+    const d = k && state.days && state.days[k];
+    if (!d || !(d.tasks || []).length) continue;
+    const open = d.tasks.filter((t) => t.status === 'todo' || t.status === 'active').slice(0, 10).map((t) => String(t.title || '').slice(0, 80));
+    const done = d.tasks.filter((t) => t.status === 'done').length;
+    otherDays.push({ date: k, closed: !!d.closed, open, done });
+  }
   return {
     sample: state.mode === 'sample',
     name: state.profile && state.profile.name,
     business: state.profile && state.profile.business,
     today: { date, closed: !!day.closed, tasks },
+    otherDays,
     ticks: { done: Object.keys(ticks).filter((k) => ticks[k]), left: ids.filter((id) => !ticks[id]), streaks: Object.fromEntries(ids.map((id) => [id, streak(id)])) },
     ads: extras.ads || null,
     adSettings: s.ads || null,

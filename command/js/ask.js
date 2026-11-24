@@ -1,34 +1,44 @@
-// Ask Command: a small chat panel. In this version it answers a handful of plain-English
-// requests on the device, using the app's own data and functions. It is not Claude and
-// never says it is. Claude switches on with his login (phase 2, server side).
-import { state } from './store.js';
+// Ask Command: a small chat panel.
+// Sample version: answers a handful of plain-English requests on the device, using the app's own
+// data and functions. It is not Claude and never says it is.
+// Live version (his login): questions go to the `ask` function (Claude, on his own Anthropic key),
+// which knows how the app works from backend/help/COMMAND_HELP.md and sees a summary of his data.
+// Until his key is in, or if the function is not switched on yet, the device answers fall back in.
+// Claude never changes anything itself: its suggestions are buttons he taps (ask-bridge.js).
+import { state, save } from './store.js';
 import { ymd, esc, fmtDur, niceTime, hmToMins } from './util.js';
 import { icon } from './icons.js';
 import { bus } from './ui.js';
 import { isOpen } from './planner.js';
-import { planFor } from './today.js';
+import { planFor, addFromText } from './today.js';
 import { getAds, pendingCount, KPI } from './ads.js';
 import { accountWindow } from './advice.js';
 import { money, num } from './util.js';
 import { HABITS } from './sample.js';
 import { ticked } from './habits.js';
-import { doExport, doReset, doWipe, setSound, setDeep } from './settings.js';
+import { doExport, doReset, doWipe, setSound, setDeep, applyTheme, actions as settingsActions } from './settings.js';
+import { LIVE } from './integrations.js';
 import { fixedFor, doneOn } from './mind.js';
 import * as timer from './timer.js';
 
 const today = () => ymd();
 const DAYS = [['sun', 0], ['mon', 1], ['tue', 2], ['wed', 3], ['thu', 4], ['fri', 5], ['sat', 6]];
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-export const LABEL = 'Basic answers for now. Claude switches on with your login.';
-export const SUGGEST = ['What should I do today?', 'How did my ads do this week?', 'What does ROAS mean?', 'Turn sounds on', 'Change my deep thinking days', 'Download a backup'];
+export const LABEL = LIVE ? 'Ask how to do anything in Command. Your data stays in your account.' : 'Basic answers for now. Claude switches on with your login.';
+// "How do I..." puts the words in the box for him to finish; the others send straight away.
+export const STARTER = 'How do I...';
+export const SUGGEST = LIVE
+  ? [STARTER, "Why isn't my task showing on my other device?", 'How do I plan tomorrow?', 'What should I do today?']
+  : ['What should I do today?', 'How did my ads do this week?', 'What does ROAS mean?', 'Turn sounds on', 'Change my deep thinking days', 'Download a backup'];
 
 let log = [];
 let awaitingDays = false;
 let pending = {}; // button id -> function
 let n = 0;
+let matched = true; // false when the device answers could not handle the question
 
 const btn = (label, fn, kind = 'ghost') => { const id = `a${++n}`; pending[id] = fn; return { id, label, kind }; };
-const say = (text, buttons = []) => { log.push({ who: 'cmd', text, buttons }); };
+const say = (text, buttons = [], extra = {}) => { log.push({ who: 'cmd', text, buttons, ...extra }); };
 const goTo = (hash) => () => { location.hash = hash; close(); };
 
 const listJoin = (a) => (a.length < 2 ? a.join('') : `${a.slice(0, -1).join(', ')} and ${a[a.length - 1]}`);
@@ -39,6 +49,12 @@ function answer(raw) {
   const has = (re) => re.test(q);
   const wasAwaiting = awaitingDays;
   awaitingDays = false;
+  matched = true;
+
+  // Live, before Meta is connected: there are no ad numbers to talk about.
+  if (getAds().data.empty && has(/\b(ads?|meta|roas|campaigns?|ad budget|ad spend)\b/) && !has(/^(how do i|where)\b/)) {
+    return say('Meta is not connected yet, so there are no ad numbers to look at. Jack will switch it on, then you connect it in Settings by clicking Allow.');
+  }
 
   // Risky money moves: advise against, offer a small safe step, and leave the call with him.
   if (has(/\b(double|triple|boost|increase|raise|extra|more|pump|throw|put|add|bump|up|max|maximise|maximize)\b/) && has(/\b(ads?|budget|spend|spending|meta|campaigns?)\b|£/) && !has(/^(how|what does|whats)\b/)) {
@@ -100,7 +116,10 @@ function answer(raw) {
     return null;
   }
   if (has(/^(hi|hello|hey|morning|evening|afternoon)\b/)) return say(`Morning, ${state.profile.name || 'John'}. Ask me one of these, or tap one below.`);
-  return say('I can only do a few simple things for now: your day, your ads this week, what an ads number means, sounds on or off, your deep thinking days, a backup, resetting the sample or starting empty. Anything else needs Claude, which switches on with your login.');
+  matched = false;
+  return say(LIVE
+    ? 'I can only do a few simple things until Ask Command is switched on: your day, sounds on or off, your deep thinking days and a backup. For everything else, add your Anthropic key in Settings, under Ask Command.'
+    : 'I can only do a few simple things for now: your day, your ads this week, what an ads number means, sounds on or off, your deep thinking days, a backup, resetting the sample or starting empty. Anything else needs Claude, which switches on with your login.');
 }
 
 function riskyAnswer(q) {
@@ -156,12 +175,18 @@ function paint() {
   const list = el.querySelector('.ask-log');
   list.innerHTML = bubbles();
   list.scrollTop = list.scrollHeight;
-  el.querySelector('.ask-chips').innerHTML = SUGGEST.map((s) => `<button class="chip" data-ask-q="${esc(s)}">${esc(s)}</button>`).join('');
+  el.querySelector('.ask-chips').innerHTML = SUGGEST.map((s) => (s === STARTER
+    ? `<button class="chip" data-ask-start>${esc(s)}</button>`
+    : `<button class="chip" data-ask-q="${esc(s)}">${esc(s)}</button>`)).join('');
 }
 
 export function open() {
   if (document.querySelector('[data-ask-panel]')) return;
-  if (!log.length) say(`Hello, ${state.profile.name || 'John'}. I can help with a few things in the app. Tap one below or type.`);
+  if (!log.length) {
+    say(LIVE
+      ? `Hello, ${state.profile.name || 'John'}. Ask me how to do anything in Command, or why something isn't showing. Start with "How do I..." or tap an example below.`
+      : `Hello, ${state.profile.name || 'John'}. I can help with a few things in the app. Tap one below or type.`, [], { local: true });
+  }
   const el = document.createElement('div');
   el.className = 'ask-panel';
   el.dataset.askPanel = '';
@@ -174,7 +199,7 @@ export function open() {
     <div class="ask-log" aria-live="polite"></div>
     <div class="ask-chips"></div>
     <form class="ask-form" data-ask-form>
-      <input name="q" autocomplete="off" maxlength="200" placeholder="Type a question" aria-label="Your question">
+      <input name="q" autocomplete="off" maxlength="${LIVE ? 1000 : 200}" placeholder="${LIVE ? 'How do I...' : 'Type a question'}" aria-label="Your question">
       <button class="btn primary sm" type="submit" aria-label="Send">${icon('send', 16)}</button>
     </form>`;
   document.body.appendChild(el);
@@ -191,11 +216,86 @@ export function close() {
   document.body.classList.remove('ask-open');
 }
 
-export function ask(text) {
+// What each suggestion button does once John taps it (live mode). Returns a short confirmation,
+// or an error starting with "!".
+const LIVE_HANDLERS = {
+  backup: () => `Your backup is downloading as ${doExport()}.`,
+  set_sound: (v) => { setSound(v === 'on'); return v === 'on' ? 'Sounds are on.' : 'Sounds are off.'; },
+  set_theme: (v) => { state.settings.theme = v; save(); applyTheme(); bus.render(); return 'Done.'; },
+  set_tone: (v) => { state.settings.tone = v; save(); return v === 'drill' ? 'Drill sergeant it is.' : 'Firm tone from now on.'; },
+  set_deep_days: (v) => { const e = setDeep(v.split(',').map(Number)); return e ? `!${e}` : 'Deep thinking days changed.'; },
+  set_deep_time: (v) => { const e = setDeep(state.settings.deep.days, v); return e ? `!${e}` : `Deep thinking now starts at ${niceTime(hmToMins(v))}.`; },
+  add_task: (v) => { const added = addFromText(v, today()); bus.render(); return added ? `Added "${v}" to today.` : '!That did not work. Nothing was added.'; },
+  open: (v) => { location.hash = `#${v}`; close(); return 'Opened.'; },
+  turn_on_reminders: () => { settingsActions['notify-on'](); return 'Your phone or browser will ask to allow notifications. Tap Allow.'; },
+  set_ad_budget: (v) => { const [lo, hi] = v.split('-').map(Number); Object.assign(state.settings.ads, { budgetLow: lo, budgetHigh: hi }); save(); return `Monthly ad budget set to £${lo} to £${hi}. Nothing changes in Meta until you approve on the Ads page.`; },
+  set_target_roas: (v) => { state.settings.ads.targetRoas = Number(v); save(); return `Target ROAS set to ${v}.`; },
+};
+
+// The data summary sent with each question: his day, nearby days, ticks, money, settings and how
+// this device's sync stands. Never his deep thinking text.
+function liveSummary(live, summarise) {
+  const { data } = getAds();
+  let ads = null;
+  if (!data.empty) {
+    const pick = (a) => ({ spend: Math.round(a.spend), revenue: Math.round(a.revenue), roas: +a.roas.toFixed(2), purchases: a.purchases, cpa: a.cpa && +a.cpa.toFixed(2) });
+    ads = { last7: pick(accountWindow(data, today(), 7)), prev7: pick(accountWindow(data, today(), 7, 7)), waitingForApproval: pendingCount() };
+  }
+  const sync = {
+    status: live.sync.status(),
+    device: String(live.device() || '').split('-')[0] || 'unknown',
+    online: typeof navigator === 'undefined' ? true : navigator.onLine !== false,
+  };
+  return { ...summarise(state, { today: today(), habitIds: HABITS.map((h) => h.id), ads }), sync, screen: (location.hash || '#today').slice(1) };
+}
+
+// The device answers, used when Claude is not available yet (no key, or not switched on).
+function localOr(t, reply, buttons) {
+  const before = log.length;
+  try {
+    answer(t);
+  } catch {
+    matched = false;
+  }
+  if (matched) return;
+  log.length = before; // drop the device's "I can only do a few things" line
+  say(reply, buttons || [], { local: true });
+}
+
+export async function ask(text) {
   const t = String(text || '').trim();
   if (!t) return;
   log.push({ who: 'me', text: t });
-  answer(t);
+  if (!LIVE) { answer(t); paint(); return; }
+  const wait = { who: 'cmd', text: 'Thinking...', local: true, wait: true };
+  log.push(wait);
+  paint();
+  const drop = () => { const i = log.indexOf(wait); if (i >= 0) log.splice(i, 1); };
+  let mods;
+  try {
+    mods = await Promise.all([import('./live.js'), import('./ask-bridge.js')]);
+  } catch {
+    drop();
+    localOr(t, 'Ask Command could not start just now. Close the app, open it again and try again.');
+    paint();
+    return;
+  }
+  const [{ live, summarise }, { liveButtons, historyFrom }] = mods;
+  try {
+    if (!live) throw Object.assign(new Error('not live'), { kind: 'server' });
+    const history = historyFrom(log.slice(0, log.indexOf(wait) - 1));
+    const r = await live.ask(t, history, liveSummary(live, summarise));
+    drop();
+    const sayAndPaint = (x, b) => { say(x, b); paint(); };
+    const buttons = liveButtons(r.suggestions, { btn, say: sayAndPaint, handlers: LIVE_HANDLERS });
+    if (r.needs_key) localOr(t, r.reply, buttons);
+    else log.push({ who: 'cmd', text: r.reply || 'Sorry John, I did not get an answer back. Try again.', pushedBack: !!r.pushed_back, buttons, local: !!r.error });
+  } catch (e) {
+    drop();
+    if (e && e.kind === 'offline') say('You are offline. Ask Command needs the internet. Everything else in the app still works.', [], { local: true });
+    else if (e && e.status === 404) localOr(t, 'Ask Command is not switched on yet. Jack is setting it up.');
+    else say('Ask Command could not answer just now. Try again in a minute.', [], { local: true });
+  }
   paint();
 }
 
@@ -213,6 +313,11 @@ document.addEventListener('click', (e) => {
   }
   const chip = e.target.closest('[data-ask-q]');
   if (chip) { ask(chip.dataset.askQ); return; }
+  if (e.target.closest('[data-ask-start]')) {
+    const input = document.querySelector('[data-ask-form] input');
+    if (input) { input.value = 'How do I '; input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
+    return;
+  }
   if (e.target.closest('[data-ask-close]')) close();
   if (e.target.closest('[data-ask-open]')) { e.preventDefault(); open(); }
 });

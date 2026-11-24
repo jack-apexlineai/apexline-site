@@ -1,5 +1,5 @@
 // Service worker: works offline, shows notifications, and (phase 2) receives push.
-const CACHE = 'command-v6';
+const CACHE = 'command-v7';
 const SHELL = [
   './', 'index.html', 'config.js', 'manifest.webmanifest', 'css/app.css',
   'js/app.js', 'js/live.js', 'js/merge.js', 'js/login.js', 'js/live-boot.js', 'js/ask-bridge.js', 'js/util.js', 'js/store.js', 'js/sample.js', 'js/planner.js', 'js/sergeant.js', 'js/advice.js',
