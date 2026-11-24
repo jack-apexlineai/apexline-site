@@ -293,6 +293,77 @@ button.chip{cursor:pointer}
 #boot.still .car .glint{opacity:0}
 @media (prefers-reduced-motion: reduce){#boot *{animation:none!important;transition:none!important}.car .rim{stroke-dashoffset:0}.chip.run .stdot{animation:none}}
 
+/* calendar and clients pages (24 Nov) */
+.pc.cal-meet,.arow.cal-meet{background:rgba(167,139,250,.22);color:#DDD6FE;border-color:rgba(167,139,250,.55)}.arow.cal-meet{--c:#A78BFA}
+.pc.cal-task{background:rgba(92,200,245,.1);color:#BAE6FD;border-color:rgba(92,200,245,.3)}.arow.cal-task{--c:var(--accent)}
+.pc.cal-late,.arow.cal-late{background:rgba(248,113,113,.13);color:#FCA5A5;border-color:rgba(248,113,113,.4)}.arow.cal-late{--c:var(--bad)}
+.pc.cal-fu{background:rgba(251,191,36,.1);color:#FDE68A;border-color:rgba(251,191,36,.4)}.arow.cal-fu{--c:var(--warn)}
+.pc.cal-live,.arow.cal-live{background:rgba(52,211,153,.18);color:#A7F3D0;border-color:rgba(52,211,153,.5)}.arow.cal-live{--c:var(--good)}
+.pc.cal-money{background:transparent;color:var(--good);border-color:var(--good)}.arow.cal-money{--c:var(--good)}
+.pc.cal-post{opacity:.6;border-style:dashed;border-color:var(--line);color:var(--muted)}
+.pc.cal-done{opacity:.45;text-decoration:line-through;color:var(--muted)}
+.pc .ctm{font:600 11px var(--mono);opacity:.85}
+.pkey i.kk{border:1px solid}
+.pkey i.kk.cal-meet{background:rgba(167,139,250,.4);border-color:#A78BFA}.pkey i.kk.cal-task{background:rgba(92,200,245,.2);border-color:var(--accent)}.pkey i.kk.cal-fu{background:rgba(251,191,36,.2);border-color:var(--warn)}.pkey i.kk.cal-live{background:rgba(52,211,153,.35);border-color:var(--good)}.pkey i.kk.cal-money{border-color:var(--good)}.pkey i.kk.cal-late{background:rgba(248,113,113,.3);border-color:var(--bad)}
+.cal-li,.tcal{cursor:pointer}
+.clgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:14px;margin-bottom:18px}
+.clc{border-left:3px solid var(--st);margin:0}
+.clh{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.clh .cln{font-size:16px}
+.clnx{color:var(--text);opacity:.9;overflow-wrap:anywhere}
+/* payments calendar: month grid on a laptop, agenda list on a phone */
+.pnav{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.pnav button{padding:8px 14px}
+.pgrid{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
+.pdow{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-bottom:1px solid var(--line);background:rgba(255,255,255,.02)}
+.pdow span{padding:9px 10px;font:600 11px var(--mono);letter-spacing:1.5px;color:var(--muted);text-transform:uppercase}
+.pwk{position:relative;border-bottom:1px solid var(--line)}
+.pwk:last-child{border-bottom:0}
+.pdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.pday{position:relative;min-width:0;min-height:112px;padding:calc(32px + var(--nb,0) * 27px) 6px 8px;border-right:1px solid var(--line)}
+.pday:last-child{border-right:0}
+.pday .dn{position:absolute;top:7px;left:9px;font:600 13px var(--mono);color:#C3CCDA;line-height:20px}
+.pday.wkend{background:rgba(255,255,255,.015)}
+.pday.other{background:rgba(0,0,0,.22)}
+.pday.other .dn{color:#45526A}
+.pday.today{background:rgba(92,200,245,.06);box-shadow:inset 0 0 0 1px rgba(92,200,245,.35)}
+.pday.today .dn{background:var(--accent);color:#06121F;border-radius:99px;padding:0 7px;left:6px}
+.pbands{position:absolute;left:0;right:0;top:31px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-auto-rows:23px;row-gap:4px;pointer-events:none}
+.pband{pointer-events:auto;margin:0 4px;border-radius:8px;background:linear-gradient(90deg,rgba(52,211,153,.07),rgba(52,211,153,.2) 50%,rgba(52,211,153,.07));border:1px dashed rgba(52,211,153,.6);color:#6EE7B7;font-size:12px;font-weight:600;padding:0 9px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;line-height:21px}
+.pband.late{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.55);color:var(--warn)}
+.pband.cont{border-top-left-radius:0;border-bottom-left-radius:0;border-left-style:none;margin-left:0}
+.pband.more{border-top-right-radius:0;border-bottom-right-radius:0;border-right-style:none;margin-right:0}
+.pc{display:block;width:100%;text-align:left;margin-top:4px;padding:3px 7px;border-radius:7px;font-size:12px;font-weight:600;line-height:1.35;overflow-wrap:anywhere;cursor:pointer;border:1px solid transparent;background:none;color:var(--text)}
+.pc.out{background:rgba(248,113,113,.13);color:#FCA5A5;border-color:rgba(248,113,113,.32)}
+.pc.in{background:rgba(52,211,153,.2);color:#A7F3D0;border-color:rgba(52,211,153,.5)}
+.pc.mrr{background:transparent;color:var(--good);border-color:var(--good)}
+.pc.mrr.late{color:var(--warn);border-color:var(--warn)}
+.pc.nc{opacity:.55}
+.pc:hover,.pband:hover,.arow:hover{filter:brightness(1.18)}
+.pc .ck2,.arow .ck2,.pband .ck2{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--warn);margin:0 0 1px 5px;vertical-align:middle}
+.pkey{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:-4px 0 14px}
+.pkey i{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-2px;margin-right:5px}
+.pagenda{display:none}
+.ad{margin-bottom:14px}
+.ad h3{display:flex;align-items:center;gap:8px;font:600 12px var(--mono);letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin:0 0 7px}
+.arow{--c:var(--muted);display:flex;gap:10px;align-items:center;width:100%;text-align:left;padding:11px 12px;border-radius:12px;border:1px solid var(--line);border-left:3px solid var(--c);background:var(--card2);color:var(--text);font-weight:500;margin-bottom:6px;cursor:pointer}
+.arow .grow{flex:1;min-width:0;overflow-wrap:anywhere}
+.arow .grow small{display:block;color:var(--muted);font-size:12px;font-weight:500;margin-top:1px}
+.arow b{white-space:nowrap;font-variant-numeric:tabular-nums}
+.arow.out{--c:var(--bad)}.arow.out b{color:#FCA5A5}
+.arow.in{--c:var(--good);background:rgba(52,211,153,.1)}.arow.in b{color:var(--good)}
+.arow.mrr{--c:var(--good);border-style:dashed;border-left-style:solid}.arow.mrr b{color:var(--good)}
+.arow.exp{--c:var(--good);background:rgba(52,211,153,.06);border-style:dashed;border-left-style:solid}
+.arow.late{--c:var(--warn)}
+.prow{cursor:pointer}
+.prow:hover b.nm{color:var(--accent)}
+.ferr{color:var(--bad);font-size:13px;min-height:18px;margin:8px 0 0}
+.ksub-if{display:block;color:var(--text);font-weight:600}
+#td .td-meta label.chk{flex-direction:row;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-family:inherit;font-size:14px;color:var(--text)}
+#td .td-meta label.chk input{width:18px;height:18px;padding:0;accent-color:var(--accent)}
+#td .td-meta .full{grid-column:1 / -1}
+@media (max-width:700px){.pgrid,.pkey{display:none}.pagenda{display:block}}
+
 /* pipeline board (Notion): drag cards between status columns on a laptop, tap a card for Move to on a phone */
 .pstate{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:-8px 0 14px}
 .pstate.warn{color:var(--warn)}
@@ -485,11 +556,14 @@ body.pdragging,body.pdragging *{cursor:grabbing!important}
   <aside class="side" id="side">
     <div class="brand"><svg><use href="#jsmark"/></svg><div><b>HQ</b><small id="hdrSub"></small></div></div>
     <a class="nav" href="#today" data-nav="today"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Today<span class="badge" id="navToday"></span></a>
+    <a class="nav" href="#calendar" data-nav="calendar"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h3M13 14h3M8 17h3"/></svg>Calendar</a>
     <a class="nav" href="#tasks" data-nav="tasks"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>Tasks<span class="badge" id="navTasks"></span></a>
     <a class="nav" href="#pipeline" data-nav="pipeline"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="9.5" y="4" width="5" height="11" rx="1.5"/><rect x="16" y="4" width="5" height="7" rx="1.5"/></svg>Pipeline<span class="badge" id="navPipe"></span></a>
+    <a class="nav" href="#clients" data-nav="clients"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 12h18"/></svg>Clients</a>
     <a class="nav" href="#crm" data-nav="crm"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.8c1.6.8 2.7 2.5 3 5.2"/></svg>CRM<span class="badge" id="navCrm"></span></a>
     <a class="nav" href="#calls" data-nav="calls"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z"/></svg>Calls</a>
     <a class="nav" href="#money" data-nav="money"><svg viewBox="0 0 24 24"><path d="M16 6.5A4 4 0 0 0 9 9v3H7m2 0h5M9 12v3c0 1.5-1 2.5-2 3h11"/></svg>Money</a>
+    <a class="nav" href="#payments" data-nav="payments"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Payments<span class="badge" id="navPay"></span></a>
     <a class="nav" href="#outreach" data-nav="outreach"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Outreach</a>
     <div class="sep"></div>
     <a class="nav" href="#notes" data-nav="notes"><svg viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M9 12h6M9 16h6"/></svg>Notes</a>
@@ -539,9 +613,17 @@ function show(id){ ["login","lock","boot","app"].forEach(x => $("#" + x).classLi
 
 /* ---------- state ---------- */
 let ME = null, appStarted = false, hiddenAt = 0;
-const S = { tasks: [], notes: [], touches: [], calls: [], assets: [], li: [], deals: [], invoices: [], cash: [], debts: [], plan: [], outreach: [], settings: { target: 25000, deadline: "2026-12-31", title: "Road to £25k" } };
+const S = { tasks: [], notes: [], touches: [], calls: [], assets: [], li: [], deals: [], invoices: [], cash: [], debts: [], plan: [], outreach: [], costs: [], expected: [], payMissing: false, settings: { target: 25000, deadline: "2026-12-31", title: "Road to £25k" } };
+/* payments tables (hq_costs, hq_expected) load softly: until migration hq_v34_payments is applied the rest of HQ still works */
+async function qSoft(p, flag){ const { data, error } = await p; if (error) { S[flag] = true; return []; } return data || []; }
 async function loadAll(){
   const since = addDays(today(), -13);
+  S.payMissing = false;
+  const [costs, expected] = await Promise.all([
+    qSoft(sb.from("hq_costs").select("*").order("created_at"), "payMissing"),
+    qSoft(sb.from("hq_expected").select("*").order("expected_on"), "payMissing"),
+  ]);
+  Object.assign(S, { costs, expected });
   const [tasks, notes, deals, invoices, cash, debts, plan, outreach, st, touches, calls, assets, li] = await Promise.all([
     q(sb.from("hq_tasks").select("*").order("sort")),
     q(sb.from("hq_task_notes").select("*").order("created_at")),
@@ -727,6 +809,8 @@ document.addEventListener("click", async e => {
   if (ck) { e.stopPropagation(); const t = S.tasks.find(x => x.id === ck.closest(".tc").dataset.id); if (t) await toggleDone(t); return; }
   const tc = e.target.closest(".tc");
   if (tc) { openCard("task", tc.dataset.id, tc, true); return; }
+  const pc = e.target.closest("[data-pchip]");
+  if (pc && !e.target.closest("#td")) { openCard("pay", pc.dataset.pchip, pc, true); return; }
   const dd = e.target.closest("[data-deal]");
   if (dd && !e.target.closest("#td")) { if (e.target.closest("a")) return; openCard("deal", dd.dataset.deal, dd.matches(".dc, .dcrow") ? dd : null, true); return; }
   if (!e.target.isConnected) return; // the card redrew itself under this click (e.g. Edit), so it was inside
@@ -753,7 +837,7 @@ document.addEventListener("mouseout", e => {
 $("#td").addEventListener("focusin", () => { TD.pinned = true; });
 $("#tdBack").onclick = () => closeTask();
 function openCard(kind, id, anchor, pin){
-  if (!(kind === "deal" ? S.deals : S.tasks).some(x => x.id === id)) return;
+  if (kind === "pay" ? !payRef(id) : !(kind === "deal" ? S.deals : S.tasks).some(x => x.id === id)) return;
   const same = TD.id === id && TD.kind === kind;
   if (!same) TD.editDesc = false;
   TD.pinned = (same && TD.pinned) || !!pin; TD.id = id; TD.kind = kind;
@@ -773,7 +857,7 @@ function openCard(kind, id, anchor, pin){
   } else if (!sheet) { td.style.left = Math.max(12, innerWidth - Math.min(390, innerWidth - 24) - 24) + "px"; td.style.top = "24px"; }
 }
 const openTask = (id, anchor, pin) => openCard("task", id, anchor, pin);
-function drawCard(){ return TD.kind === "deal" ? drawDeal() : drawTask(); }
+function drawCard(){ return TD.kind === "deal" ? drawDeal() : TD.kind === "pay" ? drawPay() : drawTask(); }
 function closeTask(){
   TD.id = null; TD.pinned = false; TD.editDesc = false; clearTimeout(TD.hoverT); clearTimeout(TD.leaveT);
   const td = $("#td"); if (!td) return; td.classList.add("hide"); td.innerHTML = ""; $("#tdBack").classList.add("hide");
@@ -969,7 +1053,7 @@ $("#boot").addEventListener("click", () => BOOT.done && BOOT.done());
 document.addEventListener("keydown", () => { if (!$("#boot").classList.contains("hide") && BOOT.done) BOOT.done(); });
 
 /* ---------- app shell ---------- */
-const PAGES = { today: renderToday, tasks: renderTasks, pipeline: renderPipeline, crm: renderCRM, calls: renderCalls, money: renderMoney, outreach: renderOutreach, notes: renderNotes, training: renderHealth };
+const PAGES = { today: renderToday, calendar: renderCalendar, tasks: renderTasks, pipeline: renderPipeline, clients: renderClients, crm: renderCRM, calls: renderCalls, money: renderMoney, payments: renderPayments, outreach: renderOutreach, notes: renderNotes, training: renderHealth };
 const curTab = () => { let t = (location.hash || "#today").slice(1); return PAGES[t] ? t : "today"; };
 function route(){
   const tab = curTab();
@@ -977,7 +1061,7 @@ function route(){
   document.body.classList.remove("menu");
   PAGES[tab]($("#page"));
 }
-function rerender(){ const tab = curTab(); if (["today","tasks","money","crm","calls"].includes(tab)) { const y = scrollY; PAGES[tab]($("#page")); scrollTo(0, y); } navBadges(); }
+function rerender(){ const tab = curTab(); if (["today","calendar","clients","tasks","money","payments","crm","calls"].includes(tab)) { const y = scrollY; PAGES[tab]($("#page")); scrollTo(0, y); } navBadges(); }
 function startApp(){
   show("app");
   if (!appStarted) {
@@ -995,7 +1079,7 @@ function header(){
   const left = Math.max(0, Math.ceil((new Date(dl + "T23:59:59") - new Date()) / 864e5));
   $("#hdrSub").textContent = left + " DAYS TO " + fmtDay(dl).toUpperCase();
 }
-function navBadges(){ const c = todayCounts(); $("#navCrm").textContent = followUps().due.length || ""; $("#navPipe").textContent = PL.deals.length ? PL.deals.filter(x => pipeOverdue(x)).length || "" : ""; $("#navToday").textContent = c.open || ""; $("#navTasks").textContent = S.tasks.filter(t => t.status !== "done" && !isPost(t)).length || ""; }
+function navBadges(){ const c = todayCounts(); $("#navCrm").textContent = followUps().due.length || ""; $("#navPipe").textContent = PL.deals.length ? PL.deals.filter(x => pipeOverdue(x)).length || "" : ""; $("#navToday").textContent = c.open || ""; $("#navTasks").textContent = S.tasks.filter(t => t.status !== "done" && !isPost(t)).length || ""; $("#navPay").textContent = payWeek().out.length || ""; }
 async function refresh(){
   const active = document.activeElement;
   if (TD.pinned || (active && /INPUT|TEXTAREA|SELECT/.test(active.tagName) && active.value)) return; // never wipe what's being typed
@@ -1199,6 +1283,7 @@ function renderToday(el){
         <div id="tSoon">${soon.length ? soon.map(t => taskCard(t, { project: true, compact: true })).join("") : '<div class="empty">Nothing booked in the next 7 days.</div>'}</div></div>
     </div>
     <div class="col">
+      ${payWeekCard()}
       <div class="card"><div class="card-h"><h2>Today's progress</h2></div><div class="ringcard">${ring(c.total ? 100 * c.done / c.total : 0, c.done + "/" + c.total, "tasks done")}<div class="rl"><ul class="lines">
         <li><span class="grow k">Running</span><b>${list.filter(t => t.status === "running").length}</b></li>
         <li><span class="grow k">Waiting</span><b>${list.filter(t => t.status === "waiting").length}</b></li>
@@ -1221,6 +1306,114 @@ function renderToday(el){
   $("#qAdd").onclick = add;
   $("#qTitle").addEventListener("keydown", e => { if (e.key === "Enter") add(); });
   $("#hAdd").onclick = () => $("#qTitle").focus();
+}
+
+/* ---------- CALENDAR (Jack, 24 Nov): what's on, what's due by when, what still needs a date ----------
+   Built from data HQ already holds: tasks with a due date (calls and demos stand out), deal follow-ups,
+   go-live dates and invoice due dates. Month grid on a laptop, agenda list on a phone (same CSS as Payments). */
+const CALV = { ym: null };
+const isMeet = t => { const x = t.title || ""; if (/run-through|prep|tell claude|whatsapp|chase|check|send|questions|diary|open, demo window/i.test(x)) return false; return /\bdemo\b|walkthrough|meeting|sit-down/i.test(x) || (/\bcall\b/i.test(x) && !!t.due_time); };
+function calItems(s = S, from, to, d = today()){
+  const out = [], inR = x => x && x >= from && x <= to;
+  s.tasks.filter(t => t.due && inR(t.due) && !isPost(t)).forEach(t => out.push({ type: t.status === "done" ? "done" : isMeet(t) ? "meet" : (t.due < d ? "late" : "task"), date: t.due, time: t.due_time ? String(t.due_time).slice(0, 5) : "", label: t.title, attr: `data-id="${t.id}"`, cls: "tcal", proj: t.project }));
+  s.tasks.filter(t => t.due && inR(t.due) && isPost(t) && t.status !== "done").forEach(t => out.push({ type: "post", date: t.due, time: t.due_time ? String(t.due_time).slice(0, 5) : "", label: t.title.replace(/^LinkedIn post: /, "Post: "), attr: `data-id="${t.id}"`, cls: "tcal" }));
+  s.deals.filter(x => x.next_date && inR(x.next_date) && !["Lost", "Uncontacted"].includes(dealStatus(x))).forEach(x => out.push({ type: "fu", date: x.next_date, time: x.next_time ? String(x.next_time).slice(0, 5) : "", label: "Follow up " + x.company, attr: `data-deal="${x.id}"` }));
+  s.deals.filter(x => x.live_on && inR(x.live_on) && x.live_on >= d).forEach(x => out.push({ type: "live", date: x.live_on, time: "", label: "Go-live " + x.company, attr: `data-deal="${x.id}"` }));
+  s.invoices.filter(i => i.due_on && inR(i.due_on) && i.status !== "paid").forEach(i => out.push({ type: "money", date: i.due_on, time: "", label: `${i.number} ${gbp(i.amount)} due, ${i.client}`, attr: "" }));
+  const ord = { meet: 0, late: 1, task: 2, fu: 3, live: 4, money: 5, post: 6, done: 7 };
+  return out.sort((a, b) => a.date.localeCompare(b.date) || (a.time || "99").localeCompare(b.time || "99") || ord[a.type] - ord[b.type]);
+}
+function calDeadlines(s = S, d = today()){
+  const end = addDays(d, 21);
+  return calItems(s, addDays(d, -30), end, d).filter(i => i.type !== "done" && i.type !== "post" && (i.date >= d || i.type === "late" || i.type === "fu"));
+}
+function calUndated(s = S){
+  const t = s.tasks.filter(x => !x.due && x.status !== "done" && !isPost(x));
+  const dl = s.deals.filter(x => !x.next_date && ["Hot", "Call booked", "Proposal Sent", "Won"].includes(dealStatus(x)));
+  return { tasks: t, deals: dl };
+}
+const CTXT = { meet: "Call or demo", late: "Overdue", task: "To do", fu: "Follow-up", live: "Go-live", money: "Money due", post: "LinkedIn post", done: "Done" };
+function renderCalendar(el){
+  const d = today(); if (!CALV.ym) CALV.ym = d.slice(0, 7);
+  const ym = CALV.ym, first = ym + "-01", last = addDays(ymAdd(ym, 1) + "-01", -1);
+  const gs = weekStart(first), ge = addDays(weekStart(last), 6);
+  const items = calItems(S, gs, ge, d);
+  const chip = i => `<button class="pc cal-${i.type}${i.cls ? " " + i.cls : ""}" ${i.attr} title="${esc((i.time ? i.time + " UK, " : "") + i.label)}">${i.time ? `<span class="ctm">${esc(i.time)}</span> ` : ""}${esc(i.label)}</button>`;
+  const weeks = []; for (let ws = gs; ws <= ge; ws = addDays(ws, 7)) weeks.push(ws);
+  const grid = weeks.map(ws => `<div class="pwk"><div class="pdays">${[0,1,2,3,4,5,6].map(n => { const day = addDays(ws, n), inM = day.slice(0, 7) === ym;
+    return `<div class="pday${inM ? "" : " other"}${day === d ? " today" : ""}${n >= 5 ? " wkend" : ""}" data-cday="${day}"><span class="dn">${+day.slice(8)}</span>${items.filter(i => i.date === day).map(chip).join("")}</div>`; }).join("")}</div></div>`).join("");
+  const mItems = items.filter(i => i.date >= first && i.date <= last);
+  const agDays = [...new Set(mItems.map(i => i.date))].sort();
+  const agenda = agDays.map(day => `<div class="ad"><h3>${fmtDay(day)}${day === d ? ' <span class="chip hud">Today</span>' : ""}</h3>${mItems.filter(i => i.date === day).map(i =>
+    `<button class="arow cal-${i.type}${i.cls ? " " + i.cls : ""}" ${i.attr}><span class="grow">${esc(i.label)}<small>${esc(CTXT[i.type])}${i.proj ? ", " + esc(i.proj) : ""}</small></span><b>${i.time ? esc(i.time) + " UK" : ""}</b></button>`).join("")}</div>`).join("") || '<div class="empty">Nothing in the diary this month.</div>';
+  const dls = calDeadlines(S, d), und = calUndated(S);
+  const wkEnd = addDays(d, 6), wk = calItems(S, d, wkEnd, d).filter(i => i.type !== "done" && i.type !== "post");
+  const dlRow = i => { const n = daysBetween(d, i.date); const when = i.date < d ? `<span class="chip bad">${-n}d late</span>` : n === 0 ? '<span class="chip hud">Today</span>' : n === 1 ? '<span class="chip">Tomorrow</span>' : `<span class="chip">${fmtDay(i.date)}</span>`;
+    return `<li class="dcrow cal-li" ${i.attr}><span class="grow"><b>${esc(i.label)}</b><span class="muted small" style="display:block">${esc(CTXT[i.type])}${i.time ? ", " + esc(i.time) + " UK" : ""}</span></span>${when}</li>`; };
+  el.innerHTML = phead("Calendar", esc(monthName(ym)), `<div class="pnav"><button class="ghost" id="cPrev" aria-label="Previous month">‹ Prev</button><button class="ghost" id="cNow">This month</button><button class="ghost" id="cNext" aria-label="Next month">Next ›</button></div>`) +
+  `<div class="kpis" id="cStats">
+    ${kpi(wk.filter(i => i.type === "meet").length, "Calls and demos, 7 days", "booked in the diary")}
+    ${kpi(wk.filter(i => i.type === "fu").length, "Follow-ups, 7 days", "from the CRM")}
+    ${kpi(dls.filter(i => i.date < d).length, "Overdue", "tick them or give them a new date", { warn: dls.some(i => i.date < d) })}
+    ${kpi(und.tasks.length + und.deals.length, "Needs a date", "not planned yet", { warn: !!(und.tasks.length + und.deals.length) })}
+  </div>
+  <div class="pkey"><span><i class="kk cal-meet"></i>Call or demo</span><span><i class="kk cal-task"></i>To do</span><span><i class="kk cal-fu"></i>Follow-up</span><span><i class="kk cal-live"></i>Go-live</span><span><i class="kk cal-money"></i>Money due</span><span><i class="kk cal-late"></i>Overdue</span><span class="muted">Times are UK</span></div>
+  <div class="pgrid" id="cGrid"><div class="pdow">${["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(x => `<span>${x}</span>`).join("")}</div>${grid}</div>
+  <div class="card pagenda" id="cAgenda" style="margin-bottom:16px"><div class="card-h"><h2>${esc(monthName(ym))}</h2><span class="cnt">${mItems.length} items</span></div>${agenda}</div>
+  <div class="dash">
+    <div class="col"><div class="card"><div class="card-h"><h2>Due by when, next 3 weeks</h2><span class="cnt">${dls.length}</span></div><ul class="lines" id="cDead">${dls.length ? dls.map(dlRow).join("") : '<li class="muted small">Nothing due.</li>'}</ul></div></div>
+    <div class="col"><div class="card"><div class="card-h"><h2>Should be planned</h2><span class="cnt">no date yet</span></div><ul class="lines" id="cUnd">${und.deals.map(x => `<li class="dcrow" data-deal="${x.id}"><span class="grow"><b>${esc(x.company)}</b><span class="muted small" style="display:block">${esc(dealStatus(x))} deal with no follow-up date</span></span><span class="chip warn">Set a date</span></li>`).join("")}${und.tasks.map(t => `<li class="tcal" data-id="${t.id}"><span class="grow"><b>${esc(t.title)}</b><span class="muted small" style="display:block">${esc(t.project)}, task with no due date</span></span><span class="chip warn">Set a date</span></li>`).join("") || '<li class="muted small">Everything has a date.</li>'}</ul></div></div>
+  </div>`;
+  $("#cPrev").onclick = () => { CALV.ym = ymAdd(CALV.ym, -1); renderCalendar(el); };
+  $("#cNext").onclick = () => { CALV.ym = ymAdd(CALV.ym, 1); renderCalendar(el); };
+  $("#cNow").onclick = () => { CALV.ym = today().slice(0, 7); renderCalendar(el); };
+}
+/* calendar task chips open the normal task card */
+document.addEventListener("click", e => { const c = e.target.closest(".tcal[data-id]"); if (c && !e.target.closest("#td")) { e.stopPropagation(); openCard("task", c.dataset.id, c, true); } }, true);
+
+/* ---------- CLIENTS (Jack, 24 Nov): one card per client, build or live lead; leads that don't buy are archived, never deleted ----------
+   Each client's full brief lives in apexlineai.com/Clients/<Name - Company>/CLAUDE.md on the Mac. */
+const CLV = { show: "active" };
+function clientGroup(x){
+  const st = dealStatus(x);
+  if (st === "Won" || st === "Renewal" || SIGNED_STAGES.includes(x.stage)) return "won";
+  if (st === "Lost") return "arch";
+  if (["Hot", "Call booked", "Proposal Sent"].includes(st)) return "hot";
+  if (st === "Warm" && (Number(x.value) > 0 || Number(x.monthly) > 0)) return "warm";
+  return null;
+}
+function clientTasks(x){
+  const keys = [x.contact, x.company].filter(Boolean).map(k => String(k).split(/[\s(,]/)[0].toLowerCase()).filter(k => k.length > 2);
+  return S.tasks.filter(t => t.status !== "done" && !isPost(t) && keys.some(k => (t.title || "").toLowerCase().includes(k))).sort((a, b) => String(a.due || "9999").localeCompare(String(b.due || "9999")) || String(a.due_time || "99").localeCompare(String(b.due_time || "99")));
+}
+function clientCard(x){
+  const st = dealStatus(x), ts = clientTasks(x).slice(0, 3), nx = x.next_step || "";
+  return `<div class="card clc" style="--st:${STC[st] || "#6B7A93"}">
+    <div class="clh" data-deal="${x.id}"><div class="grow"><b class="cln">${esc(x.company)}</b><div class="muted small">${esc([x.contact, x.role].filter(Boolean).join(", ")) || "&nbsp;"}</div></div><span class="chip" style="border-color:var(--st);color:var(--st)">${esc(x.stage && SIGNED_STAGES.includes(x.stage) ? x.stage : st)}</span></div>
+    <div class="meta" style="margin:10px 0">${Number(x.value) ? `<span class="chip good">${gbp(x.value)} build</span>` : '<span class="chip">Value TBC</span>'}${Number(x.monthly) ? `<span class="chip good">${gbp(x.monthly)}/mo</span>` : ""}${x.product ? `<span class="chip">${esc(x.product)}</span>` : ""}${x.live_on ? `<span class="chip violet">Live ${fmtDay(x.live_on)}</span>` : ""}${x.next_date ? fuChip(x) : '<span class="chip warn">No follow-up date</span>'}</div>
+    <div class="small clnx">${esc(nx.slice(0, 260))}${nx.length > 260 ? "…" : ""}</div>
+    ${ts.length ? `<div class="eyebrow" style="margin:12px 0 4px">Next for them</div>${ts.map(t => taskCard(t, { compact: true })).join("")}` : ""}
+    <div class="muted small" style="margin-top:10px">${sinceTxt(x)}${x.notion_url ? ` · <a href="${esc(x.notion_url)}" target="_blank" rel="noopener">Notion</a>` : ""}</div>
+  </div>`;
+}
+function renderClients(el){
+  const all = S.deals.map(x => ({ x, g: clientGroup(x) })).filter(r => r.g);
+  const by = g => all.filter(r => r.g === g).map(r => r.x).sort((a, b) => (Number(b.value || 0) - Number(a.value || 0)));
+  const won = by("won"), hot = by("hot"), warm = by("warm"), arch = by("arch");
+  const sec = (title, list, sub) => list.length ? `<div class="card-h" style="margin:6px 0 10px"><h2>${title}</h2><span class="cnt">${sub}</span></div><div class="clgrid">${list.map(clientCard).join("")}</div>` : "";
+  el.innerHTML = phead("Clients", "Every build and live lead", `<div class="pnav"><button class="${CLV.show === "active" ? "" : "ghost"}" id="clAct">Active</button><button class="${CLV.show === "arch" ? "" : "ghost"}" id="clArc">Archived (${arch.length})</button></div>`) +
+  `<div class="kpis">
+    ${kpi(won.length, "Clients", gbp(sum(won, "monthly")) + " a month signed")}
+    ${kpi(hot.length, "Hot and booked", gbp(sum(hot, "value")) + " in builds")}
+    ${kpi(warm.length, "Warm", gbp(sum(warm, "value")) + " in builds")}
+    ${kpi(all.filter(r => r.g !== "arch" && !r.x.next_date).length, "No follow-up date", "give each one a date", { warn: all.some(r => r.g !== "arch" && !r.x.next_date) })}
+  </div>
+  <div id="clBody">${CLV.show === "arch"
+    ? (sec("Archived", arch, "didn't buy, kept for later") || '<div class="empty">Nothing archived. A lead that says no moves here, never deleted.</div>')
+    : sec("Clients, live and building", won, "monthly is their rent") + sec("Hot leads and booked calls", hot, "closest to cash") + sec("Warm", warm, "keep them moving")}</div>
+  <div class="muted small" style="margin-top:6px">Each client's full brief (who, money, what's built, files, timeline) is in Clients/&lt;Name - Company&gt;/CLAUDE.md on the Mac. Tap a client to open their CRM card.</div>`;
+  $("#clAct").onclick = () => { CLV.show = "active"; renderClients(el); };
+  $("#clArc").onclick = () => { CLV.show = "arch"; renderClients(el); };
 }
 
 /* ---------- TASKS ---------- */
@@ -1333,6 +1526,365 @@ function renderMoney(el){
     await q(rows[0] ? sb.from("hq_settings").update(v).eq("id", rows[0].id) : sb.from("hq_settings").insert({ ...v, title: "Road to £25k" }));
     toast("Target saved"); await rer(); header();
   };
+}
+
+/* ---------- PAYMENTS (calendar) ----------
+   Money out = recurring costs (hq_costs) on their day of the month. Money in landed = hq_cash (the same rows Money banks, never copied).
+   MRR due = signed deals with a monthly fee and a billing day (1st or 15th), from go-live, until that month's MRR lands.
+   Expected = pipeline payments (hq_expected) drawn as a band across their window, counted in the month of their expected date.
+   Net this month = landed minus out. "If expected lands" adds expected pipeline payments and MRR still due. */
+const CURR = { GBP: "£", USD: "$", EUR: "€" };
+const COST_CATS = ["Software","AI","Outreach","Hosting","Domain","Admin","Other"];
+const EXP_KINDS = [["build","Build payment"],["deposit","Deposit"],["mrr","Monthly fee"],["other","Other"]];
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const PORD = { in: 0, mrr: 1, out: 2, exp: 3 };
+const PV = { ym: null };
+const pad2 = n => String(n).padStart(2, "0");
+const lastDay = ym => new Date(+ym.slice(0, 4), +ym.slice(5, 7), 0).getDate();
+const ymAdd = (ym, n) => { const x = new Date(+ym.slice(0, 4), +ym.slice(5, 7) - 1 + n, 1); return x.getFullYear() + "-" + pad2(x.getMonth() + 1); };
+const monthName = ym => MONTHS[+ym.slice(5, 7) - 1] + " " + ym.slice(0, 4);
+const dayOrd = n => n + ((n % 10 === 1 && n !== 11) ? "st" : (n % 10 === 2 && n !== 12) ? "nd" : (n % 10 === 3 && n !== 13) ? "rd" : "th");
+const shortMon = d => MONTHS[+d.slice(5, 7) - 1].slice(0, 3);
+const shortName = s => String(s || "").trim().split(/\s+/)[0] || "";
+const isDate = v => /^\d{4}-\d{2}-\d{2}$/.test(v || "") && !isNaN(new Date(v + "T12:00:00"));
+const numOrNull = v => v === "" || v == null ? null : Number(v);
+const money0 = (n, c = "GBP") => { const v = Math.round(Number(n || 0) * 100) / 100, t = (CURR[c] || c + " ") + Math.abs(v).toLocaleString("en-GB", { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 }); return v < 0 ? "-" + t : t; };
+function rangeTxt(a, b){
+  if (a === b) return +a.slice(8) + " " + shortMon(a);
+  return a.slice(0, 7) === b.slice(0, 7) ? `${+a.slice(8)} to ${+b.slice(8)} ${shortMon(b)}` : `${+a.slice(8)} ${shortMon(a)} to ${+b.slice(8)} ${shortMon(b)}`;
+}
+function toGbp(s, amount, cur){
+  if (amount == null || amount === "") return null;
+  if (!cur || cur === "GBP") return Number(amount);
+  const r = Number(((s.settings || {}).fx || {})[cur]);
+  return r > 0 ? Number(amount) * r : null;
+}
+/* every payment touching the days from..to (ISO dates, inclusive) */
+function payItems(s, from, to, d = today()){
+  const out = [], costs = s.costs || [], cash = s.cash || [], exp = s.expected || [], deals = s.deals || [];
+  for (let ym = from.slice(0, 7); ym <= to.slice(0, 7); ym = ymAdd(ym, 1)) {
+    for (const c of costs) {
+      if (c.active === false || !c.day_of_month) continue;
+      if (c.cadence === "yearly" && Number(c.month_of_year) !== +ym.slice(5, 7)) continue;
+      const date = ym + "-" + pad2(Math.min(Number(c.day_of_month), lastDay(ym)));
+      if (date < from || date > to || (c.starts_on && date < c.starts_on) || (c.ends_on && date > c.ends_on)) continue;
+      const amount = c.amount == null || c.amount === "" ? null : Number(c.amount);
+      out.push({ id: `c:${c.id}:${date}`, type: "out", date, name: c.name, amount, currency: c.currency || "GBP", gbp: toGbp(s, amount, c.currency), row: c });
+    }
+    for (const x of deals) {
+      if (!SIGNED_STAGES.includes(x.stage) || !(Number(x.monthly) > 0) || ![1, 15].includes(Number(x.bill_day))) continue;
+      const date = ym + "-" + pad2(Number(x.bill_day));
+      if (date < from || date > to) continue;
+      if (x.live_on ? date < x.live_on : x.stage !== "Live") continue;
+      if (cash.some(c => c.kind === "mrr" && c.deal_id === x.id && String(c.date).slice(0, 7) === ym)) continue;
+      out.push({ id: `m:${x.id}:${ym}`, type: "mrr", date, who: x.company, amount: Number(x.monthly), gbp: Number(x.monthly), late: date < d, deal: x });
+    }
+  }
+  for (const c of cash) {
+    const date = String(c.date).slice(0, 10);
+    if (date < from || date > to) continue;
+    const label = c.kind === "mrr" ? "MRR landed" : (c.kind === "deposit" || /deposit/i.test(c.note || "")) ? "Deposit landed" : "Landed";
+    out.push({ id: `k:${c.id}`, type: "in", date, who: c.from_who, label, amount: Number(c.amount), gbp: c.counts ? Number(c.amount) : 0, counts: !!c.counts, row: c });
+  }
+  for (const e of exp) {
+    if (e.status === "landed" || !isDate(e.expected_on)) continue;
+    const w = Math.max(0, Number(e.window_days) || 0), a = addDays(e.expected_on, -w), b = addDays(e.expected_on, w);
+    if (b < from || a > to) continue;
+    out.push({ id: `e:${e.id}`, type: "exp", date: e.expected_on, from: a, to: b, who: e.who, label: e.label || e.who, amount: Number(e.amount), gbp: Number(e.amount), late: e.status === "late" || b < d, row: e });
+  }
+  return out.sort((x, y) => x.date.localeCompare(y.date) || PORD[x.type] - PORD[y.type]);
+}
+function payMonth(s, ym, d = today()){
+  const from = ym + "-01", to = ym + "-" + pad2(lastDay(ym)), items = payItems(s, from, to, d);
+  const ins = items.filter(i => i.type === "in" && i.counts), outs = items.filter(i => i.type === "out");
+  const exps = items.filter(i => i.type === "exp" && i.date >= from && i.date <= to), mrrDue = items.filter(i => i.type === "mrr");
+  const landed = sum(ins, "gbp"), out = outs.reduce((a, i) => a + (i.gbp || 0), 0), expected = sum(exps, "gbp") + sum(mrrDue, "gbp");
+  const r2 = n => Math.round(n * 100) / 100;
+  return { ym, from, to, items, ins, outs, exps, mrrDue,
+    landed: r2(landed), mrrIn: r2(sum(ins.filter(i => i.row.kind === "mrr"), "gbp")), out: r2(out), expected: r2(expected),
+    net: r2(landed - out), ifLands: r2(landed + expected - out),
+    unpriced: outs.filter(i => i.amount == null), unconverted: outs.filter(i => i.amount != null && i.gbp == null),
+    undated: (s.costs || []).filter(c => c.active !== false && !c.day_of_month) };
+}
+function payWeek(s = S, d = today()){
+  const to = addDays(d, 6), items = payItems(s, d, to, d);
+  const out = items.filter(i => i.type === "out"), inn = items.filter(i => i.type === "exp" || i.type === "mrr");
+  return { from: d, to, out, in: inn, inTotal: sum(inn, "gbp"), undated: (s.costs || []).filter(c => c.active !== false && !c.day_of_month) };
+}
+/* "£35 + $25": pounds, plus any currency with no rate set yet. Costs with no amount are left out (they show "to check"). */
+function outTxt(items){
+  const g = items.reduce((a, i) => a + (i.gbp || 0), 0), oth = {};
+  items.filter(i => i.amount != null && i.gbp == null).forEach(i => { oth[i.currency] = (oth[i.currency] || 0) + i.amount; });
+  const parts = g || !Object.keys(oth).length ? [money0(g)] : [];
+  Object.entries(oth).forEach(([c, v]) => parts.push(money0(v, c)));
+  return parts.join(" + ");
+}
+function validCost(v){
+  if (!v.name) return "Add a name";
+  if (v.amount != null && !(v.amount > 0 && v.amount < 100000)) return "Amount must be more than 0 (or leave it blank to check later)";
+  if (!CURR[v.currency]) return "Pick a currency";
+  if (!["monthly","yearly"].includes(v.cadence)) return "Pick monthly or yearly";
+  if (v.day_of_month != null && !(Number.isInteger(v.day_of_month) && v.day_of_month >= 1 && v.day_of_month <= 31)) return "Day of the month must be 1 to 31";
+  if (v.cadence === "yearly" && v.day_of_month != null && !(Number.isInteger(v.month_of_year) && v.month_of_year >= 1 && v.month_of_year <= 12)) return "Pick the month it renews";
+  if (v.starts_on && !isDate(v.starts_on)) return "First payment date is not a date";
+  if (v.ends_on && !isDate(v.ends_on)) return "Last payment date is not a date";
+  if (v.starts_on && v.ends_on && v.ends_on < v.starts_on) return "Last payment is before the first";
+  return "";
+}
+function validExpected(v){
+  if (!v.label) return "Add what it is (e.g. Noble go-live)";
+  if (!v.who) return "Add who pays";
+  if (!(v.amount > 0 && v.amount < 10000000)) return "Add the amount";
+  if (!isDate(v.expected_on)) return "Add the expected date";
+  if (!(Number.isInteger(v.window_days) && v.window_days >= 0 && v.window_days <= 14)) return "Window must be 0 to 14 days either side";
+  if (!["expected","late"].includes(v.status)) return "Pick a status";
+  return "";
+}
+function chipTxt(i){
+  if (i.type === "out") return `${i.name} ${i.amount == null ? "£ to check" : money0(i.amount, i.currency)}`;
+  if (i.type === "in") return `${i.label}, ${shortName(i.who)} ${money0(i.amount)}${i.counts ? "" : " (not counted)"}`;
+  if (i.type === "mrr") return `MRR ${i.late ? "late" : "due"}, ${shortName(i.who)} ${money0(i.amount)}`;
+  return `${i.label} ${money0(i.amount)}, ${rangeTxt(i.from, i.to)}${i.late ? ", late" : ""}`;
+}
+const chkDot = i => (i.row && i.row.needs_check) ? '<span class="ck2" title="Marked check"></span>' : "";
+function costSched(c){
+  const day = c.day_of_month ? dayOrd(Number(c.day_of_month)) : null;
+  if (!day) return "date not known yet";
+  return c.cadence === "yearly" ? `every year, ${day} ${c.month_of_year ? MONTHS[c.month_of_year - 1] : "(month?)"}` : `every month on the ${day}`;
+}
+function payBlanks(s = S){
+  const out = [];
+  (s.costs || []).filter(c => c.active !== false).forEach(c => {
+    const miss = [!c.day_of_month && "date", (c.amount == null || c.amount === "") && "amount"].filter(Boolean);
+    if (miss.length) out.push({ id: "cost:" + c.id, txt: `${c.name}: ${miss.join(" and ")} to confirm` });
+    else if (c.needs_check) out.push({ id: "cost:" + c.id, txt: `${c.name}: check ${money0(c.amount, c.currency)} ${costSched(c)}` });
+  });
+  (s.expected || []).filter(e => e.status !== "landed" && e.needs_check).forEach(e => out.push({ id: "e:" + e.id, txt: `${e.label}: check ${money0(e.amount)} around ${fmtDay(e.expected_on)}` }));
+  return out;
+}
+
+function payWeekCard(){
+  const w = payWeek();
+  const priced = w.out.filter(i => i.amount != null), unpriced = w.out.filter(i => i.amount == null);
+  const cats = [...new Set(w.out.map(i => String(i.row.category || "Other").toLowerCase()))];
+  const line = w.out.length
+    ? `Payments out this week: <b data-k="twout">${priced.length ? outTxt(priced) : "£0"}</b> on ${esc(cats.join(" and "))} (${esc(w.out.map(i => i.name).join(", "))})${unpriced.length ? `, ${unpriced.length} still to check` : ""}`
+    : "No payments out this week.";
+  return `<div class="card" id="tPay"><div class="card-h"><h2>Payments this week</h2><a href="#payments">Calendar</a></div>
+    ${S.payMissing ? '<p class="muted small" style="margin:0 0 8px">Payments tables not set up yet (migration hq_v34_payments).</p>' : ""}
+    <p style="margin:0 0 6px" id="tPayOut">${line}</p>
+    ${w.out.length ? `<ul class="lines">${w.out.map(i => `<li class="prow" data-pchip="${i.id}"><span class="grow"><b class="nm">${esc(i.name)}</b> <span class="muted small">${fmtDay(i.date)}</span>${i.row.needs_check ? ' <span class="chip warn">check</span>' : ""}</span><b class="num" style="color:#FCA5A5">${i.amount == null ? "to check" : money0(i.amount, i.currency)}</b></li>`).join("")}</ul>` : ""}
+    <div class="eyebrow" style="margin:12px 0 2px">Expected in${w.inTotal ? ": " + money0(w.inTotal) : ""}</div>
+    <ul class="lines" id="tPayIn">${w.in.length ? w.in.map(i => `<li class="prow" data-pchip="${i.id}"><span class="grow"><b class="nm">${esc(i.type === "mrr" ? "MRR, " + shortName(i.who) : i.label)}</b> <span class="muted small">${i.type === "exp" ? rangeTxt(i.from, i.to) : fmtDay(i.date)}</span></span><b class="num" style="color:var(--good)">${money0(i.amount)}</b></li>`).join("") : '<li class="muted small">Nothing expected this week.</li>'}</ul>
+    ${w.undated.length ? `<div class="muted small" style="margin-top:8px">No date yet: ${esc(w.undated.map(c => c.name).join(", "))}. Fill in on Payments.</div>` : ""}
+  </div>`;
+}
+
+function renderPayments(el){
+  const d = today(); if (!PV.ym) PV.ym = d.slice(0, 7);
+  const ym = PV.ym, M = payMonth(S, ym, d);
+  const first = M.from, last = M.to, gs = weekStart(first), ge = addDays(weekStart(last), 6);
+  const items = payItems(S, gs, ge, d);
+  const chip = i => `<button class="pc ${i.type}${i.late ? " late" : ""}${i.type === "in" && !i.counts ? " nc" : ""}" data-pchip="${i.id}" title="${esc(chipTxt(i))}">${esc(chipTxt(i))}${chkDot(i)}</button>`;
+  const weeks = []; for (let ws = gs; ws <= ge; ws = addDays(ws, 7)) weeks.push(ws);
+  const grid = weeks.map(ws => {
+    const we = addDays(ws, 6);
+    const bands = items.filter(i => i.type === "exp" && i.to >= ws && i.from <= we).sort((a, b) => a.from.localeCompare(b.from));
+    const bandHtml = bands.map((b, k) => { const s0 = Math.max(0, daysBetween(ws, b.from)), e0 = Math.min(6, daysBetween(ws, b.to));
+      return `<button class="pband${b.late ? " late" : ""}${b.from < ws ? " cont" : ""}${b.to > we ? " more" : ""}" data-pchip="${b.id}" style="grid-column:${s0 + 1} / ${e0 + 2};grid-row:${k + 1}" title="${esc(chipTxt(b))}, could land any day in the window">${esc(chipTxt(b))}${chkDot(b)}</button>`; }).join("");
+    const days = [0,1,2,3,4,5,6].map(n => { const day = addDays(ws, n), inM = day.slice(0, 7) === ym;
+      return `<div class="pday${inM ? "" : " other"}${day === d ? " today" : ""}${n >= 5 ? " wkend" : ""}" data-day="${day}"><span class="dn">${+day.slice(8)}</span>${inM ? items.filter(i => i.type !== "exp" && i.date === day).map(chip).join("") : ""}</div>`; }).join("");
+    return `<div class="pwk" style="--nb:${bands.length}"><div class="pdays">${days}</div>${bands.length ? `<div class="pbands">${bandHtml}</div>` : ""}</div>`;
+  }).join("");
+  const mItems = items.filter(i => i.type === "exp" ? (i.to >= first && i.from <= last) : i.date.slice(0, 7) === ym);
+  const keyDay = i => i.type === "exp" ? (i.from < first ? first : i.from) : i.date;
+  const agTitle = i => i.type === "out" ? i.name : i.type === "in" ? `${i.label}, ${i.who}` : i.type === "mrr" ? `MRR ${i.late ? "late" : "due"}, ${i.who}` : i.label;
+  const agSub = i => i.type === "out" ? `${i.row.category || "Other"}, ${costSched(i.row)}${i.amount == null ? ", amount to check" : ""}${i.amount != null && i.gbp == null ? ", no rate set" : ""}`
+    : i.type === "in" ? (i.row.note || i.row.source || "") + (i.counts ? "" : ", not counted")
+    : i.type === "mrr" ? "Monthly fee, not landed yet"
+    : `Could land any day ${rangeTxt(i.from, i.to)}${i.late ? ", now late" : ""}`;
+  const agAmt = i => i.type === "out" ? (i.amount == null ? "to check" : "-" + money0(i.amount, i.currency)) : i.type === "in" ? "+" + money0(i.amount) : money0(i.amount);
+  const agDays = [...new Set(mItems.map(keyDay))].sort();
+  const agenda = agDays.map(day => `<div class="ad" data-aday="${day}"><h3>${fmtDay(day)}${day === d ? ' <span class="chip hud">Today</span>' : ""}</h3>${mItems.filter(i => keyDay(i) === day).sort((a, b) => PORD[a.type] - PORD[b.type]).map(i =>
+    `<button class="arow ${i.type}${i.late ? " late" : ""}" data-pchip="${i.id}"><span class="grow">${esc(agTitle(i))}${chkDot(i)}<small>${esc(agSub(i))}</small></span><b>${esc(agAmt(i))}</b></button>`).join("")}</div>`).join("") || '<div class="empty">Nothing in or out this month yet.</div>';
+  const oth = M.unconverted.length ? outTxt(M.unconverted) : "";
+  const curs = [...new Set((S.costs || []).map(c => c.currency).filter(c => c && c !== "GBP"))];
+  const fx = (S.settings && S.settings.fx) || {};
+  const blanks = payBlanks();
+  const exps = (S.expected || []).slice().sort((a, b) => String(a.expected_on).localeCompare(String(b.expected_on)));
+  const mrrDeals = S.deals.filter(x => SIGNED_STAGES.includes(x.stage) && Number(x.monthly) > 0);
+  const landedM = M.items.filter(i => i.type === "in");
+  el.innerHTML = phead("Payments calendar", esc(monthName(ym)), `<div class="pnav"><button class="ghost" id="pPrev" aria-label="Previous month">‹ Prev</button><button class="ghost" id="pNow">This month</button><button class="ghost" id="pNext" aria-label="Next month">Next ›</button><button data-pchip="new-cost" id="pAddCost">+ Cost</button><button class="ghost" data-pchip="new-exp" id="pAddExp">+ Expected</button></div>`) +
+  (S.payMissing ? '<div class="card" style="border-color:rgba(251,191,36,.5);margin-bottom:16px"><b>Payments tables not set up yet.</b> <span class="muted">Apply migration hq_v34_payments, then costs and expected payments save here. Money already banked still shows.</span></div>' : "") +
+  `<div class="kpis" id="pStats">
+    ${kpi(money0(M.landed), "In, landed", M.ins.length ? `${M.ins.length} ${M.ins.length === 1 ? "payment" : "payments"}${M.mrrIn ? ", MRR " + money0(M.mrrIn) : ""}` : "nothing landed yet", { k: "pin" })}
+    ${kpi(money0(M.expected), "Expected in", `${M.exps.length} pipeline${M.mrrDue.length ? `, ${M.mrrDue.length} MRR due` : ""}, not landed`, { k: "pexp" })}
+    ${kpi(outTxt(M.outs), "Out", M.unpriced.length ? `${M.outs.length} payments, ${M.unpriced.length} with no amount yet` : `${M.outs.length} ${M.outs.length === 1 ? "payment" : "payments"}`, { k: "pout", warn: !!M.unpriced.length })}
+    <div class="kpi hi"><b data-k="pnet">${money0(M.net)}</b><div class="lab">Net this month</div><div class="sub"><span class="ksub-if" data-k="pif">If expected lands: ${money0(M.ifLands)}</span>landed minus out${oth ? `, ${esc(oth)} not counted until the rate is set` : ""}</div></div>
+  </div>
+  <div class="pkey"><span><i style="background:rgba(52,211,153,.35)"></i>Landed</span><span><i style="border:1px solid var(--good)"></i>MRR due</span><span><i style="border:1px dashed var(--good);background:rgba(52,211,153,.12)"></i>Expected window</span><span><i style="background:rgba(248,113,113,.3)"></i>Out</span><span><i style="background:var(--warn);border-radius:50%;width:7px;height:7px;vertical-align:1px"></i>To check</span></div>
+  <div class="pgrid" id="pGrid"><div class="pdow">${["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(x => `<span>${x}</span>`).join("")}</div>${grid}</div>
+  <div class="card pagenda" id="pAgenda" style="margin-bottom:16px"><div class="card-h"><h2>${esc(monthName(ym))}</h2><span class="cnt">${mItems.length} items</span></div>${agenda}</div>
+  <div class="dash">
+    <div class="col">
+      <div class="card"><div class="card-h"><h2>Recurring costs</h2><button class="lnk" data-pchip="new-cost">+ Add</button></div>
+        <ul class="lines" id="pCosts">${(S.costs || []).length ? S.costs.map(c => `<li class="prow" data-pchip="cost:${c.id}"><span class="grow"><b class="nm">${esc(c.name)}</b> ${c.needs_check ? '<span class="chip warn">check</span>' : ""}${c.active === false ? ' <span class="chip">off</span>' : ""}<span class="muted small" style="display:block">${esc(c.category || "Other")}, ${costSched(c)}</span></span><b class="num" style="color:${c.amount == null ? "var(--warn)" : "#FCA5A5"}">${c.amount == null ? "to check" : money0(c.amount, c.currency)}</b></li>`).join("") : '<li class="muted small">No recurring costs yet.</li>'}</ul></div>
+      <div class="card"><div class="card-h"><h2>Still to fill in</h2><span class="cnt">${blanks.length}</span></div>
+        <ul class="lines" id="pBlanks">${blanks.length ? blanks.map(b => `<li class="prow" data-pchip="${b.id}"><span class="grow">${esc(b.txt)}</span><span class="chip warn">check</span></li>`).join("") : '<li class="muted small">Nothing to check.</li>'}</ul></div>
+      ${curs.length ? `<div class="card"><div class="card-h"><h2>Exchange rate</h2><span class="cnt">for the £ totals</span></div>${curs.map(c => `<div class="row" style="margin-bottom:8px"><span>1 ${c} = £</span><input type="number" step="0.0001" min="0" inputmode="decimal" data-fx="${c}" id="pFx${c}" value="${fx[c] ?? ""}" placeholder="rate" aria-label="Pounds per ${c}"><button class="ghost sm" data-fxsave="${c}">Save</button></div>`).join("")}<div class="muted small">Until a rate is set, ${esc(curs.join(" and "))} costs show in their own currency and stay out of the £ totals.</div></div>` : ""}
+    </div>
+    <div class="col">
+      <div class="card"><div class="card-h"><h2>Expected payments</h2><button class="lnk" data-pchip="new-exp">+ Add</button></div>
+        <ul class="lines" id="pExp">${exps.length ? exps.map(e => { const w = Number(e.window_days) || 0, a = addDays(e.expected_on, -w), b = addDays(e.expected_on, w), late = e.status === "late" || (e.status !== "landed" && b < d);
+          return `<li class="prow" data-pchip="e:${e.id}"><span class="grow"><b class="nm">${esc(e.label)}</b> ${e.status === "landed" ? `<span class="chip good">Landed ${e.landed_on ? fmtDay(e.landed_on) : ""}</span>` : late ? '<span class="chip warn">Late</span>' : '<span class="chip">Expected</span>'}${e.needs_check ? ' <span class="chip warn">check</span>' : ""}<span class="muted small" style="display:block">${esc(e.who)}, ${w ? rangeTxt(a, b) : fmtDay(e.expected_on)}</span></span><b class="num" style="color:var(--good)">${money0(e.amount)}</b></li>`; }).join("") : '<li class="muted small">No expected payments yet.</li>'}</ul></div>
+      <div class="card"><div class="card-h"><h2>Monthly fees (MRR)</h2><span class="cnt">bills on the 1st or 15th</span></div>
+        <ul class="lines" id="pMrr">${mrrDeals.length ? mrrDeals.map(x => `<li><span class="grow"><b>${esc(x.company)}</b> <span class="muted small">${money0(x.monthly)}/mo</span><span class="muted small" style="display:block">${x.live_on ? "from go-live, " + fmtDay(x.live_on) : x.stage === "Live" ? "live" : "starts at go-live (no date yet)"}</span></span><select data-billday="${x.id}" aria-label="Billing day for ${esc(x.company)}"><option value="">Day not set</option><option value="1" ${Number(x.bill_day) === 1 ? "selected" : ""}>1st</option><option value="15" ${Number(x.bill_day) === 15 ? "selected" : ""}>15th</option></select></li>`).join("") : '<li class="muted small">No signed monthly fees yet.</li>'}</ul>
+        <div class="muted small" style="margin-top:8px">MRR shows as due on its billing day from go-live, and turns green when you mark it landed.</div></div>
+      <div class="card"><div class="card-h"><h2>Landed in ${esc(MONTHS[+ym.slice(5, 7) - 1])}</h2><a href="#money">Money</a></div>
+        <ul class="lines" id="pLanded">${landedM.length ? landedM.map(i => `<li class="prow" data-pchip="${i.id}"><span class="grow"><b class="nm">${esc(i.label)}, ${esc(i.who)}</b><span class="muted small" style="display:block">${fmtDay(i.date)}${i.row.note ? ", " + esc(i.row.note) : ""}${i.counts ? "" : ", not counted"}</span></span><b class="num" style="color:var(--good)">${money0(i.amount)}</b></li>`).join("") : '<li class="muted small">Nothing landed this month yet.</li>'}</ul></div>
+    </div>
+  </div>`;
+  $("#pPrev").onclick = () => { PV.ym = ymAdd(PV.ym, -1); renderPayments(el); };
+  $("#pNext").onclick = () => { PV.ym = ymAdd(PV.ym, 1); renderPayments(el); };
+  $("#pNow").onclick = () => { PV.ym = today().slice(0, 7); renderPayments(el); };
+  el.querySelectorAll("[data-billday]").forEach(sel => sel.onchange = async () => {
+    const x = S.deals.find(r => r.id === sel.dataset.billday), v = sel.value ? Number(sel.value) : null;
+    await q(sb.from("hq_deals").update({ bill_day: v }).eq("id", x.id)); x.bill_day = v;
+    toast(v ? `${x.company}: MRR due on the ${dayOrd(v)}` : `${x.company}: billing day cleared`); rerender();
+  });
+  el.querySelectorAll("[data-fxsave]").forEach(b => b.onclick = async () => {
+    const cur = b.dataset.fxsave, v = parseFloat($("#pFx" + cur).value);
+    if (!(v > 0 && v < 10)) return toast("Rate must be more than 0 and under 10");
+    const nfx = { ...((S.settings && S.settings.fx) || {}), [cur]: v };
+    const rows = await q(sb.from("hq_settings").select("id").limit(1));
+    await q(rows[0] ? sb.from("hq_settings").update({ fx: nfx }).eq("id", rows[0].id) : sb.from("hq_settings").insert({ fx: nfx, target: Number(S.settings.target || 25000), deadline: S.settings.deadline || "2026-12-31", title: S.settings.title || "Road to £25k" }));
+    S.settings.fx = nfx; toast(`Rate saved: 1 ${cur} = £${v}`); rerender();
+  });
+}
+
+/* payment detail card: same pop-over (laptop) and bottom sheet (phone) as tasks and deals */
+function payRef(id){
+  if (id === "new-cost" || id === "new-exp") return { type: id };
+  const [p, a, b] = String(id || "").split(":");
+  if (p === "c" || p === "cost") { const row = (S.costs || []).find(x => x.id === a); return row ? { type: "cost", row, date: b || null } : null; }
+  if (p === "e") { const row = (S.expected || []).find(x => x.id === a); return row ? { type: "exp", row } : null; }
+  if (p === "k") { const row = S.cash.find(x => x.id === a); return row ? { type: "in", row } : null; }
+  if (p === "m") { const deal = S.deals.find(x => x.id === a); return deal ? { type: "mrr", deal, ym: b } : null; }
+  return null;
+}
+function costForm(c){
+  return `<div class="td-meta">
+    <label class="f full">Name<input id="pfName" value="${esc(c.name || "")}" placeholder="e.g. Notion"></label>
+    <label class="f">Amount<input id="pfAmt" type="number" step="0.01" min="0" inputmode="decimal" value="${c.amount ?? ""}" placeholder="blank = to check"></label>
+    <label class="f">Currency<select id="pfCur">${Object.keys(CURR).map(k => `<option ${k === (c.currency || "GBP") ? "selected" : ""}>${k}</option>`).join("")}</select></label>
+    <label class="f">Every<select id="pfCad"><option value="monthly">Month</option><option value="yearly" ${c.cadence === "yearly" ? "selected" : ""}>Year</option></select></label>
+    <label class="f">Day of month<input id="pfDay" type="number" min="1" max="31" step="1" inputmode="numeric" value="${c.day_of_month ?? ""}" placeholder="blank = not known"></label>
+    <label class="f">Month (yearly only)<select id="pfMon"><option value="">n/a</option>${MONTHS.map((m, i) => `<option value="${i + 1}" ${Number(c.month_of_year) === i + 1 ? "selected" : ""}>${m}</option>`).join("")}</select></label>
+    <label class="f">Category<select id="pfCat">${COST_CATS.map(k => `<option ${k === (c.category || "Software") ? "selected" : ""}>${k}</option>`).join("")}</select></label>
+    <label class="f">First payment<input id="pfStart" type="date" value="${c.starts_on || ""}"></label>
+    <label class="f">Last payment<input id="pfEnd" type="date" value="${c.ends_on || ""}"></label>
+    <label class="f chk"><input id="pfActive" type="checkbox" ${c.active !== false ? "checked" : ""}> Active</label>
+    <label class="f chk"><input id="pfCheck" type="checkbox" ${c.needs_check ? "checked" : ""}> Needs checking</label>
+    <label class="f full">Note<textarea id="pfNote" style="min-height:60px">${esc(c.note || "")}</textarea></label>
+  </div><p class="ferr" id="pfErr" role="alert"></p>`;
+}
+function readCost(){
+  return { name: $("#pfName").value.trim(), amount: numOrNull($("#pfAmt").value), currency: $("#pfCur").value, cadence: $("#pfCad").value,
+    day_of_month: numOrNull($("#pfDay").value), month_of_year: numOrNull($("#pfMon").value), category: $("#pfCat").value,
+    starts_on: $("#pfStart").value || null, ends_on: $("#pfEnd").value || null, active: $("#pfActive").checked, needs_check: $("#pfCheck").checked, note: $("#pfNote").value.trim() || null };
+}
+function expForm(e){
+  const deals = S.deals.filter(x => !["Lost","Uncontacted"].includes(dealStatus(x)) || x.id === e.deal_id).sort((a, b) => String(a.company).localeCompare(String(b.company)));
+  const invs = S.invoices.filter(i => !["paid","void"].includes(i.status) || i.id === e.invoice_id);
+  return `<div class="td-meta">
+    <label class="f full">What<input id="pfLabel" value="${esc(e.label || "")}" placeholder="e.g. Noble go-live"></label>
+    <label class="f full">Who pays<input id="pfWho" value="${esc(e.who || "")}" placeholder="Company"></label>
+    <label class="f">Amount (£)<input id="pfAmt" type="number" step="0.01" min="0" inputmode="decimal" value="${e.amount ?? ""}"></label>
+    <label class="f">Expected on<input id="pfDate" type="date" value="${e.expected_on || ""}"></label>
+    <label class="f">Days either side<input id="pfWin" type="number" min="0" max="14" step="1" inputmode="numeric" value="${e.window_days ?? 2}"></label>
+    <label class="f">Status<select id="pfStatus"><option value="expected">Expected</option><option value="late" ${e.status === "late" ? "selected" : ""}>Late</option></select></label>
+    <label class="f">Kind<select id="pfKind">${EXP_KINDS.map(([v, l]) => `<option value="${v}" ${v === (e.kind || "build") ? "selected" : ""}>${l}</option>`).join("")}</select></label>
+    <label class="f">CRM deal<select id="pfDeal"><option value="">None</option>${deals.map(x => `<option value="${x.id}" ${x.id === e.deal_id ? "selected" : ""}>${esc(x.company)}</option>`).join("")}</select></label>
+    <label class="f full">Invoice<select id="pfInv"><option value="">None</option>${invs.map(i => `<option value="${i.id}" ${i.id === e.invoice_id ? "selected" : ""}>${esc(i.number)} ${esc(i.client)} ${gbp(i.amount)}</option>`).join("")}</select></label>
+    <label class="f chk full"><input id="pfCheck" type="checkbox" ${e.needs_check ? "checked" : ""}> Needs checking</label>
+    <label class="f full">Note<textarea id="pfNote" style="min-height:60px">${esc(e.note || "")}</textarea></label>
+  </div><p class="ferr" id="pfErr" role="alert"></p>`;
+}
+function readExp(){
+  return { label: $("#pfLabel").value.trim(), who: $("#pfWho").value.trim(), amount: numOrNull($("#pfAmt").value), expected_on: $("#pfDate").value,
+    window_days: numOrNull($("#pfWin").value) ?? 0, status: $("#pfStatus").value, kind: $("#pfKind").value, deal_id: $("#pfDeal").value || null,
+    invoice_id: $("#pfInv").value || null, needs_check: $("#pfCheck").checked, note: $("#pfNote").value.trim() || null };
+}
+const cashSource = deal => deal && /wasteline/i.test(deal.product || "") ? "WasteLine" : "Custom build";
+async function landExpected(e, date){
+  if (!isDate(date)) return toast("Pick the date it landed");
+  const inv = e.invoice_id && S.invoices.find(i => i.id === e.invoice_id), deal = S.deals.find(x => x.id === (e.deal_id || (inv && inv.deal_id)));
+  let cid;
+  if (inv && inv.status === "paid" && inv.cash_id) cid = inv.cash_id; // already banked on Money: link it, never bank it twice
+  else if (inv) { cid = await q(sb.rpc("hq_invoice_paid", { p_invoice: inv.id, p_on: date })); await q(sb.from("hq_cash").update({ kind: e.kind || "build", deal_id: deal ? deal.id : null }).eq("id", cid)); }
+  else { const c = await q(sb.from("hq_cash").insert({ from_who: e.who, amount: Math.round(Number(e.amount)), date, source: cashSource(deal), counts: true, note: e.label, kind: e.kind || "build", deal_id: deal ? deal.id : null }).select().single()); cid = c.id; }
+  await q(sb.from("hq_expected").update({ status: "landed", landed_on: date, cash_id: cid }).eq("id", e.id));
+  toast(`${e.label} landed, ${money0(inv ? inv.amount : e.amount)} banked`); closeTask(); await loadAll(); rerender();
+}
+async function landMrr(deal, ym, date){
+  if (!isDate(date)) return toast("Pick the date it landed");
+  await q(sb.from("hq_cash").insert({ from_who: deal.company, amount: Math.round(Number(deal.monthly)), date, source: cashSource(deal), counts: true, note: "Monthly fee, " + monthName(ym), kind: "mrr", deal_id: deal.id }).select().single());
+  toast(`MRR landed, ${shortName(deal.company)} ${money0(deal.monthly)}`); closeTask(); await loadAll(); rerender();
+}
+function drawPay(){
+  const r = payRef(TD.id); if (!r) return closeTask();
+  const td = $("#td"), d = today();
+  const head = (title, chips = "") => `<div class="grab"></div><div class="td-h"><div class="td-title" style="border:0">${esc(title)}</div><button class="x" id="tdClose" aria-label="Close">✕</button></div>${chips ? `<div class="row" style="gap:6px">${chips}</div>` : ""}`;
+  const landRow = (label) => `<h4>${label}</h4><div class="row"><input id="plDate" type="date" value="${d}" aria-label="Date it landed"><button id="plGo">Mark landed</button></div>`;
+  if (r.type === "new-cost" || r.type === "cost") {
+    const c = r.row || { currency: "GBP", cadence: "monthly", category: "Software", active: true };
+    td.innerHTML = head(r.row ? c.name : "Add a recurring cost", r.row ? `<span class="chip bad">${c.amount == null ? "amount to check" : money0(c.amount, c.currency)}</span><span class="chip">${esc(costSched(c))}</span>${c.needs_check ? '<span class="chip warn">check</span>' : ""}${r.date ? `<span class="chip">${fmtDay(r.date)}</span>` : ""}` : "") +
+      costForm(c) + `<div class="td-f"><button id="pfSave">${r.row ? "Save" : "Add cost"}</button><span style="flex:1"></span>${r.row ? '<button class="ghost" id="pfDel">Delete</button>' : ""}</div>`;
+    $("#pfSave").onclick = async () => {
+      const v = readCost(), err = validCost(v);
+      if (err) { $("#pfErr").textContent = err; return toast(err); }
+      if (v.cadence !== "yearly") v.month_of_year = null;
+      if (r.row) { await q(sb.from("hq_costs").update(v).eq("id", r.row.id)); Object.assign(r.row, v); toast("Saved " + v.name); }
+      else { const row = await q(sb.from("hq_costs").insert(v).select().single()); S.costs.push(row); toast("Added " + v.name); }
+      closeTask(); rerender();
+    };
+    if (r.row) $("#pfDel").onclick = async () => { if (!confirm(`Delete ${r.row.name}? It comes off every month.`)) return; await q(sb.from("hq_costs").delete().eq("id", r.row.id)); S.costs = S.costs.filter(x => x.id !== r.row.id); closeTask(); rerender(); };
+  } else if (r.type === "new-exp" || r.type === "exp") {
+    const e = r.row || { window_days: 2, status: "expected", kind: "build" };
+    const w = Number(e.window_days) || 0, inv = e.invoice_id && S.invoices.find(i => i.id === e.invoice_id), deal = e.deal_id && S.deals.find(x => x.id === e.deal_id);
+    const late = e.status === "late" || (e.status === "expected" && e.expected_on && addDays(e.expected_on, w) < d);
+    const chips = r.row ? `<span class="chip good">${money0(e.amount)}</span><span class="chip">${w ? rangeTxt(addDays(e.expected_on, -w), addDays(e.expected_on, w)) : fmtDay(e.expected_on)}</span>${e.status === "landed" ? `<span class="chip good">Landed ${e.landed_on ? fmtDay(e.landed_on) : ""}</span>` : late ? '<span class="chip warn">Late</span>' : '<span class="chip">Expected</span>'}${e.needs_check ? '<span class="chip warn">check</span>' : ""}` : "";
+    const links = r.row && (deal || inv) ? `<div class="btnrow">${deal ? `<button class="btn" id="pfOpenDeal">CRM: ${esc(deal.company)}</button>` : ""}${inv ? `<span class="chip ${inv.status === "paid" ? "good" : "violet"}">${esc(inv.number)} ${gbp(inv.amount)} ${esc(inv.status)}</span>` : ""}</div>` : "";
+    td.innerHTML = head(r.row ? e.label : "Add an expected payment", chips) + links +
+      (r.row && e.status === "landed" ? `<p class="muted small" style="margin:12px 0 0">Banked on Money${e.landed_on ? " on " + fmtDay(e.landed_on) : ""}. It shows on the calendar as landed.</p>` :
+      (r.row ? landRow(inv ? `Landed? Marks ${esc(inv.number)} paid and banks ${gbp(inv.amount)}` : `Landed? Banks ${money0(e.amount)} on Money`) : "") +
+      `<h4>${r.row ? "Edit" : "Details"}</h4>` + expForm(e) + `<div class="td-f"><button id="pfSave">${r.row ? "Save" : "Add expected"}</button><span style="flex:1"></span>${r.row ? '<button class="ghost" id="pfDel">Delete</button>' : ""}</div>`);
+    if ($("#pfOpenDeal")) $("#pfOpenDeal").onclick = () => openCard("deal", deal.id, null, true);
+    if ($("#plGo")) $("#plGo").onclick = () => landExpected(r.row, $("#plDate").value);
+    if ($("#pfInv")) $("#pfInv").onchange = () => { const i = S.invoices.find(x => x.id === $("#pfInv").value); if (!i) return;
+      if (!$("#pfAmt").value) $("#pfAmt").value = Number(i.amount); if (!$("#pfWho").value) $("#pfWho").value = i.client;
+      if (i.deal_id && !$("#pfDeal").value) $("#pfDeal").value = i.deal_id; };
+    if ($("#pfSave")) $("#pfSave").onclick = async () => {
+      const v = readExp(), err = validExpected(v);
+      if (err) { $("#pfErr").textContent = err; return toast(err); }
+      if (r.row) { await q(sb.from("hq_expected").update(v).eq("id", r.row.id)); Object.assign(r.row, v); toast("Saved " + v.label); }
+      else { const row = await q(sb.from("hq_expected").insert(v).select().single()); S.expected.push(row); toast("Added " + v.label); }
+      closeTask(); rerender();
+    };
+    if ($("#pfDel")) $("#pfDel").onclick = async () => { if (!confirm(`Delete ${r.row.label}?`)) return; await q(sb.from("hq_expected").delete().eq("id", r.row.id)); S.expected = S.expected.filter(x => x.id !== r.row.id); closeTask(); rerender(); };
+  } else if (r.type === "mrr") {
+    const x = r.deal, date = r.ym + "-" + pad2(Number(x.bill_day));
+    td.innerHTML = head(`MRR, ${x.company}`, `<span class="chip good">${money0(x.monthly)}</span><span class="chip">${fmtDay(date)}</span>${date < d ? '<span class="chip warn">Late</span>' : '<span class="chip">Due</span>'}`) +
+      `<p class="small" style="margin:12px 0 0;color:#D5DDEA">Monthly fee for ${esc(monthName(r.ym))}, billed on the ${dayOrd(Number(x.bill_day))}${x.live_on ? " from go-live " + fmtDay(x.live_on) : ""}. Change the billing day under Monthly fees on Payments.</p>` +
+      landRow(`Landed? Banks ${money0(x.monthly)} on Money as MRR`);
+    $("#plGo").onclick = () => landMrr(x, r.ym, $("#plDate").value);
+  } else {
+    const c = r.row, i = payItems(S, String(c.date).slice(0, 10), String(c.date).slice(0, 10)).find(z => z.id === "k:" + c.id);
+    td.innerHTML = head(`${i ? i.label : "Landed"}, ${c.from_who}`, `<span class="chip good">${money0(c.amount)}</span><span class="chip">${fmtDay(String(c.date).slice(0, 10))}</span>${c.counts ? '<span class="chip hud">Counts to target</span>' : '<span class="chip">Not counted</span>'}`) +
+      `<h4>Note</h4><div class="desc">${esc(c.note || "No note.")}</div><h4>Source</h4><div class="desc">${esc(c.source || "")}</div>
+      <p class="muted small" style="margin:14px 0 0">This is the payment banked on Money. Edit or remove it there.</p><div class="td-f"><a class="btn" href="#money">Open Money</a></div>`;
+  }
+  $("#tdClose").onclick = closeTask;
 }
 
 /* ---------- CRM (Supabase is the home, Notion is the archive) ---------- */
@@ -1705,7 +2257,7 @@ async function renderNotes(el){
   $("#cQ").addEventListener("keydown", e => { if (e.key === "Enter") $("#cGo").click(); });
 }
 
-window.HQ = { money, todayTasks, todayCounts, liStats, followUps, parseCSV, S };
+window.HQ = { money, todayTasks, todayCounts, liStats, followUps, parseCSV, S, payItems, payMonth, payWeek, validCost, validExpected, PV };
 init();
 </script>
 </body>
