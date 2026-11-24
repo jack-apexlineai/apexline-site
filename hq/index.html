@@ -320,6 +320,9 @@ button.chip{cursor:pointer}
 .cltrack{display:flex;gap:3px;margin:10px 0 2px}
 .cltrack i{flex:1;height:4px;border-radius:3px;background:rgba(255,255,255,.1)}
 .cltrack i.on{background:var(--st)}
+.clna{margin:12px 0 4px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--st)}
+.clna .na{font-size:15px;font-weight:600;line-height:1.35;overflow-wrap:anywhere}
+.clna .meta{margin-top:6px}
 /* payments calendar: month grid on a laptop, agenda list on a phone */
 .pnav{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .pnav button{padding:8px 14px}
@@ -1425,11 +1428,15 @@ function clientMoneyHtml(x){
     <div class="muted small">Stage: <b style="color:var(--st)">${m.label}</b></div>`;
 }
 function clientCard(x){
-  const st = dealStatus(x), ts = clientTasks(x).slice(0, 3), nx = x.next_step || "";
+  const st = dealStatus(x), ts = clientTasks(x).slice(0, 3);
+  /* Next action (Jack, 24 Nov): the first line of the deal's next step is the headline, the rest is detail */
+  const lines = String(x.next_step || "").split(/\n+/), na = lines[0].trim(), nx = lines.slice(1).join(" ").trim();
   return `<div class="card clc" style="--st:${STC[st] || "#6B7A93"}">
     <div class="clh" data-deal="${x.id}"><div class="grow"><b class="cln">${esc(x.company)}</b><div class="muted small">${esc([x.contact, x.role].filter(Boolean).join(", ")) || "&nbsp;"}</div></div><span class="chip" style="border-color:var(--st);color:var(--st)">${esc(x.stage && SIGNED_STAGES.includes(x.stage) ? x.stage : st)}</span></div>
+    <div class="clna"><div class="eyebrow">Next action</div><div class="na">${na ? esc(na) : '<span class="muted">No next action set. Tap the name to add one.</span>'}</div>
+      <div class="meta">${x.next_date ? fuChip(x) : '<span class="chip warn">No date</span>'}${x.who_acts ? `<span class="chip">${esc(x.who_acts === "Waiting on them" ? "Waiting on them" : x.who_acts + " acts")}</span>` : ""}</div></div>
     ${clientMoneyHtml(x)}
-    <div class="meta" style="margin:10px 0">${x.product ? `<span class="chip">${esc(x.product)}</span>` : ""}${x.live_on ? `<span class="chip violet">Live ${fmtDay(x.live_on)}</span>` : ""}${x.next_date ? fuChip(x) : '<span class="chip warn">No follow-up date</span>'}</div>
+    <div class="meta" style="margin:10px 0">${x.product ? `<span class="chip">${esc(x.product)}</span>` : ""}${x.live_on ? `<span class="chip violet">Live ${fmtDay(x.live_on)}</span>` : ""}</div>
     <div class="small clnx">${esc(nx.slice(0, 260))}${nx.length > 260 ? "…" : ""}</div>
     ${ts.length ? `<div class="eyebrow" style="margin:12px 0 4px">Next for them</div>${ts.map(t => taskCard(t, { compact: true })).join("")}` : ""}
     <div class="muted small" style="margin-top:10px">${sinceTxt(x)}${x.notion_url ? ` · <a href="${esc(x.notion_url)}" target="_blank" rel="noopener">Notion</a>` : ""}</div>
