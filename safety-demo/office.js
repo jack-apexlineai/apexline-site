@@ -20,6 +20,8 @@ document.getElementById('openPhone').innerHTML = ic('device-mobile') + '<span cl
 document.getElementById('openPhone').title = 'Open the operative phone over the office';
 document.getElementById('resetBtn').innerHTML = ic('refresh') + '<span class="btxt">Reset demo</span>';
 document.getElementById('openPhone').addEventListener('click', openPhoneView);
+document.getElementById('wordsBtn').innerHTML = ic('school') + '<span class="btxt">Plain English</span>';
+document.getElementById('wordsBtn').addEventListener('click', words);
 
 /* ---------- the operative phone, over the office ----------
    The real phone.html in a same-origin iframe, in a phone frame. It shares this browser's
@@ -99,7 +101,8 @@ function tabs(){
   var locks = CS.activeLocks().length;
   var lotoMissing = CS.OPS.filter(function(o){ return !CS.hasSigned('lototo', o.id); }).length;
   var insp = CS.MACHINES.filter(function(m){ return CS.inspWorst(m.id) === 'red'; }).length;
-  var t = [['board', 'layout-dashboard', 'Live board', ''], ['iso', 'lock', 'Isolations', locks ? '<span class="cnt">' + locks + '</span>' : ''], ['sign', 'signature', 'Sign-offs', lotoMissing ? '<span class="cnt">' + lotoMissing + '</span>' : ''], ['insp', 'calendar', 'Inspections', insp ? '<span class="cnt red">' + insp + '</span>' : ''], ['people', 'id-badge', 'People', ''], ['rec', 'printer', 'Records', '']];
+  var gapsOpen = CS.gapsToday().filter(function(g){ return !g.coveredBy; }).length;
+  var t = [['board', 'layout-dashboard', 'Live board', ''], ['cover', 'truck', 'Cover and breakdowns', gapsOpen ? '<span class="cnt red">' + gapsOpen + '</span>' : ''], ['iso', 'lock', 'Isolations', locks ? '<span class="cnt">' + locks + '</span>' : ''], ['sign', 'signature', 'Sign-offs', lotoMissing ? '<span class="cnt">' + lotoMissing + '</span>' : ''], ['insp', 'calendar', 'Inspections', insp ? '<span class="cnt red">' + insp + '</span>' : ''], ['people', 'id-badge', 'People', ''], ['rec', 'printer', 'Records', '']];
   document.getElementById('tabs').innerHTML = t.map(function(x){ return '<button class="' + (tab === x[0] ? 'on' : '') + '" data-tab="' + x[0] + '">' + ic(x[1]) + x[2] + x[3] + '</button>'; }).join('');
   $$('[data-tab]').forEach(function(b){ b.addEventListener('click', function(){ tab = b.dataset.tab; render(); }); });
 }
@@ -193,6 +196,10 @@ function attention(){
     if (CS.checksToday(m.id, 'pre').length || CS.activeLocks(m.id).length || CS.doNotUse(m.id)) return;
     items.push({ w: 2, h: '<div class="att" data-mrow="' + m.id + '"><span class="ai amber">' + ic('clock') + '</span><div class="tx"><b>' + esc(m.name) + ' has no pre-shift check</b><br>Shift started 07:00 at ' + esc(CS.site(m.site).name) + '<small>' + esc(m.model) + ' · ' + esc(m.ref.replace('Asset ', '')) + '</small></div></div>' });
   });
+  CS.gapsToday().forEach(function(g){
+    if (g.coveredBy) return; var gm = CS.machine(g.machine || g.from); if (machines().indexOf(gm) < 0) return; var o = CS.op(g.op);
+    items.push({ w: 0.3, h: '<div class="att" data-gotab="cover"><span class="ai red">' + ic(g.kind === 'sick' ? 'thermometer' : 'truck') + '</span><div class="tx"><b>' + (g.kind === 'sick' ? esc(gm.name) + ' needs cover: ' + esc(o.first) + ' is off sick' : esc(CS.machine(g.from).name) + ' broke down: ' + (g.machine ? esc(gm.name) + ' needs a driver' : 'no spare free')) + '</b><br>' + CS.coverCandidates(g).length + ' trained to cover. Open Cover and breakdowns to ask them.<small>' + CS.hm(g.at) + ' · ' + esc(CS.site(gm.site).name) + '</small></div></div>' });
+  });
   CS.state.nearmisses.forEach(function(n){
     if (!n.open || (siteF !== 'all' && n.site !== siteF)) return; var o = CS.op(n.op);
     items.push({ w: 0.5, h: '<div class="att"><span class="ai ' + (n.severity === 'high' ? 'red' : 'amber') + '">' + ic('alert-octagon') + '</span><div class="tx"><b>' + esc(n.title) + '</b><br>' + esc(n.text) + (n.raw ? '<i class="raw">' + ic('microphone') + '"' + esc(n.raw) + '"</i>' : '') + '<small>' + esc(o.first + ' ' + o.last) + ' · ' + CS.hm(n.at) + ' · ' + (n.severity === 'high' ? 'High potential' : 'Low potential') + ' · ' + esc(n.action) + '</small></div><button class="smallbtn act" data-nm="' + n.id + '">' + ic('check') + 'Reviewed</button></div>' });
@@ -281,11 +288,96 @@ function pageRec(){
     '</tbody></table></div></section>';
 }
 
+/* ---------- cover and breakdowns ----------
+   Who is off today, what that leaves without a driver, who is trained and allowed to cover it,
+   one tap to ask them, first yes gets it. Breakdowns: Do not use, fitter told, spare suggested. */
+function jobList(mid){
+  var j = CS.jobsFor(mid);
+  if (!j.length) return '';
+  return '<div class="gjobs"><small>' + j.length + ' job' + (j.length > 1 ? 's' : '') + ' today on ' + esc(CS.machine(mid).name) + '</small>' + j.map(function(x){ return '<span>' + CS.hm(x.at) + ' · ' + esc(x.what) + ' · ' + esc(x.where) + '</span>'; }).join('') + '</div>';
+}
+function gapCard(g){
+  var who = CS.op(g.op), m = g.machine ? CS.machine(g.machine) : null, cands = CS.coverCandidates(g);
+  var bd = g.kind === 'breakdown' ? CS.byId(CS.state.breakdowns, g.breakdown) : null, from = g.from ? CS.machine(g.from) : null;
+  var cov = g.coveredBy ? CS.op(g.coveredBy) : null;
+  var head = g.kind === 'sick'
+    ? ''
+    : '<span class="gi red">' + ic('truck') + '</span><div class="gt"><b>' + esc(from.name) + ' has broken down</b><small>' + esc(who.first + ' ' + who.last) + ' · ' + CS.hm(g.at) + (bd && bd.where ? ' · ' + esc(bd.where) : '') + '</small></div>';
+  if (g.kind === 'sick') { var ab = CS.byId(CS.state.absences, g.absence); head = '<span class="gi red">' + ic('thermometer') + '</span><div class="gt"><b>' + esc(who.first + ' ' + who.last) + ' is off sick</b><small>' + esc(who.role) + ' · ' + (ab && ab.how === 'office' ? 'logged by the office' : 'told us on the phone') + ' at ' + CS.hm(g.at) + '</small></div>'; }
+  var h = '<div class="gap ' + (cov ? 'ok' : 'open') + '" data-gap="' + g.id + '"><div class="g1">' + head + (cov ? '<span class="pill ok">' + ic('circle-check') + 'Covered</span>' : '<span class="pill bad">' + ic('alert-triangle') + 'Needs cover</span>') + '</div>';
+  if (bd) {
+    var fit = CS.op(CS.FITTER[from.site]);
+    h += '<div class="gbd">' + (bd.photo ? '<img src="' + bd.photo + '" alt="Breakdown photo" data-zoom>' : '') + '<div><b>' + esc(bd.text) + '</b>' + (bd.raw ? '<i class="raw">' + ic('microphone') + '"' + esc(bd.raw) + '"</i>' : '') +
+      '<div class="gflags"><span class="pill bad">' + ic('hand-stop') + (bd.open ? 'Do not use' : 'Fixed ' + CS.hm(bd.back)) + '</span><span class="pill amber">' + ic('tools') + esc(fit.first) + ' the fitter told</span></div></div></div>';
+  }
+  if (g.kind === 'sick') h += '<div class="gneed">' + ic(CS.KIND_ICON[m.kind]) + '<span><b>' + esc(m.name) + ' needs a ' + (m.kind === 'lorry' ? 'driver' : 'driver or operator') + ' today</b></span></div>' + jobList(g.jobsOf);
+  else if (m) h += '<div class="gneed">' + ic(CS.KIND_ICON[m.kind]) + '<span><b>Spare: ' + esc(m.name) + '</b><small>' + esc(m.model) + (CS.checksToday(m.id, 'pre').length ? ' · pre-shift check done today' : ' · needs a pre-shift check') + '</small></span></div>' + jobList(g.jobsOf);
+  else h += '<div class="gneed">' + ic('alert-triangle') + '<span><b>No spare free</b><small>The fitter or office sorts a hire or moves the work.</small></span></div>' + jobList(g.jobsOf);
+  if (cov) {
+    h += '<div class="gcov">' + CS.avatar(cov, 'sm') + '<span class="gtx"><b>' + esc(cov.first + ' ' + cov.last) + ' is covering ' + esc(m.name) + '</b><small>Said yes at ' + CS.hm(g.coveredAt) + '. First to say yes gets it. Logged.</small></span>' + ic('circle-check') + '</div>';
+  } else if (m) {
+    var sug = cands.filter(function(c){ return !c.no && !c.cov; })[0];
+    if (g.kind === 'breakdown' && sug) h += '<div class="gsug">' + ic('bulb') + '<span>Suggested: <b>' + esc(m.name) + '</b> with <b>' + esc(sug.op.first + ' ' + sug.op.last) + '</b>, trained on it' + (sug.st.free ? ' and free' : ' (' + esc(sug.st.t.charAt(0).toLowerCase() + sug.st.t.slice(1)) + ')') + '</span>' + (sug.asked ? '' : '<button class="smallbtn pri" data-ask="' + g.id + '" data-op="' + sug.op.id + '">' + ic('send') + 'Ask ' + esc(sug.op.first) + '</button>') + '</div>';
+    var open = cands.filter(function(c){ return !c.asked && !c.no && !c.cov; });
+    h += '<div class="cands"><div class="ch">Trained and allowed to drive ' + esc(m.name) + ' · ' + cands.length + '</div>' +
+      (cands.length ? cands.map(function(c){
+        var o = c.op, state = c.cov ? '' : c.no ? '<span class="pill bad">' + ic('x') + 'Said no</span>' : c.asked ? '<span class="pill amber">' + ic('clock') + 'Asked, waiting</span>' : '<button class="smallbtn" data-ask="' + g.id + '" data-op="' + o.id + '">' + ic('send') + 'Ask</button>';
+        return '<div class="cand">' + CS.avatar(o, 'sm') + '<span class="cn"><b>' + esc(o.first + ' ' + o.last) + '</b><small>' + esc(o.role) + '</small></span><span class="pill ' + (c.st.free ? 'ok' : 'mute') + '">' + esc(c.st.t) + '</span>' + state + '</div>';
+      }).join('') : '<div class="empty">Nobody else is trained on ' + esc(m.name) + '. Ring round or hire in.</div>') + '</div>' +
+      (open.length > 1 ? '<button class="smallbtn pri wide" data-askall="' + g.id + '">' + ic('send') + 'Ask all ' + open.length + ' on their phones. First yes gets it</button>' : '');
+  }
+  return h + '</div>';
+}
+function pageCover(){
+  var gs = CS.gapsToday().filter(function(g){ var m = CS.machine(g.machine || g.from); return siteF === 'all' || m.site === siteF; }).sort(function(a, b){ return (a.coveredBy ? 1 : 0) - (b.coveredBy ? 1 : 0) || b.at - a.at; });
+  var ops = CS.OPS.filter(function(o){ return siteF === 'all' || o.site === siteF; });
+  var off = ops.filter(function(o){ return CS.offToday(o.id); });
+  var open = gs.filter(function(g){ return !g.coveredBy; }).length;
+  var offRoad = CS.state.breakdowns.filter(function(b){ return b.open && (siteF === 'all' || CS.machine(b.machine).site === siteF); }).length;
+  function k(cls, icon, label, v, sub){ return '<div class="kpi ' + cls + '"><div class="k">' + ic(icon) + label + '</div><div class="v">' + v + '</div><div class="s">' + sub + '</div></div>'; }
+  var sum = '<div class="kpis three">' + k(off.length ? 'amber' : 'green', 'thermometer', 'Off sick today', off.length, off.length ? off.map(function(o){ return o.first; }).join(', ') : 'Everyone is in') +
+    k(open ? 'red' : 'green', 'user-check', 'Gaps to cover', open, open ? 'Still need a driver' : gs.length ? 'All covered' : 'Nothing to cover') +
+    k(offRoad ? 'red' : 'green', 'truck', 'Off the road', offRoad, offRoad ? 'Broken down today' : 'All vehicles running') + '</div>';
+  var present = ops.filter(function(o){ return !CS.offToday(o.id) && !o.fitter; });
+  var logBox = '<section class="panel"><div class="ph"><h2>' + ic('thermometer') + 'Someone rang in sick?</h2></div><div class="aud"><select id="sickSel" aria-label="Who is off sick">' + present.map(function(o){ return '<option value="' + o.id + '">' + esc(o.first + ' ' + o.last + ' · ' + o.role) + '</option>'; }).join('') + '</select><button class="smallbtn pri" data-sicklog>' + ic('thermometer') + 'Log off sick</button></div><div class="ph" style="margin:10px 0 0"><span class="note">Most people tap "I\'m off sick" on their own phone. This is for when they ring in.</span></div></section>';
+  /* absence list */
+  var abs = ops.map(function(o){ var l = CS.state.absences.filter(function(a){ return a.op === o.id && CS.now() - a.at < 56 * 864e5; }).sort(function(a, b){ return b.at - a.at; }); return { o: o, l: l, today: CS.offToday(o.id), pat: CS.absencePattern(o.id) }; })
+    .filter(function(x){ return x.l.length; }).sort(function(a, b){ return (b.today ? 1 : 0) - (a.today ? 1 : 0) || b.l.length - a.l.length; });
+  var absP = '<section class="panel"><div class="ph"><h2>' + ic('calendar') + 'Off sick, last 8 weeks</h2><span class="sp"></span><span class="note">Spots patterns from the dates</span></div><div class="tw"><table class="t tsm"><thead><tr><th>Who</th><th>Days</th><th>Last off</th><th>Pattern</th></tr></thead><tbody>' +
+    (abs.length ? abs.map(function(x){ return '<tr><td class="nw"><b>' + esc(x.o.first + ' ' + x.o.last) + '</b></td><td><b>' + x.l.length + '</b></td><td class="nw">' + (x.today ? '<span class="pill bad">Today</span>' : esc(CS.weekday(x.l[0].at).slice(0, 3) + ' ' + CS.dShort(x.l[0].at))) + '</td><td>' + (x.pat ? '<span class="pill amber">' + esc(x.pat) + '</span>' : '<span style="color:var(--muted)">None</span>') + '</td></tr>'; }).join('') : '<tr><td colspan="4" class="empty">Nobody off in the last 8 weeks</td></tr>') +
+    '</tbody></table></div></section>';
+  /* breakdown log */
+  var ms = machines().filter(function(m){ return m.group === 'mobile'; });
+  var rows = ms.map(function(m){
+    var h = CS.state.bdHist.filter(function(x){ return x.machine === m.id; }), live = CS.state.breakdowns.filter(function(x){ return x.machine === m.id; });
+    var days = h.reduce(function(a, x){ return a + x.days; }, 0) + live.filter(function(x){ return !x.open; }).length;
+    var lastH = h.slice().sort(function(a, b){ return b.at - a.at; })[0], lastL = live.slice().sort(function(a, b){ return b.at - a.at; })[0];
+    return { m: m, n: h.length + live.length, days: days, openNow: live.some(function(x){ return x.open; }), last: lastL ? 'Today: ' + (lastL.what || 'breakdown') + (lastL.open ? '' : ', back ' + CS.hm(lastL.back)) : lastH ? CS.dShort(lastH.at) + ': ' + lastH.what : '' };
+  }).filter(function(x){ return x.n; }).sort(function(a, b){ return (b.openNow ? 1 : 0) - (a.openNow ? 1 : 0) || b.n - a.n; });
+  var bdP = '<section class="panel"><div class="ph"><h2>' + ic('truck') + 'Breakdown log, last 12 months</h2></div><div class="tw"><table class="t tsm"><thead><tr><th>Vehicle</th><th>Breakdowns</th><th>Days off the road</th><th>Last one</th></tr></thead><tbody>' +
+    rows.map(function(x){ return '<tr><td><b>' + esc(x.m.name) + '</b><br><small style="color:var(--muted)">' + esc(x.m.model) + '</small></td><td><b>' + x.n + '</b></td><td>' + x.days + (x.openNow ? ' <span class="pill bad">Off now</span>' : '') + '</td><td>' + esc(x.last) + '</td></tr>'; }).join('') +
+    '</tbody></table></div><div class="ph" style="margin:10px 0 0"><span class="note">Earlier breakdowns are sample data. New ones go in from the phone.</span></div></section>';
+  return filters() + sum + '<div class="grid2"><div><section class="panel"><div class="ph"><h2>' + ic('user-check') + 'Today\'s gaps</h2><span class="sp"></span><span class="note">Live from the phones</span></div>' +
+    (gs.length ? gs.map(gapCard).join('') : '<div class="empty">' + ic('circle-check') + ' Nobody off and nothing broken down. Gaps show here the moment someone taps "I\'m off sick" or reports a breakdown.</div>') + '</section>' + bdP + '</div>' +
+    '<div>' + logBox + absP + '</div></div>';
+}
+function bindCover(){
+  $$('[data-ask]', view).forEach(function(b){ b.addEventListener('click', function(){ var o = CS.op(b.dataset.op); if (CS.askCover(b.dataset.ask, [o.id])) toast('Asked ' + o.first + ' on their phone', '', 'send'); render(); }); });
+  $$('[data-askall]', view).forEach(function(b){ b.addEventListener('click', function(){ var g = CS.byId(CS.state.gaps, b.dataset.askall), ids = CS.coverCandidates(g).filter(function(c){ return !c.asked && !c.no && !c.cov; }).map(function(c){ return c.op.id; }); if (CS.askCover(g.id, ids)) toast('Asked ' + ids.map(function(id){ return CS.op(id).first; }).join(', ') + ' on their phones. First yes gets it.', '', 'send'); render(); }); });
+  var sb = view.querySelector('[data-sicklog]'); if (sb) sb.addEventListener('click', function(){ var id = view.querySelector('#sickSel').value, o = CS.op(id); if (CS.markSick(id, 'office')) { prevStatus = snapshot(); render(); toast(o.first + ' logged off sick.' + (o.main ? ' ' + CS.machine(o.main).name + ' needs cover.' : ''), 'red', 'thermometer'); } });
+}
+/* Plain English: what the safety words mean. */
+function words(){
+  layer.innerHTML = '<div class="scrim" data-close></div><aside class="drawer notip"><div class="dh"><span class="mi">' + ic('school') + '</span><div><h2>Plain English</h2><small>What the safety words on screen mean. Hover any dotted word to see this too.</small></div><button class="smallbtn x" data-close>' + ic('x') + 'Close</button></div>' +
+    CS.GLOSS.map(function(g){ return '<div class="gl1"><b>' + esc(g[0].charAt(0).toUpperCase() + g[0].slice(1)) + '</b><span>' + esc(g[1]) + '</span></div>'; }).join('') + '</aside>';
+  $$('[data-close]', layer).forEach(function(b){ b.addEventListener('click', closeLayer); });
+}
+
 /* ---------- render ---------- */
 function render(changed){
   tabs();
   var y = window.scrollY;
-  view.innerHTML = tab === 'board' ? pageBoard() : tab === 'iso' ? pageIso() : tab === 'sign' ? pageSign() : tab === 'insp' ? pageInsp() : tab === 'people' ? pagePeople() : pageRec();
+  view.innerHTML = tab === 'board' ? pageBoard() : tab === 'cover' ? pageCover() : tab === 'iso' ? pageIso() : tab === 'sign' ? pageSign() : tab === 'insp' ? pageInsp() : tab === 'people' ? pagePeople() : pageRec();
   window.scrollTo(0, y);
   $$('[data-site]', view).forEach(function(b){ b.addEventListener('click', function(){ siteF = b.dataset.site; render(); }); });
   $$('[data-swpf]', view).forEach(function(b){ b.addEventListener('click', function(){ swpF = b.dataset.swpf; render(); }); });
@@ -298,6 +390,9 @@ function render(changed){
   $$('[data-audit]', view).forEach(function(b){ b.addEventListener('click', function(){ audit(b.dataset.audit); }); });
   $$('[data-brief]', view).forEach(function(b){ b.addEventListener('click', function(){ briefing(b.dataset.brief); }); });
   var asel = view.querySelector('#auditSel'); if (asel) view.querySelector('[data-auditgo]').addEventListener('click', function(){ audit(asel.value); });
+  if (tab === 'cover') bindCover();
+  $$('[data-gotab]', view).forEach(function(b){ b.style.cursor = 'pointer'; b.addEventListener('click', function(){ tab = b.dataset.gotab; render(); window.scrollTo(0, 0); }); });
+  CS.terms(view); CS.terms(document.getElementById('tabs'));
   (changed || []).forEach(function(c){
     $$('[data-m="' + c.id + '"],[data-mrow="' + c.id + '"]', view).forEach(function(el){ el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); if (c.tone) el.classList.add(c.tone); setTimeout(function(){ el.classList.remove('flash', 'red', 'green'); }, 2500); });
   });
@@ -321,6 +416,7 @@ function drawer(mid){
   $$('[data-rec]', layer).forEach(function(b){ b.addEventListener('click', function(){ record(b.dataset.rec); }); });
   $$('[data-audit]', layer).forEach(function(b){ b.addEventListener('click', function(){ audit(b.dataset.audit); }); });
   $$('[data-zoom]', layer).forEach(function(i){ i.addEventListener('click', function(){ zoom(i.src); }); });
+  CS.terms(layer);
 }
 function zoom(src){ var d = document.createElement('div'); d.className = 'lightbox'; d.innerHTML = '<img src="' + src + '" alt="Defect photo">'; d.addEventListener('click', function(){ d.remove(); }); document.body.appendChild(d); }
 
@@ -446,8 +542,9 @@ window.addEventListener('storage', function(e){
   render(changed);
   fresh.forEach(function(x){
     var tone = x.kind === 'defect' ? 'red' : x.kind === 'check' || x.kind === 'lockoff' || x.kind === 'sign' ? 'green' : '';
-    if (x.kind === 'nearmiss') tone = 'red';
-    var icon = x.kind === 'nearmiss' ? 'alert-octagon' : x.kind === 'lockon' ? 'lock' : x.kind === 'lockoff' ? 'lock-open' : x.kind === 'defect' ? 'alert-triangle' : x.kind === 'sign' ? 'signature' : 'clipboard-check';
+    if (x.kind === 'nearmiss' || x.kind === 'sick' || x.kind === 'breakdown') tone = 'red';
+    if (x.kind === 'cover') tone = 'green';
+    var icon = x.kind === 'sick' ? 'thermometer' : x.kind === 'breakdown' ? 'truck' : x.kind === 'cover' ? 'user-check' : x.kind === 'askno' ? 'user-x' : x.kind === 'nearmiss' ? 'alert-octagon' : x.kind === 'lockon' ? 'lock' : x.kind === 'lockoff' ? 'lock-open' : x.kind === 'defect' ? 'alert-triangle' : x.kind === 'sign' ? 'signature' : 'clipboard-check';
     toast(x.text, tone, icon);
   });
 });

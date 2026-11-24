@@ -635,6 +635,12 @@ body.landing{background:radial-gradient(900px 500px at 50% -100px,rgba(16,151,11
   .otop .smallbtn .btxt{display:none}
   .otop .live{font-size:0;gap:0}
 }
+@media (max-width:1520px) and (min-width:701px){
+  .otabs button .ic{display:none}
+  .otabs{min-width:0;flex:0 1 auto;overflow-x:auto;scrollbar-width:none}
+  .otabs::-webkit-scrollbar{display:none}
+  .otop>*:not(.otabs):not(.sp){flex-shrink:0}
+}
 @media (max-width:1240px) and (min-width:701px){
   .otabs button .ic{display:none}
   .otop .clock small{display:none}
@@ -733,3 +739,61 @@ body.phone,body.office,body.landing{background:var(--bg)}
 .tourlink .ic{font-size:17px}
 /* toolbox talk tiles: keep the avatar round (it was stretching) */
 .tb .av{flex:0 0 auto}
+
+/* ============ COVER AND BREAKDOWNS ============ */
+.otabs button .cnt.red{background:var(--bad);color:#fff}
+.kpis.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.gap{border:1px solid var(--line2);border-radius:16px;padding:14px;background:var(--card);margin-top:12px}
+.gap:first-of-type{margin-top:0}
+.gap.open{border-color:rgba(255,75,62,.55);background:linear-gradient(180deg,rgba(255,75,62,.08),var(--card))}
+.gap.ok{border-color:rgba(34,197,94,.45)}
+.g1{display:flex;align-items:center;gap:12px}
+.g1 .gt{flex:1;min-width:0}.g1 .gt b{display:block;font-size:15px}.g1 .gt small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
+.gi{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:21px;flex:0 0 auto}
+.gi.red{background:var(--bad-l);color:var(--bad)}
+.gneed{display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--bg2);border:1px solid var(--line)}
+.gneed>.ic{font-size:24px;color:var(--brand-hi);flex:0 0 auto}.gneed b{display:block;font-size:13.5px}.gneed small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
+.gjobs{display:flex;flex-direction:column;gap:3px;margin:8px 2px 0;font-size:12px;color:var(--ink2)}
+.gjobs small{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.gbd{display:flex;gap:12px;margin-top:12px;font-size:12.5px;line-height:1.4}
+.gbd img{width:96px;height:66px;object-fit:cover;border-radius:10px;border:1px solid var(--line2);cursor:zoom-in;flex:0 0 auto}
+.gbd .raw{display:block;color:var(--muted);font-size:11.5px;margin-top:4px}
+.gflags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.gsug{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--hivis-l);border:1px solid rgba(255,210,31,.4);font-size:12.5px}
+.gsug>.ic{font-size:20px;color:var(--hivis)}.gsug>span{flex:1;min-width:180px}
+.cands{margin-top:12px}
+.cands .ch{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px}
+.cand{display:flex;align-items:center;gap:10px;padding:8px 2px;border-top:1px solid var(--line);flex-wrap:wrap}
+.cand:first-of-type{border-top:0}
+.cand .cn{flex:1;min-width:110px}.cand .cn b{display:block;font-size:13px}.cand .cn small{color:var(--muted);font-size:11px}
+.pill.mute{background:var(--card2);color:var(--muted);border:1px solid var(--line2)}
+.smallbtn.pri{background:var(--brand);border-color:var(--brand);color:#fff}
+.smallbtn.wide{width:100%;justify-content:center;margin-top:10px;padding:11px;font-size:12px;white-space:normal}
+.gcov{display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--ok-l);border:1px solid rgba(34,197,94,.45)}
+.gcov .gtx{flex:1;min-width:0}.gcov b{display:block;font-size:13.5px}.gcov small{display:block;color:var(--ink2);font-size:11.5px;margin-top:2px}.gcov>.ic{font-size:22px;color:var(--ok)}
+table.t.tsm{min-width:0}
+.aud select{max-width:100%}
+.gl1{padding:10px 2px;border-top:1px solid var(--line);font-size:12.5px;line-height:1.45}
+.gl1 b{display:block;font-size:13.5px;margin-bottom:2px}.gl1 span{color:var(--ink2)}
+/* Plain English tips on safety words */
+.term{text-decoration:underline dotted;text-decoration-color:var(--brand-hi);text-underline-offset:3px;text-decoration-thickness:1.5px;cursor:help}
+.termtip{position:fixed;z-index:200;display:none;background:#0F1715;color:var(--ink);border:1px solid var(--brand);border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.45;font-weight:500;box-shadow:0 14px 40px rgba(0,0,0,.55);pointer-events:none;text-transform:none;letter-spacing:0;text-align:left}
+.termtip b{display:block;color:var(--brand-hi);font-size:12px;margin-bottom:3px}
+/* phone: cover asks and off sick */
+.askcard{border:2px solid var(--hivis);border-radius:20px;padding:14px;background:linear-gradient(135deg,rgba(255,210,31,.14),var(--card));margin:4px 0 12px}
+.askcard .ah{display:flex;align-items:center;gap:12px}
+.askcard .ah>.ic{font-size:38px;color:var(--hivis);flex:0 0 auto}
+.askcard .ah div{flex:1;min-width:0}.askcard b{display:block;font-size:18px;font-weight:800;line-height:1.2}.askcard small{display:block;font-size:13px;color:var(--ink2);margin-top:3px}
+.askcard .twin{margin-top:4px}
+.askcard.ok{border-color:var(--ok);background:linear-gradient(135deg,rgba(34,197,94,.16),var(--card))}.askcard.ok .ah>.ic{color:var(--ok)}
+.sickcard{display:flex;align-items:center;gap:12px;border:2px solid var(--bad);border-radius:20px;padding:14px;background:linear-gradient(135deg,rgba(255,75,62,.16),var(--card));margin:4px 0 12px}
+.sickcard>.ic{font-size:36px;color:var(--bad);flex:0 0 auto}.sickcard b{display:block;font-size:17px}.sickcard small{display:block;font-size:13px;color:var(--ink2);margin-top:2px}
+.act.sick>.ic{color:var(--bad)}.act.bd>.ic{color:var(--amber)}
+.bdphoto{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.bdphoto img{width:100%;border-radius:14px;border:1px solid var(--line2)}
+.bdphoto .photo{min-height:90px;margin:0;flex:1}
+.vjobs{font-size:13px;color:var(--ink2);display:flex;flex-direction:column;gap:4px;margin-top:8px}
+
+table.t td.nw{white-space:nowrap}
+
+.att .smallbtn.act{min-height:0;flex-direction:row;align-items:center;justify-content:center;gap:6px;padding:7px 11px;border-radius:10px;background:var(--card);overflow:visible}

@@ -32,18 +32,21 @@ var SITES = [
    iso = machines they are authorised to isolate (put a lock on).
    Demo PIN for everyone is 1234. */
 var OPS = [
-  { id: 'o1', first: 'Dean', last: 'Hooper', site: 'kw', role: 'Shovel driver', lock: 11, col: '#10976F', drive: ['m1', 'm2', 'm5'], iso: [] },
-  { id: 'o2', first: 'Lee', last: 'Pengelly', site: 'kw', role: 'Baler operator', lock: 12, col: '#E8A317', drive: ['m6', 'm7', 'm8', 'm5'], iso: ['m6', 'm7', 'm8'] },
-  { id: 'o3', first: 'Kyle', last: 'Ashford', site: 'kw', role: '360 driver', lock: 13, col: '#3B82F6', drive: ['m3', 'm1'], iso: ['m8'] },
-  { id: 'o4', first: 'Shaun', last: 'Rowe', site: 'kw', role: 'Telehandler', lock: 14, col: '#E2553F', drive: ['m4', 'm5'], iso: [] },
-  { id: 'o5', first: 'Jamie', last: 'Tozer', site: 'kw', role: 'Picker', lock: 15, col: '#8B5CF6', drive: ['m6'], iso: ['m6'] },
-  { id: 'o6', first: 'Marek', last: 'Nowak', site: 'kw', role: 'Picker', lock: 16, col: '#0EA5A4', drive: ['m6', 'm5'], iso: ['m6'] },
+  { id: 'o1', first: 'Dean', last: 'Hooper', site: 'kw', role: 'Shovel driver', lock: 11, col: '#10976F', drive: ['m1', 'm2', 'm5'], iso: [], main: 'm2' },
+  { id: 'o2', first: 'Lee', last: 'Pengelly', site: 'kw', role: 'Baler operator', lock: 12, col: '#E8A317', drive: ['m6', 'm7', 'm8', 'm5'], iso: ['m6', 'm7', 'm8'], main: 'm7' },
+  { id: 'o3', first: 'Kyle', last: 'Ashford', site: 'kw', role: '360 driver', lock: 13, col: '#3B82F6', drive: ['m3', 'm1', 'm2'], iso: ['m8'], main: 'm3' },
+  { id: 'o4', first: 'Shaun', last: 'Rowe', site: 'kw', role: 'Telehandler', lock: 14, col: '#E2553F', drive: ['m4', 'm5', 'm14', 'm15', 'm16'], iso: [], main: 'm4' },
+  { id: 'o5', first: 'Jamie', last: 'Tozer', site: 'kw', role: 'Picker', lock: 15, col: '#8B5CF6', drive: ['m6'], iso: ['m6'], main: 'm6' },
+  { id: 'o6', first: 'Marek', last: 'Nowak', site: 'kw', role: 'Picker', lock: 16, col: '#0EA5A4', drive: ['m6', 'm5'], iso: ['m6'], main: 'm6' },
+  { id: 'o14', first: 'Wayne', last: 'Bickley', site: 'kw', role: 'HGV driver', lock: 18, col: '#0891B2', drive: ['m14', 'm16'], iso: [], main: 'm14' },
+  { id: 'o15', first: 'Ben', last: 'Ashton', site: 'kw', role: 'HGV driver', lock: 19, col: '#65A30D', drive: ['m15', 'm16'], iso: [], main: 'm15' },
+  { id: 'o16', first: 'Craig', last: 'Lang', site: 'kw', role: 'Relief driver', lock: 20, col: '#9333EA', drive: ['m14', 'm15', 'm16', 'm2', 'm4'], iso: [], main: null },
   { id: 'o13', first: 'Steve', last: 'Luxton', site: 'kw', role: 'Fitter', lock: 17, col: '#475569', fitter: true, drive: ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8'], iso: ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8'] },
-  { id: 'o7', first: 'Gary', last: 'Hext', site: 'dm', role: 'Shredder operator', lock: 21, col: '#D97706', drive: ['m12', 'm13'], iso: ['m12', 'm13'] },
-  { id: 'o8', first: 'Callum', last: 'Squire', site: 'dm', role: 'Shovel driver', lock: 22, col: '#2563EB', drive: ['m9', 'm11'], iso: [] },
+  { id: 'o7', first: 'Gary', last: 'Hext', site: 'dm', role: 'Shredder operator', lock: 21, col: '#D97706', drive: ['m12', 'm13'], iso: ['m12', 'm13'], main: 'm12' },
+  { id: 'o8', first: 'Callum', last: 'Squire', site: 'dm', role: 'Shovel driver', lock: 22, col: '#2563EB', drive: ['m9', 'm11'], iso: [], main: 'm9' },
   { id: 'o9', first: 'Ryan', last: 'Bolt', site: 'dm', role: 'Fitter', lock: 23, col: '#DC2626', fitter: true, drive: ['m9', 'm10', 'm11', 'm12', 'm13'], iso: ['m9', 'm10', 'm11', 'm12', 'm13'] },
-  { id: 'o10', first: 'Tom', last: 'Vosper', site: 'dm', role: '360 driver', lock: 24, col: '#059669', drive: ['m10', 'm9'], iso: ['m13'] },
-  { id: 'o11', first: 'Nathan', last: 'Heard', site: 'dm', role: 'Forklift', lock: 25, col: '#7C3AED', drive: ['m11'], iso: [] },
+  { id: 'o10', first: 'Tom', last: 'Vosper', site: 'dm', role: '360 driver', lock: 24, col: '#059669', drive: ['m10', 'm9'], iso: ['m13'], main: 'm10' },
+  { id: 'o11', first: 'Nathan', last: 'Heard', site: 'dm', role: 'Forklift', lock: 25, col: '#7C3AED', drive: ['m11'], iso: [], main: 'm11' },
   { id: 'o12', first: 'Pete', last: 'Stoneman', site: 'dm', role: 'Yard operative', lock: 26, col: '#DB2777', drive: ['m11'], iso: [] }
 ];
 var PIN = '1234';
@@ -59,6 +62,9 @@ var MACHINES = [
   { id: 'm6', site: 'kw', kind: 'picking', name: 'Picking line', model: '6 bay picking station', ref: 'Asset KW-PL1', asset: 'KW-PL1', group: 'fixed' },
   { id: 'm7', site: 'kw', kind: 'baler', name: 'Baler 1', model: 'Horizontal baler', ref: 'Asset KW-BL1', asset: 'KW-BL1', group: 'fixed' },
   { id: 'm8', site: 'kw', kind: 'conveyor', name: 'Infeed conveyor', model: 'Belt conveyor C1', ref: 'Asset KW-C1', asset: 'KW-C1', group: 'fixed' },
+  { id: 'm14', site: 'kw', kind: 'lorry', name: 'Lorry 1', model: 'DAF CF hook loader (RoRo)', ref: 'WA20 KXR', asset: 'KW-L1', group: 'mobile' },
+  { id: 'm15', site: 'kw', kind: 'lorry', name: 'Lorry 2', model: 'Volvo FL skip loader', ref: 'WF19 PNO', asset: 'KW-L2', group: 'mobile' },
+  { id: 'm16', site: 'kw', kind: 'lorry', name: 'Lorry 3', model: 'DAF CF hook loader, spare', ref: 'WJ17 DVE', asset: 'KW-L3', group: 'mobile', spare: true },
   { id: 'm9', site: 'dm', kind: 'shovel', name: 'Shovel 3', model: 'Volvo L90H loading shovel', ref: 'WK68 RZE', asset: 'DM-01', group: 'mobile' },
   { id: 'm10', site: 'dm', kind: 'excavator', name: '360 Handler', model: 'Doosan DX225LC', ref: 'Asset DM-02', asset: 'DM-02', group: 'mobile' },
   { id: 'm11', site: 'dm', kind: 'forklift', name: 'Forklift', model: 'Toyota 8FD25', ref: 'Asset DM-03', asset: 'DM-03', group: 'mobile' },
@@ -66,7 +72,7 @@ var MACHINES = [
   { id: 'm13', site: 'dm', kind: 'trommel', name: 'Trommel', model: 'Trommel screen', ref: 'Asset DM-TR1', asset: 'DM-TR1', group: 'fixed' }
 ];
 
-var KIND_ICON = { shovel: 'bulldozer', excavator: 'backhoe', telehandler: 'car-crane', forklift: 'forklift', picking: 'm-picking', baler: 'm-baler', shredder: 'm-shredder', trommel: 'm-trommel', conveyor: 'm-conveyor' };
+var KIND_ICON = { shovel: 'bulldozer', excavator: 'backhoe', telehandler: 'car-crane', forklift: 'forklift', picking: 'm-picking', baler: 'm-baler', shredder: 'm-shredder', trommel: 'm-trommel', conveyor: 'm-conveyor', lorry: 'truck' };
 
 /* Check lists. t = short title shown, s = what to look for (also read out). */
 var MOBILE_PRE = {
@@ -83,7 +89,8 @@ var MOBILE_PRE = {
   ],
   excavator: { 1: { i: 'tools', t: 'Tracks', s: 'Check the tracks and rollers. No damage, nothing loose.' }, 2: { i: 'bucket', t: 'Grab and quick hitch', s: 'Grab is locked on. Quick hitch safety pin is in.' } },
   telehandler: { 2: { i: 'forklift', t: 'Forks and boom', s: 'Forks locked on. No damage to the boom or the hoses.' } },
-  forklift: { 2: { i: 'forklift', t: 'Forks and chains', s: 'Forks, mast and chains. No cracks, no slack chains.' } }
+  forklift: { 2: { i: 'forklift', t: 'Forks and chains', s: 'Forks, mast and chains. No cracks, no slack chains.' } },
+  lorry: { 2: { i: 'truck', t: 'Hook or skip arms', s: 'Hook arm or skip arms, chains and body locks. No damage, all locked down.' } }
 };
 var MOBILE_RUN = [
   { i: 'gauge', t: 'Warning lights', s: 'No warning lights on the dash.' },
@@ -133,6 +140,7 @@ function checklist(machine, type){
       var sw = MOBILE_PRE[machine.kind];
       if (sw) Object.keys(sw).forEach(function(k){ list[+k] = sw[k]; });
     } else list = (type === 'run' ? MOBILE_RUN : MOBILE_POST).slice();
+    if (machine.kind === 'lorry' && type === 'post') list[0] = { i: 'parking', t: 'Park up safe', s: 'Park in the lorry park. Arms down, body locked.' };
   } else {
     if (type === 'pre') { list = FIXED_PRE.slice(); if (FIXED_EXTRA[machine.kind]) list.splice(1, 0, FIXED_EXTRA[machine.kind]); }
     else list = (type === 'run' ? FIXED_RUN : FIXED_POST).slice();
@@ -184,7 +192,7 @@ var SWPS = [
 
 
 /* Training and competence. Card names are typical UK schemes, dates are sample. */
-var CARD = { shovel: 'NPORS N600 Loading shovel', excavator: 'NPORS N202 360 excavator', telehandler: 'NPORS N010 Telehandler', forklift: 'RTITB Counterbalance forklift', picking: 'In-house: Picking line', baler: 'In-house: Baler operation', conveyor: 'In-house: Conveyor and infeed', shredder: 'In-house: Shredder operation', trommel: 'In-house: Trommel operation' };
+var CARD = { shovel: 'NPORS N600 Loading shovel', excavator: 'NPORS N202 360 excavator', telehandler: 'NPORS N010 Telehandler', forklift: 'RTITB Counterbalance forklift', picking: 'In-house: Picking line', baler: 'In-house: Baler operation', conveyor: 'In-house: Conveyor and infeed', shredder: 'In-house: Shredder operation', trommel: 'In-house: Trommel operation', lorry: 'HGV licence (C) and driver CPC' };
 var T_OVERRIDE = { 'o1|forklift': 18, 'o4|telehandler': 11, 'o8|forklift': -4, 'o12|Manual handling': 9 };
 function training(oid){
   var o = op(oid), seen = {}, out = [];
@@ -214,6 +222,9 @@ var INSPECT = {
   m6: [['PUWER', 'PUWER inspection', 'Every 6 months', 88]],
   m7: [['PUWER', 'PUWER inspection', 'Every 6 months', 6], ['SERVICE', 'Hydraulic service', 'Every 6 months', 54]],
   m8: [['PUWER', 'PUWER inspection', 'Every 6 months', 120]],
+  m14: [['LOLER', 'LOLER thorough examination', 'Every 12 months', 96], ['SERVICE', 'Safety inspection', 'Every 6 weeks', 19]],
+  m15: [['LOLER', 'LOLER thorough examination', 'Every 12 months', 201], ['SERVICE', 'Safety inspection', 'Every 6 weeks', 8]],
+  m16: [['LOLER', 'LOLER thorough examination', 'Every 12 months', 150], ['SERVICE', 'Safety inspection', 'Every 6 weeks', 33]],
   m9: [['PUWER', 'PUWER inspection', 'Every 3 months', 17], ['SERVICE', '500 hour service', 'By hours', 44]],
   m10: [['PUWER', 'PUWER inspection', 'Every 3 months', 66], ['SERVICE', '500 hour service', 'By hours', 5]],
   m11: [['LOLER', 'LOLER thorough examination', 'Every 12 months', -3], ['PUWER', 'PUWER inspection', 'Every 3 months', 38]],
@@ -223,7 +234,7 @@ var INSPECT = {
 function inspections(mid){
   return (INSPECT[mid] || []).map(function(x, i){
     var due = daysFrom(x[3]), d = x[3];
-    return { kind: x[0], name: x[1], every: x[2], due: due, last: due - (x[2].indexOf('12') >= 0 ? 365 : x[2].indexOf('6') >= 0 ? 182 : 91) * 24 * 60 * MIN, ref: (x[0] === 'LOLER' ? 'TE-' : x[0] === 'PUWER' ? 'PI-' : 'SV-') + (4100 + parseInt(mid.slice(1), 10) * 7 + i),
+    return { kind: x[0], name: x[1], every: x[2], due: due, last: due - (x[2].indexOf('week') >= 0 ? 42 : x[2].indexOf('12') >= 0 ? 365 : x[2].indexOf('6') >= 0 ? 182 : 91) * 24 * 60 * MIN, ref: (x[0] === 'LOLER' ? 'TE-' : x[0] === 'PUWER' ? 'PI-' : 'SV-') + (4100 + parseInt(mid.slice(1), 10) * 7 + i),
       c: d < 0 ? 'red' : d <= 30 ? 'amber' : 'green', label: d < 0 ? 'Overdue ' + (-d) + ' day' + (d === -1 ? '' : 's') : d === 0 ? 'Due today' : 'Due ' + dShort(due) };
   });
 }
@@ -251,6 +262,7 @@ var TBT = { id: 'tbt-iso', title: 'Isolation: one person, one lock', by: 'Trista
 /* Rules-based tidy-up of a spoken note. No AI: fixed word lists and templates. */
 var NUMW = { one: 1, two: 2, three: 3, four: 4, five: 5, to: 2, too: 2, won: 1, tree: 3, free: 3 };
 var MACHINE_WORDS = [
+  [/\b(lorry|truck|wagon|hook loader|skip loader|roro)\s*(one|won|1)\b/, 'm14'], [/\b(lorry|truck|wagon|hook loader|skip loader|roro)\s*(two|to|too|2)\b/, 'm15'], [/\b(lorry|truck|wagon|hook loader|skip loader|roro)\s*(three|tree|free|3)\b/, 'm16'],
   [/\b(shovel|loader|loading shovel)\s*(one|won|1)\b/, 'm1'], [/\b(shovel|loader|loading shovel)\s*(two|to|too|2)\b/, 'm2'], [/\b(shovel|loader|loading shovel)\s*(three|tree|free|3)\b/, 'm9'],
   [/\b(360|three sixty|sorter|sorting grab)\b/, 'm3', 'kw'], [/\b(360|three sixty|handler|doosan)\b/, 'm10', 'dm'],
   [/\b(telehandler|tele handler|telly|teli|jcb)\b/, 'm4'], [/\b(forklift|fork lift|fork truck|forky)\b/, 'm5', 'kw'], [/\b(forklift|fork lift|fork truck|forky)\b/, 'm11', 'dm'],
@@ -312,6 +324,193 @@ function tidyNearMiss(raw, siteId){
   return { kind: 'nearmiss', machine: m ? m.id : null, place: place, cat: cat, title: title, text: text, severity: high ? 'high' : 'low', why: high ? 'Could have caused a serious injury. Rule: high potential, review today.' : 'Low potential. Rule: review this week.', action: action, unsure: unsure, raw: raw };
 }
 
+/* Breakdown said by voice or typed. Rules only: fixed word lists, no AI. A breakdown always means Do not use. */
+function tidyBreakdown(raw, siteId, mFixed){
+  var low = ' ' + String(raw || '').toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ') + ' ';
+  var m = mFixed || findMachine(low, siteId), unsure = [];
+  var road = (low.match(/\b(?:on|at) the ([am] ?\d{1,3})\b/) || [])[1];
+  var near = (low.match(/\bnear ([a-z]{3,})\b/) || [])[1];
+  var where = road || near ? [road ? 'on the ' + road.toUpperCase().replace(' ', '') : '', near ? 'near ' + cap(near) : ''].filter(Boolean).join(' ') : /\b(yard|on site|tipping|weighbridge)\b/.test(low) ? 'on site' : '';
+  var what = /lost power|no power|losing power|power loss|limp mode/.test(low) ? 'lost power' : /won.?t start|will not start|not starting|flat battery|battery/.test(low) ? 'will not start' : /puncture|flat tyre|blow ?out|tyre/.test(low) ? 'tyre gone' : /overheat|steam|temperature|boiling/.test(low) ? 'overheating' : /hydraulic|hose|burst/.test(low) ? 'hydraulic fault' : /brake/.test(low) ? 'brake fault' : /gear ?box|clutch|gears/.test(low) ? 'gearbox fault' : /warning light|engine light|on the dash/.test(low) ? 'warning light on' : /leak/.test(low) ? 'leaking' : 'broken down';
+  var light = what !== 'warning light on' && /warning light|engine light|on the dash/.test(low);
+  var safe = /lay ?by|pulled (over|in)|hard shoulder|safe/.test(low);
+  if (!m) unsure.push('Which vehicle or machine. Tap it below.');
+  if (!where) unsure.push('Where it is. Add it if you can.');
+  var title = (m ? m.name + ': ' : '') + 'Breakdown, ' + what;
+  var text = (m ? m.name : 'The vehicle') + ' has broken down' + (where ? ' ' + where : '') + '. ' + cap(what) + (light ? ', warning light on' : '') + '.' + (safe ? ' Driver has pulled over safely.' : '');
+  var fit = m ? op(FITTER[m.site]) : null;
+  var action = 'Off the road. Do not use until the fitter has fixed and tested it. ' + (fit ? fit.first + ' the fitter' : 'The fitter') + ' and the office are told straight away.';
+  return { kind: 'breakdown', machine: m ? m.id : null, where: where, what: what, title: title, text: text, severity: 'serious', why: 'Rule: a breakdown always means Do not use until a fitter has checked it.', action: action, unsure: unsure, raw: raw };
+}
+
+/* ---------- Cover and breakdowns ----------
+   Off sick: one tap on the phone (or the office logs it). Their machine or lorry gets a gap.
+   The office sees who is trained and allowed to cover it, asks them in one tap, first yes gets it.
+   Breakdown: Do not use straight away, fitter told, a spare suggested with a trained driver. */
+function weekday(t){ return new Date(t).toLocaleDateString('en-GB', { timeZone: 'Europe/London', weekday: 'long' }); }
+function offToday(oid){ return state.absences.some(function(a){ return a.op === oid && a.day === dateKey(now()); }); }
+function gapsToday(){ return state.gaps.filter(function(g){ return isToday(g.at); }); }
+function jobsFor(mid){ return (state.jobs && state.jobs[mid]) || []; }
+function inUseBy(mid){ return OPS.filter(function(o){ return o.main === mid && !offToday(o.id); })[0] || null; }
+function spareFor(mid){
+  var m = machine(mid);
+  var l = MACHINES.filter(function(x){ return x.id !== mid && x.site === m.site && x.kind === m.kind && !doNotUse(x.id) && !activeLocks(x.id).length && !inUseBy(x.id) && !state.gaps.some(function(g){ return isToday(g.at) && g.machine === x.id && g.kind === 'breakdown'; }); });
+  l.sort(function(a, b){ return (b.spare ? 1 : 0) - (a.spare ? 1 : 0); });
+  return l[0] || null;
+}
+function coverStatus(o){
+  var cov = gapsToday().filter(function(g){ return g.coveredBy === o.id; })[0];
+  if (cov) return { c: 'busy', free: false, t: 'Covering ' + machine(cov.machine).name };
+  if (!o.main) return { c: 'free', free: true, t: 'Free today' };
+  if (doNotUse(o.main)) return { c: 'free', free: true, t: machine(o.main).name + ' is off the road' };
+  return { c: 'busy', free: false, t: 'On ' + machine(o.main).name + ' today' };
+}
+function coverCandidates(g){
+  if (!g || !g.machine) return [];
+  var m = machine(g.machine);
+  return OPS.filter(function(o){ return o.site === m.site && o.id !== g.op && !o.fitter && !offToday(o.id) && canDrive(o.id, g.machine).ok; })
+    .map(function(o){ var st = coverStatus(o); return { op: o, st: st, cov: /^Covering/.test(st.t), asked: g.asked.indexOf(o.id) >= 0, no: g.declined.indexOf(o.id) >= 0 }; })
+    .sort(function(a, b){ return (a.no || a.cov ? 1 : 0) - (b.no || b.cov ? 1 : 0) || (b.st.free ? 1 : 0) - (a.st.free ? 1 : 0); });
+}
+function markSick(oid, how){
+  if (offToday(oid)) return null;
+  var o = op(oid), a = { id: uid('a'), op: oid, at: now(), day: dateKey(now()), how: how || 'phone', reason: 'Sick' };
+  state.absences.push(a);
+  if (o.main) state.gaps.push({ id: uid('g'), kind: 'sick', at: now(), machine: o.main, op: oid, absence: a.id, jobsOf: o.main, asked: [], declined: [], coveredBy: null });
+  addEvent('sick', o.main || null, oid, o.first + ' is off sick today' + (a.how === 'office' ? ' (logged by the office)' : '') + '.' + (o.main ? ' ' + machine(o.main).name + ' needs cover.' : ''));
+  persist({ type: 'sick', op: oid });
+  return a;
+}
+function addBreakdown(b, oid){
+  if (!b.machine || (b.id && byId(state.breakdowns, b.id))) return null;
+  var m = machine(b.machine), fit = FITTER[m.site];
+  var d = { id: uid('d'), machine: m.id, op: oid, at: now(), item: 'Breakdown', note: b.text, title: b.title, severity: 'serious', photo: b.photo || null, check: null, open: true, assigned: fit, how: b.how || 'voice', raw: b.raw || '' };
+  var rec = { id: b.id || uid('b'), machine: m.id, op: oid, at: now(), where: b.where || '', what: b.what || '', text: b.text, title: b.title, photo: b.photo || null, defect: d.id, raw: b.raw || '', how: d.how, open: true };
+  d.breakdown = rec.id;
+  state.defects.push(d);
+  state.breakdowns.push(rec);
+  var spare = spareFor(m.id);
+  state.gaps.push({ id: uid('g'), kind: 'breakdown', at: now(), machine: spare ? spare.id : null, from: m.id, breakdown: rec.id, op: oid, jobsOf: m.id, asked: [], declined: [], coveredBy: null });
+  addEvent('breakdown', m.id, oid, 'Breakdown: ' + op(oid).first + ' reported ' + m.name + (rec.where ? ' ' + rec.where : '') + '. Do not use. ' + op(fit).first + ' the fitter has been told.');
+  persist({ type: 'breakdown', machine: m.id, op: oid });
+  return rec;
+}
+function closeBreakdownFor(d){ if (!d || !d.breakdown) return; var b = byId(state.breakdowns, d.breakdown); if (b && b.open) { b.open = false; b.back = now(); } }
+function askCover(gid, ids){
+  var g = byId(state.gaps, gid); if (!g || g.coveredBy) return false;
+  var add = (ids || []).filter(function(id){ return g.asked.indexOf(id) < 0 && g.declined.indexOf(id) < 0; });
+  if (!add.length) return false;
+  g.asked = g.asked.concat(add); g.askedAt = now();
+  addEvent('ask', g.machine, null, 'Office asked ' + add.map(function(id){ return op(id).first; }).join(', ') + ' to cover ' + machine(g.machine).name + '.');
+  persist({ type: 'ask', op: add[0] });
+  return true;
+}
+/* First to say yes gets it. Returns 'got', 'taken' (someone was quicker), 'no' or false. */
+function answerCover(gid, oid, yes){
+  var g = byId(state.gaps, gid); if (!g || g.asked.indexOf(oid) < 0) return false;
+  if (g.coveredBy === oid) return 'got';
+  if (!yes) { if (g.declined.indexOf(oid) < 0) { g.declined.push(oid); addEvent('askno', g.machine, oid, op(oid).first + ' cannot cover ' + machine(g.machine).name + ' today.'); persist({ type: 'askno', op: oid }); } return 'no'; }
+  if (g.coveredBy) return 'taken';
+  g.coveredBy = oid; g.coveredAt = now();
+  addEvent('cover', g.machine, oid, op(oid).first + ' said yes first: covering ' + machine(g.machine).name + (g.kind === 'sick' ? ' for ' + op(g.op).first : ' while ' + machine(g.from).name + ' is off the road') + '.');
+  persist({ type: 'cover', op: oid });
+  return 'got';
+}
+function myAsks(oid){ return gapsToday().filter(function(g){ return g.asked.indexOf(oid) >= 0 && g.declined.indexOf(oid) < 0 && (!g.coveredBy || g.coveredBy === oid); }); }
+/* Absence pattern, from the dates alone: "off 3 Fridays in a row". */
+function absencePattern(oid){
+  var days = state.absences.filter(function(a){ return a.op === oid && now() - a.at < 56 * 864e5; }).map(function(a){ return a.at; }).sort(function(a, b){ return b - a; });
+  var byW = {};
+  days.forEach(function(t){ var w = weekday(t); (byW[w] = byW[w] || []).push(t); });
+  var best = '';
+  Object.keys(byW).forEach(function(w){
+    var l = byW[w]; if (l.length < 2) return;
+    var run = 1; for (var i = 1; i < l.length; i++) { if (Math.round((l[i - 1] - l[i]) / 864e5) === 7) run++; else break; }
+    if (run >= 3) best = 'Off ' + run + ' ' + w + 's in a row';
+    else if (l.length >= 3 && !best) best = 'Off ' + l.length + ' ' + w + 's in 8 weeks';
+  });
+  return best;
+}
+/* Glossary: plain English for the safety words on screen. */
+var GLOSS = [
+  ['LOTOTO', 'Lock out, tag out, try out. Switch the machine off at its isolator, fit your own padlock and name tag, then try to start it to prove nothing can move.'],
+  ['LOLER', 'The lifting rules (Lifting Operations and Lifting Equipment Regulations). Anything that lifts, like a forklift, telehandler or skip loader, needs a thorough examination by a competent person, usually every 12 months.'],
+  ['PUWER', 'The work equipment rules (Provision and Use of Work Equipment Regulations). Machines must be kept safe, inspected regularly and only used by trained people.'],
+  ['SWP', 'Safe work procedure. The step by step way to do a risky job safely.'],
+  ['thorough examination', 'The formal LOLER check of lifting equipment by a competent person, with a written report.'],
+  ['permit to work', 'A written go-ahead for risky maintenance. It lists every power source that has been switched off and locked. The job cannot start until it is all done.'],
+  ['permits to work', 'Written go-aheads for risky maintenance. Each lists every power source switched off and locked before the job starts.'],
+  ['group lock box', 'A box that holds the machine keys. Everyone working on the machine puts their own padlock on the box, so it cannot be switched back on until the last person is out.'],
+  ['group box', 'A box that holds the machine keys. Everyone working on the machine puts their own padlock on it, so it cannot be switched back on until the last person is out.'],
+  ['isolation', 'Cutting off every power source (electric, hydraulic, anything stored up) so the machine cannot move while someone works on it.'],
+  ['isolations', 'Machines that have had every power source cut off and locked, so nobody can start them while someone works on them.'],
+  ['isolate', 'Cut off every power source and lock it off, so the machine cannot move while someone works on it.'],
+  ['isolating', 'Cutting off every power source and locking it off, so the machine cannot move while someone works on it.'],
+  ['isolated', 'Every power source cut off and locked, so the machine cannot move.'],
+  ['isolator', 'The main switch that cuts the power to a machine. It takes a padlock.'],
+  ['try out', 'After locking off, pressing start to prove nothing moves.'],
+  ['stored energy', 'Power still left in a machine after it is switched off, like hydraulic pressure or a raised ram.'],
+  ['toolbox talk', 'A short safety briefing for the team, usually at the start of a shift.'],
+  ['near miss', 'Something that nearly hurt someone but did not. Reporting them stops the real accident.'],
+  ['near misses', 'Things that nearly hurt someone but did not. Reporting them stops the real accident.'],
+  ['pre-shift', 'The walk-round check of a machine before it is used each day.'],
+  ['audit pack', 'Everything about one machine in one printable file: checks, defects, locks and inspections.'],
+  ['sign-offs', 'Proof that each person was read the procedure and tapped to say they understand it.'],
+  ['competent person', 'Someone with the training and experience to do the check properly, often an outside engineer or insurer.'],
+  ['CPC', 'Driver Certificate of Professional Competence. Lorry drivers need it to drive for work.']
+];
+var GMAP = {}; GLOSS.forEach(function(g){ GMAP[g[0].toLowerCase()] = g[1]; });
+var GRE = new RegExp('\\b(' + GLOSS.map(function(g){ return g[0]; }).sort(function(a, b){ return b.length - a.length; }).map(function(w){ return w.replace(/[-]/g, '\\-').replace(/ /g, '[ -]'); }).join('|') + ')\\b', 'gi');
+var CASED = { LOTOTO: 1, LOLER: 1, PUWER: 1, SWP: 1, CPC: 1 };
+function gloss(word){ var l = String(word).toLowerCase(); return GMAP[l] || GMAP[l.replace(/-/g, ' ')] || null; }
+var SKIP_T = /^(SCRIPT|STYLE|TEXTAREA|SELECT|OPTION|INPUT|TITLE|svg|SVG|path|ABBR)$/;
+var LIGHT_SKIP = { 'near miss': 1, 'near misses': 1, 'toolbox talk': 1, 'pre-shift': 1, 'audit pack': 1, 'sign-offs': 1 };
+function terms(root, light){
+  if (!root || !document.createTreeWalker) return;
+  var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null), list = [], n;
+  while ((n = w.nextNode())) {
+    var p = n.parentNode; if (!p || SKIP_T.test(p.nodeName) || (p.classList && p.classList.contains('term'))) continue;
+    if (p.closest && p.closest('.rec,.notip,[lang="pl"],svg')) continue;
+    GRE.lastIndex = 0; if (GRE.test(n.nodeValue)) list.push(n);
+  }
+  var seen = {};
+  Array.prototype.forEach.call(root.querySelectorAll('.term'), function(el){ seen[el.getAttribute('data-tip')] = 1; });
+  list.forEach(function(t){
+    var s = t.nodeValue, frag = document.createDocumentFragment(), last = 0, mm;
+    GRE.lastIndex = 0;
+    while ((mm = GRE.exec(s))) {
+      var word = mm[0], tip = gloss(word);
+      if (!tip || (CASED[word.toUpperCase()] && word !== word.toUpperCase()) || (light && LIGHT_SKIP[word.toLowerCase()]) || seen[tip]) continue;
+      seen[tip] = 1;
+      if (mm.index > last) frag.appendChild(document.createTextNode(s.slice(last, mm.index)));
+      var sp = document.createElement('span'); sp.className = 'term'; sp.setAttribute('data-tip', tip); sp.textContent = word; frag.appendChild(sp);
+      last = mm.index + word.length;
+    }
+    if (!last) return;
+    if (last < s.length) frag.appendChild(document.createTextNode(s.slice(last)));
+    t.parentNode.replaceChild(frag, t);
+  });
+}
+/* One floating tip, kept inside the window so it never causes sideways scroll. */
+var tipEl = null, tipPinned = 0;
+function showTip(el){
+  if (!tipEl) { tipEl = document.createElement('div'); tipEl.className = 'termtip'; tipEl.setAttribute('role', 'tooltip'); document.body.appendChild(tipEl); }
+  tipEl.innerHTML = '<b>' + esc(el.textContent) + '</b>' + esc(el.getAttribute('data-tip'));
+  tipEl.style.display = 'block';
+  var r = el.getBoundingClientRect(), tw = Math.min(300, window.innerWidth - 16), th;
+  tipEl.style.maxWidth = tw + 'px';
+  th = tipEl.offsetHeight;
+  var x = Math.max(8, Math.min(r.left, window.innerWidth - tipEl.offsetWidth - 8));
+  var y = r.bottom + 8; if (y + th > window.innerHeight - 8) y = Math.max(8, r.top - th - 8);
+  tipEl.style.left = x + 'px'; tipEl.style.top = y + 'px';
+}
+function hideTip(){ if (tipEl) tipEl.style.display = 'none'; }
+document.addEventListener('mouseover', function(e){ var t = e.target.closest && e.target.closest('.term'); if (t) showTip(t); });
+document.addEventListener('mouseout', function(e){ var t = e.target.closest && e.target.closest('.term'); if (t && Date.now() - tipPinned > 800 && !(e.relatedTarget && t.contains(e.relatedTarget))) hideTip(); });
+document.addEventListener('click', function(e){ var t = e.target.closest && e.target.closest('.term'); if (t) { tipPinned = Date.now(); showTip(t); } }, true);
+document.addEventListener('scroll', hideTip, true);
+document.addEventListener('pointerdown', function(e){ if (!(e.target.closest && e.target.closest('.term'))) hideTip(); }, true);
+
 /* 30 days of sample history for the audit pack. Made up on the fly, not stored. */
 function history(mid){
   var m = machine(mid), out = [], ops = OPS.filter(function(o){ return o.drive.indexOf(mid) >= 0 && !o.fitter; });
@@ -335,8 +534,16 @@ var DEMO_PHOTO = 'data:image/svg+xml;utf8,' + encodeURIComponent(
   '<path d="M200 60 L262 132" stroke="#ff4d3d" stroke-width="6" stroke-linecap="round"/><path d="M262 60 L200 132" stroke="#ff4d3d" stroke-width="6" stroke-linecap="round"/>' +
   '<text x="160" y="196" fill="#cfd6d2" font-family="Arial" font-size="15" text-anchor="middle">Sample photo: reversing alarm</text></svg>');
 
+var BD_PHOTO = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6d7c86"/><stop offset="1" stop-color="#2b3236"/></linearGradient></defs>' +
+  '<rect width="320" height="220" fill="url(#s)"/><rect y="150" width="320" height="70" fill="#3b3f3d"/><path d="M0 168 H320" stroke="#e8e8e8" stroke-width="3" stroke-dasharray="18 14"/>' +
+  '<rect x="52" y="78" width="150" height="70" rx="6" fill="#1f6f8b"/><rect x="202" y="92" width="62" height="56" rx="6" fill="#e9eef0"/><rect x="214" y="100" width="38" height="22" rx="3" fill="#2b3236"/>' +
+  '<circle cx="92" cy="152" r="15" fill="#151718"/><circle cx="160" cy="152" r="15" fill="#151718"/><circle cx="236" cy="152" r="15" fill="#151718"/>' +
+  '<path d="M262 70 l14 24 h-28z" fill="#FFD21F" stroke="#111" stroke-width="2"/><rect x="274" y="94" width="3" height="40" fill="#111"/>' +
+  '<text x="160" y="205" fill="#f1f5f3" font-family="Arial" font-size="14" text-anchor="middle">Sample photo: Lorry 2 in a lay-by</text></svg>');
+
 function seed(){
-  var s = { v: 2, shift: SHIFT, seededAt: now(), checks: [], defects: [], locks: [], signoffs: [], events: [], nearmisses: [], tbt: [], permits: [], last: null };
+  var s = { v: 2, shift: SHIFT, seededAt: now(), checks: [], defects: [], locks: [], signoffs: [], events: [], nearmisses: [], tbt: [], permits: [], absences: [], gaps: [], breakdowns: [], bdHist: [], jobs: {}, last: null };
   function chk(mid, op, type, h, m, rank, fails){
     var mach = MACHINES.filter(function(x){ return x.id === mid; })[0];
     var items = checklist(mach, type).map(function(it, idx){ return { t: it.t, ok: !(fails && fails[idx]) }; });
@@ -353,6 +560,21 @@ function seed(){
   chk('m10', 'o10', 'pre', 7, 11, 6);
   chk('m11', 'o11', 'pre', 7, 18, 5);
   chk('m12', 'o7', 'run', 10, 15, 2);
+  chk('m15', 'o15', 'pre', 6, 34, 10);
+  chk('m16', 'o16', 'pre', 6, 41, 9);
+  /* Today's lorry jobs (sample). Times from now on, so they are still to do whenever the demo is opened. */
+  var q = Math.ceil(now() / (15 * MIN)) * 15 * MIN;
+  function job(mid, plus, what, where){ (s.jobs[mid] = s.jobs[mid] || []).push({ at: q + plus * MIN, what: what, where: where }); }
+  job('m14', 30, 'RoRo exchange, 40 yard', 'Marsh Barton, Exeter'); job('m14', 120, 'RoRo delivery, 20 yard', 'Newton Abbot'); job('m14', 210, 'RoRo collection, 35 yard', 'Dawlish');
+  job('m15', 45, 'Skip exchange, 8 yard', 'Topsham'); job('m15', 105, 'Skip delivery, 6 yard', 'Kennford'); job('m15', 180, 'Skip collection, 12 yard', 'Chudleigh');
+  /* Absence history, last 8 weeks (sample). Pete has been off the last three Fridays. */
+  function past(n){ var t = now() - n * 864e5; return today(6, 20, t); }
+  var fr = []; for (var dd = 1; dd < 40 && fr.length < 3; dd++) if (weekday(now() - dd * 864e5) === 'Friday') fr.push(dd);
+  fr.forEach(function(dd){ s.absences.push({ id: uid('a'), op: 'o12', at: past(dd), day: dateKey(past(dd)), how: 'phone', reason: 'Sick' }); });
+  [[19, 'o14'], [47, 'o14'], [15, 'o6'], [16, 'o6'], [33, 'o2'], [26, 'o10']].forEach(function(x){ if (weekday(now() - x[0] * 864e5) === 'Sunday') x[0]++; s.absences.push({ id: uid('a'), op: x[1], at: past(x[0]), day: dateKey(past(x[0])), how: x[0] % 2 ? 'office' : 'phone', reason: 'Sick' }); });
+  /* Breakdown log, last 12 months (sample). days = days off the road. */
+  [['m15', 12, 2, 'Lost power, turbo pipe'], ['m15', 74, 1, 'Flat battery'], ['m15', 160, 6, 'Gearbox fault'], ['m14', 41, 1, 'Hydraulic hose burst on the hook arm'], ['m14', 210, 4, 'Air leak, brakes'],
+   ['m16', 98, 1, 'Will not start'], ['m9', 55, 3, 'Hydraulic pump'], ['m4', 130, 2, 'Boom ram seal'], ['m10', 23, 1, 'Track came off']].forEach(function(x){ s.bdHist.push({ machine: x[0], at: now() - x[1] * 864e5, days: x[2], what: x[3] }); });
   var bad = chk('m9', 'o8', 'pre', 6, 48, 9, { 5: true });
   s.defects.push({ id: uid('d'), machine: 'm9', op: 'o8', at: bad.at, item: 'Horn and reversing alarm', note: 'Reversing alarm not working', severity: 'serious', photo: DEMO_PHOTO, check: bad.id, open: true, assigned: 'o9' });
   var balerChk = s.checks.filter(function(c){ return c.machine === 'm7'; })[0];
@@ -378,7 +600,7 @@ function seed(){
 
 var state = null;
 function load(){
-  try { var raw = localStorage.getItem(KEY); if (raw) { var p = JSON.parse(raw); if (p && p.v === 2) { SHIFT = p.shift || 0; if (dateKey(p.seededAt) === dateKey(now())) { state = p; return state; } } } } catch (e) {}
+  try { var raw = localStorage.getItem(KEY); if (raw) { var p = JSON.parse(raw); if (p && p.v === 2 && p.gaps && p.jobs) { SHIFT = p.shift || 0; if (dateKey(p.seededAt) === dateKey(now())) { state = p; return state; } } } } catch (e) {}
   SHIFT = calcShift(); state = seed(); persist(null); return state;
 }
 function persist(change){
@@ -508,14 +730,14 @@ function closePermit(pid, oid, note){
   if (others.length) return false;
   activeLocks(p.machine).filter(function(l){ return l.permit === p.id; }).forEach(function(l){ l.off = now(); });
   p.open = false; p.closed = now(); p.note = note || '';
-  if (p.defect) { var d = byId(state.defects, p.defect); if (d && d.open) { d.open = false; d.fixedAt = now(); d.fixedBy = oid; d.fixNote = note || ''; } }
+  if (p.defect) { var d = byId(state.defects, p.defect); if (d && d.open) { d.open = false; d.fixedAt = now(); d.fixedBy = oid; d.fixNote = note || ''; closeBreakdownFor(d); } }
   addEvent('lockoff', p.machine, oid, op(oid).first + ' closed permit ' + p.id + '. ' + machine(p.machine).name + ' handed back. Pre-shift check needed.');
   persist({ type: 'lockoff', machine: p.machine, op: oid });
   return true;
 }
 function fitterFix(did, oid, note){
   var d = byId(state.defects, did); if (!d || !d.open) return false;
-  d.open = false; d.fixedAt = now(); d.fixedBy = oid; d.fixNote = note || '';
+  d.open = false; d.fixedAt = now(); d.fixedBy = oid; d.fixNote = note || ''; closeBreakdownFor(d);
   addEvent('fixed', d.machine, oid, op(oid).first + ' fixed and tested ' + machine(d.machine).name + ': ' + (note || d.note) + ' Back in use.');
   persist({ type: 'fixed', machine: d.machine, op: oid });
   return true;
@@ -523,7 +745,7 @@ function fitterFix(did, oid, note){
 function hasSigned(swpId, oid){ return state.signoffs.some(function(s){ return s.swp === swpId && s.op === oid; }); }
 function fixDefect(did){
   var d = byId(state.defects, did); if (!d || !d.open) return;
-  d.open = false; d.fixedAt = now();
+  d.open = false; d.fixedAt = now(); closeBreakdownFor(d);
   addEvent('fixed', d.machine, null, 'Defect on ' + machine(d.machine).name + ' marked fixed in the office.');
   persist({ type: 'fixed', machine: d.machine });
 }
@@ -645,12 +867,15 @@ window.CS = {
   now: now, PIN: PIN, FITTER: FITTER, TBT: TBT, QUIZ: QUIZ, CARD: CARD, training: training, tStatus: tStatus, canDrive: canDrive, canIsolate: canIsolate,
   inspections: inspections, inspWorst: inspWorst, tidyDefect: tidyDefect, tidyNearMiss: tidyNearMiss, history: history, dShort: dShort, dYear: dYear, cap: cap,
   addDefect: addDefect, addNearMiss: addNearMiss, signTbt: signTbt, atTbt: atTbt, openPermits: openPermits, raisePermit: raisePermit, joinPermit: joinPermit, closePermit: closePermit, fitterFix: fitterFix,
-  KEY: KEY, SITES: SITES, OPS: OPS, MACHINES: MACHINES, SWPS: SWPS, CHECK_TYPES: CHECK_TYPES, KIND_ICON: KIND_ICON, DEMO_PHOTO: DEMO_PHOTO,
+  KEY: KEY, SITES: SITES, OPS: OPS, MACHINES: MACHINES, SWPS: SWPS, CHECK_TYPES: CHECK_TYPES, KIND_ICON: KIND_ICON, DEMO_PHOTO: DEMO_PHOTO, BD_PHOTO: BD_PHOTO,
   load: load, reset: reset, persist: persist, get state(){ return state; },
   op: op, machine: machine, site: site, byId: byId, uid: uid, checklist: checklist,
   openDefects: openDefects, activeLocks: activeLocks, checksToday: checksToday, doNotUse: doNotUse, status: status,
   saveCheck: saveCheck, lockOn: lockOn, lockOff: lockOff, signSwp: signSwp, hasSigned: hasSigned, fixDefect: fixDefect,
   hm: hm, dayLabel: dayLabel, since: since, ago: ago, esc: esc, initials: initials, avatar: avatar, isToday: isToday,
+  tidyBreakdown: tidyBreakdown, offToday: offToday, gapsToday: gapsToday, jobsFor: jobsFor, inUseBy: inUseBy, spareFor: spareFor, coverStatus: coverStatus, coverCandidates: coverCandidates,
+  markSick: markSick, addBreakdown: addBreakdown, askCover: askCover, answerCover: answerCover, myAsks: myAsks, absencePattern: absencePattern, weekday: weekday, dateKey: dateKey,
+  GLOSS: GLOSS, gloss: gloss, terms: terms, hideTip: hideTip,
   say: say, stop: stop, speaking: speaking, recorded: recorded, audioEl: function(){ return player; }, setMuted: setMuted, get muted(){ return muted; }
 };
 })();

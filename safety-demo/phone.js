@@ -68,7 +68,10 @@ function go(fn, arg, opts){
   render(false);
 }
 function back(){
-  if (busy || stack.length < 2) return;
+  if (busy) return;
+  /* On a home screen the back arrow always means switch person. */
+  if (stack.length < 2 && stack.length && stack[0].fn === hub) { ctx = {}; go(who, null, { reset: true }); return; }
+  if (stack.length < 2) return;
   stack.pop();
   render(true);
 }
@@ -77,7 +80,7 @@ function render(isBack){
   var out = top.fn(top.arg) || {};
   view.innerHTML = '<div class="screen' + (isBack ? ' back' : '') + '">' + out.html + '</div>';
   window.scrollTo(0, 0);
-  backBtn.hidden = stack.length < 2;
+  backBtn.hidden = stack.length < 2 && top.fn !== hub;
   homeBtn.hidden = !ctx.op || top.fn === hub || top.fn === who;
   $$('[data-say]').forEach(function(b){
     b.addEventListener('click', function(e){ e.stopPropagation(); e.preventDefault(); buzz(); speak(b.getAttribute('data-say'), b.getAttribute('data-lang')); });
@@ -87,6 +90,7 @@ function render(isBack){
     b.addEventListener('click', function(){ if (busy) return; var v = b.getAttribute('data-lang-set'); if (v === (ctx.lang || 'en')) return; buzz(); ctx.lang = v; render(false); });
   });
   if (out.bind) out.bind($('.screen'));
+  CS.hideTip(); CS.terms($('.screen'), true);
   if (out.talk) setTimeout(function(){ quiet(out.talk, out.lang); }, 180);
 }
 backBtn.innerHTML = ic('arrow-left');
@@ -184,6 +188,15 @@ function hub(){
   var tr = CS.training(o.id);
   var h = '<div class="me">' + CS.avatar(o, 'lg') + '<div class="mt"><h1>Hi ' + esc(o.first) + '</h1><small>' + esc(o.role + ' · ' + CS.site(o.site).name) + ' · Lock ' + o.lock + '</small></div>' +
     spk('Hi ' + o.first + '. This is your page. ' + (o.fitter ? 'You have ' + jobs.length + ' job' + (jobs.length === 1 ? '' : 's') + ' to fix. ' : '') + (due.length ? due.length + ' check' + (due.length > 1 ? 's' : '') + ' due. ' : 'Your checks are done. ') + (mine.length ? 'You have a lock on. ' : '') + (toSign.length ? toSign.length + ' procedure' + (toSign.length > 1 ? 's' : '') + ' to sign.' : '')) + '</div>';
+  /* off sick today, and requests to cover */
+  if (CS.offToday(o.id)) h += '<div class="sickcard">' + ic('thermometer') + '<div><b>You are off sick today</b><small>The office knows. Get well soon.</small></div>' + spk('You are off sick today. The office knows. Get well soon.') + '</div>';
+  CS.myAsks(o.id).forEach(function(g){
+    var m = CS.machine(g.machine), jobs = CS.jobsFor(g.jobsOf), why = g.kind === 'sick' ? CS.op(g.op).first + ' is off sick' : CS.machine(g.from).name + ' has broken down';
+    if (g.coveredBy === o.id) { h += '<div class="askcard ok"><div class="ah">' + ic('circle-check') + '<div><b>You are covering ' + esc(m.name) + ' today</b><small>' + esc(why) + '. Thanks. The office can see it.' + (jobs.length ? ' First job ' + CS.hm(jobs[0].at) + ': ' + esc(jobs[0].what) + ', ' + esc(jobs[0].where) + '.' : '') + '</small></div>' + spk('You are covering ' + m.name + ' today. Thank you.') + '</div></div>'; return; }
+    var say = 'Can you cover ' + m.name + ' today? ' + why + '.' + (jobs.length ? ' ' + jobs.length + ' jobs, the first at ' + CS.hm(jobs[0].at) + '.' : '') + ' The first person to say yes gets it.';
+    h += '<div class="askcard"><div class="ah">' + ic(CS.KIND_ICON[m.kind]) + '<div><b>Can you cover ' + esc(m.name) + ' today?</b><small>' + esc(why) + '.' + (jobs.length ? ' ' + jobs.length + ' jobs, first at ' + CS.hm(jobs[0].at) + '.' : '') + ' First to say yes gets it.</small></div>' + spk(say) + '</div>' +
+      '<div class="twin"><button class="bigbtn" data-cy="' + g.id + '">' + ic('check') + 'Yes, I\'ll do it</button><button class="bigbtn ghost" data-cn="' + g.id + '">' + ic('x') + 'Can\'t today</button></div></div>';
+  });
   /* fitter: jobs and maintenance isolations first */
   if (o.fitter) {
     h += '<div class="sect">' + ic('tools') + 'Jobs for me' + spk('Jobs for me. Defects the operatives reported, sent to you.') + '</div><div class="todos">' +
@@ -199,6 +212,8 @@ function hub(){
     '<button class="act" data-go="swp">' + (toSign.length ? '<span class="newtag">' + toSign.length + ' TO SIGN</span>' : '') + ic('file-text') + '<b>Procedures</b><small>Listen, then sign</small>' + spk('Safe work procedures. Listen, then sign.') + '</button>' +
     '<button class="act' + (mine.length ? ' locked' : '') + '" data-go="lock">' + ic(mine.length ? 'lock' : 'lock-open') + '<b>My lock</b><small>' + (mine.length ? 'On ' + esc(mine.map(function(l){ return CS.machine(l.machine).name; }).join(', ')) : 'Lock on, lock off') + '</small>' + spk('My lock. Lock on, lock off.') + '</button>' +
     '<button class="act" data-go="tbt">' + (tbtDue ? '<span class="newtag">TODAY</span>' : '') + ic('users-group') + '<b>Toolbox talk</b><small>' + (tbtDue ? 'Not signed' : o.site === CS.TBT.site ? 'Signed' : 'None today') + '</small>' + spk('Toolbox talk.') + '</button>' +
+    '<button class="act sick" data-go="sick">' + ic('thermometer') + '<b>Off sick</b><small>Tell the office</small>' + spk('Off sick. Tap if you are off sick today. The office is told straight away.') + '</button>' +
+    '<button class="act bd" data-go="bd">' + ic('truck') + '<b>Breakdown</b><small>Just say it</small>' + spk('Breakdown. Tap, and say which vehicle, where you are, and what has happened.') + '</button>' +
     '</div>';
   /* today for you */
   var items = '';
@@ -228,6 +243,15 @@ function hub(){
         if (g === 'swp') go(swpList);
         if (g === 'lock') go(lockHome);
         if (g === 'tbt') go(tbtView);
+        if (g === 'sick') go(sickView);
+        if (g === 'bd') { ctx.v = null; go(voice, 'breakdown'); }
+      });
+      onTap(r, '[data-cy],[data-cn]', function(el){
+        var yes = el.hasAttribute('data-cy'), gid = el.getAttribute(yes ? 'data-cy' : 'data-cn');
+        S = CS.load(); var res = CS.answerCover(gid, o.id, yes);
+        if (res === 'taken') { toast('Someone said yes first. Thanks anyway.'); return render(false); }
+        if (res === 'got') return burst('ok', function(){ render(false); });
+        render(false);
       });
       onTap(r, '[data-go2]', function(el){ if (el.dataset.go2 === 'lock') go(lockHome); else go(tbtView); });
       onTap(r, '[data-due]', function(el){ var m = CS.machine(el.dataset.due); ctx.flow = 'check'; ctx.site = CS.site(m.site); ctx.machine = m; go(pickType); });
@@ -574,6 +598,44 @@ function swpDone(rec){
   };
 }
 
+/* ---------- off sick: one tap, the office sorts cover ---------- */
+function sickView(){
+  var o = ctx.op, m = o.main ? CS.machine(o.main) : null;
+  if (CS.offToday(o.id)) return { html: askHead('You are off sick today', 'You are off sick today. The office knows. Get well soon.') + '<button class="bigbtn" data-home>' + ic('home') + 'Home</button>', bind: function(r){ onTap(r, '[data-home]', function(){ go(hub, null, { reset: true }); }); } };
+  var talk = 'Off sick today? Tap the red button. The office is told straight away and they sort your cover. You do not need to ring round.';
+  return {
+    html: askHead('Off sick today?', talk) +
+      '<div class="sickcard">' + ic('thermometer') + '<div><b>The office is told straight away</b><small>' + (m ? 'They see who is trained to cover ' + esc(m.name) + ' and ask them. ' : '') + 'You do not need to ring round.</small></div>' + spk((m ? 'The office sees who is trained to cover ' + m.name + ' and asks them. ' : '') + 'You do not need to ring round.') + '</div>' +
+      '<button class="bigbtn red" data-sick>' + ic('thermometer') + 'I\'m off sick today</button>' +
+      '<button class="bigbtn ghost" data-back>' + ic('arrow-left') + 'No, go back</button>',
+    talk: talk,
+    bind: function(r){
+      var b = $('[data-sick]', r);
+      b.addEventListener('click', function(){
+        if (busy || b.disabled) return;
+        b.disabled = true; buzz(40);
+        S = CS.load();
+        var a = CS.markSick(o.id, 'phone');
+        burst('ok', function(){ go(sickDone, a, { replace: true }); });
+      });
+      onTap(r, '[data-back]', back);
+    }
+  };
+}
+function sickDone(a){
+  var o = ctx.op, m = o.main ? CS.machine(o.main) : null, t = a ? a.at : CS.now();
+  stack = [stack[0], stack[1], stack[stack.length - 1]];
+  var talk = 'Get well soon. The office was told at ' + CS.hm(t) + '.' + (m ? ' They are sorting cover for ' + m.name + '.' : '');
+  return {
+    html: '<div class="done"><div class="disc"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><h1>Get well soon</h1>' +
+      '<div class="meta">The office was told at <b>' + CS.hm(t) + '</b>.' + (m ? '<br>They are sorting cover for <b>' + esc(m.name) + '</b>.' : '') + spk(talk) + '</div>' +
+      '<div class="stamp">' + ic('thermometer') + 'Off sick today · ' + esc(o.first + ' ' + o.last) + '</div></div>' +
+      '<button class="bigbtn" data-home>' + ic('home') + 'Home</button>',
+    talk: talk,
+    bind: function(r){ onTap(r, '[data-home]', function(){ ctx = { op: ctx.op }; go(hub, null, { reset: true }); }); }
+  };
+}
+
 /* ---------- My lock ---------- */
 function lockHome(){
   var mine = CS.activeLocks().filter(function(l){ return l.op === ctx.op.id; });
@@ -706,18 +768,20 @@ function listen(onText, onEnd){
 var VK = {
   defect: { h: 'Say what is wrong', say: 'Tap the microphone. Say what is wrong, in your own words. Say which machine.', ex: 'For example: the reversing alarm on shovel two is not working.', icon: 'microphone' },
   nearmiss: { h: 'Say what nearly happened', say: 'Tap the microphone. Say what nearly happened, and where. Nobody gets in trouble for reporting a near miss.', ex: 'For example: someone walked behind the shovel at the tipping bay.', icon: 'alert-octagon' },
+  breakdown: { h: 'Say what has happened', say: 'Tap the microphone. Say which vehicle, where you are, and what has happened. Get yourself safe first.', ex: 'For example: lorry two has lost power on the A38 near Chudleigh.', icon: 'truck' },
   fix: { h: 'Say what you fixed', say: 'Tap the microphone. Say what you did, and how you tested it.', ex: 'For example: fitted a new reversing alarm, tested it, all working.', icon: 'tools' }
 };
 function sampleFor(a){
   var dm = ctx.op.site === 'dm';
   if (a.kind === 'nearmiss') return dm ? 'a visitor walked right behind the three sixty handler at the tipping bay while it was slewing, he was not in the walkway' : 'a lad walked right behind shovel two when I was reversing by the tipping bay, he was not in the walkway';
   if (a.kind === 'fix') return 'fitted a new reversing alarm and tested it, all working';
+  if (a.kind === 'breakdown') return dm ? 'the three sixty handler has broken down in the yard, a hydraulic hose has burst' : 'lorry ' + (ctx.op.main === 'm14' ? 'one' : 'two') + ' has lost power on the a38 near chudleigh, the engine warning light is on, I have pulled into a lay by';
   if (a.fromCheck) { var it = ctx.check.list[ctx.check.idx]; return 'the ' + it.t.toLowerCase() + ' on ' + ctx.machine.name.toLowerCase() + ' is not working, it keeps cutting out'; }
   return dm ? 'the horn on the three sixty handler is not working, it is dead since this morning' : "the reversing alarm on shovel two isn't working, it's been cutting out since first thing";
 }
 function voice(arg){
   var a = typeof arg === 'string' ? { kind: arg } : arg, k = VK[a.kind];
-  var v = ctx.v = ctx.v && ctx.v.kind === a.kind ? ctx.v : { kind: a.kind, raw: '', id: CS.uid(a.kind === 'nearmiss' ? 'n' : 'd'), saved: false };
+  var v = ctx.v = ctx.v && ctx.v.kind === a.kind ? ctx.v : { kind: a.kind, raw: '', id: CS.uid(a.kind === 'nearmiss' ? 'n' : a.kind === 'breakdown' ? 'b' : 'd'), saved: false };
   var rec = null;
   return {
     html: (a.fromCheck || a.kind === 'fix' ? crumbs() : '') + askHead(k.h, k.say + ' ' + k.ex) +
@@ -756,11 +820,13 @@ function voice(arg){
 function buildCard(a){
   var v = ctx.v, siteId = ctx.op.site;
   if (a.kind === 'nearmiss') return CS.tidyNearMiss(v.raw, siteId);
+  if (a.kind === 'breakdown') return CS.tidyBreakdown(v.raw, siteId, v.forceM ? CS.machine(v.forceM) : null);
   if (a.kind === 'fix') { var d = CS.byId(CS.state.defects, a.did), t = CS.cap(v.raw.trim().replace(/[.\s]+$/, '')) + '.'; return { kind: 'fix', machine: d.machine, title: 'Fixed: ' + CS.machine(d.machine).name, text: t, severity: null, action: CS.machine(d.machine).name + ' goes back to Ready. The next driver does a pre-use check before using it.', unsure: /test/i.test(t) ? [] : ['You did not say how you tested it. Add it if you can.'], raw: v.raw }; }
   return CS.tidyDefect(v.raw, siteId, a.fromCheck ? ctx.machine : (v.forceM ? CS.machine(v.forceM) : null));
 }
 function readback(c){
   if (c.kind === 'fix') return 'Here is what I wrote. ' + c.text + ' ' + c.action + ' If it is right, tap confirm.';
+  if (c.kind === 'breakdown') return 'Here is what I wrote. ' + c.title.replace(':', '.') + '. ' + c.text + ' ' + c.action + ' If it is right, tap confirm.';
   return 'Here is what I wrote. ' + c.title.replace(':', '.') + '. ' + c.text + ' Suggested: ' + (c.kind === 'nearmiss' ? (c.severity === 'high' ? 'high potential' : 'low potential') : c.severity === 'serious' ? 'serious, do not use' : 'minor') + '. ' + c.action + ' If it is right, tap confirm.';
 }
 function voiceCard(a){
@@ -769,10 +835,12 @@ function voiceCard(a){
   v.redo = false;
   if (v.sev && c.kind === 'defect') { if (c.severity !== v.sev) { c.severity = v.sev; c.edited = true; c.action = v.sev === 'serious' ? 'Do not use ' + (c.machine ? CS.machine(c.machine).name : 'it') + ' until the fitter has fixed and tested it. Keep the key out.' : 'Carry on with care. The fitter will look at it within 24 hours.'; } }
   var m = c.machine ? CS.machine(c.machine) : null, rb = readback(c);
-  var siteMs = CS.MACHINES.filter(function(x){ return x.site === ctx.op.site; });
+  var siteMs = CS.MACHINES.filter(function(x){ return x.site === ctx.op.site && (c.kind !== 'breakdown' || x.group === 'mobile'); });
   function row(lbl, val, say, cls){ return '<div class="vrow ' + (cls || '') + '"><small>' + lbl + '</small><div class="vv"><b>' + val + '</b>' + spk(say) + '</div></div>'; }
   var sevRow = '';
   if (c.kind === 'defect') sevRow = '<div class="vrow"><small>How bad · suggested by the rules' + (c.edited ? ' · <span class="edited">changed by you</span>' : '') + '</small><div class="sevpick"><button class="minor' + (c.severity === 'minor' ? ' on' : '') + '" data-s="minor">' + ic('alert-triangle') + 'Minor</button><button class="serious' + (c.severity === 'serious' ? ' on' : '') + '" data-s="serious">' + ic('hand-stop') + 'Serious, do not use</button></div><div class="why">' + esc(c.why || '') + spk(c.why || '') + '</div></div>';
+  if (c.kind === 'breakdown') sevRow = '<div class="vrow"><small>Status</small><div class="vv"><b><span class="pp red">Off the road · Do not use</span></b>' + spk('Off the road. Do not use.') + '</div><div class="why">' + esc(c.why) + spk(c.why) + '</div></div>';
+  var photoBlock = c.kind !== 'breakdown' ? '' : '<div class="sect">' + ic('camera') + 'Photo' + spk('Take a photo if it is safe to.') + '</div><label class="photo">' + (v.photo ? '<img src="' + v.photo + '" alt="Breakdown photo"><span class="retake">Retake</span>' : ic('camera') + 'Take a photo<small>If it is safe to</small>') + '<input type="file" accept="image/*" capture="environment" aria-label="Take a photo"></label>' + (v.photo ? '' : '<button class="bigbtn ghost" data-sphoto style="margin-top:0">' + ic('photo') + 'Use a sample photo</button>');
   if (c.kind === 'nearmiss') sevRow = row('Potential', c.severity === 'high' ? '<span class="pp red">High potential</span> ' + esc(c.cat) : '<span class="pp amber">Low potential</span> ' + esc(c.cat), c.why);
   return {
     html: (a.fromCheck || a.kind === 'fix' ? crumbs() : '') + askHead('Is this right?', rb) +
@@ -782,7 +850,7 @@ function voiceCard(a){
       (c.kind !== 'fix' ? '<div class="vrow' + (m ? '' : ' warn') + '"><small>Machine</small>' + (m ? '<div class="vv"><b>' + ic(CS.KIND_ICON[m.kind]) + esc(m.name) + ' <span class="muted">' + esc(CS.site(m.site).name) + '</span></b>' + spk(m.name) + '</div>' : '') +
         (!a.fromCheck ? '<div class="mpick">' + siteMs.map(function(x){ return '<button class="' + (m && m.id === x.id ? 'on' : '') + '" data-pm="' + x.id + '">' + esc(x.name) + '</button>'; }).join('') + '</div>' : '') + '</div>' : '') +
       row(c.kind === 'nearmiss' ? 'What happened' : c.kind === 'fix' ? 'What was done' : 'The defect', esc(c.text), c.text) + sevRow +
-      row(c.kind === 'fix' ? 'Next' : 'Action', esc(c.action), c.action, 'vact') + '</div>' +
+      row(c.kind === 'fix' ? 'Next' : 'Action', esc(c.action), c.action, 'vact') + '</div>' + photoBlock +
       '<button class="replay wide" data-say="' + esc(rb) + '">' + ic('volume') + 'Read it all out</button>' +
       '<div class="twin"><button class="bigbtn ghost" data-again>' + ic('microphone') + 'Say it again</button><button class="bigbtn' + (c.severity === 'serious' ? ' red' : '') + '" data-ok' + (c.kind !== 'fix' && !m ? ' disabled' : '') + '>' + ic('check') + 'Confirm</button></div>',
     talk: rb,
@@ -790,6 +858,8 @@ function voiceCard(a){
       onTap(r, '[data-s]', function(el){ v.sev = el.dataset.s; go(voiceCard, a, { replace: true }); });
       onTap(r, '[data-pm]', function(el){ v.forceM = el.dataset.pm; v.redo = true; go(voiceCard, a, { replace: true }); });
       onTap(r, '[data-again]', function(){ back(); });
+      onTap(r, '[data-sphoto]', function(){ v.photo = CS.BD_PHOTO; go(voiceCard, a, { replace: true }); });
+      var pin = $('.photo input', r); if (pin) pin.addEventListener('change', function(){ var f = pin.files && pin.files[0]; if (!f) return; shrink(f, function(url){ if (url) { v.photo = url; go(voiceCard, a, { replace: true }); } }); });
       var ok = $('[data-ok]', r);
       ok.addEventListener('click', function(){
         if (busy || ok.disabled || v.saved) return;
@@ -804,6 +874,7 @@ function voiceCard(a){
         }
         var rec = c.kind === 'nearmiss' ? CS.addNearMiss({ id: v.id, machine: c.machine, cat: c.cat, title: c.title, text: c.text, severity: c.severity, action: c.action, raw: v.raw }, ctx.op.id)
           : c.kind === 'fix' ? CS.fitterFix(a.did, ctx.op.id, c.text)
+          : c.kind === 'breakdown' ? CS.addBreakdown({ id: v.id, machine: c.machine, title: c.title, text: c.text, where: c.where, what: c.what, raw: v.raw, photo: v.photo || null }, ctx.op.id)
           : CS.addDefect({ id: v.id, machine: c.machine, part: c.part, title: c.title, text: c.text, severity: c.severity, raw: v.raw }, ctx.op.id);
         burst(c.severity === 'serious' || c.severity === 'high' ? 'bad' : 'ok', function(){ go(voiceDone, { a: a, c: c }, { replace: true }); });
       });
@@ -814,12 +885,13 @@ function voiceDone(x){
   var c = x.c, m = c.machine ? CS.machine(c.machine) : null, red = c.severity === 'serious';
   stack = [stack[0], stack[1], stack[stack.length - 1]];
   var fit = m ? CS.op(CS.FITTER[m.site]) : null;
-  var talk = c.kind === 'nearmiss' ? 'Thank you ' + ctx.op.first + '. Your near miss is in. The supervisor will look at it today.' : c.kind === 'fix' ? 'Thank you. ' + m.name + ' is back in use.' : 'Thank you ' + ctx.op.first + '. ' + (red ? m.name + ' is now marked do not use. ' : '') + fit.first + ' the fitter has the job.';
+  var talk = c.kind === 'breakdown' ? 'Thank you ' + ctx.op.first + '. Get yourself safe. ' + m.name + ' is marked do not use. ' + fit.first + ' the fitter and the office have been told. The office will sort a spare.' : c.kind === 'nearmiss' ? 'Thank you ' + ctx.op.first + '. Your near miss is in. The supervisor will look at it today.' : c.kind === 'fix' ? 'Thank you. ' + m.name + ' is back in use.' : 'Thank you ' + ctx.op.first + '. ' + (red ? m.name + ' is now marked do not use. ' : '') + fit.first + ' the fitter has the job.';
   return {
     html: '<div class="done' + (red ? ' red' : '') + '"><div class="disc">' + (red ? ic('hand-stop').replace('class="ic ', 'style="font-size:92px;color:#fff" class="ic ') : '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>') + '</div>' +
-      '<h1>' + (c.kind === 'nearmiss' ? 'Near miss reported' : c.kind === 'fix' ? 'Back in use' : red ? 'Saved. Do not use.' : 'Defect reported') + '</h1>' +
+      '<h1>' + (c.kind === 'breakdown' ? 'Breakdown reported' : c.kind === 'nearmiss' ? 'Near miss reported' : c.kind === 'fix' ? 'Back in use' : red ? 'Saved. Do not use.' : 'Defect reported') + '</h1>' +
       '<div class="meta"><b>' + esc(c.title) + '</b>' + spk(talk) + '</div>' +
-      (c.kind === 'defect' ? '<div class="stamp">' + CS.avatar(fit, 'xs') + 'Sent to ' + esc(fit.first) + ', fitter at ' + esc(CS.site(m.site).name) + '</div>' : '') +
+      (c.kind === 'defect' || c.kind === 'breakdown' ? '<div class="stamp">' + CS.avatar(fit, 'xs') + 'Sent to ' + esc(fit.first) + ', fitter at ' + esc(CS.site(m.site).name) + '</div>' : '') +
+      (c.kind === 'breakdown' ? '<div class="stamp">' + ic('truck') + 'The office is sorting a spare</div>' : '') +
       '<div class="stamp">' + ic('clock') + CS.hm(CS.now()) + ' · ' + esc(ctx.op.first + ' ' + ctx.op.last) + ' · by voice</div></div>' +
       '<button class="bigbtn" data-home>' + ic('home') + 'Home</button>',
     talk: talk,
