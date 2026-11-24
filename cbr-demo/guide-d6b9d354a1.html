@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Presenter guide</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%237F1D1D'/><text x='32' y='41' font-family='Arial,sans-serif' font-size='24' font-weight='700' fill='white' text-anchor='middle'>G</text></svg>">
+<style>
+:root{--bg:#111113;--card:#1C1C20;--line:#2E2E34;--tx:#F4F4F5;--mu:#A1A1AA;--or:#E67D00;--gr:#34D399;--rd:#F87171;--am:#FBBF24;--say:#22201C}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+body{overflow-x:hidden}
+button{font:inherit;cursor:pointer}
+.bar{position:sticky;top:0;z-index:5;background:#7F1D1D;color:#fff;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-align:center;padding:5px 8px}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line)}
+.top h1{font-size:15px;margin:0;flex:1;min-width:180px}
+.top h1 small{display:block;color:var(--mu);font-weight:400;font-size:12px}
+.btn{background:#27272A;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13.5px}
+.btn:hover{border-color:#52525B}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.pri{background:var(--or);border-color:var(--or);color:#1A1209;font-weight:700}
+.btn.big{padding:12px 20px;font-size:16px}
+.btn.sm{padding:4px 9px;font-size:12.5px}
+.wrap{display:grid;grid-template-columns:250px minmax(0,1fr);min-height:calc(100vh - 100px)}
+.list{border-right:1px solid var(--line);padding:10px 0 90px;overflow:auto;max-height:calc(100vh - 28px);position:sticky;top:28px}
+.list .sec{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);padding:12px 16px 4px}
+.list button{display:block;width:100%;text-align:left;background:none;border:0;color:var(--mu);padding:5px 16px;font-size:13.5px}
+.list button.cur{color:var(--tx);background:#26262B;box-shadow:inset 3px 0 var(--or)}
+.list button.seen{color:#D4D4D8}
+.list button.opt::after{content:" (skip if short)";font-size:11px;color:#71717A}
+.main{padding:18px 22px 150px;max-width:840px;min-width:0}
+.clock{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;font-size:13px;color:var(--mu)}
+.clock b{font-variant-numeric:tabular-nums;color:var(--tx);font-size:18px}
+.clock .of{color:var(--mu);font-size:14px;margin-left:-6px}
+.clock .over{color:var(--am)}
+.step .meta{font-size:12px;color:var(--or);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+.step h2{margin:2px 0 12px;font-size:24px;line-height:1.25}
+.optbar{display:inline-block;margin:0 0 12px;padding:4px 10px;border:1px dashed #52525B;border-radius:8px;font-size:13px;color:#D4D4D8}
+.blk{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:0 0 12px}
+.blk h3{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--mu)}
+.blk ol,.blk ul{margin:0;padding-left:20px}
+.blk li{margin:3px 0}
+.say{background:var(--say);border-color:#5A4630}
+.say p{margin:6px 0;font-size:17px;line-height:1.45}
+.say p::before{content:"\201C";color:var(--or);font-weight:700;margin-right:2px}
+.say p::after{content:"\201D";color:var(--or);font-weight:700}
+.say .stage{font-size:13px;color:var(--mu);font-style:italic}
+.say .stage::before,.say .stage::after{content:none}
+.why{background:#11241C;border-color:#1F5A43}
+.why h3{color:var(--gr)}
+.why p{margin:4px 0;font-size:15px}
+.watch{border-color:#5B4A1A}
+.watch h3{color:var(--am)}
+.ask h3{color:#93C5FD}
+.land{font-size:19px;font-weight:700;line-height:1.3;margin:-4px 0 12px;padding:10px 14px;border-left:4px solid var(--or);background:#1F1A14;border-radius:0 10px 10px 0}
+.land.wow{border-left-color:var(--gr);background:#13241C}
+.say.inner{background:var(--say);border:1px solid #5A4630;border-radius:10px;padding:4px 12px;margin:8px 0}
+.say.inner p{font-size:16px}
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th,.tbl td{text-align:left;vertical-align:top;padding:7px 8px;border-top:1px solid var(--line)}
+.tbl th{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);border-top:0}
+.tbl td.n{white-space:nowrap;font-weight:700;font-variant-numeric:tabular-nums}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.draft{display:inline-block;background:#5B4A1A;color:#FDE68A;font-size:11px;font-weight:700;letter-spacing:.08em;padding:1px 7px;border-radius:5px;margin-left:6px;vertical-align:middle}
+.price{font-size:26px;font-weight:800;line-height:1.25;margin:4px 0 6px}
+textarea{width:100%;min-height:110px;background:#0C0C0E;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;font-size:14px}
+.nav{position:fixed;left:0;right:0;bottom:0;background:rgba(17,17,19,.96);border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;z-index:6}
+.nav #next{margin-left:auto}
+.nav .grow{flex:1;min-width:0;font-size:12.5px;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.glo{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9;display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
+.glo.open{display:flex}
+.glo .in{background:var(--card);border:1px solid var(--line);border-radius:14px;max-width:720px;width:100%;padding:18px 20px}
+.glo ul{margin:0;padding-left:20px}
+.glo li{margin:5px 0;font-size:14px}
+kbd{background:#27272A;border:1px solid var(--line);border-radius:4px;padding:0 5px;font-size:11.5px}
+.jump{display:none;width:100%;margin:0 0 10px;background:#1C1C20;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:7px 8px;font:inherit;font-size:14px}
+@media (max-width:820px){
+  .wrap{grid-template-columns:minmax(0,1fr)}
+  .list{display:none}
+  .jump{display:block}
+  .main{padding:14px 16px 170px}
+  .top{padding:8px 12px;gap:6px 8px}
+  .top h1{flex:1 1 100%;min-width:0;font-size:14px}
+  .top h1 small{display:inline;margin-left:6px}
+  .top .btn{padding:5px 10px;font-size:13px}
+  .clock{margin-bottom:8px;gap:8px}
+  .land{font-size:17px}
+  .nav .grow{display:none}
+  .nav{padding:8px 10px;gap:6px}
+  .nav .btn{padding:7px 10px}
+  .nav .btn.big{padding:10px 16px;font-size:15px}
+  .step h2{font-size:20px}
+  .say p{font-size:16px}
+  .price{font-size:22px}
+  .tbl{font-size:12.5px}
+  .tbl th,.tbl td{padding:6px 4px}
+  .blk{padding:12px 12px}
+}
+</style>
+</head>
+<body>
+<div class="bar">Jack only. Never share this window or this link</div>
+<div class="top">
+  <h1>Jamie Boyce, Commercial Bodies &amp; Repairs<small>Tue 24 Nov, 10:00 UK (17:00 Thai), Google Meet, about 30 min</small></h1>
+  <button class="btn pri" id="openDemo">Open demo</button>
+  <button class="btn" id="trueBtn">Only true claims</button>
+</div>
+<div class="wrap">
+  <nav class="list" id="list" aria-label="Steps"></nav>
+  <main class="main">
+    <select class="jump" id="jump" aria-label="Jump to a step"></select>
+    <div class="clock"><span>Call clock</span><b id="clk">0:00</b><span class="of">of 30:00</span><span id="clkNote"></span><button class="btn sm" id="clkBtn">Start</button></div>
+    <div id="step" class="step"></div>
+  </main>
+</div>
+<div class="nav">
+  <button class="btn" id="back">Back</button>
+  <span class="grow" id="nextName"></span>
+  <button class="btn pri big" id="next">Next</button>
+</div>
+<div class="glo" id="truePanel" role="dialog" aria-label="Only true claims"><div class="in">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px"><b style="font-size:17px">Only true claims (say these if asked)</b><button class="btn sm" id="trueClose">Close</button></div>
+  <ul id="trueList"></ul>
+</div></div>
+
+<script>
+(function () {
+  var NOTES_KEY = 'cbr-guide-notes', STEP_KEY = 'cbr-guide-step', CLOCK_KEY = 'cbr-guide-clock';
+  function get(k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }
+  function put(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function h(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function $(s) { return document.querySelector(s); }
+  var TOTAL = 30;
+
+  /* Minutes: questions 5, demo 15, price and close 10. Thirty in all. */
+  var SECS = { prep: { n: 'Before the call', end: 0 }, q: { n: 'Questions', end: 5 }, demo: { n: 'The demo', end: 20 }, price: { n: 'Price and close', end: 30 } };
+
+  var OPTIONS = '<div class="tscroll"><table class="tbl"><tr><th>Option</th><th>What\'s in it</th><th>Build</th><th>Add later</th></tr>' +
+    '<tr><td><b>Everything</b></td><td>Van engineer app (safety check, photos, parts off the van, extra work approved on the customer\'s phone, signature), office board, invoices to Xero the day the job is done, overdue chase, body builds board, customer tracker with extras approved, quotes priced off the last build, numbers screen</td><td class="n">£11,950</td><td></td></tr>' +
+    '<tr><td><b>Without the customer side</b></td><td>Everything except the customer tracker and customer approvals on their phone (office approves by phone call as now)</td><td class="n">£9,500</td><td>Tracker and approvals £2,450</td></tr>' +
+    '<tr><td><b>Vans and invoicing</b></td><td>Van engineer app, office board, invoices to Xero, overdue chase, numbers screen. Build hall stays on paper for now</td><td class="n">£7,500</td><td>Body builds, tracker and quoting £4,450</td></tr>' +
+    '<tr><td><b>Starter</b></td><td>Job sheets on the engineer\'s phone with photos and signature, straight into an invoice to Xero, overdue chase</td><td class="n">£5,500</td><td>Each piece priced when he wants it</td></tr>' +
+    '</table></div><p style="margin:8px 0 0;font-size:13px;color:var(--mu)">All options + £199 a month. Same two payment split. Never less money for the same thing.</p>';
+
+  var STEPS = [
+    { id: 'prep', sec: 'prep', t: 'Fifteen minutes before',
+      do: ['Press <b>Open demo</b> at the top. It opens the CBR demo in its own window. Put it on the left, this guide on your phone or the other screen.',
+           'In the demo: if you clicked around earlier, press <b>Reset demo</b> in the top bar. It reseeds to today.',
+           'Tap <b>Jamie</b> once to check it opens, then <b>Sign out</b>, so he sees the start-up live.',
+           'Check the <b>Phones</b> button is in the top bar (Van engineer, Build team, Workshop, Customer tracker, Customer approves).',
+           'Google Meet: share the <b>demo window</b> only. Never this guide. Phone on silent, close everything else.',
+           'When Jamie joins, press the big button at the bottom. The clock starts by itself.'],
+      shows: 'Nothing is shared yet. 14 steps, wow first, about 15 minutes of demo. <kbd>&rarr;</kbd> Next, <kbd>&larr;</kbd> Back. Steps marked <i>skip if short</i> can go if time is tight.',
+      watch: ['Never send him this guide link. If he wants to try it on his phone after, only these two: apexlineai.com/cbr-demo/van.html (engineer app) and apexlineai.com/cbr-demo/track.html (a customer\'s build tracker). What he taps there does not show on your screen.'],
+      notes: true },
+
+    { id: 'q', sec: 'q', t: 'Questions before anything', mins: 5,
+      land: 'Before I show you anything, I want it to fit how you actually run things.',
+      do: ['Camera on, no screen share yet.', 'One question at a time, then stop talking. Only the ones you need.', 'Write his exact words and numbers in the box below. Use them in the demo.'],
+      say: ['Talk me through a job, from the phone ringing to the invoice going out. Where does the paper go?',
+            'With the vans out on the road, how do you know where each engineer\'s at and how the job\'s going?',
+            'When one of the lads finds something else wrong on site, how do you get the customer\'s OK?',
+            'On a body build, when do you find out it\'s run over on hours or materials?',
+            'When a customer rings asking where their lorry or their new body\'s at, how do you find out?',
+            'How long does invoicing take you a week? Who does it, and which package, Xero, Sage, QuickBooks?',
+            'Has a job sheet ever gone missing, or a job not been invoiced?',
+            'Who else would use it? Gavin, the office, the engineers, the build team?'],
+      say2H: 'Then ask to share',
+      say2: ['Want me to show you what I\'ve built round CBR? Shout if any of it isn\'t how you\'d do it.'],
+      watch: ['Never ask what it\'s worth to him, what he\'d pay or his budget. Only his facts: hours, money owed, jobs missed.', 'Don\'t mention Wilcox or any other firm.', 'Note his accounts package. If it is Sage or QuickBooks, you switch it live at the invoice step.'],
+      notes: true },
+
+    { id: 'start', sec: 'demo', t: 'The start-up', mins: 1,
+      land: 'His logo, his name, his day. Nobody typed it.',
+      do: ['Share the demo window. Tap <b>Jamie</b> (one tap, no password in the demo).', 'Let it build line by line: vans out, builds on, a chassis late, money ready to invoice. Say nothing until it finishes.', 'Then click any line, or <b>Continue</b>.'],
+      say: ['Good morning, Jamie. Nobody typed this. It reads it off the jobs, the vans and the build hall.', 'Click any line and it takes you straight there.'],
+      shows: 'Dark screen, CBR logo, "Good morning, Jamie." and 8 lines: 3 vans out, a breakdown not given to a van, a chassis late, builds on, £8,934 ready to invoice.' },
+
+    { id: 'home', sec: 'demo', t: 'Home: CBR on one screen', mins: 1.5,
+      land: 'The whole business on one screen. That\'s the whiteboards gone.',
+      do: ['Home is open. Point along the four tiles: Workshop, Vans on the road, Body builds, Ready to invoice.', 'Scroll slowly: where each van is right now, every build with its hours against the quote, <b>Needs you</b>, <b>As it happens</b>.'],
+      say: ['This is the whole business on one screen. From the office, your phone, or the exhibition stand.', 'Stick it on a TV in the workshop and nobody has to walk in and ask.'],
+      why: ['George, 17 Nov, workshop owner on paper and whiteboards: "I\'m taking all the whiteboards down and bolting plasmas to the wall."'],
+      shows: 'Today at a glance: 15 jobs in the workshop, 3 vans out, 4 builds on, £8,934 ready to invoice.' },
+
+    { id: 'vans', sec: 'demo', t: 'Vans on the road: one tap to Kyle', mins: 1,
+      land: 'A breakdown comes in. One tap and it\'s on an engineer\'s phone.',
+      do: ['Open <b>Vans on the road</b>. The A47 breakdown is at the top, not given to anyone.', 'Tap <b>Kyle</b>.', 'Point down the vans: what each is on, on site since when, what\'s left, signed jobs.'],
+      say: ['It\'s on his phone now, with the site, the fault and the customer\'s number.', 'This is from the engineer\'s phone, not GPS. We can add tracking later from a tracker you pick.'],
+      watch: ['No GPS in this build. Say it plainly, don\'t let him assume it.'] },
+
+    { id: 'phone', sec: 'demo', t: 'The van engineer\'s phone. Slow down', mins: 3,
+      land: 'Paper gone. The customer signs on the phone and the office knows the second it\'s done.',
+      do: ['<b>Phones &gt; Van engineer</b>. Ash is on site at Halcott: the clock, the photo, parts from Van 1. Tap a part, the van stock counts down.',
+           'Switch to <b>Kyle</b>: <b>I\'ve arrived</b> &gt; the four tick safety check (Start work stays grey until it\'s done) &gt; take a photo.',
+           '<b>Found something else wrong</b> &gt; hours and a price &gt; Send.',
+           '<b>Phones &gt; Customer approves</b>: the customer sees the photo and the price, taps <b>Yes</b>.',
+           'Back to Kyle: "Tony approved it at 10:14. Carry on."',
+           '<b>Finished</b> &gt; the customer signs with his finger &gt; <b>Signed, send to the office</b>.',
+           'Close the phone. The office already shows it Done and signed.'],
+      say: ['No job sheet. Safety check done before he can start.', 'He finds something else, the customer says yes on his own phone with the photo in front of him. No phone tag, and it\'s in writing.', 'Signed on the phone, and you knew the second it was done.'],
+      why: ['George, 17 Nov: "I\'m sick of paper."', 'This is the moment Jamie said yes to on the cold call: where the engineers are and how they\'re getting on through the day.'],
+      watch: ['Messages to the customer are simulated in the demo. Nothing is sent.'] },
+
+    { id: 'invoice', sec: 'demo', t: 'Invoice straight into Xero', mins: 1,
+      land: 'The job he just signed is an invoice in Xero. Nothing typed twice.',
+      do: ['<b>Money &gt; Invoices</b>: the job is waiting, hours and parts already on it.', 'Raise it: posted straight into Xero.', 'If he said Sage or QuickBooks: <b>Settings &gt; Your accounts package</b> &gt; tap his. The whole system now says his package. Do it live.'],
+      say: ['Done this morning, invoiced this morning. Nothing typed twice.', 'Invoices out the day the job\'s done is money in the bank sooner.'],
+      why: ['George, 17 Nov, when invoices posted to Xero: "exactly what we want."', 'CBR had about £241k owed to them at year end. Cash in sooner is real to him. Don\'t quote that figure at him.'],
+      watch: ['Xero, QuickBooks or Sage is simulated in the demo. In the build we connect to the one he uses through its API.'] },
+
+    { id: 'tracker', sec: 'demo', t: 'HEADLINE: what the customer sees, and the £690 extra', mins: 2,
+      wow: true,
+      land: 'His customers stop ringing to ask where their body is. And extras get paid for.',
+      do: ['<b>Body builds</b> &gt; open <b>B-0141</b> (Brindley\'s second body) &gt; <b>See what Dean sees</b>.',
+           'Let him look: his build, the stage, the photos, the ready date. Pause.',
+           'At the top: <b>an extra for you to approve: Catwalk, £690</b>. Tap <b>Yes, add it</b>.',
+           'Close the phone. The price, the fit out hours and the spec have all moved.',
+           'Then <b>B-0142</b>: chassis 5 days late. <b>Send an update</b>, one tap.'],
+      say: ['This is what your customer sees on his phone. His body, where it\'s at, the photos, the date.', 'Your customers stop ringing to ask where their body is.', 'He asks for a catwalk half way through. It\'s priced, he says yes on his phone, and nothing gets built for free. It\'s in writing.'],
+      say2H: 'Then stop and let him react',
+      say2: [{ stage: 'Silence for a few seconds. This is the one that landed hardest last time.' }],
+      why: ['George, 17 Nov, at the customer view: "That\'s really cool. Really, really good."', 'Biggest reaction of the whole call. Give it room.'],
+      watch: ['To price a new extra live: <b>Customer wants an extra</b> on the Spec card.', 'Tracker links and updates are simulated. Nothing is sent from the demo.'] },
+
+    { id: 'build', sec: 'demo', t: 'Body build B-0140: hours against the quote', mins: 1.5,
+      land: 'He sees a build running over the day it happens, not when the invoice goes out.',
+      do: ['Open <b>B-0140</b> (Brindley, over on hours).', 'Point: the stage stepper, <b>hours against the quote by stage</b> (fabrication in red).', '<b>Margin when quoted 25%, margin if it finishes like this 23%.</b>', 'Materials against budget, photos at every stage, the handover checklist (CoC, plated weights, VTG10, tipping test with the body prop, sheet test).'],
+      say: ['You see it running over the day it happens, not when the invoice goes out.', 'Would you have changed anything if you\'d seen that on day three?'],
+      watch: ['Prices, hours and margins are sample figures. His real ones go in at build time.', 'The handover checklist records type approval. The system does not do approvals.'] },
+
+    { id: 'quote', sec: 'demo', t: 'Quote priced off the last build', mins: 1.5, opt: true,
+      land: 'His next quote learns from his last build.',
+      do: ['<b>Body builds &gt; New build enquiry</b>. Pick the body, tick onboard weighing and side skirts. Price, hours and margin move as you tick.',
+           'Under the margin: <b>"Last one like this, B-0140, took 83h to fabricate against 70h quoted. Allow the extra 13h this time."</b> Tap it, the margin drops to the true figure.',
+           'Save &gt; <b>Send the quote</b>: a proper CBR quote. "Customer said yes" raises the deposit invoice into Xero.'],
+      say: ['Your next quote learns from your last build.', 'You stop pricing the same mistake twice.'] },
+
+    { id: 'numbers', sec: 'demo', t: 'The numbers: the owner\'s screen', mins: 1,
+      land: 'The screen that pays for it.',
+      do: ['<b>Money and people &gt; The numbers</b>.', 'Four figures: finished and not invoiced, owed to CBR and how much is overdue, extra work sold in the last 30 days, margin on builds against the quote.', 'Point at the two buttons: one tap invoices every finished job, one tap chases every overdue invoice.'],
+      say: ['That\'s the screen that pays for it.', 'Money sat in someone else\'s account. This gets it in sooner.'],
+      watch: ['The numbers are worked out live from sample jobs. Van hours come from engineers clocking on and off on the phone, not a tracker.'] },
+
+    { id: 'perms', sec: 'demo', t: 'Permissions', mins: 0.5, opt: true,
+      land: 'He decides who sees the money.',
+      do: ['<b>Settings &gt; the team</b>.'],
+      say: ['You decide who sees the money. Engineers only ever see their phone.'],
+      why: ['George, 17 Nov, on users and who sees what: "It\'s quite clever."'] },
+
+    { id: 'close', sec: 'price', t: 'Close the demo, then his numbers', mins: 4,
+      land: 'Say the close line, ask what he thinks, then do his sums with him.',
+      do: ['Stop sharing or leave Home up.', 'Say the close, then stop talking.', 'Then ask only the questions you need below. Write his answers in the box and add them up out loud.'],
+      say: ['The hard part is wiring up the back end, that\'s what I handle. The look is the easy part, any change is five minutes. It\'s a custom build, so you tell me what goes in each section.',
+            'What do you think? Honestly.'],
+      say2H: 'His numbers (his facts only)',
+      say2: ['How many hours a week go on writing up job sheets and typing invoices? Who does it?',
+             'How long from a van job being done to the invoice going out?',
+             'How much are you owed right now, and how much of it is overdue?',
+             'In the last year, has a job gone out and not been invoiced, or parts gone on a lorry and not been charged?',
+             'When the lads find extra work on site, how often does it not get done because you couldn\'t get hold of the customer?',
+             'On your last three builds, how many hours over the quote did they run?',
+             'Which bit would make the biggest difference to CBR?',
+             { stage: 'Add his column up: "So on your numbers that\'s about £____ a year." Then go to the price.' }],
+      watch: ['Never give him a figure he hasn\'t given you. No made up savings.', 'Off the shelf: our research says three systems at roughly £300 to £1,000+ a month on contracts, and none does body builds. Only say it if he brings up other systems.'],
+      notes: true },
+
+    { id: 'price', sec: 'price', t: 'The price. One number, then silence', mins: 3,
+      land: 'Say the number. Stop talking.',
+      priceHtml: '<div class="blk say"><h3>Say</h3><p>The build is £11,950, and £199 a month to run, host and look after it.</p><p>Two payments. £5,975 to start, and £5,975 when you\'re live and happy.</p><p>No lock in, one month\'s notice.</p><p class="stage">Then stop talking. Let him go first.</p></div>',
+      why: ['George, 17 Nov, when he heard he only pays the second half once he\'s completely happy: "you blown me away again."'],
+      obj: { say: ['This demo is the full version, just to show you what we can do. If there\'s anything you\'d want that isn\'t on here, tell me and I\'ll scope and quote it. And if there are sections you don\'t want or won\'t need, we take them out and it comes down.'],
+             then: 'If that\'s more than you want to put in now, we start with the vans and invoicing at £7,500 and add the build hall when you\'re ready.' },
+      watch: ['Only open the options if he pushes back. Lead with £11,950 every time.', 'Never a discount on the same scope. Less money means less in it.'],
+      say2H: 'Trial close',
+      say2: ['If it does what you\'ve just seen, built round CBR, is there anything stopping you going ahead?'] },
+
+    { id: 'next', sec: 'price', t: 'Next steps', mins: 2,
+      land: 'Leave with a yes or a date. Never with "I\'ll have a think" and nothing booked.',
+      do: ['<b>Yes:</b> proposal and deposit invoice the same day. Ask for his paper job sheet, a build sheet and any inspection sheet so we build them in.',
+           '<b>Think about it:</b> book the follow up there and then.',
+           '<b>Keen:</b> ask who else at the exhibition runs on paper.',
+           'After the call: log it in the CRM and set the follow up date.'],
+      say: ['Shall we say Thursday at 10 for any questions?', 'Who else did you see at the exhibition still running on paper?'],
+      notes: true }
+  ];
+  var RUN = STEPS.length - 1;
+
+  var TRUE = [
+    'Everything on screen works in the browser, but it is <b>sample data</b>: customers, staff, vans, vehicles, prices and hours are made up. Nothing real of CBR\'s is in it.',
+    'Xero, QuickBooks or Sage: simulated in the demo. In the build we connect to the one he uses through its API.',
+    'Messages to customers (on the way texts, approvals, tracker links, updates, overdue reminders): simulated, nothing is sent from the demo.',
+    'The numbers are worked out live from the sample jobs. Van hours on jobs come from engineers clocking on and off, not a tracker.',
+    'Prices, hours and margins on builds are sample figures. His real body prices, option prices and hourly cost go in at build time.',
+    'Reg lookup uses sample data until our DVLA and DVSA keys arrive.',
+    'No GPS tracking in this build. Tracking can be added later from a tracker he chooses. Not checked end to end, so don\'t promise it.',
+    'Inspection sheets get built from his own templates. We are <b>not</b> a DVSA Earned Recognition validated supplier.',
+    'Type approval: the handover checklist records it, the system does not do approvals.',
+    'Don\'t name any other customer or firm. Don\'t mention Wilcox.'
+  ];
+
+  /* ---------- open the demo in a named window ---------- */
+  $('#openDemo').onclick = function () {
+    var w = window.open('./', 'cbrdemo', 'width=1280,height=820');
+    if (w) try { w.focus(); } catch (e) {}
+  };
+
+  /* ---------- clock ---------- */
+  var t0 = get(CLOCK_KEY, null), cur = Math.max(0, Math.min(+get(STEP_KEY, 0) || 0, STEPS.length - 1)), seen = {};
+  function mmss(secs) { return Math.floor(secs / 60) + ':' + ('0' + Math.floor(secs % 60)).slice(-2); }
+  function tick() {
+    var note = $('#clkNote');
+    if (!t0) { $('#clk').textContent = '0:00'; note.textContent = 'Starts on your first Next'; note.className = ''; return; }
+    var secs = Math.max(0, Math.floor((Date.now() - t0) / 1000));
+    $('#clk').textContent = mmss(secs);
+    var sec = SECS[STEPS[cur].sec], over = sec.end ? secs / 60 - sec.end : -1;
+    if (secs >= TOTAL * 60) { note.textContent = 'Past ' + TOTAL + ' minutes'; note.className = 'over'; }
+    else if (!sec.end) { note.textContent = ''; note.className = ''; }
+    else if (over > 0) { note.textContent = sec.n + ': ' + Math.max(1, Math.round(over)) + ' min over. Skip the optional steps'; note.className = 'over'; }
+    else { note.textContent = sec.n + ': finish by ' + sec.end + ':00'; note.className = ''; }
+  }
+  function clockStart() { if (!t0) { t0 = Date.now(); put(CLOCK_KEY, t0); $('#clkBtn').textContent = 'Reset'; tick(); } }
+  $('#clkBtn').onclick = function () { if (t0) { t0 = null; put(CLOCK_KEY, null); $('#clkBtn').textContent = 'Start'; tick(); } else clockStart(); };
+  if (t0) $('#clkBtn').textContent = 'Reset';
+  setInterval(tick, 500);
+
+  /* ---------- render ---------- */
+  function sayHtml(arr) { return arr.map(function (x) { return typeof x === 'string' ? '<p>' + h(x) + '</p>' : '<p class="stage">' + h(x.stage) + '</p>'; }).join(''); }
+  function liHtml(arr) { return arr.map(function (x) { return '<li>' + x + '</li>'; }).join(''); }
+  function bodyHtml(s) {
+    var html = '';
+    if (s.opt) html += '<div class="optbar">Optional. Skip if short on time</div>';
+    if (s.land) html += '<div class="land' + (s.wow ? ' wow' : '') + '">' + h(s.land) + '</div>';
+    if (s.do) html += '<div class="blk"><h3>Do this</h3><ol>' + liHtml(s.do) + '</ol></div>';
+    if (s.priceHtml) html += s.priceHtml;
+    if (s.say) html += '<div class="blk say"><h3>Say this</h3>' + sayHtml(s.say) + '</div>';
+    if (s.shows) html += '<div class="blk"><h3>What it shows</h3><div>' + s.shows + '</div></div>';
+    if (s.why) html += '<div class="blk why"><h3>Why it lands (Jack only)</h3>' + s.why.map(function (x) { return '<p>' + h(x) + '</p>'; }).join('') + '</div>';
+    if (s.obj) html += '<div class="blk ask"><h3>Only if he pushes back on the price</h3><div class="say inner">' + sayHtml(s.obj.say) + '</div>' +
+      '<p style="margin:10px 0 6px;font-size:14px"><b>Then walk the options</b><span class="draft">DRAFT PRICES</span></p>' + OPTIONS +
+      '<div class="say inner" style="margin-top:10px"><p class="stage">If he still wants less:</p><p>' + h(s.obj.then) + '</p><p class="stage">Then stop talking.</p></div></div>';
+    if (s.say2) html += '<div class="blk say"><h3>' + h(s.say2H || 'Then say') + '</h3>' + sayHtml(s.say2) + '</div>';
+    if (s.watch) html += '<div class="blk watch"><h3>Only say what\'s true</h3><ul>' + liHtml(s.watch) + '</ul></div>';
+    if (s.notes) html += '<div class="blk"><h3>His words and numbers</h3><textarea id="notes" placeholder="Write what he says, word for word">' + h(get(NOTES_KEY, '')) + '</textarea></div>';
+    return html;
+  }
+  function stepName(i) { return i === 0 ? 'before the call' : 'step ' + i + ' of ' + RUN + ': ' + STEPS[i].t; }
+  function render() {
+    var s = STEPS[cur]; seen[cur] = true; put(STEP_KEY, cur);
+    $('#step').innerHTML = '<div class="meta">' + h(SECS[s.sec].n) + (cur ? ' · Step ' + cur + ' of ' + RUN : ' · not counted') + (s.mins ? ' · about ' + s.mins + ' min' : '') + '</div><h2>' + h(s.t) + '</h2>' + bodyHtml(s);
+    var last = cur === STEPS.length - 1;
+    $('#back').disabled = cur === 0;
+    $('#next').textContent = last ? 'Done' : cur === 0 ? 'Jamie has joined. Start' : 'Next';
+    $('#next').disabled = last;
+    $('#nextName').textContent = last ? 'Last step' : 'Next: ' + STEPS[cur + 1].t + (STEPS[cur + 1].opt ? ' (skip if short)' : '');
+    renderList(); tick(); window.scrollTo(0, 0);
+  }
+  function renderList() {
+    var out = '', last = '', opts = '';
+    STEPS.forEach(function (s, i) {
+      if (s.sec !== last) { out += '<div class="sec">' + h(SECS[s.sec].n) + '</div>'; last = s.sec; }
+      out += '<button data-i="' + i + '" class="' + (i === cur ? 'cur' : seen[i] ? 'seen' : '') + (s.opt ? ' opt' : '') + '">' + (i ? i + '. ' : '') + h(s.t) + '</button>';
+      opts += '<option value="' + i + '"' + (i === cur ? ' selected' : '') + '>' + (i ? i + '. ' : '') + h(s.t) + (s.opt ? ' (skip if short)' : '') + '</option>';
+    });
+    $('#list').innerHTML = out;
+    $('#jump').innerHTML = opts;
+  }
+  function goTo(i) { i = +i; if (!(i >= 0 && i < STEPS.length)) return; cur = i; closePanels(); render(); }
+  function closePanels() { $('#truePanel').classList.remove('open'); }
+  $('#next').onclick = function () { if (cur === 0) clockStart(); if (cur < STEPS.length - 1) goTo(cur + 1); };
+  $('#back').onclick = function () { if (cur > 0) goTo(cur - 1); };
+  $('#jump').onchange = function () { goTo(this.value); };
+  document.addEventListener('click', function (e) { var i = e.target.closest('#list [data-i]'); if (i) goTo(+i.dataset.i); });
+  document.addEventListener('input', function (e) { if (e.target.id === 'notes') put(NOTES_KEY, e.target.value); });
+  document.addEventListener('keydown', function (e) {
+    var tag = (e.target.tagName || '').toLowerCase(); if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'Escape') { closePanels(); return; }
+    if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); $('#next').click(); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); $('#back').click(); }
+  });
+  $('#trueList').innerHTML = TRUE.map(function (x) { return '<li>' + x + '</li>'; }).join('');
+  $('#trueBtn').onclick = function () { $('#truePanel').classList.add('open'); };
+  $('#trueClose').onclick = closePanels;
+  $('#truePanel').onclick = function (e) { if (e.target.id === 'truePanel') closePanels(); };
+  render();
+  window.CBRGUIDE = { total: STEPS.length, goTo: goTo, cur: function () { return cur; }, minutes: STEPS.reduce(function (t, s) { return t + (s.mins || 0); }, 0) };
+})();
+</script>
+</body>
+</html>
