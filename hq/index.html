@@ -115,6 +115,54 @@ th:first-child,td:first-child{text-align:left}
 .quick{display:flex;gap:8px;margin-bottom:12px}
 .quick input{flex:1}
 .empty{color:var(--muted);font-size:14px;padding:10px 2px}
+/* day plan */
+.dp .card-h{flex-wrap:wrap}
+.dp-date{font-family:var(--mono);font-size:12px;font-weight:400;color:var(--muted);margin-left:6px;letter-spacing:.5px}
+.dp-tog button{padding:6px 12px}
+.dp-status{display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap;margin-bottom:12px}
+.dp-pill{display:inline-flex;align-items:center;font-weight:700;font-size:13px;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);white-space:nowrap}
+.dp-pill.good{color:var(--good);border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.08)}
+.dp-pill.bad{color:var(--bad);border-color:rgba(248,113,113,.45);background:rgba(248,113,113,.08)}
+.dp-pill.hud{color:var(--hud);border-color:rgba(92,225,255,.4);background:rgba(92,225,255,.07)}
+.dp-status b{color:var(--text)}
+.dp-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.dp-stats > div{background:#0B1322;border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
+.dp-stats b{display:block;font-family:var(--head);font-size:20px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dp-stats > div > span{color:var(--muted);font-size:12px;display:inline-flex;align-items:center;gap:6px}
+.dp-stats .stdot{box-shadow:0 0 8px var(--hud);animation:pulse 1.4s infinite}
+.dpr{--st:#2A3850;display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;padding:12px 14px;border:1px solid var(--line);border-left:3px solid var(--st);border-radius:12px;background:var(--card2);margin-bottom:8px;min-width:0}
+.dpr:last-child{margin-bottom:0}
+.dpr.run{--st:var(--hud);border-color:rgba(92,225,255,.4);border-left-color:var(--st);box-shadow:0 0 18px rgba(92,225,255,.08)}
+.dpr.over{--st:var(--bad);border-color:rgba(248,113,113,.45);border-left-color:var(--st)}
+.dpr.done{--st:var(--good);background:transparent}
+.dp-time{font-family:var(--mono);font-size:15px;font-weight:600;color:var(--hud);line-height:1.3}
+.dpr.done .dp-time{color:var(--muted)}
+.dp-main{min-width:0}
+.dp-title{background:none;border:0;padding:0;color:var(--text);font-weight:600;font-size:15px;line-height:1.3;text-align:left;cursor:pointer;overflow-wrap:anywhere;max-width:100%}
+.dp-title:hover{color:var(--accent)}
+.dpr.done .dp-title{color:var(--muted);text-decoration:line-through}
+.dp-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.dp-live{display:flex;align-items:center;gap:10px;margin-top:10px;min-width:0}
+.dp-clock{font-family:var(--mono);font-weight:600;font-size:14px;min-width:54px}
+.dp-bar{flex:1;min-width:40px}
+.dp-live.paused .dp-bar i{background:#4A5870}
+.dp-live.run .dp-bar i{background:var(--hud);box-shadow:0 0 8px rgba(92,225,255,.5)}
+.dp-live.run .dp-clock{color:var(--hud)}
+.dp-live.near .dp-bar i{background:var(--warn)}
+.dp-live.near .dp-clock{color:var(--warn)}
+.dp-live.over .dp-bar i{background:var(--bad)}
+.dp-live.over .dp-clock{color:var(--bad)}
+.dp-steps{list-style:none;margin:10px 0 0;padding:8px 0 0;border-top:1px solid var(--line)}
+.dp-steps label{display:flex;gap:10px;align-items:flex-start;padding:6px 0;cursor:pointer;font-size:14px;line-height:1.35}
+.dp-steps input{width:18px;height:18px;margin:0;padding:0;flex:none;accent-color:var(--good);cursor:pointer}
+.dp-steps li.on span{color:var(--muted);text-decoration:line-through}
+.dp-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.dp-btns button{white-space:nowrap}
+.dp-btns .btn{gap:.3em}
+button.dp-pause{background:var(--warn)}
+button.chip.dp-stog{background:transparent;color:var(--accent);border-color:rgba(92,200,245,.3)}
+button.chip.dp-stog:hover{border-color:var(--accent)}
+.dp-narrow{display:none}
 
 /* task detail card: hover pop on laptop, sheet on phone */
 #tdBack{position:fixed;inset:0;background:rgba(3,6,12,.55);z-index:58}
@@ -307,7 +355,7 @@ button.chip{cursor:pointer}
 #boot.still .mono .sig{fill-opacity:1}
 #boot.still .mono .ring2,#boot.still .car .shell,#boot.still .car .tyre,#boot.still .car .arch,#boot.still .car .hubring,#boot.still .car .neck,#boot.still .car .floor,#boot.still .hello,#boot.still .hudrow > div{opacity:1}
 #boot.still .car .glint{opacity:0}
-@media (prefers-reduced-motion: reduce){#boot *{animation:none!important;transition:none!important}.car .rim{stroke-dashoffset:0}.chip.run .stdot{animation:none}}
+@media (prefers-reduced-motion: reduce){#boot *{animation:none!important;transition:none!important}.car .rim{stroke-dashoffset:0}.chip.run .stdot,.dp-stats .stdot{animation:none}}
 
 /* calendar and clients pages (24 Nov) */
 .pc.cal-meet,.arow.cal-meet{background:rgba(167,139,250,.22);color:#DDD6FE;border-color:rgba(167,139,250,.55)}.arow.cal-meet{--c:#A78BFA}
@@ -463,6 +511,15 @@ body.pdragging,body.pdragging *{cursor:grabbing!important}
   .quick input{flex:1 1 100%}
   .quick select{flex:1;max-width:none!important}
   .card{padding:16px}
+  .dpr{grid-template-columns:44px minmax(0,1fr);gap:10px;padding:12px}
+  .dp-time{font-size:14px}
+  .dp-stats{gap:8px}
+  .dp-stats > div{padding:9px 10px}
+  .dp-stats b{font-size:17px}
+  .dp-wide{display:none}
+  .dp-btns{gap:6px}
+  .dp-btns button{padding:6px 10px}
+  .dp-narrow{display:inline}
   .pad{grid-template-columns:repeat(3,68px)}
   .pad button{height:68px}
   .hudrow{grid-template-columns:1fr 1fr}
@@ -1287,10 +1344,140 @@ function openPipeSheet(id){
 }
 document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#pSheet.show")) closePipeSheet(); });
 
+/* ---------- DAY PLAN (Jack, 25 Nov): today's and tomorrow's work in time order, each with an estimate, steps to tick and a Start / Pause / Done timer.
+   Claude fills it through the database: a task shows here when its due is that day and it has a due_time or est_mins.
+   due_time is read as this device's local time. The timer lives in started_at + spent_secs, so it survives a reload, and only one runs at a time.
+   Schedule status: minutes that should be finished by now (each slot from due_time, up to est_mins) against done estimates plus progress on the rest. */
+const DP = { day: 0, open: new Set(), shut: new Set(), busy: false };
+const dpDay = () => addDays(today(), DP.day);
+const isTiming = t => t.status === "running" && !!t.started_at;
+const spentSecs = (t, now = Date.now()) => Number(t.spent_secs || 0) + (isTiming(t) ? Math.max(0, (now - Date.parse(t.started_at)) / 1000) : 0);
+const estM = t => Math.max(0, Number(t.est_mins || 0));
+const hhmm = ms => { const x = new Date(ms); return String(x.getHours()).padStart(2, "0") + ":" + String(x.getMinutes()).padStart(2, "0"); };
+function hrs(m){ m = Math.max(0, Math.round(m)); if (m < 60) return m + "m"; const h = m / 60; if (Number.isInteger(h * 2)) return h + (h === 1 ? " hr" : " hrs"); const w = Math.floor(h); return w + (w === 1 ? " hr " : " hrs ") + (m % 60) + "m"; }
+function clock(s){ s = Math.max(0, Math.floor(s)); const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, x = s % 60, p = n => String(n).padStart(2, "0"); return h ? `${h}:${p(m)}:${p(x)}` : `${m}:${p(x)}`; }
+function slotStart(t, day){ const [h, m] = String(t.due_time).split(":").map(Number); const x = new Date(day + "T00:00:00"); x.setHours(h || 0, m || 0, 0, 0); return x.getTime(); }
+function dpSteps(t){ // accepts [{t, done}], plain strings, or a JSON string, so a hand-written SQL insert still shows
+  let s = t.steps; if (typeof s === "string") { try { s = JSON.parse(s); } catch { s = []; } }
+  return Array.isArray(s) ? s.map(x => typeof x === "string" ? { t: x, done: false } : { t: String((x && (x.t ?? x.text)) || ""), done: !!(x && x.done) }).filter(x => x.t) : [];
+}
+function dpTasks(day, s = S){
+  return s.tasks.filter(t => !isPost(t) && t.due === day && (t.due_time || estM(t)))
+    .sort((a, b) => String(a.due_time || "99").localeCompare(String(b.due_time || "99")) || (a.sort || 0) - (b.sort || 0));
+}
+function dpStats(list, day, now = Date.now()){
+  const isToday = day === iso(now);
+  let planned = 0, worked = 0, done = 0, expected = 0, actual = 0, firstStart = null;
+  for (const t of list) {
+    const e = estM(t), sp = spentSecs(t, now) / 60;
+    planned += e; worked += sp;
+    if (t.status === "done") { done++; actual += e; } else actual += Math.min(sp, e);
+    if (t.due_time) { const st = slotStart(t, day); firstStart = firstStart == null ? st : Math.min(firstStart, st); if (e) expected += Math.max(0, Math.min(e, (now - st) / 60000)); }
+  }
+  const dn = list.filter(t => t.status === "done" && estM(t) && Number(t.spent_secs) > 0);
+  const pace = dn.length ? Math.max(0.5, Math.min(2, sum(dn, "spent_secs") / 60 / dn.reduce((a, t) => a + estM(t), 0))) : 1;
+  const left = list.filter(t => t.status !== "done").sort((a, b) => isTiming(b) - isTiming(a));
+  let cur = isToday ? now : new Date(day + "T00:00:00").getTime();
+  for (const t of left) {
+    if (t.due_time && !isTiming(t)) cur = Math.max(cur, slotStart(t, day));
+    cur += (isToday ? Math.max(0, estM(t) * pace - spentSecs(t, now) / 60) : estM(t)) * 60000;
+  }
+  const diff = actual - expected;
+  let pill = null;
+  if (!list.length) pill = null;
+  else if (!isToday) pill = firstStart != null ? { k: "hud", text: "Starts " + hhmm(firstStart) } : null;
+  else if (!left.length) pill = { k: "good", text: "All done" };
+  else if (firstStart == null) pill = null;
+  else if (Math.abs(diff) < 5) pill = worked < 1 && firstStart > now ? { k: "hud", text: "Starts " + hhmm(firstStart) } : { k: "good", text: "On time" };
+  else pill = diff < 0 ? { k: "bad", text: "Running behind by " + hrs(-diff) } : { k: "good", text: "Ahead by " + hrs(diff) };
+  return { isToday, planned, worked, done, total: list.length, expected, actual, diff, pace, finish: left.length ? cur : null, pill, live: list.some(isTiming) };
+}
+function dpHead(list, day, now = Date.now()){
+  if (!list.length) return "";
+  const s = dpStats(list, day, now);
+  const fin = s.finish != null ? `${s.isToday ? "Finishes around" : "Planned to finish"} <b class="num">${hhmm(s.finish)}</b>` : "";
+  return `<div class="dp-status">${s.pill ? `<span class="dp-pill ${s.pill.k}" id="dpPill">${s.pill.text}</span>` : ""}<span class="muted small" id="dpFin">${s.isToday && s.worked >= 1 ? `${hrs(s.worked)} in${fin ? ", " + fin.charAt(0).toLowerCase() + fin.slice(1) : ""}` : fin}</span></div>
+    <div class="dp-stats"><div><b class="num" id="dpPlanned">${hrs(s.planned)}</b><span>Planned</span></div><div><b class="num" id="dpWorked">${hrs(s.worked)}</b><span>Worked${s.live ? ' <i class="stdot" style="color:var(--hud)"></i>' : ""}</span></div><div><b class="num" id="dpDone">${s.done}<span class="muted" style="font-size:14px"> of ${s.total}</span></b><span>Done</span></div></div>`;
+}
+function dpLive(t, now = Date.now()){
+  const est = estM(t) * 60, sp = spentSecs(t, now), run = isTiming(t);
+  if (!run && sp < 1) return "";
+  const over = est && sp > est, near = est && !over && sp >= est * 0.9;
+  const note = !est ? "" : over ? `<span class="chip bad">Over by ${hrs(Math.max(1, (sp - est) / 60))}</span>` : run ? `<span class="chip ${near ? "warn" : "hud"}">${hrs(Math.ceil((est - sp) / 60))} left</span>` : `<span class="chip">Paused</span>`;
+  return `<div class="dp-live ${over ? "over" : near ? "near" : run ? "run" : "paused"}"><span class="dp-clock num">${clock(sp)}</span>${est ? `<div class="bar dp-bar" role="progressbar" aria-label="Time used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(Math.min(100, 100 * sp / est))}"><i style="width:${Math.min(100, 100 * sp / est).toFixed(1)}%"></i></div>` : '<span style="flex:1"></span>'}${note}</div>`;
+}
+function dpRow(t, nextId, now = Date.now()){
+  const done = t.status === "done", run = isTiming(t), steps = dpSteps(t), sd = steps.filter(x => x.done).length, tom = DP.day === 1;
+  const open = steps.length && (DP.open.has(t.id) || (!DP.shut.has(t.id) && !done && (run || t.id === nextId)));
+  const sp = spentSecs(t, now), est = estM(t) * 60, over = !done && est && sp > est;
+  const btns = done ? ""
+    : (tom ? "" : run ? `<button class="sm dp-pause" data-dpa="pause">Pause</button>` : `<button class="sm" data-dpa="start">${sp >= 1 ? "Resume" : "Start"}</button>`) +
+      `<button class="ghost sm" data-dpa="done">Done</button><button class="btn" data-dpa="move" aria-label="${tom ? "Move to today" : "Move to tomorrow"}"><span class="dp-wide">Move to</span><span class="dp-narrow">To</span><span>${tom ? "today" : "tomorrow"}</span></button>`;
+  return `<div class="dpr${done ? " done" : ""}${run ? " run" : ""}${over ? " over" : ""}" data-dp="${t.id}">
+    <div class="dp-time num">${t.due_time ? String(t.due_time).slice(0, 5) : '<span class="muted small">Any time</span>'}</div>
+    <div class="dp-main">
+      <button class="dp-title" data-dpa="open">${esc(t.title)}</button>
+      <div class="dp-meta"><span class="chip">${esc(t.project)}</span>${estM(t) ? `<span class="chip" title="Estimate">${hrs(estM(t))}</span>` : ""}${run ? '<span class="chip hud run"><span class="stdot"></span>Running</span>' : ""}${done && sp >= 60 ? `<span class="chip ${est && sp > est ? "warn" : "good"}">Took ${hrs(sp / 60)}</span>` : ""}${t.status === "waiting" ? `<span class="chip warn">Waiting on ${esc(t.waiting_on || "Jack")}</span>` : ""}${steps.length ? `<button class="chip dp-stog" data-dpa="steps" aria-expanded="${open ? "true" : "false"}">Steps ${sd}/${steps.length} ${open ? "▴" : "▾"}</button>` : ""}${done ? '<button class="chip dp-stog" data-dpa="reopen">Reopen</button>' : ""}</div>
+      <div class="dp-livewrap">${done ? "" : dpLive(t, now)}</div>
+      ${open ? `<ul class="dp-steps">${steps.map((x, i) => `<li class="${x.done ? "on" : ""}"><label><input type="checkbox" data-step="${i}" ${x.done ? "checked" : ""}><span>${esc(x.t)}</span></label></li>`).join("")}</ul>` : ""}
+      ${btns ? `<div class="dp-btns">${btns}</div>` : ""}
+    </div></div>`;
+}
+function dayPlanCard(){
+  const day = dpDay(), list = dpTasks(day), now = Date.now();
+  const nextId = (list.find(isTiming) || list.find(t => t.status !== "done") || {}).id;
+  return `<div class="card dp" id="dayPlan"><div class="card-h"><h2>Day plan <span class="dp-date">${fmtDay(day)}</span></h2>
+      <div class="chips dp-tog" role="group" aria-label="Which day"><button data-dpday="0" class="${DP.day ? "" : "on"}" aria-pressed="${!DP.day}">Today</button><button data-dpday="1" class="${DP.day ? "on" : ""}" aria-pressed="${!!DP.day}">Tomorrow</button></div></div>
+    <div id="dpHead">${dpHead(list, day, now)}</div>
+    <div id="dpList">${list.length ? list.map(t => dpRow(t, nextId, now)).join("") : `<div class="empty">${DP.day ? "Nothing planned for tomorrow yet. Ask Claude to plan it." : "Nothing planned. Ask Claude to plan your day."}</div>`}</div></div>`;
+}
+function dpTick(){
+  const card = $("#dayPlan"); if (!card || document.hidden) return;
+  const day = dpDay(), list = dpTasks(day), now = Date.now(); if (!list.length) return;
+  $("#dpHead").innerHTML = dpHead(list, day, now);
+  list.filter(isTiming).forEach(t => {
+    const row = card.querySelector(`.dpr[data-dp="${t.id}"]`); if (!row) return;
+    row.querySelector(".dp-livewrap").innerHTML = dpLive(t, now);
+    row.classList.toggle("over", estM(t) > 0 && spentSecs(t, now) > estM(t) * 60);
+  });
+}
+setInterval(dpTick, 1000);
+const dpPause = (t, now = Date.now()) => ({ status: "todo", started_at: null, spent_secs: Math.round(spentSecs(t, now)) });
+async function dpAct(t, a){
+  const now = Date.now();
+  if (a === "start") {
+    for (const o of S.tasks.filter(x => x.id !== t.id && isTiming(x))) await setTask(o, dpPause(o, now));
+    await setTask(t, { status: "running", started_at: new Date(now).toISOString() }); DP.shut.delete(t.id); toast("Started: " + t.title);
+  } else if (a === "pause") { await setTask(t, dpPause(t, now)); toast("Paused: " + t.title); }
+  else if (a === "done") { await setTask(t, { status: "done", done_at: new Date(now).toISOString(), started_at: null, spent_secs: Math.round(spentSecs(t, now)) }); toast("Done: " + t.title); }
+  else if (a === "reopen") { await setTask(t, { status: "todo", done_at: null }); toast("Back on the plan"); }
+  else if (a === "move") { const back = DP.day === 1; await setTask(t, { ...(isTiming(t) ? dpPause(t, now) : {}), due: addDays(t.due, back ? -1 : 1) }); toast((back ? "Moved to today: " : "Moved to tomorrow: ") + t.title); }
+}
+document.addEventListener("click", async e => {
+  const b = e.target.closest("#dayPlan [data-dpa], #dayPlan [data-dpday]"); if (!b) return;
+  if (b.dataset.dpday != null) { DP.day = Number(b.dataset.dpday); rerender(); return; }
+  const row = b.closest(".dpr"), t = row && S.tasks.find(x => x.id === row.dataset.dp); if (!t) return;
+  const a = b.dataset.dpa;
+  if (a === "open") return openCard("task", t.id, row, true);
+  if (a === "steps") { const shown = !!row.querySelector(".dp-steps"); (shown ? DP.shut : DP.open).add(t.id); (shown ? DP.open : DP.shut).delete(t.id); rerender(); return; }
+  if (DP.busy) return;
+  DP.busy = true; row.querySelectorAll("button").forEach(x => { x.disabled = true; });
+  try { await dpAct(t, a); } catch {} finally { DP.busy = false; rerender(); }
+});
+document.addEventListener("change", async e => {
+  const cb = e.target.closest && e.target.closest("#dayPlan [data-step]"); if (!cb) return;
+  const row = cb.closest(".dpr"), t = S.tasks.find(x => x.id === row.dataset.dp); if (!t) return;
+  const steps = dpSteps(t), i = Number(cb.dataset.step); if (!steps[i]) return;
+  const mark = on => { cb.checked = on; cb.closest("li").classList.toggle("on", on); const n = row.querySelectorAll(".dp-steps input:checked").length, tg = row.querySelector("[data-dpa=steps]"); if (tg) tg.textContent = `Steps ${n}/${steps.length} ▴`; };
+  steps[i].done = cb.checked; mark(cb.checked);
+  try { await setTask(t, { steps }); if (steps.every(x => x.done)) toast("All steps ticked. Mark it done?"); } catch { mark(!steps[i].done); }
+});
+
 /* ---------- TODAY (main screen) ---------- */
 function renderToday(el){
   const d = today(), m = money(), c = todayCounts();
   const list = todayTasks(), ids = new Set(list.map(t => t.id));
+  const planIds = new Set(dpTasks(d).map(t => t.id)), shown = list.filter(t => !planIds.has(t.id)), inPlan = list.length - shown.length;
   const np = nextPost(), pw = postsThisWeek();
   const soon = S.tasks.filter(t => !isPost(t) && t.status !== "done" && t.due && t.due > d && t.due <= addDays(d, 7) && !ids.has(t.id)).sort((a, b) => (a.due + (a.due_time || "")).localeCompare(b.due + (b.due_time || "")));
   const out = S.invoices.filter(i => i.status === "sent" || i.status === "scheduled");
@@ -1308,9 +1495,10 @@ function renderToday(el){
   </div>
   <div class="dash">
     <div class="col">
+      ${dayPlanCard()}
       <div class="card" id="todayCard"><div class="card-h"><h2>Today</h2><span class="cnt">${c.done} of ${c.total} done</span></div>
         <div class="quick"><input id="qTitle" placeholder="Add a task for today, press Enter" aria-label="New task"><select id="qProj" aria-label="Project" style="max-width:150px">${PROJECTS.map(p => `<option>${p}</option>`).join("")}</select><button id="qAdd" aria-label="Add">Add</button></div>
-        <div id="tList">${list.length ? list.map(t => taskCard(t, { project: true, today: true })).join("") : '<div class="empty">Nothing due today. Add one above.</div>'}</div>
+        <div id="tList">${shown.length ? shown.map(t => taskCard(t, { project: true, today: true })).join("") + (inPlan ? `<div class="empty small">${inPlan} more in the Day plan above.</div>` : "") : inPlan ? '<div class="empty">Everything due today is in the Day plan above.</div>' : '<div class="empty">Nothing due today. Add one above.</div>'}</div>
       </div>
       <div class="card" id="postCardWrap"><div class="card-h"><h2>Next LinkedIn post</h2><span class="cnt" id="postsWeek">${pw.done} of 3 to 5 this week</span></div>${postCard(np)}</div>
       <div class="card"><div class="card-h"><h2>Coming up</h2><a href="#tasks">All tasks</a></div>
@@ -1498,6 +1686,7 @@ function renderTasks(el){
   const by = st => open.filter(t => t.status === st).length;
   el.innerHTML = phead("Everything on the list", "Tasks") +
   `<div class="kpis">${kpi(open.length, "Open", `${by("todo")} to do, ${by("running")} running`)}${kpi(by("waiting"), "Waiting", "on someone else or you")}${kpi(by("scheduled"), "Scheduled", "calls, demos, deadlines")}${kpi(open.filter(t => t.due && t.due < d).length, "Overdue", "past their due date", { warn: open.some(t => t.due && t.due < d) })}</div>
+  <div style="margin-bottom:16px">${dayPlanCard()}</div>
   <div class="card" style="margin-bottom:16px"><div class="quick" style="flex-wrap:wrap;margin:0">
     <input id="kTitle" placeholder="Add a task" aria-label="Task title" style="min-width:200px">
     <select id="kProj" aria-label="Project">${PROJECTS.map(p => `<option ${p === (TV.project === "All" ? "ApexLine" : TV.project) ? "selected" : ""}>${p}</option>`).join("")}</select>
