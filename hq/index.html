@@ -1345,8 +1345,8 @@ function openPipeSheet(id){
 document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#pSheet.show")) closePipeSheet(); });
 
 /* ---------- DAY PLAN (Jack, 25 Nov): today's and tomorrow's work in time order, each with an estimate, steps to tick and a Start / Pause / Done timer.
-   Claude fills it through the database: a task shows here when its due is that day and it has a due_time or est_mins.
-   due_time is read as this device's local time. The timer lives in started_at + spent_secs, so it survives a reload, and only one runs at a time.
+   Claude fills it through the database: a task shows here when its due is that day and it has an est_mins (older tasks with only a UK due_time stay in the normal list).
+   due_time on planned tasks is Jack's local (Thai) time, read as this device's local time. The timer lives in started_at + spent_secs, so it survives a reload, and only one runs at a time.
    Schedule status: minutes that should be finished by now (each slot from due_time, up to est_mins) against done estimates plus progress on the rest. */
 const DP = { day: 0, open: new Set(), shut: new Set(), busy: false };
 const dpDay = () => addDays(today(), DP.day);
@@ -1362,7 +1362,7 @@ function dpSteps(t){ // accepts [{t, done}], plain strings, or a JSON string, so
   return Array.isArray(s) ? s.map(x => typeof x === "string" ? { t: x, done: false } : { t: String((x && (x.t ?? x.text)) || ""), done: !!(x && x.done) }).filter(x => x.t) : [];
 }
 function dpTasks(day, s = S){
-  return s.tasks.filter(t => !isPost(t) && t.due === day && (t.due_time || estM(t)))
+  return s.tasks.filter(t => !isPost(t) && t.due === day && estM(t) > 0)
     .sort((a, b) => String(a.due_time || "99").localeCompare(String(b.due_time || "99")) || (a.sort || 0) - (b.sort || 0));
 }
 function dpStats(list, day, now = Date.now()){
