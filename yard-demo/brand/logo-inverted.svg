@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 830 200" role="img" aria-label="Demo Skip and Grab Ltd">
+  <g transform="translate(6 26)">
+    <path d="M6 30 L178 30 L156 128 L28 128 Z" fill="#EB9347"/>
+    <path d="M6 30 L178 30 L174 47 L10 47 Z" fill="#C7672A"/>
+    <rect x="52" y="62" width="80" height="11" rx="5.5" fill="#fff" opacity=".9"/>
+    <rect x="64" y="86" width="56" height="11" rx="5.5" fill="#fff" opacity=".9"/>
+    <circle cx="40" cy="142" r="12" fill="#FFFFFF"/><circle cx="144" cy="142" r="12" fill="#FFFFFF"/>
+    <path d="M38 0 L66 0 L76 24 L28 24 Z" fill="#FFFFFF" opacity=".85"/>
+  </g>
+  <text x="208" y="108" font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900" font-size="74" fill="#FFFFFF" letter-spacing="-1">SKIP <tspan fill="#EB9347">&amp;</tspan> GRAB</text>
+  <text x="212" y="166" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="34" fill="#FFFFFF" opacity=".7" letter-spacing="9">DEMO LTD</text>
+</svg>

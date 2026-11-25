@@ -1,0 +1,972 @@
+/* Yard layer for the skip and grab demo: Home, yard board, bookings, day plan, skips on site, live tracking,
+   driver app, tickets and WTNs, Defra, recycling, credit control, scoreboard, problems and "make it yours".
+   Sample data in this browser only. Nothing is sent anywhere. */
+(function () {
+  function ready() {
+    var UI = window.DSGUI, CS = window.CS;
+    if (!(UI && UI.V && UI.A && UI.VIEWS && CS && CS.S && window.DSGYC && window.DSGG && window.DSGV3 && window.DSGSK)) return false;
+    var have = UI.VIEWS.map(function (v) { return v.k; }).join(' ');
+    return /\bteam\b/.test(have) && /\bportal\b/.test(have) && /\bcompliance\b/.test(have) && /\bhistory\b/.test(have);
+  }
+  function start(tries) {
+    if (!ready()) { if ((tries || 0) < 120) { setTimeout(function () { start((tries || 0) + 1); }, 50); return; } if (!(window.DSGUI && window.CS && window.CS.S && window.DSGYC)) return; }
+    var UI = window.DSGUI, CS = window.CS, YC = window.DSGYC, A = UI.A, V = UI.V, ui = UI.ui, ic = window.ic;
+    var h = CS.esc, money = CS.money;
+    function S() { return CS.S; }
+    function Y() { return YC.ensure(CS.S, CS); }
+    function q(s, r) { return (r || document).querySelector(s); }
+    function qa(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+    function plural(n, w, p) { return n + ' ' + (n === 1 ? w : (p || w + 's')); }
+    function save() { CS.save(); }
+    function commit() { CS.save(); UI.render(); }
+    function toast(text, icon) {
+      var box = q('#toasts'); if (!box) return; var el = document.createElement('div'); el.className = 'toast';
+      el.innerHTML = ic(icon || 'circle-check') + '<span>' + text + '</span>'; box.appendChild(el);
+      setTimeout(function () { el.style.transition = 'opacity .4s'; el.style.opacity = '0'; setTimeout(function () { el.remove(); }, 400); }, 4200);
+    }
+    function modal(title, body, foot, cls) {
+      q('#layer').innerHTML = '<div class="scrim" data-act="close"></div><div class="modal ' + (cls || '') + '" role="dialog" aria-label="' + h(String(title).replace(/<[^>]+>/g, '')) + '"><div class="mhd"><h2>' + title + '</h2><button class="iconbtn" data-act="close" aria-label="Close">' + ic('x') + '</button></div><div class="mbd">' + body + '</div>' + (foot ? '<div class="mft">' + foot + '</div>' : '') + '</div>';
+    }
+    function drawer(title, sub, body, foot) {
+      q('#layer').innerHTML = '<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-label="' + h(String(title).replace(/<[^>]+>/g, '')) + '"><div class="dhd"><div style="flex:1;min-width:0"><h2>' + title + '</h2><small>' + sub + '</small></div><button class="iconbtn" data-act="close" aria-label="Close">' + ic('x') + '</button></div><div class="dbd">' + body + '</div>' + (foot ? '<div class="dft">' + foot + '</div>' : '') + '</aside>';
+    }
+    if (!A.close) A.close = function () { q('#layer').innerHTML = ''; };
+    function go(v) { A.go({ dataset: { v: v } }); }
+    function dayName(off) { return CS.fmtDay(off); }
+    function lorryTag(id) { var l = YC.lorry(id); return l ? '<span class="ylo" style="--lc:' + l.col + '"><i></i>' + h(l.n) + '</span>' : '<span class="tag amber">No lorry yet</span>'; }
+    var STAT = { planned: ['Booked', ''], onway: ['On the way', 'brand'], onsite: ['On site', 'mail'], done: ['Done', 'ok'] };
+    function stTag(j) { var s = STAT[j.status] || STAT.planned; return '<span class="tag ' + s[1] + '">' + s[0] + '</span>'; }
+    function streamTxt(k) { var s = YC.STREAMS[k]; return s ? h(s.n) + ' <span class="yewc">EWC ' + s.ewc + '</span>' : ''; }
+
+    /* ======================================================================
+       People and "make it yours": every person gets their own menu order, favourites and home tiles
+       ====================================================================== */
+    var PK = 'dsg-prefs';
+    var USERS = [{ k: 'dave', n: 'Dave Archer', r: 'Managing Director', c: '#EB9347' }, { k: 'ellie', n: 'Ellie Ward', r: 'Office', c: '#0E9F6E' }, { k: 'sam', n: '', r: 'Sales', c: '#7A3FF2' }];
+    function uName(u) { return u.k === 'sam' ? CS.bde() : u.n; }
+    function allP() { try { return JSON.parse(localStorage.getItem(PK) || '{}') || {}; } catch (e) { return {}; } }
+    function meK() { var a = allP(); return USERS.some(function (u) { return u.k === a.user; }) ? a.user : 'dave'; }
+    function meU() { var k = meK(); return USERS.filter(function (u) { return u.k === k; })[0]; }
+    function P() { var a = allP(); return (a.users && a.users[meK()]) || {}; }
+    function setP(fn) { var a = allP(), k = meK(); a.users = a.users || {}; var p = a.users[k] || {}; fn(p); a.users[k] = p; try { localStorage.setItem(PK, JSON.stringify(a)); } catch (e) {} }
+    function drawMe() {
+      var u = meU(), box = q('.side .me'); if (!box) return;
+      var av = box.querySelector('.av'), who = box.querySelector('.who');
+      if (av) { av.textContent = CS.initials(uName(u)); av.style.setProperty('--c', u.c); }
+      if (who) who.innerHTML = '<b>' + h(uName(u)) + '</b><small>' + h(u.r) + '</small>';
+      if (who && !who.getAttribute('data-act')) { who.setAttribute('data-act', 'yMine'); who.setAttribute('role', 'button'); who.setAttribute('tabindex', '0'); who.title = 'Switch person, or make it yours'; }
+    }
+
+    /* ---------- the menu ---------- */
+    var GROUPS = ['Today', 'Jobs', 'Customers', 'Money', 'Yard', 'More'];
+    var MAP = {
+      home: ['Today', 'Home', 'home'], inbox: ['Today', 'Inbox', 'inbox'], board: ['Today', 'Yard board', 'dashboard'],
+      bookings: ['Jobs', 'Bookings', 'calendar'], plan: ['Jobs', 'Day plan', 'route'], skips: ['Jobs', 'Skips on site', 'skip'], tracking: ['Jobs', 'Live tracking', 'map-pin'], quotes: ['Jobs', 'Quotes', 'file-text'],
+      customers: ['Customers', 'Customers', 'users'], portal: ['Customers', 'Customer portal', 'world'],
+      credit: ['Money', 'Credit control', 'lock'], money: ['Money', 'Money', 'pound'], trends: ['Money', 'Trends', 'trending-up'], scoreboard: ['Money', 'Scoreboard', 'target'],
+      driver: ['Yard', 'Driver app', 'mobile'], tickets: ['Yard', 'Tickets and WTNs', 'receipt'], defra: ['Yard', 'Defra tracking', 'shield-check'], recycling: ['Yard', 'Recycling report', 'leaf'],
+      chasing: ['More', 'Chasing', 'bell'], orders: ['More', 'Order diary', 'calendar'], history: ['More'], today: ['More', 'Day summary', 'dashboard'], jobs: ['More', 'Partner jobs', 'truck'], sales: ['More', 'Sales', 'target'],
+      team: ['More', 'Team', 'users'], suppliers: ['More', 'Supplier handbook', 'warehouse'], compliance: ['More'], find: ['More', 'Find a supplier', 'map-pin'], bills: ['More', 'Bill check', 'receipt'], paperwork: ['More', 'Duty of care', 'certificate'], reports: ['More', 'Waste and carbon', 'leaf']
+    };
+    var NEW = [
+      { k: 'board', sub: 'Lorries out, skips due back, today\'s money and the jobs league, for the office TV' },
+      { k: 'bookings', sub: 'Every skip and grab job, with the waste stream, EWC code and permit' },
+      { k: 'plan', sub: 'Drag a job onto a lorry. Drivers see the change straight away' },
+      { k: 'skips', sub: 'Every skip out on hire, how long it has been there, and what is overdue' },
+      { k: 'tracking', sub: 'Where every lorry is and how each job is going' },
+      { k: 'driver', sub: 'What your drivers see on their phones' },
+      { k: 'tickets', sub: 'Tip tickets matched to jobs, and waste transfer notes made by themselves' },
+      { k: 'defra', sub: 'Every movement prepared for Defra\'s digital waste tracking' },
+      { k: 'recycling', sub: 'Tonnes, recycling rate and carbon, for the company and for each customer' },
+      { k: 'scoreboard', sub: 'Who is top this week, in the office and on the road, with commission worked out' },
+      { k: 'problems', hide: true, n: 'Reported problems', ic: 'alert', sub: 'Everything reported through the assistant, and where it is up to' }
+    ];
+    NEW.forEach(function (n) { if (UI.VIEWS.some(function (v) { return v.k === n.k; })) return; var m = MAP[n.k] || []; UI.VIEWS.push({ k: n.k, g: m[0] || 'More', n: n.n || m[1], ic: n.ic || m[2], sub: n.sub, hide: n.hide }); });
+    UI.VIEWS.forEach(function (v) { var m = MAP[v.k]; if (m) { v.g = m[0]; if (m[1]) v.n = m[1]; if (m[2]) v.ic = m[2]; } else if (!v.hide && v.k !== 'home') v.g = 'More'; if (v.k === 'home') v.g = 'Today'; });
+    var jv = UI.VIEWS.filter(function (v) { return v.k === 'jobs'; })[0]; if (jv) jv.sub = 'Jobs passed to partner firms outside your area';
+    var cv = UI.VIEWS.filter(function (v) { return v.k === 'credit'; })[0]; if (cv) cv.sub = 'Who owes what, how late, statements, reminders and who is on stop';
+    var hv = UI.VIEWS.filter(function (v) { return v.k === 'home'; })[0]; if (hv) hv.sub = '';
+    function defOrder() { var mk = Object.keys(MAP), o = []; GROUPS.forEach(function (g) { UI.VIEWS.filter(function (v) { return !v.hide && v.g === g; }).sort(function (a, b) { var ia = mk.indexOf(a.k), ib = mk.indexOf(b.k); return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib); }).forEach(function (v) { o.push(v.k); }); }); return o; }
+    var DEF = defOrder();
+    /* keep the list itself in menu order too */
+    UI.VIEWS.sort(function (a, b) { var ia = DEF.indexOf(a.k), ib = DEF.indexOf(b.k); return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib); });
+    function grpOf(k) { var p = P(); var v = UI.VIEWS.filter(function (x) { return x.k === k; })[0]; return (p.grp && p.grp[k]) || (v && v.g) || 'More'; }
+    function ordered(g) {
+      var p = P(), ord = p.order || DEF, pins = p.pins || [];
+      return UI.VIEWS.filter(function (v) { return !v.hide && grpOf(v.k) === g && pins.indexOf(v.k) < 0; }).map(function (v) { return v.k; })
+        .sort(function (a, b) { var ia = ord.indexOf(a), ib = ord.indexOf(b); if (ia < 0) ia = 900 + DEF.indexOf(a); if (ib < 0) ib = 900 + DEF.indexOf(b); return ia - ib; });
+    }
+    function view(k) { return UI.VIEWS.filter(function (v) { return v.k === k; })[0]; }
+    function navCounts(base) {
+      var c = {}; for (var k in base) c[k] = base[k];
+      try {
+        var y = Y(), s = S();
+        c.skips = y.onsite.filter(function (o) { return !o.booked && -o.since > o.hire; }).length;
+        c.plan = YC.today(y).filter(function (j) { return !j.lorry; }).length;
+        c.defra = YC.defraRows(s, y).filter(function (r) { return r.status === 'error'; }).length;
+        c.tickets = y.tickets.filter(function (t) { return !t.matched; }).length;
+        c.credit = s.customers.filter(function (x) { return x.stop; }).length + s.invoices.filter(function (i) { return i.status !== 'paid' && i.due <= -30; }).length;
+      } catch (e) {}
+      return c;
+    }
+    var RED = { inbox: 1, credit: 1, defra: 1, skips: 1 };
+    window.DSGNAV = function (ctx) {
+      var s = S(); s.settings.navShut = s.settings.navShut || {};
+      if (!s.settings.navMoreSet) { s.settings.navMoreSet = true; s.settings.navShut.More = true; save(); }
+      var shut = s.settings.navShut, cur = ui.view === 'pricebook' ? 'suppliers' : ui.view, curG = grpOf(cur), counts = navCounts(ctx.counts || {}), pins = (P().pins || []).filter(function (k) { return view(k) && !view(k).hide; });
+      if (curG && shut[curG] && ui.yNavSeen !== ui.view && pins.indexOf(cur) < 0) { delete shut[curG]; save(); }
+      ui.yNavSeen = ui.view;
+      function item(k, g) {
+        var v = view(k); if (!v) return ''; var c = counts[k], pinned = pins.indexOf(k) >= 0;
+        return '<button data-act="go" data-v="' + k + '" data-nav="' + k + '" draggable="true" class="' + (cur === k ? 'on' : '') + (g && shut[g] ? ' gshut' : '') + '" title="' + h(v.n) + '">' + ic(v.ic) + '<span class="lb">' + h(v.n) + '</span>' +
+          (c ? '<span class="cnt' + (RED[k] ? ' red' : ' grey') + '">' + c + '</span>' : '') +
+          '<span class="ypin' + (pinned ? ' on' : '') + '" data-act="yPin" data-v="' + k + '" role="button" aria-label="' + (pinned ? 'Unpin ' : 'Pin ') + h(v.n) + '" title="' + (pinned ? 'Unpin' : 'Pin to the top') + '">' + ic('star') + '</span></button>';
+      }
+      function head(g) {
+        var n = 0, red = false; ordered(g).forEach(function (k) { if (counts[k]) { n += counts[k]; if (RED[k]) red = true; } });
+        return '<button class="navg' + (shut[g] ? ' shut' : '') + (shut[g] && curG === g ? ' cur' : '') + '" data-act="navGroup" data-g="' + g + '" data-navg="' + g + '" aria-expanded="' + (shut[g] ? 'false' : 'true') + '" title="' + (shut[g] ? 'Show ' : 'Hide ') + g + '"><span class="gl">' + g + '</span>' + (shut[g] && n ? '<span class="cnt' + (red ? ' red' : ' grey') + '">' + n + '</span>' : '') + '</button>';
+      }
+      var o = '<div class="navtop"><button class="navcta" data-act="yBook" title="New booking (B)">' + ic('plus') + '<span class="lb">New booking</span></button><button class="navcta two" data-act="desk" title="New quote (Q)" aria-label="New quote">' + ic('file-text') + '</button></div>';
+      if (pins.length) o += '<div class="navg ypinhd" data-navg="Pinned"><span class="gl">' + ic('star') + 'Pinned</span></div>' + pins.map(function (k) { return item(k, null); }).join('');
+      GROUPS.forEach(function (g) { var ks = ordered(g); if (!ks.length) return; o += head(g) + ks.map(function (k) { return item(k, g); }).join(''); });
+      o += '<button class="ymine" data-act="yMine" title="Drag the menu into your own order, pin favourites, choose your home tiles">' + ic('star') + '<span class="lb">Make it yours</span></button>';
+      return o;
+    };
+    A.yPin = function (el, e) {
+      if (e) { e.stopPropagation(); }
+      var k = el.dataset.v; setP(function (p) { p.pins = p.pins || []; var i = p.pins.indexOf(k); if (i >= 0) p.pins.splice(i, 1); else p.pins.push(k); });
+      var on = (P().pins || []).indexOf(k) >= 0; toast((on ? 'Pinned ' : 'Unpinned ') + h(view(k).n) + (on ? ' to the top of your menu' : ''), 'star');
+      UI.render(); if (q('#yMine')) A.yMine();
+    };
+    /* drag and drop the menu */
+    (function () {
+      var nav = q('#nav'), dragK = null;
+      function clear() { qa('#nav .ydrop-b,#nav .ydrop-a').forEach(function (x) { x.classList.remove('ydrop-b', 'ydrop-a'); }); }
+      nav.addEventListener('dragstart', function (e) { var b = e.target.closest && e.target.closest('[data-nav]'); if (!b) return; dragK = b.getAttribute('data-nav'); b.classList.add('ydrag'); try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragK); } catch (x) {} });
+      nav.addEventListener('dragend', function () { dragK = null; clear(); qa('#nav .ydrag').forEach(function (x) { x.classList.remove('ydrag'); }); });
+      nav.addEventListener('dragover', function (e) {
+        if (!dragK) return; var t = e.target.closest && (e.target.closest('[data-nav]') || e.target.closest('[data-navg]')); if (!t) return;
+        e.preventDefault(); clear(); var r = t.getBoundingClientRect(); t.classList.add(t.hasAttribute('data-navg') || e.clientY > r.top + r.height / 2 ? 'ydrop-a' : 'ydrop-b');
+      });
+      nav.addEventListener('drop', function (e) {
+        if (!dragK) return; e.preventDefault();
+        var t = e.target.closest && (e.target.closest('[data-nav]') || e.target.closest('[data-navg]')); var k = dragK; clear(); dragK = null; if (!t) return;
+        moveNav(k, t.getAttribute('data-nav'), t.getAttribute('data-navg'), !t.hasAttribute('data-navg') && e.clientY <= t.getBoundingClientRect().top + t.getBoundingClientRect().height / 2);
+      });
+    })();
+    function moveNav(k, onK, onG, before) {
+      setP(function (p) {
+        var pins = p.pins || [], order = (p.order || DEF).slice(); DEF.forEach(function (x) { if (order.indexOf(x) < 0) order.push(x); });
+        order.splice(order.indexOf(k), 1);
+        if (onG === 'Pinned' || (onK && pins.indexOf(onK) >= 0)) { if (pins.indexOf(k) < 0) pins.push(k); p.pins = pins; order.push(k); p.order = order; return; }
+        var i = pins.indexOf(k); if (i >= 0) pins.splice(i, 1); p.pins = pins;
+        var g = onG || grpOf(onK); p.grp = p.grp || {}; p.grp[k] = g;
+        if (onK) { var at = order.indexOf(onK); order.splice(before ? at : at + 1, 0, k); }
+        else { var first = ordered(g)[0]; order.splice(first ? order.indexOf(first) : order.length, 0, k); }
+        p.order = order;
+      });
+      var s = S(); if (onG && s.settings.navShut && s.settings.navShut[onG]) { delete s.settings.navShut[onG]; save(); }
+      UI.render(); toast(h(view(k).n) + ' moved. Saved for ' + h(uName(meU()).split(' ')[0]), 'star');
+    }
+    A.yNavUp = function (el) { var k = el.dataset.v, g = grpOf(k), l = ordered(g), i = l.indexOf(k); if (i > 0) moveNav(k, l[i - 1], null, true); A.yMine(); };
+    A.yNavDown = function (el) { var k = el.dataset.v, g = grpOf(k), l = ordered(g), i = l.indexOf(k); if (i >= 0 && i < l.length - 1) moveNav(k, l[i + 1], null, false); A.yMine(); };
+    A.yMine = function () {
+      var u = meU(), pins = P().pins || [];
+      var rows = GROUPS.map(function (g) {
+        var ks = ordered(g); if (!ks.length) return '';
+        return '<div class="ym-g"><b>' + g + '</b>' + ks.map(function (k, i) {
+          return '<div class="ym-r"><span class="ym-n">' + ic(view(k).ic) + h(view(k).n) + '</span><button class="iconbtn sm" data-act="yNavUp" data-v="' + k + '" aria-label="Move ' + h(view(k).n) + ' up"' + (i ? '' : ' disabled') + '>' + ic('chevron-down', 'up') + '</button><button class="iconbtn sm" data-act="yNavDown" data-v="' + k + '" aria-label="Move ' + h(view(k).n) + ' down"' + (i < ks.length - 1 ? '' : ' disabled') + '>' + ic('chevron-down') + '</button><button class="iconbtn sm ym-star" data-act="yPin" data-v="' + k + '" aria-label="Pin ' + h(view(k).n) + '">' + ic('star') + '</button></div>';
+        }).join('') + '</div>';
+      }).join('');
+      var pinRows = pins.length ? '<div class="ym-g"><b>Pinned</b>' + pins.filter(view).map(function (k) { return '<div class="ym-r"><span class="ym-n">' + ic(view(k).ic) + h(view(k).n) + '</span><button class="iconbtn sm ym-star on" data-act="yPin" data-v="' + k + '" aria-label="Unpin ' + h(view(k).n) + '">' + ic('star') + '</button></div>'; }).join('') + '</div>' : '';
+      modal(ic('star') + ' Make it yours', '<div id="yMine"><p class="ym-lead">Everyone gets their own layout. Drag items in the side menu into the order you like, or use the arrows here. Tap the star to pin a page to the top. Your home tiles move the same way.</p>' +
+        '<div class="ym-who"><span>Layout for</span><div class="seg">' + USERS.map(function (x) { return '<button data-act="yUser" data-v="' + x.k + '" class="' + (x.k === u.k ? 'on' : '') + '">' + h(uName(x).split(' ')[0]) + '</button>'; }).join('') + '</div></div>' +
+        pinRows + rows + '</div>',
+        '<button class="btn" data-act="yResetMine">' + ic('refresh') + 'Reset my layout</button><span class="sp"></span><button class="btn" data-act="yArrange">' + ic('dashboard') + 'Arrange home tiles</button><button class="btn pri" data-act="close">Done</button>', 'ymine-m');
+    };
+    A.yUser = function (el) {
+      var a = allP(); a.user = el.dataset.v; try { localStorage.setItem(PK, JSON.stringify(a)); } catch (e) {}
+      drawMe(); UI.render(); A.yMine(); toast('Now showing ' + h(uName(meU()).split(' ')[0]) + '\'s layout', 'user');
+    };
+    A.yResetMine = function () { setP(function (p) { delete p.order; delete p.pins; delete p.grp; delete p.tiles; delete p.hidden; }); UI.render(); A.yMine(); toast('Layout reset for ' + h(uName(meU()).split(' ')[0]), 'refresh'); };
+
+    /* ======================================================================
+       Money figures used on several screens
+       ====================================================================== */
+    function cashWeek() { return S().invoices.filter(function (i) { return i.status === 'paid' && i.paidDay != null && i.paidDay >= -6; }); }
+    function sum(l, f) { return l.reduce(function (a, x) { return a + (f ? f(x) : x.amount) || a; }, 0); }
+    function aged() {
+      var b = { cur: 0, d30: 0, d60: 0, d90: 0, d90p: 0 };
+      S().invoices.forEach(function (i) { if (i.status === 'paid') return; var late = -i.due; if (late <= 0) b.cur += i.amount; else if (late <= 30) b.d30 += i.amount; else if (late <= 60) b.d60 += i.amount; else if (late <= 90) b.d90 += i.amount; else b.d90p += i.amount; });
+      b.total = b.cur + b.d30 + b.d60 + b.d90 + b.d90p; b.over = b.total - b.cur; return b;
+    }
+    function agedC(cid) {
+      var b = { cur: 0, d30: 0, d60: 0, d90: 0, d90p: 0, total: 0, worst: 0 };
+      S().invoices.forEach(function (i) { if (i.status === 'paid' || i.cust !== cid) return; var late = -i.due; b.total += i.amount; if (late > b.worst) b.worst = late; if (late <= 0) b.cur += i.amount; else if (late <= 30) b.d30 += i.amount; else if (late <= 60) b.d60 += i.amount; else if (late <= 90) b.d90 += i.amount; else b.d90p += i.amount; });
+      return b;
+    }
+    function stops() { return S().customers.filter(function (c) { return c.stop; }); }
+    function weekRevenue() {
+      try { var all = window.DSGV3.all(), dow = (CS.dayDate(0).getDay() + 6) % 7; var wk = all.filter(function (o) { return o.off >= -dow && o.off <= 6 - dow; }); return { v: sum(wk, function (o) { return o.sell; }), n: wk.length }; } catch (e) { return { v: 0, n: 0 }; }
+    }
+
+    /* ======================================================================
+       HOME: calm, eight tiles by default, drag to rearrange, Arrange to add or hide
+       ====================================================================== */
+    var TILE_DEF = ['credit', 'jobs', 'lorries', 'skips', 'inbox', 'defra', 'week', 'board'];
+    var TILE_EXTRA = ['recycle', 'league', 'tickets', 'permits', 'unassigned', 'quotes'];
+    function tiles() {
+      var y = Y(), s = S(), t0 = YC.today(y), done = t0.filter(function (j) { return j.status === 'done'; }).length, road = YC.LORRIES.filter(function (l) { var w = YC.where(y, l.id); return w.state === 'onway' || w.state === 'onsite' || w.state === 'between'; }).length;
+      var ag = aged(), st = stops(), cw = sum(cashWeek()), os = y.onsite.filter(function (o) { return !o.booked; }), od = os.filter(function (o) { return -o.since > o.hire; }).length, dueT = os.filter(function (o) { return -o.since === o.hire; }).length;
+      var dr = YC.defraRows(s, y), rdy = dr.filter(function (r) { return r.status === 'ready'; }).length, err = dr.filter(function (r) { return r.status === 'error'; }).length;
+      var needs = s.threads.filter(function (t) { return !t.done && CS.needsYou(t); }).length, wr = weekRevenue();
+      var lead = drivers()[0], unm = y.tickets.filter(function (t) { return !t.matched; }).length, perm = permitsSoon().length, un = t0.filter(function (j) { return !j.lorry; }).length;
+      var quiet = s.quotes.filter(function (x) { return x.status === 'sent' && x.day <= -3; }).length;
+      return {
+        credit: { t: 'Cash collected this week', v: money(cw), s: money(ag.over) + ' overdue' + (st.length ? ', ' + st.length + ' on stop' : ''), bad: !!st.length, go: 'credit', hero: true, i: 'pound' },
+        jobs: { t: 'Jobs today', v: done + '<i>/' + t0.length + '</i>', s: (t0.length - done) + ' still to do', go: 'plan', i: 'route' },
+        lorries: { t: 'Lorries out', v: road + '<i>/' + YC.LORRIES.length + '</i>', s: 'Live on the map', go: 'tracking', i: 'truck' },
+        skips: { t: 'Skips on site', v: os.length, s: od ? od + ' overdue' + (dueT ? ', ' + dueT + ' due back today' : '') : 'None overdue', bad: od > 0, go: 'skips', i: 'skip' },
+        inbox: { t: 'Messages', v: needs, s: needs ? 'need a reply' : 'All answered', go: 'inbox', i: 'inbox' },
+        defra: { t: 'Ready for Defra', v: rdy, s: err ? err + ' need fixing first' : 'Nothing to fix', bad: err > 0, go: 'defra', i: 'shield-check' },
+        week: { t: 'Booked this week', v: money(wr.v), s: plural(wr.n, 'order') + ' since Monday', go: 'trends', i: 'trending-up' },
+        board: { t: 'Yard board', v: ic('dashboard'), s: 'Put it on the office TV', act: 'yTV', i: 'dashboard', icon: true },
+        recycle: { t: 'Recycled this month', v: REC.months[REC.months.length - 1].rec + '%', s: 'kept out of landfill', go: 'recycling', i: 'leaf' },
+        league: { t: 'Top of the league', v: h(lead ? lead.first : ''), s: lead ? lead.today + ' jobs done today' : '', go: 'scoreboard', i: 'target' },
+        tickets: { t: 'Tickets to match', v: unm, s: unm ? 'read from a photo' : 'All matched', bad: unm > 0, go: 'tickets', i: 'receipt' },
+        permits: { t: 'Permits ending soon', v: perm, s: 'in the next 3 days', bad: perm > 0, go: 'skips', i: 'certificate' },
+        unassigned: { t: 'Jobs without a lorry', v: un, s: 'drag them onto the plan', bad: un > 0, go: 'plan', i: 'route' },
+        quotes: { t: 'Quotes gone quiet', v: quiet, s: 'sent 3 or more days ago', go: 'quotes', i: 'file-text' }
+      };
+    }
+    function tileOrder() { var p = P(), l = (p.tiles || TILE_DEF).filter(function (k) { return TILE_DEF.indexOf(k) >= 0 || TILE_EXTRA.indexOf(k) >= 0; }); return l; }
+    V.home = function () {
+      var y = Y(), T = tiles(), ord = tileOrder(), now = CS.dayDate(0), hr = new Date().getHours(), greet = hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';
+      var t0 = YC.today(y), done = t0.filter(function (j) { return j.status === 'done'; }).length, arr = !!ui.yArr;
+      var hidden = TILE_DEF.concat(TILE_EXTRA).filter(function (k) { return ord.indexOf(k) < 0; });
+      var o = '<div class="yh-head"><div><small class="yh-date">' + h(now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })) + '</small><h2 id="greet">' + greet + ', ' + h(uName(meU()).split(' ')[0]) + '</h2>' +
+        '<p class="yh-hook">' + t0.length + ' jobs on today, ' + done + ' done. ' + money(sum(cashWeek())) + ' collected this week.</p></div>' +
+        '<div class="yh-acts"><button class="btn" data-act="yArrange" id="yArrBtn">' + ic(arr ? 'check' : 'dashboard') + (arr ? 'Done' : 'Arrange') + '</button><button class="btn pri" data-act="yBook">' + ic('plus') + 'New booking</button></div></div>';
+      if (arr) o += '<div class="note yh-arrnote">' + ic('dashboard') + '<span>Drag a tile to move it. Press the cross to take one off. Add one from the list underneath. Saved for ' + h(uName(meU()).split(' ')[0]) + '.</span></div>';
+      o += '<div class="yh-tiles' + (arr ? ' arr' : '') + '" id="yTiles">' + ord.map(function (k) {
+        var t = T[k]; if (!t) return '';
+        return '<div class="yh-tile' + (t.hero ? ' hero' : '') + (t.bad ? ' bad' : '') + '" draggable="true" data-tile="' + k + '"><button class="yh-tb" data-act="' + (t.act || 'go') + '" data-v="' + (t.go || '') + '"><small>' + ic(t.i) + h(t.t) + '</small><b class="' + (t.icon ? 'ic-big' : '') + '">' + t.v + '</b><span>' + h(t.s) + '</span></button>' +
+          (arr ? '<button class="yh-x" data-act="yTileHide" data-v="' + k + '" aria-label="Take ' + h(t.t) + ' off home">' + ic('x') + '</button>' : '') + '</div>';
+      }).join('') + '</div>';
+      if (arr) o += '<div class="yh-tray"><b>Add a tile</b>' + (hidden.length ? hidden.map(function (k) { return '<button class="btn sm" data-act="yTileAdd" data-v="' + k + '">' + ic('plus') + h(T[k].t) + '</button>'; }).join('') : '<span class="muted">Every tile is on your home page.</span>') + '<span class="sp"></span><button class="btn sm" data-act="yTileReset">' + ic('refresh') + 'Back to the standard eight</button></div>';
+      /* one calm row underneath: the road, and what needs you */
+      o += '<div class="yh-low"><section class="card yh-road"><div class="yh-rh"><h3>' + ic('truck') + 'Today on the road</h3><button class="xh2-link yh-link" data-act="go" data-v="tracking">Open the map</button></div>' + roadRows(y) + '</section>' +
+        '<section class="card yh-needs"><div class="yh-rh"><h3>' + ic('bell') + 'Needs you</h3></div>' + needsRows() + '</section></div>';
+      return o;
+    };
+    function roadRows(y) {
+      return '<div class="yh-rows">' + YC.LORRIES.map(function (l) {
+        var list = YC.forLorry(y, l.id, 0), d = list.filter(function (j) { return j.status === 'done'; }).length, w = YC.where(y, l.id);
+        return '<button class="yh-lo" data-act="yFocus" data-v="' + l.id + '"><span class="ylo" style="--lc:' + l.col + '"><i></i>' + h(l.n) + '</span><span class="yh-st">' + h(stateLine(y, l, w)) + '</span><span class="yh-bar"><i style="width:' + (list.length ? Math.round(d / list.length * 100) : 0) + '%;background:' + l.col + '"></i></span><b>' + d + '/' + list.length + '</b></button>';
+      }).join('') + '</div>';
+    }
+    function needsRows() {
+      var y = Y(), s = S(), r = [];
+      stops().forEach(function (c) { var a = agedC(c.id); r.push(['lock', h(c.name) + ' is on stop', money(a.total) + ' owed, oldest ' + a.worst + ' days', 'credit', 'bad']); });
+      var od = y.onsite.filter(function (o) { return !o.booked && -o.since > o.hire; });
+      if (od.length) r.push(['skip', plural(od.length, 'skip') + ' over the hire period', 'Exchange or collect in one tap', 'skips', 'amber']);
+      var un = YC.today(y).filter(function (j) { return !j.lorry; }).length; if (un) r.push(['route', plural(un, 'job') + ' without a lorry today', 'Drag them onto the day plan', 'plan', 'amber']);
+      var err = YC.defraRows(s, y).filter(function (x) { return x.status === 'error'; }).length; if (err) r.push(['shield-check', plural(err, 'Defra record') + ' to fix', 'Missing a weight or a carrier number', 'defra', 'amber']);
+      var unm = y.tickets.filter(function (t) { return !t.matched; }).length; if (unm) r.push(['receipt', plural(unm, 'tip ticket') + ' to match', 'Read from a photo, no job found', 'tickets', '']);
+      return '<div class="yh-rows">' + r.slice(0, 5).map(function (x) { return '<button class="yh-nd" data-act="go" data-v="' + x[3] + '"><span class="yh-ni ' + x[4] + '">' + ic(x[0]) + '</span><span class="bd"><b>' + x[1] + '</b><small>' + x[2] + '</small></span>' + ic('chevron-right') + '</button>'; }).join('') + (r.length ? '' : '<p class="muted">Nothing needs you right now.</p>') + '</div>';
+    }
+    A.yArrange = function () { ui.yArr = !ui.yArr; if (ui.view !== 'home') { A.close(); go('home'); } else UI.render(); };
+    A.yTileHide = function (el) { var k = el.dataset.v; setP(function (p) { p.tiles = tileOrder().filter(function (x) { return x !== k; }); }); UI.render(); };
+    A.yTileAdd = function (el) { var k = el.dataset.v; setP(function (p) { var l = tileOrder(); if (l.indexOf(k) < 0) l.push(k); p.tiles = l; }); UI.render(); };
+    A.yTileReset = function () { setP(function (p) { delete p.tiles; }); UI.render(); toast('Home is back to the standard eight tiles', 'refresh'); };
+    (function () {
+      var dragT = null, vw = q('#view');
+      vw.addEventListener('dragstart', function (e) { var t = e.target.closest && e.target.closest('[data-tile]'); if (!t) return; dragT = t.getAttribute('data-tile'); t.classList.add('ydrag'); try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragT); } catch (x) {} });
+      vw.addEventListener('dragend', function () { dragT = null; qa('.yh-tile.ydrag,.yh-tile.ydrop').forEach(function (x) { x.classList.remove('ydrag', 'ydrop'); }); });
+      vw.addEventListener('dragover', function (e) { if (!dragT) return; var t = e.target.closest && e.target.closest('[data-tile]'); if (!t) return; e.preventDefault(); qa('.yh-tile.ydrop').forEach(function (x) { x.classList.remove('ydrop'); }); t.classList.add('ydrop'); });
+      vw.addEventListener('drop', function (e) {
+        if (!dragT) return; var t = e.target.closest && e.target.closest('[data-tile]'); if (!t) return; e.preventDefault();
+        var k = dragT, on = t.getAttribute('data-tile'); dragT = null; if (k === on) { UI.render(); return; }
+        setP(function (p) { var l = tileOrder(); l.splice(l.indexOf(k), 1); l.splice(l.indexOf(on) + (e.clientX > t.getBoundingClientRect().left + t.offsetWidth / 2 ? 1 : 0), 0, k); p.tiles = l; });
+        UI.render(); toast('Tile moved. Saved for ' + h(uName(meU()).split(' ')[0]), 'dashboard');
+      });
+    })();
+
+    /* ======================================================================
+       NEW BOOKING: skips and grabs, waste stream and EWC, permits, credit check
+       ====================================================================== */
+    var WINS = [[450, 540], [540, 660], [660, 780], [780, 900], [900, 1020]];
+    function lorryFits(l, j) { if (!l) return true; if (j.type === 'grab' || j.type === 'muck') return l.kind === 'grab'; if ((j.size || 0) >= 20) return l.kind === 'roro'; return l.kind === 'skip'; }
+    function fitWhy(j) { return j.type === 'grab' || j.type === 'muck' ? 'Grab and muckaway jobs need a grab lorry.' : (j.size || 0) >= 20 ? 'A ' + j.size + ' yard RoRo needs the hook lorry.' : 'Skips up to 16 yards go on a skip lorry.'; }
+    function suggest(j, day) {
+      var y = Y(), best = null, bn = 99;
+      YC.LORRIES.forEach(function (l) { if (!lorryFits(l, j)) return; var n = YC.forLorry(y, l.id, day).length; if (n < bn) { bn = n; best = l; } });
+      return best;
+    }
+    function bk() { if (!ui.yb) ui.yb = { cust: 'c1', site: 0, svc: 'skip', type: 'deliver', size: 8, loads: 1, stream: 'mixed', place: 'drive', day: 'tomorrow', win: 1, lorry: 'auto', notes: '', sure: false }; return ui.yb; }
+    function bkDayOff(b) { return b.day === 'today' ? 0 : b.day === 'tomorrow' ? CS.wd(1) : Math.max(0, Math.round((new Date(b.date) - CS.dayDate(0)) / 86400000)) || CS.wd(1); }
+    function bkJob(b) { return { type: b.svc === 'skip' ? b.type : b.svc, size: b.svc === 'skip' ? b.size : null, loads: b.svc === 'skip' ? null : b.loads }; }
+    function creditBox(cid) {
+      if (!cid || cid === 'new') return '<div class="ycr ok">' + ic('pound') + '<span><b>New customer.</b> Card on order until an account is opened.</span></div>';
+      var c = CS.cust(cid), a = agedC(cid), cr = CS.credit(cid, 0) || {};
+      if (c.stop) return '<div class="ycr bad" id="yStopWarn">' + ic('lock') + '<span><b>' + h(c.name) + ' is on stop.</b> ' + money(a.total) + ' owed, the oldest invoice is ' + a.worst + ' days late. Accounts have said no new orders until it is paid.</span></div>';
+      if (cr.hold) return '<div class="ycr amber">' + ic('alert') + '<span><b>On hold.</b> ' + h(cr.why || '') + ' You can still book, it is your call.</span></div>';
+      if (!c.limit) return '<div class="ycr ok">' + ic('pound') + '<span><b>Pays by card.</b> A pay link goes with the confirmation.</span></div>';
+      return '<div class="ycr ok">' + ic('circle-check') + '<span><b>Account in good standing.</b> ' + money(a.total) + ' owed of a ' + money(c.limit) + ' limit.</span></div>';
+    }
+    function seg(name, val, opts) { return '<div class="seg yseg" role="group">' + opts.map(function (o) { return '<button type="button" data-act="yBkSet" data-k="' + name + '" data-v="' + o[0] + '" class="' + (String(val) === String(o[0]) ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
+    function bookHTML() {
+      var b = bk(), s = S(), c = b.cust !== 'new' ? CS.cust(b.cust) : null, J0 = bkJob(b), off = bkDayOff(b), sug = suggest(J0, off), st = YC.STREAMS[b.stream];
+      var custs = s.customers.slice().sort(function (x, z) { return x.name < z.name ? -1 : 1; });
+      var pc = c ? (c.sites[b.site] || c.sites[0]).pc : (b.npc || ''), perm = b.place === 'road' ? YC.permitFor(pc || 'UB3', 'new', off, off + 14) : null;
+      var lorries = YC.LORRIES.filter(function (l) { return lorryFits(l, J0); });
+      var o = '<div class="ybk">' +
+        '<div class="field"><label for="ybCust">Customer</label><select id="ybCust" data-yb="cust">' + custs.map(function (x) { return '<option value="' + x.id + '"' + (x.id === b.cust ? ' selected' : '') + '>' + h(x.name) + (x.stop ? ' (on stop)' : '') + '</option>'; }).join('') + '<option value="new"' + (b.cust === 'new' ? ' selected' : '') + '>New one-off customer</option></select></div>' +
+        creditBox(b.cust) +
+        (c ? '<div class="field"><label for="ybSite">Site</label><select id="ybSite" data-yb="site">' + c.sites.map(function (x, i) { return '<option value="' + i + '"' + (i === +b.site ? ' selected' : '') + '>' + h(x.name + ', ' + x.pc) + '</option>'; }).join('') + '</select></div>'
+          : '<div class="ybk2"><div class="field"><label for="ybName">Name</label><input id="ybName" data-ybt="nname" value="' + h(b.nname || '') + '" placeholder="Mrs Jane Smith"></div><div class="field"><label for="ybPhone">Mobile</label><input id="ybPhone" data-ybt="nphone" value="' + h(b.nphone || '') + '" placeholder="07700 900000"></div></div>' +
+            '<div class="ybk2"><div class="field"><label for="ybAddr">Address</label><input id="ybAddr" data-ybt="naddr" value="' + h(b.naddr || '') + '" placeholder="12 Church Lane, Greenford"></div><div class="field"><label for="ybPc">Postcode</label><input id="ybPc" data-ybt="npc" value="' + h(b.npc || '') + '" placeholder="UB6 9AQ"></div></div>') +
+        '<div class="field"><label>What</label>' + seg('svc', b.svc, [['skip', 'Skip hire'], ['grab', 'Grab hire'], ['muck', 'Muckaway']]) + '</div>' +
+        (b.svc === 'skip' ? '<div class="field"><label>Job</label>' + seg('type', b.type, [['deliver', 'Deliver'], ['exchange', 'Exchange'], ['collect', 'Collect']]) + '</div>' +
+          '<div class="field"><label>Skip size</label><div class="ysizes">' + YC.SIZES.map(function (z) { return '<button type="button" data-act="yBkSet" data-k="size" data-v="' + z + '" class="' + (+b.size === z ? 'on' : '') + '">' + z + (z >= 20 ? '<small>RoRo</small>' : '<small>yard</small>') + '</button>'; }).join('') + '</div></div>'
+          : '<div class="field"><label>Loads</label><div class="ystep"><button type="button" data-act="yBkSet" data-k="loads" data-v="' + Math.max(1, b.loads - 1) + '" aria-label="One less load">-</button><b>' + b.loads + '</b><button type="button" data-act="yBkSet" data-k="loads" data-v="' + Math.min(8, b.loads + 1) + '" aria-label="One more load">+</button><span class="muted">8-wheeler, about ' + (b.loads * YC.LOAD_T) + ' tonnes</span></div></div>') +
+        '<div class="field"><label for="ybStream">Waste</label><select id="ybStream" data-yb="stream">' + Object.keys(YC.STREAMS).map(function (k) { return '<option value="' + k + '"' + (k === b.stream ? ' selected' : '') + '>' + h(YC.STREAMS[k].n) + '</option>'; }).join('') + '</select><small class="yewc-line">' + ic('certificate') + 'EWC code <b>' + st.ewc + '</b> goes on the job, the waste transfer note and the Defra record</small></div>' +
+        (b.svc === 'skip' && b.type === 'deliver' ? '<div class="field"><label>Where it goes</label>' + seg('place', b.place, [['drive', 'On the drive or site'], ['road', 'On the road']]) + '</div>' +
+          (perm ? '<div class="ycr amber" id="yPermit">' + ic('certificate') + '<span><b>Road permit needed</b> from ' + h(perm.council) + '. It goes on the permit list with its dates, the lights and cones go on the driver\'s job, and you are reminded before it runs out.</span></div>' : '') : '') +
+        '<div class="ybk2"><div class="field"><label>Day</label>' + seg('day', b.day, [['today', 'Today'], ['tomorrow', dayName(CS.wd(1))], ['pick', 'Pick a day']]) + (b.day === 'pick' ? '<input type="date" id="ybDate" data-yb="date" value="' + h(b.date || '') + '" style="margin-top:6px">' : '') + '</div>' +
+        '<div class="field"><label for="ybWin">Time</label><select id="ybWin" data-yb="win">' + WINS.map(function (w, i) { return '<option value="' + i + '"' + (i === +b.win ? ' selected' : '') + '>' + YC.hhmm(w[0]) + ' to ' + YC.hhmm(w[1]) + '</option>'; }).join('') + '</select></div></div>' +
+        '<div class="field"><label for="ybLorry">Lorry</label><select id="ybLorry" data-yb="lorry"><option value="auto"' + (b.lorry === 'auto' ? ' selected' : '') + '>Best fit: ' + h(sug ? sug.n + ', ' + sug.driver : 'none free') + '</option>' + lorries.map(function (l) { return '<option value="' + l.id + '"' + (b.lorry === l.id ? ' selected' : '') + '>' + h(l.n + ', ' + l.driver) + '</option>'; }).join('') + '<option value="none"' + (b.lorry === 'none' ? ' selected' : '') + '>Leave it for the day plan</option></select></div>' +
+        '<div class="field"><label for="ybNotes">Note for the driver</label><input id="ybNotes" data-ybt="notes" value="' + h(b.notes || '') + '" placeholder="Gate code, where to put it, access"></div>' +
+        '</div>';
+      return o;
+    }
+    function bookFoot() {
+      var b = bk(), c = b.cust !== 'new' ? CS.cust(b.cust) : null;
+      if (c && c.stop) return '<button class="btn" data-act="close">Cancel</button><span class="sp"></span>' + (b.sure ? '<span class="ysure">' + ic('alert') + 'Sure? They are on stop.</span><button class="btn bad" data-act="yBkGo" id="yBkGo">' + ic('lock') + 'Yes, book anyway</button>' : '<button class="btn" data-act="yBkSure" id="yBkGo">' + ic('lock') + 'Book anyway</button>');
+      return '<button class="btn" data-act="close">Cancel</button><span class="sp"></span><button class="btn pri lg" data-act="yBkGo" id="yBkGo">' + ic('check') + 'Book it</button>';
+    }
+    function bookDraw() { var m = q('#layer .modal.ybkm'); if (!m) return; var sc = m.querySelector('.mbd').scrollTop; m.querySelector('.mbd').innerHTML = bookHTML(); m.querySelector('.mft').innerHTML = bookFoot(); m.querySelector('.mbd').scrollTop = sc; }
+    A.yBook = function (el) {
+      ui.yb = null; var b = bk();
+      if (el && el.dataset && el.dataset.c) { b.cust = el.dataset.c; }
+      if (A.closeSide) A.closeSide();
+      modal(ic('plus') + ' New booking', bookHTML(), bookFoot(), 'ybkm');
+    };
+    A.yBkSet = function (el) {
+      var b = bk(), k = el.dataset.k, v = el.dataset.v; b[k] = /^(size|loads|win)$/.test(k) ? +v : v; b.sure = false;
+      if (k === 'svc') { if (v === 'skip') { b.stream = 'mixed'; } else { b.stream = 'soil'; b.place = 'drive'; } }
+      if (k === 'type' && v !== 'deliver') b.place = 'drive';
+      if (k === 'day' && v === 'pick' && !b.date) { var d = CS.dayDate(CS.wd(2)); b.date = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+      bookDraw();
+    };
+    A.yBkSure = function () { bk().sure = true; bookDraw(); };
+    document.addEventListener('change', function (e) {
+      var el = e.target; if (!el.closest) return;
+      if (el.dataset && el.dataset.yb && el.closest('.ybkm')) { var b = bk(), k = el.dataset.yb; b[k] = k === 'site' || k === 'win' ? +el.value : el.value; if (k === 'cust') { b.site = 0; b.sure = false; } bookDraw(); }
+      if (el.classList && el.classList.contains('ymove')) movePlan(el.dataset.id, el.value);
+      if (el.classList && el.classList.contains('ycomm')) { var y = Y(); y.comm = y.comm || {}; y.comm[el.dataset.k] = Math.max(0, Math.min(50, +el.value || 0)); save(); UI.render(); toast('Commission rate saved. Worked out again for this week', 'pound'); }
+    });
+    document.addEventListener('input', function (e) { var el = e.target; if (el.dataset && el.dataset.ybt && el.closest && el.closest('.ybkm')) bk()[el.dataset.ybt] = el.value; });
+    A.yBkGo = function () {
+      var b = bk(), s = S(), y = Y(), c = b.cust !== 'new' ? CS.cust(b.cust) : null;
+      if (!c && (!String(b.nname || '').trim() || !String(b.npc || '').trim())) { toast('Put the customer\'s name and postcode in first', 'alert'); var f = q(!String(b.nname || '').trim() ? '#ybName' : '#ybPc'); if (f) f.focus(); return; }
+      if (b.day === 'today' && WINS[b.win][1] <= YC.nowMin()) { toast('That time has gone today. Pick a later time or another day', 'clock'); return; }
+      var J0 = bkJob(b), off = bkDayOff(b), lo = b.lorry === 'auto' ? suggest(J0, off) : b.lorry === 'none' ? null : YC.lorry(b.lorry);
+      var cid = c ? c.id : 'o' + (10 + y.jobs.length), site;
+      if (!c) { site = { name: String(b.naddr || 'Address to confirm').trim(), pc: String(b.npc).trim().toUpperCase() }; YC.oneoffAdd = YC.oneoffAdd || {}; }
+      else site = { name: (c.sites[b.site] || c.sites[0]).name, pc: (c.sites[b.site] || c.sites[0]).pc };
+      var p = YC.pos(site.pc), id = 'DSG-' + (y.counters.job++);
+      var j = { id: id, day: off, lorry: lo ? lo.id : null, win: WINS[b.win].slice(), type: J0.type, cust: c ? c.id : 'new:' + id, cname: c ? null : String(b.nname).trim(), site: site, lat: p.lat, lng: p.lng,
+        size: J0.size, loads: J0.loads, stream: b.stream, place: b.place, permit: b.place === 'road' && J0.type === 'deliver' ? YC.permitFor(site.pc, id, off, off + 14) : null, status: 'planned', at: {}, photos: [], sig: null, ticket: null, wtn: null, eta: null, notes: b.notes || '', log: [{ at: Date.now(), t: 'Booked by ' + uName(meU()).split(' ')[0] + (c && c.stop ? ', while on stop' : '') }], isNew: true };
+      y.jobs.push(j); y.v++;
+      var nm = c ? c.first || c.contact : String(b.nname).trim().split(' ').slice(-1)[0];
+      y.texts.unshift({ at: Date.now(), job: id, to: c ? c.name : j.cname, text: 'Booked: ' + YC.what(j).toLowerCase() + ' at ' + site.name + ', ' + dayName(off).toLowerCase() + ' ' + YC.hhmm(j.win[0]) + ' to ' + YC.hhmm(j.win[1]) + '. We will text when the lorry is on its way.' });
+      save(); A.close(); ui.yb = null;
+      toast('Booked ' + h(id) + ' for ' + h(dayName(off).toLowerCase()) + (lo ? ' on ' + h(lo.first) + '\'s lorry' : ', waiting on the day plan') + '. Confirmation sent to ' + h(c ? c.name : j.cname) + (j.permit ? '. Permit added to the list' : ''), 'circle-check');
+      ui.yBkDay = off === 0 ? 'today' : off === CS.wd(1) ? 'tomorrow' : 'week';
+      if (ui.view !== 'bookings' && ui.view !== 'plan') go('bookings'); else UI.render();
+    };
+    YC.custName0 = YC.custName; YC.custName = function (s, id) { if (String(id).indexOf('new:') === 0) { var j = (s.yard && s.yard.jobs || []).filter(function (x) { return x.cust === id; })[0]; return j ? j.cname : 'Customer'; } return YC.custName0(s, id); };
+    YC.custFirst0 = YC.custFirst; YC.custFirst = function (s, id) { if (String(id).indexOf('new:') === 0) { var n = YC.custName(s, id); return n.replace(/^(Mrs|Mr|Ms|Miss)\s+/, '').split(' ')[0]; } return YC.custFirst0(s, id); };
+
+    /* ======================================================================
+       BOOKINGS
+       ====================================================================== */
+    V.bookings = function () {
+      var y = Y(), s = S(), d = ui.yBkDay || 'today', f = ui.yBkF || 'all', t1 = CS.wd(1);
+      var list = y.jobs.filter(function (j) { return d === 'today' ? j.day === 0 : d === 'tomorrow' ? j.day === t1 : j.day >= 0 && j.day <= 7; });
+      var cnt = { all: list.length, skip: 0, grab: 0, permit: 0, none: 0 };
+      list.forEach(function (j) { if (j.type === 'grab' || j.type === 'muck') cnt.grab++; else cnt.skip++; if (j.permit) cnt.permit++; if (!j.lorry) cnt.none++; });
+      var show = list.filter(function (j) { return f === 'all' || (f === 'skip' && j.size) || (f === 'grab' && !j.size) || (f === 'permit' && j.permit) || (f === 'none' && !j.lorry); })
+        .sort(function (a, b) { return a.day - b.day || a.win[0] - b.win[0] || String(a.lorry).localeCompare(String(b.lorry)); });
+      function chip(k, l) { return '<button class="ychip' + (f === k ? ' on' : '') + '" data-act="yBkF" data-v="' + k + '">' + l + ' <b>' + cnt[k] + '</b></button>'; }
+      return '<div class="ybar"><div class="seg">' + [['today', 'Today'], ['tomorrow', dayName(t1)], ['week', 'Next 7 days']].map(function (x) { return '<button data-act="yBkDay" data-v="' + x[0] + '" class="' + (d === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div><span class="sp"></span><button class="btn pri" data-act="yBook">' + ic('plus') + 'New booking</button></div>' +
+        '<div class="ychips">' + chip('all', 'All') + chip('skip', 'Skips') + chip('grab', 'Grab and muckaway') + chip('permit', 'Road permits') + chip('none', 'No lorry yet') + '</div>' +
+        '<div class="card ylist">' + (show.length ? show.map(function (j) {
+          return '<button class="yrow' + (j.isNew ? ' new' : '') + '" data-act="yJob" data-id="' + j.id + '"><span class="yt"><b>' + (d === 'week' && j.day ? h(dayName(j.day)) + ' ' : '') + YC.hhmm(j.win[0]) + '</b><small>to ' + YC.hhmm(j.win[1]) + '</small></span>' +
+            '<span class="ym"><b>' + h(YC.what(j)) + '</b><small>' + h(YC.custName(s, j.cust)) + ', ' + h(j.site.name) + ' ' + h(j.site.pc) + '</small></span>' +
+            '<span class="ys"><span class="ystream">' + streamTxt(j.stream) + '</span>' + (j.permit ? '<span class="tag amber">' + ic('certificate') + 'Permit</span>' : '') + '</span>' +
+            '<span class="yl">' + lorryTag(j.lorry) + stTag(j) + '</span></button>';
+        }).join('') : '<p class="muted yempty">Nothing here.</p>') + '</div>' +
+        '<p class="muted yfoot">Every job carries its waste stream and EWC code from the moment it is booked, so the transfer note, the tip ticket and the Defra record all match.</p>';
+    };
+    A.yBkDay = function (el) { ui.yBkDay = el.dataset.v; UI.render(); };
+    A.yBkF = function (el) { ui.yBkF = el.dataset.v; UI.render(); };
+
+    function jobById(id) { return Y().jobs.filter(function (j) { return j.id === id; })[0]; }
+    A.yJob = function (el) {
+      var j = jobById(el.dataset.id); if (!j) return; var s = S(), lo = YC.lorry(j.lorry), st = YC.STREAMS[j.stream], t = j.ticket ? Y().tickets.filter(function (x) { return x.id === j.ticket; })[0] : null;
+      var steps = [['Booked', true, j.log[0] && j.log[0].at], ['On the way', !!j.at.onway, j.at.onway], ['On site', !!j.at.arrived, j.at.arrived], ['Done', j.status === 'done', j.at.done]];
+      var body = '<div class="ytl">' + steps.map(function (x) { return '<div class="' + (x[1] ? 'on' : '') + '"><i></i><b>' + x[0] + '</b><small>' + (x[1] && x[2] ? CS.clock(x[2]) : '') + '</small></div>'; }).join('') + '</div>' +
+        '<dl class="kv"><dt>Customer</dt><dd>' + h(YC.custName(s, j.cust)) + '</dd><dt>Site</dt><dd>' + h(j.site.name + ', ' + j.site.pc) + '</dd><dt>When</dt><dd>' + h(dayName(j.day)) + ', ' + YC.win(j) + '</dd>' +
+        '<dt>Lorry</dt><dd>' + (lo ? h(lo.n + ', ' + lo.reg + ', ' + lo.driver) : 'Not given a lorry yet') + '</dd><dt>Waste</dt><dd>' + h(st.n) + '</dd><dt>EWC code</dt><dd>' + st.ewc + '</dd>' +
+        (j.permit ? '<dt>Road permit</dt><dd>' + h(j.permit.council) + ', ref ' + h(j.permit.ref) + ', until ' + h(dayName(j.permit.to)) + '</dd>' : '') +
+        (t ? '<dt>Tip ticket</dt><dd>' + h(t.id) + ', ' + t.net.toFixed(2) + ' t net at ' + h(YC.TIPS[t.site].n) + '</dd>' : '') +
+        (j.notes ? '<dt>Driver note</dt><dd>' + h(j.notes) + '</dd>' : '') + '</dl>' +
+        (j.eta && j.eta.text ? '<div class="ytext">' + ic('message') + '<span><b>Text to the customer, ' + CS.clock(j.eta.at) + '</b>' + h(j.eta.text) + '</span></div>' : '') +
+        (j.photos.length || j.sig ? '<div class="yproof">' + j.photos.map(function (p) { return '<figure><img src="' + h(p.src || YC.samplePhoto(p.k, j.size)) + '" alt="Photo on ' + (p.k === 'drop' ? 'drop' : 'collection') + '"><figcaption>' + (p.k === 'drop' ? 'On drop' : 'On collection') + ', ' + CS.clock(p.at) + '</figcaption></figure>'; }).join('') +
+          (j.sig ? '<figure class="sig"><img src="' + h(j.sig.src || YC.sampleSig()) + '" alt="Customer signature"><figcaption>' + (j.sig.none ? 'Customer not there, photo taken' : 'Signed by ' + h(j.sig.name || 'the customer')) + '</figcaption></figure>' : '') + '</div>' : '');
+      var foot = '<button class="btn" data-act="close">Close</button><span class="sp"></span>' + (j.wtn ? '<button class="btn" data-act="yWtn" data-id="' + j.id + '">' + ic('certificate') + 'Waste transfer note</button>' : '') +
+        (j.status !== 'done' && j.day === 0 && j.lorry ? '<button class="btn pri" data-act="yTrackJob" data-id="' + j.id + '">' + ic('map-pin') + 'See it on the map</button>' : '') +
+        (!j.lorry ? '<button class="btn pri" data-act="yToPlan" data-id="' + j.id + '">' + ic('route') + 'Give it a lorry</button>' : '');
+      drawer(h(j.id) + ' · ' + h(YC.what(j)), stTag(j) + ' ' + (j.permit ? '<span class="tag amber">Road permit</span>' : ''), body, foot);
+    };
+    A.yTrackJob = function (el) { var j = jobById(el.dataset.id); A.close(); ui.yFocus = j && j.lorry; go('tracking'); };
+    A.yToPlan = function (el) { var j = jobById(el.dataset.id); A.close(); ui.yPlanDay = j ? j.day : 0; go('plan'); };
+
+    /* ======================================================================
+       WASTE TRANSFER NOTE
+       ====================================================================== */
+    A.yWtn = function (el) {
+      var j = jobById(el.dataset.id), s = S(), y = Y(), t, cust, site, no, lo, st, when, size, signed;
+      if (j) { t = y.tickets.filter(function (x) { return x.id === j.ticket; })[0]; cust = YC.custName(s, j.cust); site = j.site.name + ', ' + j.site.pc; no = j.wtn; lo = YC.lorry(j.lorry); st = YC.STREAMS[j.stream]; when = j.at.done || Date.now(); size = j.size ? j.size + ' yard ' + (j.size >= 20 ? 'RoRo' : 'skip') : j.loads + ' x 8-wheeler load'; signed = j.sig; }
+      else { t = y.tickets.filter(function (x) { return x.id === el.dataset.t; })[0]; if (!t) return; cust = t.cust ? YC.custName(s, t.cust) : 'Not matched'; site = 'Site on the job'; no = 'WTN-' + (4900 + YC.hash(t.id) % 300); lo = YC.lorry(t.lorry); st = YC.STREAMS[t.stream]; var d = CS.dayDate(t.day); d.setHours(Math.floor(t.time / 60), t.time % 60); when = d.getTime(); size = 'As on ticket ' + t.id; signed = { name: 'Site contact', sample: true }; }
+      var tip = t ? YC.TIPS[t.site] : YC.TIPS.yard;
+      function bx(lbl, v) { return '<div class="yw-bx"><small>' + lbl + '</small>' + v + '</div>'; }
+      modal(ic('certificate') + ' Waste transfer note ' + h(no), '<div class="yw" id="yWtnDoc"><div class="yw-hd"><img src="brand/logo.svg" alt="Demo Skip & Grab"><div><b>Waste transfer note</b><small>' + h(no) + ' · ' + new Date(when).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) + ' ' + CS.clock(when) + '</small></div></div>' +
+        '<div class="yw-g">' + bx('A. The waste', '<b>' + h(st.n) + '</b><br>EWC ' + st.ewc + ' · ' + h(size) + (t ? '<br>' + t.net.toFixed(2) + ' tonnes net (ticket ' + h(t.id) + ')' : '') + '<br>Not hazardous') +
+        bx('B. Where it came from', '<b>' + h(cust) + '</b><br>' + h(site)) +
+        bx('C. Carrier', '<b>' + h(YC.CARRIER.name) + '</b><br>Waste carrier ' + YC.CARRIER.reg + (lo ? '<br>Vehicle ' + h(lo.reg) + ', driver ' + h(lo.driver) : '')) +
+        bx('D. Where it went', '<b>' + h(tip.n) + '</b><br>Permit ' + h(tip.permit)) + '</div>' +
+        '<div class="yw-sig"><div><small>Customer</small>' + (signed && signed.src ? '<img src="' + h(signed.src) + '" alt="Customer signature">' : '<img src="' + YC.sampleSig() + '" alt="Customer signature">') + '<span>' + h(signed && signed.name || 'Customer') + '</span></div><div><small>Driver</small><img src="' + YC.sampleSig('d') + '" alt="Driver signature"><span>' + h(lo ? lo.driver : 'Driver') + '</span></div></div>' +
+        '<p class="yw-dec">I confirm I have fulfilled my duty to apply the waste hierarchy as required by Regulation 12 of the Waste (England and Wales) Regulations 2011.</p></div>' +
+        '<p class="muted" style="font-size:12.5px;margin:10px 0 0">Made by itself when the driver finished the job. Stored on the job, on the customer\'s own page and in the duty of care file.</p>',
+        '<button class="btn" data-act="close">Close</button><span class="sp"></span><button class="btn" data-act="yWtnSend">' + ic('mail') + 'Email it to the customer</button><button class="btn pri" data-act="yPrint">' + ic('printer') + 'Print or save as PDF</button>', 'wide ywm');
+    };
+    A.yWtnSend = function () { toast('Waste transfer note emailed to the customer. Demo, nothing is sent', 'mail'); };
+    A.yPrint = function () { document.body.classList.add('yprinting'); setTimeout(function () { try { window.print(); } catch (e) {} setTimeout(function () { document.body.classList.remove('yprinting'); }, 300); }, 50); };
+
+    /* ======================================================================
+       DAY PLAN: drag a job onto a lorry
+       ====================================================================== */
+    function movePlan(id, to) {
+      var j = jobById(id); if (!j) return;
+      if (j.status !== 'planned') { toast('That job has started, so it stays with its lorry', 'lock'); UI.render(); return; }
+      var lo = to === 'none' ? null : YC.lorry(to);
+      if (lo && !lorryFits(lo, j)) { toast(fitWhy(j) + ' It has not been moved.', 'alert'); UI.render(); return; }
+      j.lorry = lo ? lo.id : null; j.manual = false; j.log.push({ at: Date.now(), t: lo ? 'Given to ' + lo.n : 'Taken off its lorry' }); Y().v++; save(); UI.render();
+      toast(lo ? h(j.id) + ' is on ' + h(lo.first) + '\'s list now. It shows on his phone straight away' : h(j.id) + ' taken off its lorry', 'route');
+    }
+    V.plan = function () {
+      var y = Y(), s = S(), d = ui.yPlanDay == null ? 0 : ui.yPlanDay, t1 = CS.wd(1);
+      var cols = [{ id: 'none', n: 'Not given a lorry', sub: 'Drag these onto a lorry' }].concat(YC.LORRIES.map(function (l) { return { id: l.id, n: l.n, sub: l.driver + ' · ' + l.reg, l: l }; }));
+      function card(j) {
+        var locked = j.status !== 'planned';
+        return '<div class="ypc' + (locked ? ' locked' : '') + '" ' + (locked ? '' : 'draggable="true"') + ' data-pj="' + j.id + '"><button class="ypc-b" data-act="yJob" data-id="' + j.id + '"><span class="ypc-t"><b>' + YC.win(j) + '</b>' + (locked ? stTag(j) : '') + '</span><b>' + h(YC.whatShort(j)) + '</b><small>' + h(YC.custName(s, j.cust)) + '</small><small>' + h(j.site.name) + '</small>' +
+          '<span class="ypc-x"><span class="yewc">' + YC.STREAMS[j.stream].ewc + '</span>' + (j.permit ? '<span class="tag amber">Permit</span>' : '') + '</span></button>' +
+          (locked ? '' : '<label class="ypc-mv"><span>Move to</span><select class="ymove" data-id="' + j.id + '" aria-label="Move ' + j.id + ' to a lorry">' + cols.map(function (c) { return '<option value="' + c.id + '"' + ((j.lorry || 'none') === c.id ? ' selected' : '') + '>' + h(c.n) + '</option>'; }).join('') + '</select></label>') + '</div>';
+      }
+      return '<div class="ybar"><div class="seg">' + [[0, 'Today'], [t1, dayName(t1)]].map(function (x) { return '<button data-act="yPlanDay" data-v="' + x[0] + '" class="' + (d === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div><span class="yhint">' + ic('route') + 'Drag a job onto a lorry. Started jobs stay put.</span><span class="sp"></span><button class="btn pri" data-act="yBook">' + ic('plus') + 'New booking</button></div>' +
+        '<div class="yplan" id="yPlan">' + cols.map(function (c, ci) {
+          var js = y.jobs.filter(function (j) { return j.day === d && (j.lorry || 'none') === c.id; }).sort(function (a, b) { return a.win[0] - b.win[0]; });
+          var hrs = js.reduce(function (a, j) { return a + (j.win[1] - j.win[0]); }, 0) / 60;
+          if (c.id === 'none' && !js.length) return '<section class="ycol none empty" data-col="none"><header><b>' + c.n + '</b><small>Every job has a lorry. Drag one back here to take it off its lorry</small></header><div class="ycol-b"></div></section><div class="ylorries">';
+          return (ci === 1 ? '' : '') + '<section class="ycol' + (c.id === 'none' ? ' none' : '') + '" data-col="' + c.id + '"' + (c.l ? ' style="--lc:' + c.l.col + '"' : '') + '><header>' + (c.l ? '<span class="ylo" style="--lc:' + c.l.col + '"><i></i>' + h(c.n) + '</span>' : '<b>' + c.n + '</b>') + '<small>' + h(c.sub) + '</small>' + (c.l ? '<small class="ycap">' + plural(js.length, 'job') + ' · ' + YC.KIND[c.l.kind] + '</small>' : '') + '</header><div class="ycol-b">' + js.map(card).join('') + '</div></section>' + (c.id === 'none' ? '<div class="ylorries">' : '');
+        }).join('') + '</div></div>';
+    };
+    A.yPlanDay = function (el) { ui.yPlanDay = +el.dataset.v; UI.render(); };
+    (function () {
+      var vw = q('#view'), dj = null;
+      vw.addEventListener('dragstart', function (e) { var c = e.target.closest && e.target.closest('[data-pj]'); if (!c) return; dj = c.getAttribute('data-pj'); c.classList.add('ydrag'); try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dj); } catch (x) {} });
+      vw.addEventListener('dragend', function () { dj = null; qa('.ycol.ydrop,.ypc.ydrag').forEach(function (x) { x.classList.remove('ydrop', 'ydrag'); }); });
+      vw.addEventListener('dragover', function (e) { if (!dj) return; var c = e.target.closest && e.target.closest('[data-col]'); if (!c) return; e.preventDefault(); qa('.ycol.ydrop').forEach(function (x) { if (x !== c) x.classList.remove('ydrop'); }); c.classList.add('ydrop'); });
+      vw.addEventListener('drop', function (e) { if (!dj) return; var c = e.target.closest && e.target.closest('[data-col]'); if (!c) return; e.preventDefault(); var id = dj; dj = null; movePlan(id, c.getAttribute('data-col')); });
+    })();
+
+    /* ======================================================================
+       SKIPS ON SITE: hire period, overdue, exchange or collect in one click
+       ====================================================================== */
+    function permitsSoon() { var y = Y(); return y.onsite.filter(function (o) { return o.permit && !o.booked && o.permit.to <= 3; }).concat(y.jobs.filter(function (j) { return j.permit && j.status !== 'done' && j.permit.to - j.day <= 3 && j.day >= 0 && j.permit.to <= 3; })); }
+    V.skips = function () {
+      var y = Y(), s = S(), f = ui.ySkF || 'all', os = y.onsite;
+      var over = os.filter(function (o) { return -o.since > o.hire; }), dueT = os.filter(function (o) { return -o.since === o.hire; }), road = os.filter(function (o) { return o.permit; });
+      var show = os.filter(function (o) { return f === 'all' || (f === 'over' && -o.since > o.hire) || (f === 'road' && o.permit); }).sort(function (a, b) { return (a.booked ? 1 : 0) - (b.booked ? 1 : 0) || a.since - b.since; });
+      function chip(k, l, n) { return '<button class="ychip' + (f === k ? ' on' : '') + '" data-act="ySkF" data-v="' + k + '">' + l + ' <b>' + n + '</b></button>'; }
+      return '<div class="ykpis"><div class="card kpi"><small>' + ic('skip') + 'Out on hire</small><b>' + os.length + '</b><span class="d">skips and RoRos</span></div><div class="card kpi"><small>' + ic('alert') + 'Over the hire period</small><b class="' + (over.length ? 'bad' : '') + '">' + over.length + '</b><span class="d">extra hire to charge, or swap them</span></div>' +
+        '<div class="card kpi"><small>' + ic('clock') + 'Due back today</small><b>' + dueT.length + '</b><span class="d">14 days up today</span></div><div class="card kpi"><small>' + ic('certificate') + 'On the road</small><b>' + road.length + '</b><span class="d">with a council permit</span></div></div>' +
+        '<div class="ychips">' + chip('all', 'All', os.length) + chip('over', 'Overdue', over.length) + chip('road', 'On the road', road.length) + '</div>' +
+        '<div class="card ylist">' + show.map(function (o) {
+          var days = -o.since, pct = Math.min(100, Math.round(days / o.hire * 100)), od = days > o.hire, due = days === o.hire;
+          return '<div class="ysk' + (od ? ' od' : '') + (o.booked ? ' bk' : '') + '"><span class="ysk-n"><b>' + h(o.id) + '</b><small>' + o.size + (o.size >= 20 ? ' yd RoRo' : ' yard') + '</small></span>' +
+            '<span class="ysk-m"><b>' + h(YC.custName(s, o.cust)) + '</b><small>' + h(o.site.name + ', ' + o.site.pc) + '</small></span>' +
+            '<span class="ysk-h"><span class="yh-bar"><i style="width:' + pct + '%"></i></span><small>' + (od ? '<b class="bad">' + (days - o.hire) + ' day' + (days - o.hire === 1 ? '' : 's') + ' over</b> · ' : due ? '<b class="amber">Due back today</b> · ' : '') + days + ' of ' + o.hire + ' days</small>' + (o.permit ? '<small>' + ic('certificate') + 'Permit until ' + h(dayName(o.permit.to)) + '</small>' : '') + '</span>' +
+            '<span class="ysk-a">' + (o.booked ? '<span class="tag ok">' + ic('check') + h(o.booked) + '</span>' : '<button class="btn sm" data-act="ySkip" data-k="exchange" data-id="' + o.id + '">' + ic('exchange') + 'Exchange</button><button class="btn sm" data-act="ySkip" data-k="collect" data-id="' + o.id + '">' + ic('truck') + 'Collect</button>') + '</span></div>';
+        }).join('') + '</div><p class="muted yfoot">Hire runs from the day it was dropped. Anything past its hire period shows in red here and on Home, so the extra hire is charged or the skip comes back.</p>';
+    };
+    A.ySkF = function (el) { ui.ySkF = el.dataset.v; UI.render(); };
+    A.ySkip = function (el) {
+      var y = Y(), o = y.onsite.filter(function (x) { return x.id === el.dataset.id; })[0]; if (!o || o.booked) return;
+      var k = el.dataset.k, day = CS.wd(1), J0 = { type: k, size: o.size }, lo = suggest(J0, day), last = YC.forLorry(y, lo.id, day).pop(), w0 = last ? Math.min(960, last.win[1]) : 450;
+      var id = 'DSG-' + (y.counters.job++), j = { id: id, day: day, lorry: lo.id, win: [w0, w0 + 60], type: k, cust: o.cust, site: o.site, lat: o.lat, lng: o.lng, size: o.size, loads: null, stream: o.stream, place: o.place, permit: o.permit || null, status: 'planned', at: {}, photos: [], sig: null, ticket: null, wtn: null, eta: null, notes: 'Skip ' + o.id, log: [{ at: Date.now(), t: (k === 'exchange' ? 'Exchange' : 'Collection') + ' booked from skips on site' }], isNew: true };
+      y.jobs.push(j); o.booked = (k === 'exchange' ? 'Exchange ' : 'Collection ') + dayName(day).toLowerCase(); y.v++;
+      y.texts.unshift({ at: Date.now(), job: id, to: YC.custName(S(), o.cust), text: 'Your ' + o.size + ' yard skip is booked for ' + (k === 'exchange' ? 'an exchange' : 'collection') + ' ' + dayName(day).toLowerCase() + ', ' + YC.hhmm(j.win[0]) + ' to ' + YC.hhmm(j.win[1]) + '.' });
+      save(); UI.render();
+      toast((k === 'exchange' ? 'Exchange' : 'Collection') + ' booked for ' + h(dayName(day).toLowerCase()) + ' on ' + h(lo.first) + '\'s lorry. Customer texted', k === 'exchange' ? 'exchange' : 'truck');
+    };
+
+    /* ======================================================================
+       LIVE TRACKING: the map is kept between redraws so it never flickers
+       ====================================================================== */
+    function stateLine(y, l, w) {
+      w = w || YC.where(y, l.id);
+      if (w.state === 'onway') { var m = YC.etaMins(y, w.job); return 'On the way to ' + w.job.site.name.split(',').slice(-1)[0].trim() + ', about ' + m + ' min'; }
+      if (w.state === 'onsite') return 'On site at ' + w.job.site.name.split(',').slice(-1)[0].trim() + ', ' + YC.whatShort(w.job);
+      if (w.state === 'between') return 'Next: ' + YC.whatShort(w.job) + ' at ' + YC.hhmm(w.job.win[0]);
+      if (w.state === 'returning') return 'Heading back to the yard';
+      if (w.state === 'home') return 'Back at the yard, day done';
+      return w.job ? 'At the yard, first job ' + YC.hhmm(w.job.win[0]) : 'At the yard';
+    }
+    var MAPBOX = null, MAP = null, LM = {}, JM = {}, mapV = -1, FALLBACK = false;
+    function mapBox() {
+      if (MAPBOX) return MAPBOX;
+      MAPBOX = document.createElement('div'); MAPBOX.className = 'ymap'; MAPBOX.id = 'yMap';
+      return MAPBOX;
+    }
+    function jobCol(j) { return j.status === 'done' ? '#16A34A' : j.status === 'onsite' ? '#2563EB' : j.status === 'onway' ? '#EB9347' : '#A1A1AA'; }
+    function mapInit() {
+      if (MAP || FALLBACK) return;
+      if (!window.L) { FALLBACK = true; return; }
+      try {
+        MAP = window.L.map(MAPBOX, { zoomControl: true, attributionControl: true, scrollWheelZoom: false });
+        var dark = (S().settings.theme === 'dark');
+        window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap contributors' }).addTo(MAP);
+        if (dark) MAPBOX.classList.add('dark');
+        var yard = window.L.marker([YC.YARD.lat, YC.YARD.lng], { icon: window.L.divIcon({ className: 'yyard', html: '<span>' + ic('home') + '</span>', iconSize: [30, 30], iconAnchor: [15, 15] }), zIndexOffset: 500 }).addTo(MAP);
+        yard.bindTooltip('Our yard', { direction: 'top', offset: [0, -14] });
+        var pts = [[YC.YARD.lat, YC.YARD.lng]]; YC.today(Y()).forEach(function (j) { if (j.lorry) pts.push([j.lat, j.lng]); });
+        MAP.fitBounds(pts, { padding: [28, 28] });
+      } catch (e) { FALLBACK = true; MAP = null; }
+    }
+    function mapUpdate(force) {
+      if (!MAPBOX || !document.body.contains(MAPBOX)) return;
+      var y = Y();
+      if (FALLBACK) { svgMap(y); return; }
+      mapInit(); if (!MAP) { svgMap(y); return; }
+      if (force || mapV !== y.v) {
+        mapV = y.v;
+        YC.today(y).forEach(function (j) {
+          if (!j.lorry) { if (JM[j.id]) { MAP.removeLayer(JM[j.id]); delete JM[j.id]; } return; }
+          var lo = YC.lorry(j.lorry);
+          if (!JM[j.id]) { JM[j.id] = window.L.circleMarker([j.lat, j.lng], { radius: 7, weight: 3, color: lo.col, fillColor: jobCol(j), fillOpacity: 1 }).addTo(MAP); JM[j.id].on('click', function () { A.yJob({ dataset: { id: j.id } }); }); }
+          JM[j.id].setStyle({ fillColor: jobCol(j), color: lo.col }); JM[j.id].bindTooltip(h(j.id + ', ' + YC.whatShort(j) + ', ' + (STAT[j.status] || STAT.planned)[0]), { direction: 'top' });
+        });
+      }
+      YC.LORRIES.forEach(function (l) {
+        var w = YC.where(y, l.id);
+        if (!LM[l.id]) { LM[l.id] = window.L.marker([w.lat, w.lng], { icon: window.L.divIcon({ className: 'ylm', html: '<span style="--lc:' + l.col + '">' + ic('truck') + '<b>' + h(l.n.replace('Skip lorry ', 'Skip ')) + '</b></span>', iconSize: [96, 30], iconAnchor: [16, 15] }), zIndexOffset: 1000 }).addTo(MAP); LM[l.id].on('click', function () { ui.yFocus = l.id; UI.render(); }); }
+        LM[l.id].setLatLng([w.lat, w.lng]);
+      });
+      if (ui.yFocusNow) { var lf = ui.yFocusNow; ui.yFocusNow = null; var ww = YC.where(y, lf); MAP.setView([ww.lat, ww.lng], 12, { animate: true }); }
+    }
+    function svgMap(y) {
+      var pts = [[YC.YARD.lat, YC.YARD.lng]]; YC.today(y).forEach(function (j) { pts.push([j.lat, j.lng]); });
+      var la0 = Math.min.apply(null, pts.map(function (p) { return p[0]; })) - 0.03, la1 = Math.max.apply(null, pts.map(function (p) { return p[0]; })) + 0.03, ln0 = Math.min.apply(null, pts.map(function (p) { return p[1]; })) - 0.05, ln1 = Math.max.apply(null, pts.map(function (p) { return p[1]; })) + 0.05;
+      function X(l) { return (l - ln0) / (ln1 - ln0) * 800; } function Yy(l) { return (1 - (l - la0) / (la1 - la0)) * 520; }
+      var o = '<svg viewBox="0 0 800 520" class="ymap-svg" role="img" aria-label="Map of today\'s jobs and lorries"><rect width="800" height="520" fill="var(--sunk)"/>';
+      o += '<circle cx="' + X(YC.YARD.lng) + '" cy="' + Yy(YC.YARD.lat) + '" r="11" fill="#1A1A1A"/>';
+      YC.today(y).forEach(function (j) { if (!j.lorry) return; o += '<circle cx="' + X(j.lng).toFixed(1) + '" cy="' + Yy(j.lat).toFixed(1) + '" r="6" fill="' + jobCol(j) + '" stroke="' + YC.lorry(j.lorry).col + '" stroke-width="3"/>'; });
+      YC.LORRIES.forEach(function (l) { var w = YC.where(y, l.id); o += '<g transform="translate(' + X(w.lng).toFixed(1) + ' ' + Yy(w.lat).toFixed(1) + ')"><rect x="-14" y="-11" width="28" height="22" rx="7" fill="' + l.col + '"/><text y="5" text-anchor="middle" font-size="11" font-weight="800" fill="#fff">' + l.id + '</text></g>'; });
+      MAPBOX.innerHTML = o + '</svg>';
+    }
+    V.tracking = function () {
+      var y = Y(), s = S();
+      if (ui.yFocus) { ui.yFocusNow = ui.yFocus; ui.yFocus = null; }
+      return '<div class="ytrack"><div class="ytrack-map" id="yMapSlot"></div><aside class="card ytrack-list"><div class="yh-rh"><h3>' + ic('truck') + 'Lorries</h3><span class="livepill"><i></i>Live</span></div>' +
+        YC.LORRIES.map(function (l) {
+          var list = YC.forLorry(y, l.id, 0), d = list.filter(function (j) { return j.status === 'done'; }).length, w = YC.where(y, l.id);
+          return '<button class="ytl-r" data-act="yFocus" data-v="' + l.id + '"><span class="ylo" style="--lc:' + l.col + '"><i></i>' + h(l.n) + '</span><small class="muted">' + h(l.driver + ' · ' + l.reg) + '</small><span class="ytl-s">' + h(stateLine(y, l, w)) + '</span><span class="yh-bar"><i style="width:' + (list.length ? Math.round(d / list.length * 100) : 0) + '%;background:' + l.col + '"></i></span><small>' + d + ' of ' + list.length + ' jobs done</small></button>';
+        }).join('') +
+        '<div class="ytl-leg"><span><i style="background:#A1A1AA"></i>Booked</span><span><i style="background:#EB9347"></i>On the way</span><span><i style="background:#2563EB"></i>On site</span><span><i style="background:#16A34A"></i>Done</span></div>' +
+        '<small class="muted ytl-note">Demo: the lorries are simulated. Live, positions come from the driver app on their phone or from your existing vehicle trackers.</small></aside></div>' +
+        '<div class="card ytexts"><div class="yh-rh"><h3>' + ic('message') + 'Texts to customers today</h3><small class="muted">"On my way" with an ETA, sent when the driver sets off</small></div>' +
+        (y.texts.slice(0, 5).map(function (t) { return '<div class="ytx"><small>' + CS.clock(t.at) + ' · ' + h(t.to) + '</small><span>' + h(t.text) + '</span></div>'; }).join('') || '<p class="muted">None yet today.</p>') + '</div>';
+    };
+    A.yFocus = function (el) { ui.yFocus = el.dataset.v; if (ui.view !== 'tracking') go('tracking'); else UI.render(); };
+
+    /* ======================================================================
+       DRIVER APP inside the office: the phone page in a frame, kept between redraws
+       ====================================================================== */
+    var DRV = null, drvSrc = '';
+    function drvFrame() {
+      if (!DRV) { DRV = document.createElement('div'); DRV.className = 'yphone'; DRV.innerHTML = '<div class="yphone-in"><iframe id="yDrvFrame" title="Driver app" loading="eager"></iframe></div>'; }
+      var want = 'driver.html?l=' + (ui.yDrv || 'L1') + '&embed=1', f = DRV.querySelector('iframe');
+      if (drvSrc !== want) { drvSrc = want; f.src = want; }
+      return DRV;
+    }
+    V.driver = function () {
+      var y = Y(), cur = ui.yDrv || 'L1';
+      return '<div class="ydrv"><div class="ydrv-txt"><h2>' + ic('mobile') + 'What your drivers see</h2><p>Each driver opens their own list on their phone. No training: the next job is at the top with one big button.</p>' +
+        '<ul class="ydrv-l"><li>' + ic('route') + '<span><b>Today\'s jobs in order</b>, with the gate code, the waste and where it goes</span></li><li>' + ic('map-pin') + '<span><b>Navigate</b> opens their usual maps app on the site</span></li><li>' + ic('message') + '<span><b>On my way</b> texts the customer an ETA by itself</span></li><li>' + ic('eye') + '<span><b>A photo</b> on every drop and every collection</span></li><li>' + ic('pencil') + '<span><b>The customer signs</b> on the screen</span></li><li>' + ic('receipt') + '<span><b>Ticket and weight</b> typed in or read from a photo of the ticket</span></li></ul>' +
+        '<div class="field"><label>Show the phone of</label><div class="ydrv-pick">' + YC.LORRIES.map(function (l) { return '<button class="ychip' + (cur === l.id ? ' on' : '') + '" data-act="yDrv" data-v="' + l.id + '"><span class="ylo" style="--lc:' + l.col + '"><i></i>' + h(l.first) + '</span></button>'; }).join('') + '</div></div>' +
+        '<p class="muted" style="font-size:12.5px">Press the buttons on the phone. The office map, the day plan and the board update as the driver goes.</p>' +
+        '<a class="btn" href="driver.html?l=' + cur + '" target="_blank" rel="noopener">' + ic('external') + 'Open it on its own</a></div><div class="ydrv-ph" id="yDrvSlot"></div></div>';
+    };
+    A.yDrv = function (el) { ui.yDrv = el.dataset.v; UI.render(); };
+    /* put the kept map and phone back after every redraw */
+    function reattach() {
+      var ms = q('#yMapSlot'); if (ms) { var b = mapBox(); if (b.parentNode !== ms) { ms.appendChild(b); } setTimeout(function () { if (MAP) MAP.invalidateSize(); mapUpdate(true); }, 30); }
+      placeDrv();
+      drawMe();
+    }
+    /* the phone frame never moves in the page (moving a frame reloads it): it sits over its slot instead */
+    function placeDrv() {
+      var ds = q('#yDrvSlot'), main = q('.main');
+      document.body.classList.toggle('ydrv-on', !!ds);
+      if (!ds) { if (DRV) DRV.hidden = true; return; }
+      var f = drvFrame(); if (f.parentNode !== main) main.appendChild(f);
+      f.hidden = false; f.classList.add('yfloat');
+      var r = ds.getBoundingClientRect(), m = main.getBoundingClientRect();
+      var w = Math.max(280, Math.min(r.width, 390, m.width - 28)), l = Math.max(0, Math.min(r.left - m.left + (r.width - w) / 2, m.width - w - 14));
+      f.style.width = w + 'px'; f.style.left = l + 'px'; f.style.top = (r.top - m.top) + 'px';
+      ds.style.height = f.offsetHeight + 'px';
+    }
+    window.addEventListener('resize', function () { if (DRV && !DRV.hidden) placeDrv(); });
+    new MutationObserver(reattach).observe(q('#view'), { childList: true });
+
+    /* ======================================================================
+       TICKETS AND WTNs
+       ====================================================================== */
+    V.tickets = function () {
+      var y = Y(), s = S(), tab = ui.yTkTab || 'tickets', today = y.tickets.filter(function (t) { return t.day === 0; }), unm = y.tickets.filter(function (t) { return !t.matched; });
+      var tn = today.reduce(function (a, t) { return a + (t.net || 0); }, 0);
+      var o = '<div class="ykpis"><div class="card kpi"><small>' + ic('receipt') + 'Tickets today</small><b>' + today.length + '</b><span class="d">from the weighbridge and the drivers</span></div><div class="card kpi"><small>' + ic('stack') + 'Tonnes today</small><b>' + tn.toFixed(1) + '</b><span class="d">net, across both tip sites</span></div>' +
+        '<div class="card kpi"><small>' + ic('alert') + 'To match</small><b class="' + (unm.length ? 'amber' : '') + '">' + unm.length + '</b><span class="d">read from a photo, no job found</span></div><div class="card kpi"><small>' + ic('certificate') + 'Transfer notes</small><b>' + y.jobs.filter(function (j) { return j.wtn; }).length + '</b><span class="d">made today, by themselves</span></div></div>' +
+        '<div class="ybar"><div class="seg"><button data-act="yTkTab" data-v="tickets" class="' + (tab === 'tickets' ? 'on' : '') + '">Tip tickets</button><button data-act="yTkTab" data-v="wtn" class="' + (tab === 'wtn' ? 'on' : '') + '">Waste transfer notes</button></div></div>';
+      if (tab === 'tickets') {
+        var l = y.tickets.slice().sort(function (a, b) { return (a.matched ? 1 : 0) - (b.matched ? 1 : 0) || b.day - a.day || b.time - a.time; }).slice(0, 40);
+        o += '<div class="card"><div class="tw"><table class="t ytab"><thead><tr><th>Ticket</th><th>When</th><th class="hide-sm">Tip site</th><th class="hide-sm">Lorry</th><th>Waste</th><th class="r">Net</th><th>Job</th></tr></thead><tbody>' + l.map(function (t) {
+          var lo = YC.lorry(t.lorry);
+          return '<tr class="' + (t.matched ? '' : 'yun') + '"><td><b>' + h(t.id) + '</b><small>' + h(t.read) + '</small></td><td>' + (t.day ? h(dayName(t.day)) : 'Today') + '<small>' + YC.hhmm(t.time) + '</small></td><td class="hide-sm">' + h(YC.TIPS[t.site].n.split(',')[0]) + '</td><td class="hide-sm">' + (lo ? h(lo.reg) : '') + '</td><td>' + h(YC.STREAMS[t.stream].n) + '<small>EWC ' + YC.STREAMS[t.stream].ewc + '</small></td><td class="r num"><b>' + t.net.toFixed(2) + ' t</b></td>' +
+            '<td>' + (t.matched ? '<span class="tag ok">' + ic('check') + h(t.job) + '</span>' : '<button class="btn sm pri" data-act="yMatch" data-id="' + t.id + '">Match</button>') + '</td></tr>';
+        }).join('') + '</tbody></table></div></div><p class="muted yfoot">Weighbridge tickets come in by themselves. A driver can also snap the ticket at a tip, and the number and weight are read off the photo. Each ticket is matched to its job by lorry, time and site; the few it cannot place wait here for one tap.</p>';
+      } else {
+        var w = y.jobs.filter(function (j) { return j.wtn; }).sort(function (a, b) { return (b.at.done || 0) - (a.at.done || 0); });
+        var hist = y.tickets.filter(function (t) { return t.day < 0; }).slice(-12).reverse();
+        o += '<div class="card"><div class="tw"><table class="t ytab"><thead><tr><th>Note</th><th>When</th><th>Customer</th><th class="hide-sm">Waste</th><th class="r hide-sm">Tonnes</th><th></th></tr></thead><tbody>' +
+          w.map(function (j) { var t = y.tickets.filter(function (x) { return x.id === j.ticket; })[0]; return '<tr><td><b>' + h(j.wtn) + '</b><small>' + h(j.id) + '</small></td><td>Today<small>' + CS.clock(j.at.done) + '</small></td><td>' + h(YC.custName(s, j.cust)) + '<small>' + h(j.site.name) + '</small></td><td class="hide-sm">' + h(YC.STREAMS[j.stream].n) + '<small>EWC ' + YC.STREAMS[j.stream].ewc + '</small></td><td class="r num hide-sm">' + (t ? t.net.toFixed(2) : '') + '</td><td class="r"><button class="btn sm" data-act="yWtn" data-id="' + j.id + '">' + ic('eye') + 'View</button></td></tr>'; }).join('') +
+          hist.map(function (t) { return '<tr><td><b>WTN-' + (4900 + YC.hash(t.id) % 300) + '</b><small>' + h(t.job || '') + '</small></td><td>' + h(dayName(t.day)) + '<small>' + YC.hhmm(t.time) + '</small></td><td>' + h(t.cust ? YC.custName(s, t.cust) : '') + '</td><td class="hide-sm">' + h(YC.STREAMS[t.stream].n) + '<small>EWC ' + YC.STREAMS[t.stream].ewc + '</small></td><td class="r num hide-sm">' + t.net.toFixed(2) + '</td><td class="r"><button class="btn sm" data-act="yWtn" data-t="' + t.id + '">' + ic('eye') + 'View</button></td></tr>'; }).join('') +
+          '</tbody></table></div></div><p class="muted yfoot">A transfer note is made the moment the driver finishes a collection, exchange or grab, with the signature, photo, EWC code and weight. Nobody writes one by hand.</p>';
+      }
+      return o;
+    };
+    A.yTkTab = function (el) { ui.yTkTab = el.dataset.v; UI.render(); };
+    A.yMatch = function (el) {
+      var y = Y(), s = S(), t = y.tickets.filter(function (x) { return x.id === el.dataset.id; })[0]; if (!t) return;
+      var cands = y.jobs.filter(function (j) { return j.day === 0 && j.lorry === t.lorry && YC.TYPES[j.type].waste; }).concat(y.jobs.filter(function (j) { return j.day === 0 && j.lorry !== t.lorry && YC.TYPES[j.type].waste && j.stream === t.stream; })).slice(0, 6);
+      modal(ic('receipt') + ' Match ticket ' + h(t.id), '<p class="muted" style="margin:0 0 10px">Read from a photo: ' + t.net.toFixed(2) + ' t net, ' + h(YC.STREAMS[t.stream].n) + ', ' + h(YC.TIPS[t.site].n) + ', ' + YC.hhmm(t.time) + '. The closest jobs first.</p>' +
+        cands.map(function (j) { return '<button class="yrow" data-act="yMatchGo" data-t="' + t.id + '" data-id="' + j.id + '"><span class="ym"><b>' + h(j.id + ' · ' + YC.whatShort(j)) + '</b><small>' + h(YC.custName(s, j.cust)) + ', ' + h(j.site.name) + '</small></span><span class="yl">' + lorryTag(j.lorry) + stTag(j) + '</span></button>'; }).join(''), '<button class="btn" data-act="close">Cancel</button>');
+    };
+    A.yMatchGo = function (el) {
+      var y = Y(), t = y.tickets.filter(function (x) { return x.id === el.dataset.t; })[0], j = jobById(el.dataset.id); if (!t || !j) return;
+      t.matched = true; t.job = j.id; t.cust = j.cust; t.read = 'Photo, matched by ' + uName(meU()).split(' ')[0]; if (!j.ticket) j.ticket = t.id; y.v++; save(); A.close(); UI.render();
+      toast('Ticket ' + h(t.id) + ' matched to ' + h(j.id) + '. The transfer note and Defra record use its weight', 'circle-check');
+    };
+
+    /* ======================================================================
+       DEFRA DIGITAL WASTE TRACKING
+       ====================================================================== */
+    V.defra = function () {
+      var y = Y(), s = S(), f = ui.yDfF || 'all', rows = YC.defraRows(s, y);
+      var n = { all: rows.length, ready: 0, submitted: 0, error: 0 }; rows.forEach(function (r) { n[r.status]++; });
+      var show = rows.filter(function (r) { return f === 'all' || r.status === f; }).sort(function (a, b) { var o = { error: 0, ready: 1, submitted: 2 }; return o[a.status] - o[b.status] || b.day - a.day || b.time - a.time; }).slice(0, 60);
+      function chip(k, l) { return '<button class="ychip' + (f === k ? ' on' : '') + '" data-act="yDfF" data-v="' + k + '">' + l + ' <b>' + n[k] + '</b></button>'; }
+      var TAG = { ready: '<span class="tag brand">Ready</span>', submitted: '<span class="tag ok">' + ic('check') + 'Submitted</span>', error: '<span class="tag bad">' + ic('alert') + 'Needs fixing</span>' };
+      return '<div class="card ydf-hd"><span class="ydf-ic">' + ic('shield-check') + '</span><div><b>Ready for Defra\'s digital waste tracking</b><small>Every load received at your transfer station is prepared as it happens: carrier, vehicle, EWC code, weight, and the recovery code. Anything missing is flagged before it goes.</small></div></div>' +
+        '<div class="ykpis three"><div class="card kpi"><small>Ready</small><b>' + n.ready + '</b><span class="d">checked, nothing missing</span></div><div class="card kpi"><small>Submitted</small><b>' + n.submitted + '</b><span class="d">this week</span></div><div class="card kpi"><small>Needs fixing</small><b class="' + (n.error ? 'bad' : '') + '">' + n.error + '</b><span class="d">fix before it can go</span></div></div>' +
+        '<div class="ybar"><div class="ychips" style="margin:0">' + chip('all', 'All') + chip('ready', 'Ready') + chip('error', 'Needs fixing') + chip('submitted', 'Submitted') + '</div><span class="sp"></span><button class="btn pri" data-act="yDfExport"' + (n.ready ? '' : ' disabled') + '>' + ic('download') + 'Export the ' + n.ready + ' ready</button></div>' +
+        '<div class="card"><div class="tw"><table class="t ytab"><thead><tr><th>Received</th><th>Carrier</th><th>Waste</th><th class="r">Tonnes</th><th class="hide-sm">Code</th><th>Status</th></tr></thead><tbody>' + show.map(function (r) {
+          return '<tr class="' + (r.status === 'error' ? 'yun' : '') + '"><td><b>' + (r.day ? h(dayName(r.day)) : 'Today') + ' ' + YC.hhmm(r.time) + '</b><small>' + h(r.id) + '</small></td><td>' + h(r.carrier) + '<small>' + (r.reg ? h(r.reg) : '<b class="bad">No registration</b>') + ' · ' + h(r.veh) + '</small></td><td>' + h(r.desc) + '<small>EWC ' + r.ewc + '</small></td><td class="r num">' + (r.net != null ? r.net.toFixed(2) + (r.est ? '<small>estimate</small>' : '') : '<b class="bad">None</b>') + '</td><td class="hide-sm">' + r.code + '</td>' +
+            '<td>' + TAG[r.status] + (r.status === 'error' ? '<small class="bad">' + h(r.why) + '</small><button class="btn sm" data-act="yDfFix" data-id="' + r.id + '">' + ic('pencil') + 'Fix</button>' : r.status === 'submitted' && r.sub ? '<small>' + h(r.sub) + '</small>' : '') + '</td></tr>';
+        }).join('') + '</tbody></table></div></div>' +
+        '<p class="muted yfoot">In this demo nothing is sent. Today the export goes into Defra\'s service as a file upload, which is an accepted way to report. A direct link from here to Defra is planned, so it goes across by itself. Permitted sites report receipts now; carriers and brokers join from October 2027.</p>';
+    };
+    A.yDfF = function (el) { ui.yDfF = el.dataset.v; UI.render(); };
+    A.yDfExport = function () {
+      var y = Y(), s = S(), rows = YC.defraRows(s, y).filter(function (r) { return r.status === 'ready'; }); if (!rows.length) return;
+      var csv = YC.defraCSV(rows);
+      try { var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'defra-waste-receipts-' + new Date().toISOString().slice(0, 10) + '.csv'; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500); } catch (e) {}
+      var D = y.defraState || (y.defraState = {}), at = 'Exported ' + CS.clock(Date.now()) + ' for upload';
+      rows.forEach(function (r) { D[r.id] = { s: 'submitted', at: at }; }); y.v++; save(); UI.render();
+      toast(plural(rows.length, 'record') + ' exported in Defra\'s format and marked submitted', 'download');
+    };
+    A.yDfFix = function (el) {
+      var y = Y(), x = (y.incoming || []).filter(function (r) { return r.id === el.dataset.id; })[0]; if (!x) return;
+      var needReg = !x.reg, body = needReg ? '<p class="muted" style="margin:0 0 10px">' + h(x.carrier) + ' brought this in without a waste carrier number. Add it, or say why there is not one.</p><div class="field"><label for="yDfReg">Carrier registration</label><input id="yDfReg" placeholder="CBDU123456"></div><div class="field"><label for="yDfWhy">Or the reason there is not one</label><select id="yDfWhy"><option value="">Choose a reason</option><option>Carrying their own waste, not a business</option><option>One-off load</option></select></div>'
+        : '<p class="muted" style="margin:0 0 10px">The weighbridge was down when ' + h(x.carrier) + ' tipped. Put in an estimate; it is marked as an estimate on the record.</p><div class="field"><label for="yDfT">Estimated tonnes</label><input id="yDfT" inputmode="decimal" value="1.90"></div>';
+      modal(ic('pencil') + ' Fix ' + h(x.id), body, '<button class="btn" data-act="close">Cancel</button><span class="sp"></span><button class="btn pri" data-act="yDfFixGo" data-id="' + x.id + '">' + ic('check') + 'Save, it is ready</button>');
+    };
+    A.yDfFixGo = function (el) {
+      var y = Y(), x = (y.incoming || []).filter(function (r) { return r.id === el.dataset.id; })[0]; if (!x) return;
+      if (!x.reg) { var reg = (q('#yDfReg') || {}).value || '', why = (q('#yDfWhy') || {}).value || ''; if (!reg.trim() && !why) { toast('Add the carrier number, or choose a reason', 'alert'); return; } x.reg = reg.trim().toUpperCase() || ('None: ' + why); }
+      else { var tn = parseFloat(((q('#yDfT') || {}).value || '').replace(/[^\d.]/g, '')); if (!(tn > 0)) { toast('Put an estimated weight in', 'alert'); return; } x.net = tn; x.est = true; }
+      x.why = null; var D = y.defraState || (y.defraState = {}); delete D[x.id]; y.v++; save(); A.close(); UI.render(); toast(h(x.id) + ' fixed and ready for Defra', 'circle-check');
+    };
+
+    /* ======================================================================
+       RECYCLING REPORT (company wide, and per customer)
+       ====================================================================== */
+    var REC = {
+      months: [{ m: 'Jun', t: 1412, rec: 88.4 }, { m: 'Jul', t: 1538, rec: 89.1 }, { m: 'Aug', t: 1602, rec: 90.2 }, { m: 'Sep', t: 1575, rec: 90.8 }, { m: 'Oct', t: 1688, rec: 91.7 }, { m: 'Nov', t: 1302, rec: 92.6, mtd: true }],
+      share: { soil: 31, hardcore: 18, mixed: 24, concrete: 9, wood: 6, green: 5, plaster: 3, metal: 1, house: 3 }
+    };
+    function custRec(c) { var n = YC.hash(c.id + 'r'); return { t: Math.round(20 + n % 160), rec: Math.round((84 + (n % 140) / 10) * 10) / 10 }; }
+    V.recycling = function () {
+      var s = S(), cur = REC.months[REC.months.length - 1], land = cur.t * (1 - cur.rec / 100), carbon = Math.round(cur.t * cur.rec / 100 * 0.07);
+      var mx = Math.max.apply(null, REC.months.map(function (m) { return m.t; }));
+      var custs = s.customers.map(function (c) { return { c: c, r: custRec(c) }; }).sort(function (a, b) { return b.r.t - a.r.t; }).slice(0, 10);
+      return '<div class="ykpis"><div class="card kpi"><small>' + ic('stack') + 'Tonnes this month</small><b>' + cur.t.toLocaleString('en-GB') + '</b><span class="d">so far, from the tickets</span></div><div class="card kpi hero"><small>' + ic('leaf') + 'Recycled or recovered</small><b>' + cur.rec + '%</b><span class="d">kept out of landfill</span></div>' +
+        '<div class="card kpi"><small>' + ic('trending-up') + 'To landfill</small><b>' + Math.round(land) + ' t</b><span class="d">' + (100 - cur.rec).toFixed(1) + '% of what came in</span></div><div class="card kpi"><small>' + ic('leaf') + 'Carbon saved</small><b>' + carbon + ' t</b><span class="d">CO2e, an estimate</span></div></div>' +
+        '<div class="yrec"><section class="card"><div class="yh-rh"><h3>Recycling rate by month</h3></div><div class="ybars">' + REC.months.map(function (m) { return '<div class="ybar1"><span class="v">' + m.rec + '%</span><i style="height:' + Math.round(m.t / mx * 150) + 'px"></i><b>' + m.m + (m.mtd ? ' so far' : '') + '</b><small>' + m.t.toLocaleString('en-GB') + ' t</small></div>'; }).join('') + '</div></section>' +
+        '<section class="card"><div class="yh-rh"><h3>By waste stream</h3></div><div class="ystreams">' + Object.keys(REC.share).map(function (k) { var st = YC.STREAMS[k], t = Math.round(cur.t * REC.share[k] / 100); return '<div><span><b>' + h(st.n) + '</b><small>EWC ' + st.ewc + ' · ' + t + ' t</small></span><span class="yh-bar"><i style="width:' + st.rec + '%"></i></span><b>' + st.rec + '%</b></div>'; }).join('') + '</div></section></div>' +
+        '<div class="card"><div class="yh-rh" style="padding:14px 16px 0"><h3>Each customer\'s report</h3><small class="muted">Sent under your logo every month, or whenever they ask</small></div><div class="tw"><table class="t ytab"><thead><tr><th>Customer</th><th class="r">Tonnes</th><th class="r">Recycled</th><th class="r hide-sm">Carbon saved</th><th></th></tr></thead><tbody>' +
+        custs.map(function (x) { return '<tr><td><b>' + h(x.c.name) + '</b><small>' + h(x.c.type) + '</small></td><td class="r num">' + x.r.t + '</td><td class="r num"><b>' + x.r.rec + '%</b></td><td class="r num hide-sm">' + (x.r.t * x.r.rec / 100 * 0.07).toFixed(1) + ' t</td><td class="r"><button class="btn sm" data-act="yRecRep" data-id="' + x.c.id + '">' + ic('eye') + 'Report</button></td></tr>'; }).join('') + '</tbody></table></div></div>' +
+        '<p class="muted yfoot">Sample figures. Live, tonnes come from your own weighbridge tickets and the recycling rate from each tip site\'s own recovery figure. Carbon is an estimate using the government\'s conversion factors.</p>';
+    };
+    A.yRecRep = function (el) {
+      var c = CS.cust(el.dataset.id); if (!c) return; var r = custRec(c), cur = REC.months[REC.months.length - 1];
+      modal(ic('leaf') + ' ' + h(c.name) + ', waste report', '<div class="yw"><div class="yw-hd"><img src="brand/logo.svg" alt="Demo Skip & Grab"><div><b>Waste and recycling report</b><small>' + h(c.name) + ' · ' + cur.m + ' so far</small></div></div>' +
+        '<div class="ykpis three" style="margin:12px 0"><div class="card kpi"><small>Tonnes</small><b>' + r.t + '</b></div><div class="card kpi"><small>Recycled</small><b>' + r.rec + '%</b></div><div class="card kpi"><small>Carbon saved</small><b>' + (r.t * r.rec / 100 * 0.07).toFixed(1) + ' t</b></div></div>' +
+        '<div class="ystreams">' + ['soil', 'mixed', 'hardcore', 'wood'].map(function (k, i) { var st = YC.STREAMS[k], t = Math.round(r.t * [0.4, 0.3, 0.2, 0.1][i]); return '<div><span><b>' + h(st.n) + '</b><small>EWC ' + st.ewc + ' · ' + t + ' t</small></span><span class="yh-bar"><i style="width:' + st.rec + '%"></i></span><b>' + st.rec + '%</b></div>'; }).join('') + '</div>' +
+        '<p class="muted" style="font-size:12.5px;margin:12px 0 0">Every load is backed by a waste transfer note and a weighbridge ticket. Sample figures.</p></div>',
+        '<button class="btn" data-act="close">Close</button><span class="sp"></span><button class="btn" data-act="yPrint">' + ic('printer') + 'Print</button><button class="btn pri" data-act="yRecSend" data-id="' + c.id + '">' + ic('mail') + 'Email it to ' + h(c.first || 'them') + '</button>', 'wide ywm');
+    };
+    A.yRecSend = function (el) { var c = CS.cust(el.dataset.id); A.close(); toast('Report emailed to ' + h(c ? c.contact : 'the customer') + '. Demo, nothing is sent', 'mail'); };
+
+    /* ======================================================================
+       CREDIT CONTROL, front and centre
+       ====================================================================== */
+    function chaseOf(i) {
+      var y = Y(), late = -i.due; y.chase = y.chase || {}; var c = y.chase[i.id];
+      var stage = c ? c.n : late >= 60 ? 3 : late >= 30 ? 2 : late >= 7 ? 1 : 0;
+      return { n: stage, at: c ? c.at : null, next: stage >= 3 ? 'Ring them' : 'Reminder ' + (stage + 1) };
+    }
+    V.credit = function () {
+      var s = S(), y = Y(), ag = aged(), st = stops(), cw = cashWeek(), auto = y.crAuto || (y.crAuto = { statements: true, reminders: true, stop: true });
+      var late = s.invoices.filter(function (i) { return i.status !== 'paid' && i.due < 0; }).sort(function (a, b) { return a.due - b.due; });
+      var rows = s.customers.map(function (c) { return { c: c, a: agedC(c.id) }; }).filter(function (r) { return r.a.total || r.c.stop || r.c.limit; }).sort(function (a, b) { return (b.c.stop ? 1 : 0) - (a.c.stop ? 1 : 0) || b.a.worst - a.a.worst || b.a.total - a.a.total; });
+      function bucket(lbl, v, cls) { var w = ag.total ? Math.max(v ? 4 : 0, Math.round(v / ag.total * 100)) : 0; return '<div class="yag ' + cls + '"><small>' + lbl + '</small><b>' + money(v) + '</b><span class="yh-bar"><i style="width:' + w + '%"></i></span></div>'; }
+      function cell(v, bad) { return '<td class="r num hide-sm">' + (v ? '<span class="' + (bad ? 'bad' : '') + '">' + money(v) + '</span>' : '<span class="faint">0</span>') + '</td>'; }
+      function sw(k, label, sub) { return '<div class="rowline"><div class="bd"><b>' + label + '</b><small>' + sub + '</small></div><button class="switch' + (auto[k] ? ' on' : '') + '" data-act="yCrAuto" data-k="' + k + '" aria-label="' + h(label) + '"></button></div>'; }
+      return '<div class="ykpis"><div class="card kpi hero"><small>' + ic('pound') + 'Cash collected this week</small><b id="yCash">' + money(sum(cw)) + '</b><span class="d">' + plural(cw.length, 'payment') + ' in the last 7 days</span></div>' +
+        '<div class="card kpi"><small>' + ic('receipt') + 'Owed to you</small><b>' + money(ag.total) + '</b><span class="d">' + money(ag.cur) + ' not due yet</span></div>' +
+        '<div class="card kpi"><small>' + ic('alert') + 'Overdue</small><b class="bad">' + money(ag.over) + '</b><span class="d">' + plural(late.length, 'invoice') + ' past their date</span></div>' +
+        '<div class="card kpi"><small>' + ic('lock') + 'On stop</small><b class="' + (st.length ? 'bad' : '') + '" id="yStopN">' + st.length + '</b><span class="d">' + (st.length ? h(st.map(function (c) { return c.name; }).join(', ')) : 'nobody') + '</span></div></div>' +
+        '<div class="card yaged"><div class="yh-rh"><h3>' + ic('clock') + 'Aged debt</h3><small class="muted">How late every unpaid invoice is</small></div><div class="yag-row">' + bucket('Not due yet', ag.cur, 'ok') + bucket('Up to 30 days late', ag.d30, 'a1') + bucket('31 to 60 days', ag.d60, 'a2') + bucket('61 to 90 days', ag.d90, 'a3') + bucket('Over 90 days', ag.d90p, 'a4') + '</div></div>' +
+        '<div class="ycr2"><section class="card"><div class="yh-rh"><h3>' + ic('bell') + 'Chase list</h3><button class="btn sm pri" data-act="yChaseAll">' + ic('send') + 'Send every reminder due</button></div>' +
+        late.map(function (i) { var c = CS.cust(i.cust), ch = chaseOf(i); return '<div class="ych"><span class="bd"><b>' + h(c.name) + (c.stop ? ' <span class="tag bad">' + ic('lock') + 'On stop</span>' : '') + '</b><small>' + h(i.id) + ' · ' + money(i.amount) + ' · <b class="' + (-i.due > 30 ? 'bad' : 'amber') + '">' + (-i.due) + ' days late</b> · ' + (ch.n ? plural(ch.n, 'reminder') + ' sent' + (ch.at ? ', last at ' + CS.clock(ch.at) : '') : 'no reminder yet') + '</small></span>' +
+          (ch.n >= 3 ? '<a class="btn sm" href="tel:' + h(String(c.phone).replace(/\s/g, '')) + '">' + ic('phone') + 'Ring</a>' : '<button class="btn sm" data-act="yChase" data-id="' + i.id + '">' + ic('mail') + 'Send ' + h(ch.next.toLowerCase()) + '</button>') + '</div>'; }).join('') + '</section>' +
+        '<section class="card"><div class="yh-rh"><h3>' + ic('refresh') + 'Runs by itself</h3><button class="btn sm" data-act="yStatements">' + ic('send') + 'Send statements now</button></div>' +
+        sw('statements', 'Statements on the 1st', 'Every account with a balance gets their statement by email on the 1st of the month') +
+        sw('reminders', 'Reminders at 7, 30 and 60 days', 'A polite one, a firmer one, then a final one with the statement attached') +
+        sw('stop', 'Suggest stop at 60 days', 'Asks you first. Nobody is put on stop without you deciding') + '</section></div>' +
+        '<div class="card"><div class="yh-rh" style="padding:14px 16px 0"><h3>' + ic('lock') + 'Every account</h3><small class="muted">New bookings warn you, and ask twice, if a customer is on stop</small></div><div class="tw"><table class="t ytab"><thead><tr><th>Customer</th><th class="r hide-sm">Limit</th><th class="r">Owed</th><th class="r hide-sm">Not due</th><th class="r hide-sm">30 days</th><th class="r hide-sm">60 days</th><th class="r hide-sm">90+ days</th><th></th></tr></thead><tbody>' +
+        rows.map(function (r) {
+          var c = r.c, a = r.a, over = c.limit && a.total > c.limit;
+          return '<tr class="' + (c.stop ? 'ystop' : '') + '"><td><b class="click" data-act="openCust" data-id="' + c.id + '">' + h(c.name) + '</b>' + (c.stop ? '<span class="tag bad">' + ic('lock') + 'On stop</span>' : over ? '<span class="tag amber">Over limit</span>' : '') + '<small>' + h(c.terms) + '</small></td><td class="r num hide-sm">' + (c.limit ? money(c.limit) : '<span class="faint">Card</span>') + '</td><td class="r num"><b>' + money(a.total) + '</b></td>' +
+            cell(a.cur) + cell(a.d30, true) + cell(a.d60, true) + cell(a.d90 + a.d90p, true) +
+            '<td class="r"><div class="row" style="justify-content:flex-end;gap:6px">' + (a.total ? '<button class="btn sm hide-sm" data-act="statement" data-id="' + c.id + '">' + ic('receipt') + 'Statement</button>' : '') + '<button class="btn sm' + (c.stop ? ' pri' : '') + '" data-act="stopToggle" data-id="' + c.id + '" aria-label="' + (c.stop ? 'Take ' + h(c.name) + ' off stop' : 'Put ' + h(c.name) + ' on stop') + '">' + ic(c.stop ? 'check' : 'lock') + '<span class="hide-sm">' + (c.stop ? 'Take off stop' : 'Put on stop') + '</span></button></div></td></tr>';
+        }).join('') + '</tbody></table></div></div>' +
+        '<div class="card"><div class="yh-rh" style="padding:14px 16px 6px"><h3>' + ic('circle-check') + 'Paid this week</h3></div>' + cw.sort(function (a, b) { return b.paidDay - a.paidDay; }).map(function (i) { var c = CS.cust(i.cust); return '<div class="ych"><span class="bd"><b>' + h(c ? c.name : '') + '</b><small>' + h(i.id) + ' · ' + h(dayName(i.paidDay)) + '</small></span><b class="ok">' + money(i.amount) + '</b></div>'; }).join('') + '</div>';
+    };
+    A.yCrAuto = function (el) { var y = Y(); y.crAuto = y.crAuto || {}; y.crAuto[el.dataset.k] = !y.crAuto[el.dataset.k]; save(); UI.render(); toast(y.crAuto[el.dataset.k] ? 'Switched on' : 'Switched off', 'refresh'); };
+    A.yChase = function (el) {
+      var y = Y(), i = CS.inv(el.dataset.id); if (!i) return; var ch = chaseOf(i); y.chase[i.id] = { n: ch.n + 1, at: Date.now() }; save(); UI.render();
+      toast(h(ch.next) + ' emailed to ' + h(CS.cust(i.cust).name) + ' for ' + h(i.id) + ', statement attached. Demo, nothing is sent', 'mail');
+    };
+    A.yChaseAll = function () {
+      var y = Y(), n = 0; S().invoices.filter(function (i) { return i.status !== 'paid' && i.due < 0; }).forEach(function (i) { var ch = chaseOf(i); if (ch.n < 3) { y.chase[i.id] = { n: ch.n + 1, at: Date.now() }; n++; } });
+      save(); UI.render(); toast(plural(n, 'reminder') + ' sent, each with the statement attached. Demo, nothing is sent', 'send');
+    };
+    A.yStatements = function () { var n = S().customers.filter(function (c) { return agedC(c.id).total; }).length; toast(plural(n, 'statement') + ' emailed to every account with a balance. Demo, nothing is sent', 'send'); };
+
+    /* ======================================================================
+       SCOREBOARD with commission
+       ====================================================================== */
+    function office() {
+      var s = S(), y = Y(), qs = s.quotes, js = s.jobs, comm = y.comm || {};
+      function sales(o) { var sent = qs.filter(function (x) { return x.owner === o && x.status !== 'draft'; }), won = sent.filter(function (x) { return x.status === 'won'; }), mine = js.filter(function (j) { return j.owner === o && j.day <= 0 && j.day >= -6; }); return { sent: sent.length, won: won.length, orders: mine.length + won.length * 2, rev: sum(mine, function (j) { return j.sell; }) + 2400, gp: sum(mine, function (j) { return j.sell - j.cost; }) + 760 }; }
+      var L = [
+        { k: 'sam', n: CS.bde(), r: 'Sales', c: '#7A3FF2', s: sales('sam'), rate: comm.sam != null ? comm.sam : 10 },
+        { k: 'dave', n: 'Dave Archer', r: 'Director', c: '#EB9347', s: sales('dave'), rate: null },
+        { k: 'ellie', n: 'Ellie Ward', r: 'Office', c: '#0E9F6E', s: { sent: 14, won: 9, orders: 31, rev: 6240, gp: 2010 }, rate: comm.ellie != null ? comm.ellie : 3 },
+        { k: 'kate', n: 'Kate Morris', r: 'Accounts', c: '#2563EB', s: { sent: 0, won: 0, orders: 4, rev: 820, gp: 260 }, rate: comm.kate != null ? comm.kate : 0 }
+      ];
+      L.forEach(function (p) { p.com = p.rate ? p.s.gp * p.rate / 100 : 0; });
+      return L.sort(function (a, b) { return b.s.gp - a.s.gp; });
+    }
+    function drivers() {
+      var y = Y(); return YC.LORRIES.map(function (l) {
+        var t = YC.forLorry(y, l.id, 0), d = t.filter(function (j) { return j.status === 'done'; }), tn = y.tickets.filter(function (x) { return x.day === 0 && x.lorry === l.id; }).reduce(function (a, x) { return a + x.net; }, 0);
+        var n = YC.hash(l.id); return { l: l, first: l.first, today: d.length, left: t.length - d.length, avg: Math.round((4 + n % 3 + (l.kind === 'skip' ? 1.6 : 0)) * 10) / 10, onTime: 91 + n % 8, tn: tn };
+      }).sort(function (a, b) { return b.today - a.today || b.avg - a.avg; });
+    }
+    function medal(i) { return '<span class="ymed m' + i + '">' + (i + 1) + '</span>'; }
+    V.scoreboard = function () {
+      var tab = ui.yScTab || 'office';
+      var o = '<div class="ybar"><div class="seg"><button data-act="yScTab" data-v="office" class="' + (tab === 'office' ? 'on' : '') + '">Office and sales</button><button data-act="yScTab" data-v="drivers" class="' + (tab === 'drivers' ? 'on' : '') + '">Drivers</button></div><span class="yhint">' + ic('calendar') + 'This week, Monday to today</span></div>';
+      if (tab === 'office') {
+        var L = office();
+        o += '<div class="card"><div class="tw"><table class="t ytab ylg"><thead><tr><th></th><th>Person</th><th class="r hide-sm">Quotes sent</th><th class="r">Won</th><th class="r hide-sm">Orders</th><th class="r hide-sm">Revenue</th><th class="r">Gross profit</th><th class="r">Commission</th></tr></thead><tbody>' +
+          L.map(function (p, i) { return '<tr><td>' + medal(i) + '</td><td><b>' + h(p.n) + '</b><small>' + h(p.r) + '</small></td><td class="r num hide-sm">' + p.s.sent + '</td><td class="r num">' + p.s.won + '</td><td class="r num hide-sm">' + p.s.orders + '</td><td class="r num hide-sm">' + money(p.s.rev) + '</td><td class="r num"><b>' + money(p.s.gp) + '</b></td>' +
+            '<td class="r num">' + (p.rate == null ? '<span class="faint">Director</span>' : '<b>' + money(p.com) + '</b><label class="yrate"><input class="ycomm" data-k="' + p.k + '" type="number" min="0" max="50" value="' + p.rate + '" aria-label="Commission rate for ' + h(p.n) + '">% of GP</label>') + '</td></tr>'; }).join('') + '</tbody></table></div></div>' +
+          '<p class="muted yfoot">Every quote, order and invoice is counted against whoever did it. Commission is worked out for you from the gross profit on what each person brings in, at the rate you set here. Each person sees their own line; you see everyone. Sample figures.</p>';
+      } else {
+        var D = drivers();
+        o += '<div class="ydl">' + D.map(function (d, i) { return '<div class="card ydc">' + medal(i) + '<span class="ylo" style="--lc:' + d.l.col + '"><i></i>' + h(d.l.driver) + '</span><small class="muted">' + h(d.l.n + ' · ' + d.l.reg) + '</small><div class="ydc-n"><div><b>' + d.today + '</b><small>jobs done today</small></div><div><b>' + d.avg + '</b><small>a day this week</small></div><div><b>' + d.onTime + '%</b><small>on time</small></div><div><b>' + d.tn.toFixed(1) + ' t</b><small>tipped today</small></div></div><small class="muted">' + (d.left ? d.left + ' still to do today' : 'Day done') + ' · every job with a photo and signature</small></div>'; }).join('') + '</div>' +
+          '<p class="muted yfoot">Jobs and tonnes come straight from the driver app and the tickets as the day goes. On time means done inside the window the customer was given.</p>';
+      }
+      return o;
+    };
+    A.yScTab = function (el) { ui.yScTab = el.dataset.v; UI.render(); };
+
+    /* ======================================================================
+       YARD BOARD, and full screen for the office TV
+       ====================================================================== */
+    V.board = function () {
+      var y = Y(), s = S(), os = y.onsite, dueT = os.filter(function (o) { return -o.since === o.hire && !o.booked; }), over = os.filter(function (o) { return -o.since > o.hire && !o.booked; });
+      var paidToday = s.invoices.filter(function (i) { return i.status === 'paid' && i.paidDay === 0; }), inv = s.invoices.filter(function (i) { return i.issued === 0; }), ag = aged(), D = drivers(), t0 = YC.today(y), dn = t0.filter(function (j) { return j.status === 'done'; }).length;
+      var now = new Date();
+      return '<div class="yboard' + (document.body.classList.contains('ytv') ? ' tv' : '') + '" id="yBoard"><div class="yb-top"><div><b class="yb-clock">' + YC.hhmm(now.getHours() * 60 + now.getMinutes()) + '</b><small>' + h(CS.dayDate(0).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })) + '</small></div><div class="yb-big"><b>' + dn + '<i>/' + t0.length + '</i></b><small>jobs done today</small></div><span class="sp"></span>' +
+        (document.body.classList.contains('ytv') ? '<button class="btn" data-act="yTVOff">' + ic('x') + 'Exit full screen</button>' : '<button class="btn pri" data-act="yTV">' + ic('dashboard') + 'Full screen for the TV</button>') + '</div>' +
+        '<div class="yb-grid"><section class="yb-p yb-lor"><h3>' + ic('truck') + 'Lorries out</h3>' + YC.LORRIES.map(function (l) { var w = YC.where(y, l.id), L0 = YC.forLorry(y, l.id, 0), d = L0.filter(function (j) { return j.status === 'done'; }).length; return '<div class="yb-l"><span class="ylo" style="--lc:' + l.col + '"><i></i>' + h(l.n) + '</span><span class="yb-s">' + h(l.first) + ': ' + h(stateLine(y, l, w)) + '</span><b>' + d + '/' + L0.length + '</b></div>'; }).join('') + '</section>' +
+        '<section class="yb-p"><h3>' + ic('clock') + 'Skips due back today</h3><b class="yb-n">' + dueT.length + '</b>' + dueT.slice(0, 4).map(function (o) { return '<div class="yb-r">' + h(o.id) + ' · ' + o.size + ' yd · ' + h(o.site.name.split(',').slice(-1)[0].trim()) + '</div>'; }).join('') + '</section>' +
+        '<section class="yb-p bad"><h3>' + ic('alert') + 'Overdue skips</h3><b class="yb-n">' + over.length + '</b>' + over.slice(0, 4).map(function (o) { return '<div class="yb-r">' + h(o.id) + ' · ' + (-o.since - o.hire) + ' days over · ' + h(YC.custName(s, o.cust)) + '</div>'; }).join('') + '</section>' +
+        '<section class="yb-p"><h3>' + ic('pound') + 'Today\'s money</h3><div class="yb-m"><div><b>' + money(sum(paidToday)) + '</b><small>collected today</small></div><div><b>' + money(sum(cashWeek())) + '</b><small>this week</small></div><div><b>' + money(sum(inv)) + '</b><small>invoiced today</small></div><div><b class="bad">' + money(ag.over) + '</b><small>overdue</small></div></div></section>' +
+        '<section class="yb-p yb-lg"><h3>' + ic('target') + 'Jobs league, today</h3>' + D.map(function (d, i) { return '<div class="yb-l">' + medal(i) + '<span class="yb-s"><b>' + h(d.l.driver) + '</b></span><b>' + d.today + '</b></div>'; }).join('') + '</section></div></div>';
+    };
+    A.yTV = function () {
+      if (ui.view !== 'board') { ui.view = 'board'; location.hash = 'board'; }
+      document.body.classList.add('ytv'); try { var de = document.documentElement; if (de.requestFullscreen) de.requestFullscreen().catch(function () {}); } catch (e) {}
+      UI.render();
+    };
+    A.yTVOff = function () { document.body.classList.remove('ytv'); try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen(); } catch (e) {} UI.render(); };
+    document.addEventListener('fullscreenchange', function () { if (!document.fullscreenElement && document.body.classList.contains('ytv')) { document.body.classList.remove('ytv'); UI.render(); } });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && document.body.classList.contains('ytv')) A.yTVOff();
+      var t = e.target, typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+      if (!typing && !e.metaKey && !e.ctrlKey && !e.altKey && (e.key === 'b' || e.key === 'B') && !q('#layer').innerHTML) { e.preventDefault(); A.yBook(); }
+    });
+
+    /* ======================================================================
+       REPORTED PROBLEMS (from the assistant)
+       ====================================================================== */
+    function problems() { var y = Y(); if (!y.problemsSeeded) { y.problemsSeeded = true; y.problems.push({ id: 'P-101', at: Date.now() - 3 * 86400000, by: 'Ellie Ward', text: 'The ticket photo came out upside down on Darren\'s phone', status: 'Fixed the same day' }); } return y.problems; }
+    V.problems = function () {
+      var l = problems().slice().sort(function (a, b) { return b.at - a.at; });
+      return '<div class="card ydf-hd"><span class="ydf-ic">' + ic('alert') + '</span><div><b>Something not right? Tell the assistant</b><small>Describe it in your own words. It goes straight to Jack with the screen and the details. Same-day fix, or that month is free.</small></div><span class="sp"></span><button class="btn pri" data-act="yProblem">' + ic('message') + 'Report a problem</button></div>' +
+        '<div class="card ylist">' + l.map(function (p) { return '<div class="ych"><span class="bd"><b>' + h(p.text) + '</b><small>' + h(p.id) + ' · ' + h(p.by) + ' · ' + new Date(p.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' + CS.clock(p.at) + '</small></span><span class="tag ' + (/Fixed/.test(p.status) ? 'ok' : 'brand') + '">' + h(p.status) + '</span></div>'; }).join('') + '</div>';
+    };
+    A.yProblem = function () { if (window.DSGSK && window.DSGSK.problem) window.DSGSK.problem(); };
+
+    /* ======================================================================
+       The assistant's answers about the yard
+       ====================================================================== */
+    window.DSGY = {
+      logProblem: function (text) { var y = Y(); problems(); var p = { id: 'P-' + (102 + y.problems.length), at: Date.now(), by: uName(meU()), text: text, status: 'Sent to Jack' }; y.problems.push(p); y.v++; save(); if (ui.view === 'problems') UI.render(); return p; },
+      answer: function (qq) {
+        var lo = qq.toLowerCase(), y = Y(), s = S();
+        function rows(r) { return '<div class="sk-rows">' + r.map(function (x) { return '<div class="sk-row"><span class="bd"><b>' + h(x[0]) + '</b><small>' + h(x[1]) + '</small></span>' + (x[2] ? '<span class="v">' + h(x[2]) + '</span>' : '') + '</div>'; }).join('') + '</div>'; }
+        function btn(v, l) { return '<div class="sk-acts"><button class="btn sm pri" data-act="go" data-v="' + v + '">' + h(l) + ic('arrow-right') + '</button></div>'; }
+        if (/overdue|over.*hire|skips? (out|on site)|due back/.test(lo) && /skip/.test(lo)) {
+          var od = y.onsite.filter(function (o) { return !o.booked && -o.since > o.hire; });
+          return '<p>' + (od.length ? plural(od.length, 'skip is', 'skips are') + ' past the 14 day hire.' : 'No skips are overdue.') + '</p>' + rows(od.slice(0, 5).map(function (o) { return [o.id + ', ' + o.size + ' yard', YC.custName(s, o.cust) + ', ' + o.site.name, (-o.since - o.hire) + ' days over']; })) + btn('skips', 'Exchange or collect them');
+        }
+        var lm = /(skip lorry ?[12]|hook|grab ?[12]|lorry ?[12]|wayne|darren|jason|ricky|callum)/.exec(lo);
+        if (lm || /where.*(lorr|driver|grab)/.test(lo)) {
+          var L0 = YC.LORRIES.filter(function (l) { var k = lm ? lm[1].replace(/\s/g, '') : ''; return !k || l.n.toLowerCase().replace(/\s/g, '').indexOf(k.replace('lorry', '')) >= 0 || l.first.toLowerCase() === k || (k === 'hook' && l.kind === 'roro'); });
+          if (!L0.length) L0 = YC.LORRIES;
+          return '<p>Here is where ' + (L0.length === 1 ? 'it is' : 'they are') + ' right now.</p>' + rows(L0.map(function (l) { var w = YC.where(y, l.id); return [l.n + ', ' + l.driver, stateLine(y, l, w), '']; })) + btn('tracking', 'Open the map');
+        }
+        if (/owe|owing|debt|overdue|unpaid|who.*pay/.test(lo)) {
+          var r = s.customers.map(function (c) { return { c: c, a: agedC(c.id) }; }).filter(function (x) { return x.a.total - x.a.cur > 0; }).sort(function (a, b) { return (b.a.total - b.a.cur) - (a.a.total - a.a.cur); });
+          return '<p>' + money(aged().over) + ' is overdue across ' + plural(r.length, 'customer') + '.</p>' + rows(r.slice(0, 5).map(function (x) { return [x.c.name + (x.c.stop ? ' (on stop)' : ''), 'Oldest ' + x.a.worst + ' days late', money(x.a.total - x.a.cur)]; })) + btn('credit', 'Open credit control');
+        }
+        if (/defra|waste tracking/.test(lo)) { var dr = YC.defraRows(s, y), n1 = dr.filter(function (x) { return x.status === 'ready'; }).length, n2 = dr.filter(function (x) { return x.status === 'error'; }).length; return '<p>' + plural(n1, 'record is', 'records are') + ' ready for Defra\'s digital waste tracking' + (n2 ? ', and ' + plural(n2, 'needs', 'need') + ' fixing first.' : '.') + '</p>' + btn('defra', 'Open Defra tracking'); }
+        if (/recycl|landfill|diversion|carbon/.test(lo)) { var cu = REC.months[REC.months.length - 1]; return '<p>' + cu.rec + '% recycled or recovered this month so far, from ' + cu.t.toLocaleString('en-GB') + ' tonnes. Sample figures.</p>' + btn('recycling', 'Open the recycling report'); }
+        if (/permit/.test(lo)) { var ps = y.onsite.filter(function (o) { return o.permit; }); return '<p>' + plural(ps.length, 'skip is', 'skips are') + ' on the road with a council permit.</p>' + rows(ps.slice(0, 5).map(function (o) { return [o.id + ', ' + o.site.name, o.permit.council, 'until ' + dayName(o.permit.to)]; })) + btn('skips', 'See skips on site'); }
+        if (/(how many|jobs?).*(today|on)|today.*jobs/.test(lo)) { var t0 = YC.today(y), d = t0.filter(function (j) { return j.status === 'done'; }).length; return '<p>' + t0.length + ' jobs today, ' + d + ' done and ' + (t0.length - d) + ' to go.</p>' + btn('plan', 'Open the day plan'); }
+        if (/ticket|weighbridge|wtn|transfer note/.test(lo)) { var um = y.tickets.filter(function (t) { return !t.matched; }).length; return '<p>' + plural(y.tickets.filter(function (t) { return t.day === 0; }).length, 'ticket') + ' today, ' + um + ' waiting to be matched. Every finished collection already has its transfer note.</p>' + btn('tickets', 'Open tickets and WTNs'); }
+        return null;
+      }
+    };
+
+    /* ======================================================================
+       The simulation: lorries drive, stop and finish. The screens follow.
+       ====================================================================== */
+    var LIVEV = { home: 1, board: 1, plan: 1, tracking: 1, bookings: 1, skips: 0, tickets: 1, defra: 1, scoreboard: 1 };
+    var lastV = -1;
+    setInterval(function () {
+      var s = S(); if (!s) return; var y = Y(), ev = YC.tick(s, y, null, ui.view === 'driver' ? (ui.yDrv || 'L1') : null);
+      if (ev.length) {
+        save();
+        ev.forEach(function (e) {
+          var nm = e.j.site.name.split(',').slice(-1)[0].trim();
+          if (e.k === 'onway' && (ui.view === 'tracking' || ui.view === 'board')) toast(h(e.lo.first) + ' is on his way to ' + h(nm) + '. ETA text sent to ' + h(YC.custName(s, e.j.cust)), 'message');
+          if (e.k === 'done' && (ui.view === 'tracking' || ui.view === 'board' || ui.view === 'plan')) toast(h(e.lo.first) + ' finished ' + h(YC.whatShort(e.j)) + ' at ' + h(nm) + (e.j.wtn ? '. Transfer note made' : ''), 'circle-check');
+        });
+      }
+      if (y.v !== lastV) {
+        lastV = y.v;
+        var busy = q('#layer') && q('#layer').innerHTML, ae = document.activeElement, typing = ae && (ae.tagName === 'INPUT' || ae.tagName === 'SELECT' || ae.tagName === 'TEXTAREA');
+        if (LIVEV[ui.view] && !busy && !typing && !document.querySelector('.ydrag')) UI.render();
+      }
+      if (ui.view === 'tracking') mapUpdate(false);
+      if (ui.view === 'board') { var c = q('.yb-clock'); if (c) { var n = new Date(); c.textContent = YC.hhmm(n.getHours() * 60 + n.getMinutes()); } }
+    }, 1000);
+
+    /* ======================================================================
+       Steps for the guided tour
+       ====================================================================== */
+    var R = window.DSGG.RUN;
+    function closeAll() { var b = q('#boot'); if (b) b.remove(); A.close(); if (A.closePhone) A.closePhone(); if (A.closeSide) A.closeSide(); if (document.body.classList.contains('ytv')) A.yTVOff(); var sk = q('#skPanel'); if (sk && !sk.hidden && A.skToggle) A.skToggle(); ui.yArr = false; }
+    R.yHome = function () { closeAll(); go('home'); };
+    R.yBoard = function () { closeAll(); go('board'); };
+    R.yTVShow = function () { closeAll(); go('board'); A.yTV(); };
+    R.yBookings = function () { closeAll(); ui.yBkDay = 'today'; ui.yBkF = 'all'; go('bookings'); };
+    R.yBookNew = function () { closeAll(); go('bookings'); A.yBook(); bk().place = 'road'; bookDraw(); };
+    R.yBookStop = function () { closeAll(); go('credit'); var st = stops()[0]; A.yBook({ dataset: { c: st ? st.id : 'c3' } }); };
+    R.yPlan = function () { closeAll(); ui.yPlanDay = 0; go('plan'); };
+    R.ySkips = function () { closeAll(); ui.ySkF = 'all'; go('skips'); };
+    R.ySkipsOver = function () { closeAll(); ui.ySkF = 'over'; go('skips'); };
+    R.yDriver = function () { closeAll(); ui.yDrv = 'L1'; go('driver'); };
+    R.yTrack = function () { closeAll(); go('tracking'); };
+    R.yTickets = function () { closeAll(); ui.yTkTab = 'tickets'; go('tickets'); };
+    R.yWtn = function () { closeAll(); ui.yTkTab = 'wtn'; go('tickets'); var j = Y().jobs.filter(function (x) { return x.wtn; })[0]; if (j) A.yWtn({ dataset: { id: j.id } }); };
+    R.yCredit = function () { closeAll(); go('credit'); };
+    R.yDefra = function () { closeAll(); ui.yDfF = 'all'; go('defra'); };
+    R.yRecycle = function () { closeAll(); go('recycling'); };
+    R.yScore = function () { closeAll(); ui.yScTab = 'office'; go('scoreboard'); };
+    R.yScoreDrv = function () { closeAll(); ui.yScTab = 'drivers'; go('scoreboard'); };
+    R.yMineShow = function () { closeAll(); go('home'); A.yMine(); };
+    R.yArrange = function () { closeAll(); go('home'); ui.yArr = true; UI.render(); };
+    R.yAssist = function () { closeAll(); go('home'); if (A.ask) A.ask(); };
+    R.yProblem = function () { closeAll(); go('home'); A.yProblem(); };
+    window.DSGG.acts = Object.keys(R);
+
+    /* ---------- start ---------- */
+    var hv0 = location.hash.replace('#', ''); if (UI.VIEWS.some(function (v) { return v.k === hv0; })) ui.view = hv0;
+    if (new URLSearchParams(location.search).get('tv') === '1') { ui.view = 'board'; document.body.classList.add('ytv'); }
+    drawMe(); UI.render();
+  }
+  start(0);
+})();
