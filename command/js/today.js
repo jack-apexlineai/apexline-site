@@ -205,6 +205,16 @@ function taskRow(t, i, date, editable) {
   </li>`;
 }
 
+// The Done list stays open so a ticked task visibly moves into it (Dad, 25 Nov: closed, it looked like
+// ticked tasks vanished). If he folds it away, it stays folded until the page is reloaded.
+let doneOpen = true;
+if (typeof document !== 'undefined') {
+  document.addEventListener('toggle', (e) => {
+    const el = e.target;
+    if (el && el.matches && el.matches('details[data-done-list]') && el.isConnected) doneOpen = el.open;
+  }, true);
+}
+
 function tasksPanel(date, sorted, plan) {
   const tdy = today();
   const day = getDay(date);
@@ -224,7 +234,7 @@ function tasksPanel(date, sorted, plan) {
       <ol class="task-list">${plan.overflow.map((t, i) => taskRow(t, open.length - plan.overflow.length + i, date, editable)).join('')}</ol>
       ${date === tdy ? `<button class="btn ghost sm" data-act="overflow-tomorrow">Move ${plan.overflow.length === 1 ? 'it' : 'them'} to tomorrow</button>` : ''}
     </div>` : ''}
-    ${done.length ? `<details class="done-list" ${date < tdy ? 'open' : ''}><summary>Done <span class="muted">${done.length}</span></summary><ol class="task-list">${done.map((t, i) => taskRow(t, i, date, false)).join('')}</ol></details>` : ''}
+    ${done.length ? `<details class="done-list" data-done-list ${doneOpen || date < tdy ? 'open' : ''}><summary>Done <span class="muted">${done.length}</span></summary><ol class="task-list">${done.map((t, i) => taskRow(t, i, date, false)).join('')}</ol></details>` : ''}
     ${other.length ? `<details class="done-list"><summary>Moved on <span class="muted">${other.length}</span></summary><ul class="plain-list">${other.map((t) => `<li><span>${esc(t.title)}</span>${pill(t.status === 'dropped' ? 'Dropped' : 'To next day', t.status === 'dropped' ? 'mute' : 'plain')}</li>`).join('')}</ul></details>` : ''}
   </section>`;
 }
