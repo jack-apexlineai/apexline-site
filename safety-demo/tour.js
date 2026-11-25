@@ -1,10 +1,11 @@
-/* Guided tours of the Coastal safety demo, over the real screens.
-   Phone tour: LOTOTO on the operative phone, then the office sign-off. Office tour: every office tab,
-   with live moments where something is done on the phone and lands in the office.
-   Each step has a short caption and a "why it matters" line tied to what Tristan told us.
-   Spotlight, a short caption, Next, Back, Skip, the step count, arrow keys and Esc.
+/* Guided tours of the Coastal safety demo, over the real screens. Two clean parts:
+   Part 1, Office tour: office screens only. Where something comes from a phone (Dean's defect,
+   Wayne off sick, Craig saying yes), the office just shows it arriving, with a one-line note.
+   Part 2, Phone tour: what operatives and fitters see on their phone. Checks, LOTOTO read out in
+   English or Polish, the picture check, tap to sign, the fitter's job list.
+   Every card is plain English: any safety word gets its meaning on the card.
    Nothing is read out by the tour: the speakers still only play when someone taps them.
-   Start: the Guided tour button in the office top bar, office.html?tour=1 (phone) or ?tour=office. */
+   Start: the Guided tour button in the office top bar, office.html?tour=office or ?tour=phone (?tour=1 is the phone). */
 (function(){
 'use strict';
 var mob = function(){ return window.innerWidth <= 760; };
@@ -57,7 +58,7 @@ function homeOf(id, first, done){
   openPhone(function(){
     if (q('.me') && whoIs() === first) return done();
     var hb = q('#homeBtn');
-    if (hb && !hb.hidden && q('.crumbs .crumb')) { tap(hb); return waitFor(function(){ return q('.me'); }, 3000, function(){ if (whoIs() === first) return later(200, done); toWho(function(){ loginAs(id, done); }); }); }
+    if (hb && !hb.hidden) { tap(hb); return waitFor(function(){ return q('.me'); }, 3000, function(){ if (whoIs() === first) return later(200, done); toWho(function(){ loginAs(id, done); }); }); }
     toWho(function(){ loginAs(id, done); });
   });
 }
@@ -119,37 +120,151 @@ function office(t){ return function(done){ closePhone(); if (window.CSO) CSO.tab
 /* the lock question, in plain English (also on the phone, under the question) */
 var LOCK_WHY = 'Only the person who put a lock on can take it off. So nobody can switch the machine back on while someone is working on it.';
 
-/* ------------------------------ phone tour: LOTOTO ------------------------------ */
+/* ---------- things that come in from a phone, done straight on the office data ----------
+   The office tour never opens the phone. It makes the same change the phone would, then the
+   office shows it arriving: the tile flashes, the note pops up. Safe to run twice (Back, Next). */
+var TOUR_DEFECT = 'd_tour_dean';
+function arrive(change){
+  return function(done){
+    closePhone();
+    if (!window.CS || !window.CSO) return done();
+    CS.load();
+    change();
+    CSO.arrived();
+    later(500, done);
+  };
+}
+function deanDefect(){
+  if (CS.byId(CS.state.defects, TOUR_DEFECT)) return;
+  var raw = "the reversing alarm on shovel two isn't working, it's been cutting out since first thing";
+  var c = CS.tidyDefect(raw, 'kw');
+  CS.addDefect({ id: TOUR_DEFECT, machine: c.machine, part: c.part, title: c.title, text: c.text, severity: c.severity, raw: raw }, 'o1');
+}
+function wayneGap(){ return CS.gapsToday().filter(function(g){ return g.op === 'o14' && g.kind === 'sick'; })[0] || null; }
+function wayneSick(){ if (!CS.offToday('o14')) CS.markSick('o14', 'phone'); }
+function craigYes(){
+  wayneSick();
+  var g = wayneGap(); if (!g || g.coveredBy) return;
+  if (g.asked.indexOf('o16') < 0) CS.askCover(g.id, ['o16']);
+  CS.answerCover(g.id, 'o16', true);
+}
+function onTab(t, change){ return arrive(function(){ CSO.tab(t); change(); }); }
+
+/* ------------------------------ Part 1, office tour ------------------------------ */
+var OFFICE = [
+  { id: 'board',
+    prep: function(done){ closePhone(); if (window.CSO) { CSO.reset(); CSO.tab('board'); } later(300, done); },
+    title: 'The morning board, both sites',
+    body: 'Every machine and lorry at Kenbury Wood and Deep Moor. Green is ready, amber needs a look, red is Do not use.',
+    why: 'Your pre and post shift checks, digital: a missing check shows here before the shift gets going.',
+    target: ['#boardPanel .mgrid'], area: ['#boardPanel .sitehead'] },
+  { id: 'attention',
+    prep: office('board'),
+    title: 'Needs attention',
+    body: 'Serious defects, missing checks and overdue inspections, worst first.',
+    why: 'Problems come to you. Nobody walks the yard chasing paper sheets.',
+    target: ['#attPanel'] },
+  { id: 'defect',
+    prep: onTab('board', deanDefect),
+    from: 'Dean reported this from his phone',
+    title: 'A defect comes in',
+    body: 'Dean said the reversing alarm on Shovel 2 keeps cutting out. Shovel 2 turns red, Do not use, and Steve the fitter gets the job.',
+    why: 'Defects are logged the moment they are found, in his own words, and nobody takes out an unsafe machine.',
+    target: ['[data-m="m2"]'] },
+  { id: 'iso',
+    prep: office('iso'),
+    title: 'Who has a lock on what',
+    body: 'Every padlock on every machine, live, and every permit to work (the written go-ahead for a risky repair).',
+    body2: 'Isolating means switching a machine off at its isolator (the main switch) and fitting your own padlock.',
+    why: 'LOTOTO (lock out, tag out, try out) is your focus: you see who is working inside which machine.',
+    target: ['#view .panel.iso'] },
+  { id: 'sick',
+    prep: onTab('cover', wayneSick),
+    from: 'Wayne told the office from his phone',
+    title: 'Wayne is off sick',
+    body: 'Lorry 1 needs a driver. The office sees who is trained on Lorry 1, who is free, and Wayne\'s jobs. One click asks them all.',
+    why: 'Cover comes from the training records, so nobody untrained ends up on a lorry.',
+    target: ['#view .gap.open', '#view .gap'],
+    next: function(done){ var b = $('#view [data-askall]'); if (b) b.click(); later(600, done); } },
+  { id: 'covered',
+    prep: onTab('cover', craigYes),
+    from: 'Craig said yes from his phone',
+    title: 'Covered, and logged',
+    body: 'First to say yes gets it. A breakdown works the same way: Do not use, the fitter told, and a spare lorry with a trained driver.',
+    why: 'One click instead of ten phone calls, and you can see which lorry keeps breaking down.',
+    target: ['#view .gap.ok', '#view .gap'] },
+  { id: 'signoffs',
+    prep: office('sign'),
+    title: 'Who has signed the procedures',
+    body: 'Who has signed the new LOTOTO (lock out, tag out, try out) procedure, when, which version and in which language. Anyone not signed yet is named.',
+    why: 'Evidence for your ISO 45001 audit with BSI, without a binder.',
+    target: ['#view .swpc.new'], area: ['#view [data-brief]'] },
+  { id: 'insp',
+    prep: office('insp'),
+    title: 'Inspection dates',
+    body: 'PUWER: machines kept safe and inspected. LOLER: anything that lifts, examined by a competent person, usually every year. Red is overdue.',
+    why: 'Helps you evidence PUWER and LOLER, with every date in one place.',
+    target: ['#view .panel'] },
+  { id: 'people',
+    prep: office('people'),
+    title: 'Who can use what',
+    body: 'Who is trained on each machine and lorry, and who is allowed to lock off. Training running out shows amber, then red.',
+    why: 'The phone stops anyone untrained, and only trained people are offered cover.',
+    target: ['#view .panel'] },
+  { id: 'records',
+    prep: office('rec'),
+    title: 'Records and audit pack',
+    body: 'Every check, ready to print. Pick a machine and get its audit pack: checks, defects, locks and inspections in one file.',
+    why: 'When an inspector, insurer or your director asks, it is one click.',
+    target: ['#view .auditp'] },
+  { id: 'end', end: true, then: 'phone',
+    prep: office('board'),
+    title: 'That is the office',
+    body: 'Next, the phone: what your operatives and fitters see.',
+    body2: 'Press Phone tour when you are ready.' }
+];
+
+/* ------------------------------ Part 2, phone tour ------------------------------ */
 var PHONE = [
   { id: 'login', phone: true,
-    prep: freshPhone,
+    prep: function(done){ closePhone(); if (window.CSO) { CSO.reset(); CSO.tab('board'); } freshPhone(done); },
     title: 'Log in with a tap',
     body: 'Each person taps their own name, then a 4 number PIN. No usernames, no passwords.',
-    why: 'Everyone at both sites is on the system, and every check, lock and signature is logged against their name.',
+    why: 'Every check, lock and signature is logged against their name.',
     target: ['.tiles'], area: ['.ask'],
     next: function(done){ toWho(function(){ loginAs('o1', done); }); } },
   { id: 'home', phone: true,
     prep: function(done){ homeOf('o1', 'Dean', done); },
     title: 'Dean\'s own page',
-    body: 'His checks due today, the procedures he still has to sign, the machines he is trained on and his training dates.',
-    why: 'Your pre and post shift checks start here, on his phone, instead of a paper sheet.',
+    body: 'His checks due today, the procedures he still has to sign, his machines and his training dates. Every button can be read out.',
+    why: 'Your pre and post shift checks start here, on his phone, not on a paper sheet.',
     target: ['.acts'], area: ['.me'] },
+  { id: 'check', phone: true,
+    prep: function(done){
+      if (q('.item') && q('[data-a]')) return done();
+      homeOf('o1', 'Dean', function(){ seq([
+        function(d){ tap('[data-due="m2"]') || tap('[data-due]'); waitFor(function(){ return q('[data-t="pre"]'); }, 3000, d); },
+        function(d){ tap('[data-t="pre"]'); waitFor(function(){ return q('.item'); }, 3000, d); }], done); }); },
+    title: 'The pre-shift check',
+    body: 'One check per screen, read out. He taps OK or Not OK. Not OK asks for a photo and how bad it is.',
+    why: 'A serious fault turns the machine red, Do not use, on the office board straight away.',
+    target: ['.item'], area: ['.yn'] },
   { id: 'procedure', phone: true,
     prep: function(done){ lototo(1, 'en', done); },
     title: 'Your LOTOTO procedure',
-    body: 'One step per screen, with a big picture. LOTOTO means lock out, tag out, try out: switch it off, lock it, prove it is dead.',
+    body: 'LOTOTO means lock out, tag out, try out: switch it off, lock it, prove it will not start. One step per screen, with a big picture.',
     why: 'LOTOTO is your focus. Every operative gets the same steps, the same way, every time.',
     target: ['.step'] },
   { id: 'readout', phone: true,
     prep: function(done){ lototo(3, 'en', done); },
     title: 'Every step, read out',
-    body: 'Step 3, Isolate: switch the baler off at its main switch. Tap the speaker and it reads the step out, as often as he likes.',
+    body: 'Step 3, Isolate: switch the baler off at its isolator, the main switch. Tap the speaker and it reads the step out, as often as he likes.',
     why: 'Nobody has to be a strong reader to follow it properly.',
     target: ['.step'] },
   { id: 'polish', phone: true,
     prep: function(done){ lototo(3, 'pl', done); },
     title: 'The same step, in Polish',
-    body: 'One tap switches the words and the voice to Polish. Add whichever languages your lads speak.',
+    body: 'One tap switches the words and the voice to Polish. Other languages can be added.',
     why: 'Many of your operatives are Polish speakers. The record shows which language each person signed in.',
     target: ['.step'], area: ['.langbar'] },
   { id: 'quiz', phone: true,
@@ -166,110 +281,16 @@ var PHONE = [
     why: 'No chasing paper sign-off sheets round two sites.',
     target: ['[data-sign]', '.done'], area: ['.quizok'],
     next: sign },
-  { id: 'office',
-    prep: office('sign'),
-    title: 'The office sees it straight away',
-    body: 'Who has signed, when, in which language, and how they did on the picture check. Anyone not signed yet is named.',
-    why: 'Everything logged and ready for your BSI auditor, in one click.',
-    target: [function(){ var r = document.querySelectorAll('#view tr[data-new-sign]'); return r[0]; }, '#view .swpc.new'] },
+  { id: 'fitter', phone: true,
+    prep: function(done){ homeOf('o13', 'Steve', done); },
+    title: 'The fitter\'s job list',
+    body: 'Steve the fitter gets every defect the operatives report, worst first. He fixes it, says what he did, and the machine goes back in use.',
+    why: 'Faults reach the fitter the moment they are reported, not at the end of the shift.',
+    target: [function(){ var j = q('[data-job]'); return j ? j.closest('.todos') : null; }] },
   { id: 'end', end: true,
-    prep: office('board'),
-    title: 'This is the demo',
-    body: 'The hard part is wiring up the back end, and that\'s what I handle. The look is the easy part: any change you want is five minutes.',
-    body2: 'It\'s a custom build, so every section is built round Coastal: you tell me your SWPs, checks, sites and languages.' }
-];
-
-/* ------------------------------ office tour: the live link ------------------------------ */
-var OFFICE = [
-  { id: 'board',
-    prep: function(done){ closePhone(); if (window.CSO) { CSO.reset(); CSO.tab('board'); } later(300, done); },
-    title: 'The morning board, both sites',
-    body: 'Every machine and lorry. Green is ready, amber needs attention, red is Do not use. A missing pre-shift check shows straight away.',
-    why: 'Your pre and post shift checks, digital: you see what has been checked before the shift gets going.',
-    target: ['#boardPanel .mgrid'], area: ['#boardPanel .sitehead'] },
-  { id: 'attention',
-    prep: office('board'),
-    title: 'Needs attention',
-    body: 'Serious defects, missing checks and overdue inspections, worst first.',
-    why: 'Problems come to you. Nobody walks the yard chasing sheets.',
-    target: ['#attPanel'] },
-  { id: 'defect', phone: true,
-    prep: function(done){ homeOf('o1', 'Dean', function(){ seq([
-      function(d){ tap('.act[data-go="voice"]'); waitFor(function(){ return q('[data-sample]'); }, 3000, d); },
-      function(d){ tap('[data-sample]'); d(); },
-      function(d){ tap('[data-tidy]'); waitFor(function(){ return q('.vcard'); }, 3000, d); }], done); }); },
-    title: 'Live: Dean reports a defect',
-    body: 'On his phone, Dean says the reversing alarm on Shovel 2 is cutting out. It is tidied into a proper report and read back to him.',
-    why: 'Defects go in the moment they are found, in his own words.',
-    target: ['.vcard', '.done'],
-    next: function(done){ if (q('[data-ok]') && !q('[data-ok]').disabled) tap('[data-ok]'); later(1500, done); } },
-  { id: 'landed',
-    prep: office('board'),
-    title: 'It lands in the office',
-    body: 'Shovel 2 has turned red on the board, Do not use, and it is in Needs attention with his exact words. Steve the fitter has the job.',
-    why: 'Everything is logged, and nobody takes out a machine with a serious defect.',
-    target: ['[data-m="m2"]'] },
-  { id: 'iso',
-    prep: office('iso'),
-    title: 'Who has a lock on what',
-    body: 'Isolating means switching a machine off at its main switch and putting your own padlock on it. This shows every lock and permit to work, live.',
-    why: 'LOTOTO, your focus: you see who is working inside which machine, right now.',
-    target: ['#view .panel.iso'] },
-  { id: 'sick', phone: true,
-    prep: function(done){ homeOf('o14', 'Wayne', function(){ tap('.act[data-go="sick"]'); waitFor(function(){ return q('[data-sick]') || q('.sickcard'); }, 3000, function(){ later(250, done); }); }); },
-    title: 'Live: Wayne is off sick',
-    body: 'Wayne, a lorry driver, taps Off sick on his phone. No ringing round at six in the morning.',
-    why: 'Drivers off sick this week: the office knows in seconds, not when the lorry fails to turn up.',
-    target: ['[data-sick]', '.sickcard'], area: ['.sickcard', '.ask'],
-    next: function(done){ if (q('[data-sick]')) tap('[data-sick]'); later(1500, done); } },
-  { id: 'cover',
-    prep: office('cover'),
-    title: 'Who can cover Lorry 1',
-    body: 'Only people trained and allowed to drive Lorry 1, who is free, and his jobs. One click asks them on their phones.',
-    why: 'Cover comes from the training records, so nobody untrained ends up on a lorry.',
-    target: ['#view .gap.open', '#view .gap'],
-    next: function(done){ var b = $('#view [data-askall]'); if (b) b.click(); later(600, done); } },
-  { id: 'yes', phone: true,
-    prep: function(done){ homeOf('o16', 'Craig', done); },
-    title: 'Live: Craig gets the ask',
-    body: 'Craig taps Yes on his phone. The first person to say yes gets it.',
-    why: 'One click from the office instead of ten phone calls.',
-    target: ['.askcard'],
-    next: function(done){ if (q('[data-cy]')) tap('[data-cy]'); later(1500, done); } },
-  { id: 'covered',
-    prep: office('cover'),
-    title: 'Covered, and logged',
-    body: 'The office sees Craig is covering. A breakdown works the same way: Do not use, the fitter told, and a spare suggested with a trained driver.',
-    why: 'Breakdowns this week: each one is logged per vehicle, so you can see which lorry keeps costing you.',
-    target: ['#view .gap.ok', '#view .gap'] },
-  { id: 'signoffs',
-    prep: office('sign'),
-    title: 'Sign-offs and the briefing record',
-    body: 'Who has signed the new LOTOTO procedure, when, which version, in which language. One click prints it.',
-    why: 'ISO 45001 evidence for your BSI audit, without a binder.',
-    target: ['#view .swpc.new'], area: ['#view [data-brief]'] },
-  { id: 'insp',
-    prep: office('insp'),
-    title: 'Inspection dates',
-    body: 'PUWER: machines kept safe and inspected. LOLER: anything that lifts examined by a competent person, usually every year. Red is overdue.',
-    why: 'Helps you meet PUWER and LOLER, with the dates in one place.',
-    target: ['#view .panel'] },
-  { id: 'people',
-    prep: office('people'),
-    title: 'Who can use what',
-    body: 'Who is trained on each machine and lorry, and who is allowed to lock off. Amber and red training shows here.',
-    why: 'The phone blocks anyone not trained, and only trained people are offered cover.',
-    target: ['#view .panel'] },
-  { id: 'records',
-    prep: office('rec'),
-    title: 'Records and audit pack',
-    body: 'Every check record, ready to print. Pick a machine and build its audit pack: checks, defects, locks and inspections in one file.',
-    why: 'When an inspector, insurer or your director asks, it is one click.',
-    target: ['#view .auditp'] },
-  { id: 'end', end: true,
-    prep: office('board'),
-    title: 'This is the skeleton',
-    body: 'If you want to move forward, we build it out round Coastal, as full or as simple as you want.',
+    prep: function(done){ closePhone(); if (window.CSO) CSO.tab('board'); later(250, done); },
+    title: 'That is the demo',
+    body: 'If you want it, we build it round Coastal: your SWPs (safe work procedures), checks, sites and languages.',
     body2: 'Who else at Coastal would need to see this?' }
 ];
 var TOURS = { phone: PHONE, office: OFFICE };
@@ -375,14 +396,15 @@ function paint(){
     '<div class="tr-top"><span class="tr-n">' + (run.i + 1) + ' of ' + n + '</span>' +
     '<button type="button" class="tr-skip" data-tr="skip">' + (last ? 'Close' : 'Skip tour') + '</button></div>' +
     '<div class="tr-bar"><i style="width:' + Math.round((run.i + 1) / n * 100) + '%"></i></div>' +
+    (s.from ? '<p class="tr-from">' + ic('device-mobile') + '<span>' + esc(s.from) + '</span></p>' : '') +
     '<h2 class="tr-h">' + esc(s.title) + '</h2>' +
     '<p class="tr-p">' + esc(s.body) + '</p>' + (s.body2 ? '<p class="tr-p' + (s.end ? '' : ' tr-p2') + '">' + esc(s.body2) + '</p>' : '') +
     (s.why ? '<p class="tr-why"><b>Why it matters</b>' + esc(s.why) + '</p>' : '') +
     '<div class="tr-btns"><button type="button" class="tr-back" data-tr="back"' + (run.i === 0 ? ' disabled' : '') + '>Back</button>' +
-    '<button type="button" class="tr-next" data-tr="' + (last ? 'skip' : 'next') + '">' + (last ? 'Done' : 'Next') + '</button></div>';
+    '<button type="button" class="tr-next" data-tr="' + (last ? (s.then ? 'then' : 'skip') : 'next') + '">' + (last ? (s.then ? 'Phone tour' : 'Done') : 'Next') + '</button></div>';
   card.querySelectorAll('[data-tr]').forEach(function(b){
     var a = b.getAttribute('data-tr');
-    b.onclick = a === 'next' ? next : a === 'back' ? back : stop;
+    b.onclick = a === 'next' ? next : a === 'back' ? back : a === 'then' ? function(){ start(s.then); } : stop;
   });
   place();
   var nb = card.querySelector('.tr-next'); if (nb) try { nb.focus({ preventScroll: true }); } catch (e) {}
@@ -426,7 +448,7 @@ function show(i){
 function next(){
   if (!run || run.busy) return;
   var s = run.steps[run.i];
-  if (run.i >= run.steps.length - 1) return stop();
+  if (run.i >= run.steps.length - 1) return s.then ? start(s.then) : stop();
   if (s.next) { run.busy = true; busyCard(); s.next(function(){ if (run) { run.busy = false; show(run.i + 1); } }); }
   else show(run.i + 1);
 }
@@ -450,7 +472,7 @@ function start(which){
 }
 window.CSTour = { start: start, stop: stop, next: next, back: back, menu: openMenu, active: function(){ return !!run; }, busy: function(){ return !!(run && run.busy); }, which: function(){ return run ? run.which : null; }, step: function(){ return run ? run.steps[run.i].id : null; }, steps: function(w){ return (TOURS[w] || PHONE).map(function(s){ return s.id; }); } };
 
-/* pick a tour: the phone (LOTOTO) or the office (the live link) */
+/* pick a tour: Part 1 the office, Part 2 the phone */
 function closeMenu(){ if (menu) { menu.remove(); menu = null; document.removeEventListener('keydown', menuKey, true); } }
 function menuKey(e){ if (e.key === 'Escape') { e.preventDefault(); closeMenu(); } }
 function openMenu(){
@@ -458,21 +480,21 @@ function openMenu(){
   closeMenu();
   menu = document.createElement('div'); menu.className = 'tr-menu'; menu.setAttribute('role', 'dialog'); menu.setAttribute('aria-label', 'Choose a guided tour');
   menu.innerHTML = '<div class="tr-mcard"><div class="tr-top"><span class="tr-n">Guided tour</span><button type="button" class="tr-skip" data-tm="close">Close</button></div>' +
-    '<h2 class="tr-h">Which tour?</h2><p class="tr-p">Each one moves only when you press Next, so you can talk over every step.</p>' +
-    '<button type="button" class="tr-pick" data-tour="phone"><b>Phone tour: LOTOTO</b><span>Log in, the procedure read out in English and Polish, the picture check, tap to sign. ' + PHONE.length + ' steps.</span></button>' +
-    '<button type="button" class="tr-pick" data-tour="office"><b>Office tour: the live link</b><span>The board, a defect, a driver off sick and cover, isolations, sign-offs, inspections, people, records. ' + OFFICE.length + ' steps. Starts from fresh sample data.</span></button></div>';
+    '<h2 class="tr-h">Which tour?</h2><p class="tr-p">Each one moves only when you press Next, so you can talk over every step. Both start from fresh sample data.</p>' +
+    '<button type="button" class="tr-pick" data-tour="office"><b>Part 1: Office tour</b><span>What you see in the office. The board, a defect coming in, isolations, cover for a driver off sick, sign-offs, inspections, people, records. ' + OFFICE.length + ' steps.</span></button>' +
+    '<button type="button" class="tr-pick" data-tour="phone"><b>Part 2: Phone tour</b><span>What operatives and fitters see on their phone. Log in, a pre-shift check, LOTOTO read out in English and Polish, the picture check, tap to sign, the fitter\'s jobs. ' + PHONE.length + ' steps.</span></button></div>';
   document.body.appendChild(menu);
   menu.addEventListener('click', function(e){ if (e.target === menu) closeMenu(); });
   menu.querySelector('[data-tm="close"]').onclick = closeMenu;
   menu.querySelectorAll('[data-tour]').forEach(function(b){ b.onclick = function(){ start(b.getAttribute('data-tour')); }; });
   document.addEventListener('keydown', menuKey, true);
-  try { menu.querySelector('[data-tour="phone"]').focus({ preventScroll: true }); } catch (e) {}
+  try { menu.querySelector('[data-tour="office"]').focus({ preventScroll: true }); } catch (e) {}
 }
 
 /* the Guided tour button, in the office top bar */
 var btn = document.createElement('button');
 btn.type = 'button'; btn.id = 'tourBtn'; btn.className = 'smallbtn pri tourbtn';
-btn.title = 'A guided tour: the phone or the office';
+btn.title = 'A guided tour: Part 1 the office, Part 2 the phone';
 btn.innerHTML = ic('player-play') + '<span>Guided tour</span>';
 btn.addEventListener('click', openMenu);
 var ph = document.getElementById('openPhone');

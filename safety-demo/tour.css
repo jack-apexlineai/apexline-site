@@ -50,3 +50,6 @@ html.touring .pmsteps,html.touring .pmx{display:none}
 .tr-pick b{display:block;font-size:15px;font-weight:800}
 .tr-pick span{display:block;font-size:12.5px;color:var(--ink2);margin-top:3px;line-height:1.4}
 @media (max-width:760px){.tr-p2,.tr-why{font-size:12.5px;margin-bottom:8px}}
+/* a thing that came in from a phone, on an office step */
+.tr-from{display:flex;align-items:center;gap:6px;width:max-content;max-width:100%;font-size:12.5px;font-weight:800;color:var(--brand-hi);background:rgba(16,151,111,.12);border:1px solid rgba(16,151,111,.35);border-radius:999px;padding:4px 10px 4px 8px;margin:0 0 8px}
+.tr-from .ic{width:15px;height:15px;flex:none}

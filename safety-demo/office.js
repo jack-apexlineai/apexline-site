@@ -532,6 +532,10 @@ function toast(text, tone, icon){
 window.addEventListener('storage', function(e){
   if (e.key !== CS.KEY) return;
   CS.load();
+  arrived();
+});
+/* show what changed: tiles flash, new events pop up as toasts (from the phone window, or the tour) */
+function arrived(){
   var last = CS.state.last || {};
   if (last.type === 'reset') { prevStatus = snapshot(); seenEvents = {}; CS.state.events.forEach(function(x){ seenEvents[x.id] = 1; }); closeLayer(); render(); toast('Demo reset to the sample data', 'green', 'refresh'); return; }
   var now = snapshot(), changed = [];
@@ -547,7 +551,7 @@ window.addEventListener('storage', function(e){
     var icon = x.kind === 'sick' ? 'thermometer' : x.kind === 'breakdown' ? 'truck' : x.kind === 'cover' ? 'user-check' : x.kind === 'askno' ? 'user-x' : x.kind === 'nearmiss' ? 'alert-octagon' : x.kind === 'lockon' ? 'lock' : x.kind === 'lockoff' ? 'lock-open' : x.kind === 'defect' ? 'alert-triangle' : x.kind === 'sign' ? 'signature' : 'clipboard-check';
     toast(x.text, tone, icon);
   });
-});
+}
 
 /* Hooks for the guided tour (tour.js). */
 window.CSO = {
@@ -556,6 +560,7 @@ window.CSO = {
   phoneFrame: function(){ return phoneMask ? phoneMask.querySelector('iframe') : null; },
   fit: phoneSize,
   tab: function(t){ closeLayer(); tab = t; siteF = 'all'; render(); window.scrollTo(0, 0); },
+  arrived: arrived,
   reset: function(){ CS.reset(); prevStatus = snapshot(); seenEvents = {}; CS.state.events.forEach(function(e){ seenEvents[e.id] = 1; }); closeLayer(); render(); }
 };
 
