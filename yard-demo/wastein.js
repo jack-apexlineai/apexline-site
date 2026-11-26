@@ -39,6 +39,7 @@
       if (y.wastein) return y.wastein;
       var W = y.wastein = { list: [], invoices: [], n: 1201, inv: 401 };
       function t(day, time, reg, net, rateBasis, pay, status, extra) {
+        if (day === 0) { var pm = String(time).split(':'); if ((+pm[0]) * 60 + (+pm[1]) > YC.nowMin()) return null; }   /* only the tips that have happened by now */
         var r = REGS[regKey(reg)] || {}, waste = (extra && extra.waste) || r.waste || 'mixed', basis = rateBasis || 'tonne', rate = basis === 'load' ? PER_LOAD : RATE[waste];
         var gross = (r.tare || 7000) + net, charge = basis === 'load' ? rate : Math.round(net / 1000 * rate * 100) / 100;
         var o = { no: 'TI-' + (W.n++), day: day, time: time, reg: reg, customer: r.customer, biz: !!r.biz, email: r.email || '', driver: r.driver || '', origin: r.origin || '', load: r.load || 'Tipper', waste: waste, ewc: YC.STREAMS[waste].ewc, lic: r.lic || '',
@@ -59,7 +60,7 @@
       t(0, '11:22', 'KX19 VAN', 0, 'load', 'Card', 'Paid', { customer: 'Mrs Kate Brennan', biz: false, driver: 'Kate', origin: '4 Pond Road, Knaphill GU21', waste: 'house', ewc: YC.STREAMS.house.ewc, net: 540, gross: 2680, tare: 2140, charge: PER_LOAD, vat: 17, total: 102, reg: 'LV66 KTB' });
       t(0, '12:04', 'RM68 SKP', 2410, 'tonne', 'On account', 'On account');
       /* parked: a lorry weighed full, waiting to come back over empty */
-      W.list.push({ no: 'TI-' + (W.n++), day: 0, time: '12:41', reg: 'GU17 HDT', customer: 'Hook Heath Driveways', biz: true, email: '', driver: 'Lee', origin: 'Hook Heath Road, Woking', load: 'Tipper', waste: 'hardcore', ewc: YC.STREAMS.hardcore.ewc, lic: 'CBDU388210', gross: 18640, tare: null, net: null, basis: 'tonne', rate: RATE.hardcore, charge: null, vat: null, total: null, pay: 'On account', status: 'Open', notes: '' });
+      W.list.push({ no: 'TI-' + (W.n++), day: 0, time: YC.hhmm(Math.max(460, Math.min(761, YC.nowMin() - 8))), reg: 'GU17 HDT', customer: 'Hook Heath Driveways', biz: true, email: '', driver: 'Lee', origin: 'Hook Heath Road, Woking', load: 'Tipper', waste: 'hardcore', ewc: YC.STREAMS.hardcore.ewc, lic: 'CBDU388210', gross: 18640, tare: null, net: null, basis: 'tonne', rate: RATE.hardcore, charge: null, vat: null, total: null, pay: 'On account', status: 'Open', notes: '' });
       W.invoices.push({ no: 'WI-399', day: -32, customer: 'Pyrford Plastering Ltd', email: 'accounts@pyrfordplastering.co.uk', tickets: 9, tonnes: 41.6, net: 7280, total: 8736, status: 'Paid', paidDay: -6, due: -2 });
       W.invoices.push({ no: 'WI-400', day: -1, customer: 'Ringway Skip Hire', email: 'accounts@ringwayskips.co.uk', tickets: 6, tonnes: 18.9, net: 3118.5, total: 3742.2, status: 'Unpaid', due: 29 });
       return W;
@@ -303,6 +304,7 @@
         { no: 'WO-304', time: '15:30', reg: 'DS70 RRO', to: 'Mole Valley Recycling, Leatherhead', waste: 'wood', t: 4.1, done: false },
         { no: 'WO-305', time: '16:15', reg: 'DS19 GRB', to: 'Wey Valley Soil Recovery, Send', waste: 'soil', t: 15, done: false }
       ];
+      var nm = YC.nowMin(); y.wasteout.forEach(function (o) { var p2 = o.time.split(':'); o.done = (+p2[0]) * 60 + (+p2[1]) <= nm; });
       return y.wasteout;
     }
     V.board = function () {
