@@ -20,7 +20,7 @@ then the tour test, then push. The build stops if anything names a real customer
 | File | What it does |
 |---|---|
 | `gate.js` | Email gate (name and workshop optional), then "Guided tour" or "I'll do it myself, thanks" once per session. Posts the lead to the `enquiry` edge function, which emails apexlineai@gmail.com. Remembered in `wsTourLead`, so a returning visitor skips the gate. |
-| `tour.js` | The guided tour: 17 steps (and the 9 step highlights tour at `?tour=wow`, no gate, for screen recordings) over the real screens, Next, Back, Skip, the count, arrow keys and Esc. The Tour button in the demo bar starts it again. |
+| `tour.js` | The guided tour: 17 steps (and the 12 step highlights tour for screen recordings: open `?tour=wow`, no gate, sign in as owner with PIN 1234, let the start-up play, then Start tour in the W wheel menu) over the real screens, Next, Back, Skip, the count, arrow keys and Esc. The Tour button in the demo bar starts it again. |
 | `tour.css` | Gate, choice and tour styles. On a phone the card is a sheet along the bottom (or the top when the highlight is low). |
 | `brand/demo-badge.svg` | The neutral logo. |
 

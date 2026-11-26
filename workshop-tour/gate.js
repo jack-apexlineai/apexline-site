@@ -129,22 +129,32 @@
     setTimeout(function () { try { w.querySelector('#tgTour').focus({ preventScroll: true }); } catch (e) { } }, 60);
   }
 
-  /* ?tour=wow: the highlights tour for a screen recording. No gate, no welcome choice, no lead
-     sent, fresh sample data, already signed in as the owner, no start-up or pop ups. */
-  function wowMode() {
+  /* ?tour=wow: the highlights tour for a screen recording. No email gate and no welcome choice,
+     no lead sent. Fresh sample data, then the normal sign in and the full start-up, exactly as a
+     real user sees it. Only the urgent pop ups are held back, so nothing covers the screen. The
+     tour itself starts from the wheel menu (Start tour) or the Tour button, never on its own.
+     The flag is kept for the browser session so it survives a reload or a sign out. */
+  var WOW = 'wsTourWow';
+  function wowUrl() {
     try { return new URLSearchParams(location.search).get('tour') === 'wow'; } catch (e) { return false; }
+  }
+  function wowMode() {
+    if (wowUrl()) { try { sessionStorage.setItem(WOW, '1'); } catch (e) { } return true; }
+    try { return sessionStorage.getItem(WOW) === '1'; } catch (e) { return false; }
   }
   WS.beforeBoot = function (boot) {
     if (wowMode()) {
       WS.tourWow = true;
-      try {
-        localStorage.removeItem('wsTour:state');
-        localStorage.removeItem('wsTour:fitter');
-        sessionStorage.setItem('wsTour:who', 'owner');
-        sessionStorage.setItem('wsTour:introSeen', '1');
-        sessionStorage.setItem('wsTour:urgentSeen', '["*"]');
-      } catch (e) { }
-      if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+      if (wowUrl()) {
+        try {
+          localStorage.removeItem('wsTour:state');
+          localStorage.removeItem('wsTour:fitter');
+          sessionStorage.removeItem('wsTour:who');
+          sessionStorage.removeItem('wsTour:introSeen');
+          sessionStorage.setItem('wsTour:urgentSeen', '["*"]');
+        } catch (e) { }
+        if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+      }
       boot();
       return;
     }

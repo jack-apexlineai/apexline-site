@@ -200,46 +200,270 @@
     document.body.appendChild(w);
   }
   function unpeek() { var w = $('.tr-peek'); if (w) w.remove(); }
+  /* ---------------- the office and fitter app story (highlights tour) ----------------
+     Jack does each click on camera: drag a job onto a fitter, the fitter signs in and starts it,
+     the office shows it, the fitter marks it waiting on parts and starts his next job, the office
+     shows that. Both sides share this browser's storage, so the state really flows. Each card
+     says what to click and lights up the exact control. Next still works if a click is skipped:
+     the step's action is then done for him, so the story always holds together. */
+  function fresh() { if (WS._pull) try { WS._pull(); } catch (e) { } return WS.state; }
+  function union(els) {
+    var box = null;
+    els.forEach(function (el) {
+      if (!visible(el)) return;
+      var q = el.getBoundingClientRect();
+      if (!box) box = { l: q.left, t: q.top, r: q.right, b: q.bottom };
+      else { box.l = Math.min(box.l, q.left); box.t = Math.min(box.t, q.top); box.r = Math.max(box.r, q.right); box.b = Math.max(box.b, q.bottom); }
+    });
+    return box;
+  }
+  var story = {
+    job: null, fitter: null, nextJob: null, pool: [],
+    pick: function () {
+      var st = fresh(), d = WS.day(0);
+      var pool = st.jobs.filter(function (j) { return j.date === d && !j.fitterId && j.status !== 'done' && j.vehicleId; });
+      story.pool = pool.map(function (j) { return j.id; });
+      if (!story.job || !WS.job(story.job) || WS.job(story.job).fitterId) {
+        var pref = pool.filter(function (j) { return j.type === 'Repair' || j.type === 'Defect'; })[0] || pool[0];
+        story.job = pref ? pref.id : null;
+      }
+      var fs = st.settings.fitters || [];
+      var busy = function (f) { return st.jobs.some(function (j) { return (j.clockOns || []).some(function (c) { return c.fitterId === f.id && !c.end; }); }); };
+      var free = fs.filter(function (f) { return !busy(f) && WS.dayPlan(f.id, d).some(function (j) { return j.status !== 'done'; }); });
+      story.fitter = (free[0] || fs[0] || {}).id;
+    },
+    f: function () { return WS.fitter(story.fitter) || {}; },
+    fname: function () { return story.f().name || 'a fitter'; },
+    reg: function (id) { var j = WS.job(id), v = j && WS.vehicle(j.vehicleId); return v ? v.reg : 'a job'; },
+    /* the job he moves on to: the first on his day that is not done and not the story job */
+    next: function () {
+      var st = fresh(), list = WS.dayPlan(story.fitter, WS.day(0)).filter(function (j) { return j.id !== story.job && j.status !== 'done' && j.status !== 'qc' && j.status !== 'waiting_parts'; });
+      if (!story.nextJob || !list.some(function (j) { return j.id === story.nextJob; })) story.nextJob = list[0] ? list[0].id : null;
+      void st;
+      return story.nextJob;
+    },
+    /* Jack may drag any waiting job onto any fitter: follow whichever he picked */
+    assigned: function () {
+      var st = fresh();
+      var moved = st.jobs.filter(function (j) { return story.pool.indexOf(j.id) >= 0 && j.fitterId; });
+      if (!moved.length) return false;
+      var mine = moved.filter(function (j) { return j.id === story.job; })[0] || moved[0];
+      story.job = mine.id; story.fitter = mine.fitterId; story.nextJob = null;
+      return true;
+    },
+    open: function (fid) {
+      var st = fresh(), out = null;
+      st.jobs.forEach(function (j) { (j.clockOns || []).forEach(function (c) { if (c.fitterId === (fid || story.fitter) && !c.end) out = j.id; }); });
+      return out;
+    },
+    started: function () { return story.open() === story.job; },
+    parted: function () { var j = (fresh(), WS.job(story.job)); var o = story.open(); return !!j && j.status === 'waiting_parts' && !!o && o !== story.job; },
+    assign: function () {
+      fresh();
+      var j = WS.job(story.job);
+      if (!j || j.fitterId) return;
+      var d = WS.day(0);
+      j.order = WS.dayPlan(story.fitter, d).length;
+      j.fitterId = story.fitter;
+      if (!j.bay && j.type !== 'Roadside callout' && j.type !== 'Collection / delivery') {
+        var taken = WS.jobsOn(d).filter(function (x) { return x.bay && x.id !== j.id && x.status !== 'done'; }).map(function (x) { return x.bay; });
+        j.bay = WS.state.settings.bays.filter(function (b) { return taken.indexOf(b) < 0; })[0] || '';
+      }
+      WS.audit(j, 'Office', 'Planned to ' + story.fname() + ' for today');
+      WS.save();
+    },
+    clock: function (jobId) {
+      var me = story.f(), now = WS.nowStamp();
+      WS.state.jobs.forEach(function (x) { (x.clockOns || []).forEach(function (c) { if (c.fitterId === me.id && !c.end) c.end = now; }); });
+      var j = WS.job(jobId);
+      if (!j) return;
+      j.clockOns = j.clockOns || [];
+      j.clockOns.push({ fitterId: me.id, start: now, end: '' });
+      if (j.status === 'booked' || j.status === 'in_bay') j.status = 'in_progress';
+      WS.audit(j, me.name, 'Clocked on');
+    },
+    start: function () {
+      fresh(); story.assign(); fresh();
+      if (!story.started()) { story.clock(story.job); WS.save(); }
+      try { localStorage.setItem('wsTour:fitter', story.fitter); } catch (e) { }
+    },
+    parts: function () {
+      fresh();
+      if (!story.started() && !story.parted()) story.start();
+      fresh();
+      var j = WS.job(story.job);
+      if (j && j.status !== 'waiting_parts') { j.status = 'waiting_parts'; WS.audit(j, story.fname(), 'Reported waiting on parts'); }
+      var n = story.next();
+      if (n && story.open() !== n) story.clock(n);
+      WS.save();
+    },
+    liveCol: function () {
+      var nm = story.fname();
+      return [].slice.call(document.querySelectorAll('#view .lcol')).filter(function (c) { return c.textContent.indexOf(nm) >= 0; })[0] || $('#view .lcol');
+    }
+  };
+
+  /* the fitter app: in the phone on a laptop, in a panel above the card on a phone */
+  function fitterFrame() { return $('.pmask iframe.pifr') || $('.tr-peek iframe'); }
+  function noVoice(ifr) {
+    // the voice job card is a preview, not part of the highlights
+    var put = function () {
+      try {
+        var d = ifr.contentDocument;
+        if (d && d.head && !d.getElementById('trNoVoice')) {
+          var st = d.createElement('style');
+          st.id = 'trNoVoice';
+          st.textContent = '.vcard,.mic{display:none!important}';
+          d.head.appendChild(st);
+        }
+      } catch (e) { }
+    };
+    put();
+    ifr.addEventListener('load', put);
+  }
+  function openFitter(done) {
+    closeOverlays();
+    go('live');
+    if (!phone() && O.openPhone) O.openPhone(); else peek('fitter.html?dock=1', 'Fitter app');
+    var ifr = fitterFrame();
+    if (ifr) noVoice(ifr);
+    hideVoiceTip();
+    waitFor(function () { var f = fitterFrame(); try { return f && f.contentWindow.WS && f.contentDocument.querySelector('#app, body').children.length; } catch (e) { return false; } }, 4000, function () { setTimeout(done, 300); });
+  }
+  function closeFitter() {
+    unpeek();
+    if ($('.pmask .pframe') && O.closePhone) O.closePhone();
+    fresh();
+    if (O.render) O.render();
+  }
+  /* a control inside the fitter app, as a box on this page (the phone may be scaled) */
+  function frameRect(el) {
+    var ifr = fitterFrame();
+    if (!ifr) return null;
+    var fr = ifr.getBoundingClientRect();
+    if (!el) return { l: fr.left, t: fr.top, r: fr.right, b: fr.bottom };
+    var k = fr.width / (ifr.clientWidth || fr.width), q = el.getBoundingClientRect();
+    if (q.width < 1) return { l: fr.left, t: fr.top, r: fr.right, b: fr.bottom };
+    return {
+      l: Math.max(fr.left, fr.left + q.left * k), t: Math.max(fr.top, fr.top + q.top * k),
+      r: Math.min(fr.right, fr.left + q.right * k), b: Math.min(fr.bottom, fr.top + q.bottom * k)
+    };
+  }
+  /* what to tap next in the fitter app, read off its screen */
+  var lastAct = null;
+  function fitterAct(stage) {
+    var ifr = fitterFrame(), d = null;
+    try { d = ifr && ifr.contentDocument; } catch (e) { }
+    var out = { el: null, text: '' };
+    if (!d || !d.body) return out;
+    var f = story.f(), first = (f.name || '').split(' ')[0];
+    var q = function (sel) { return d.querySelector(sel); };
+    var regOf = function (id) { return story.reg(id); };
+    var cur = (function () { var r = q('#jBack') ? d.querySelector('.card .rg') : null; return r ? r.textContent.trim() : ''; })();
+    var sr = regOf(story.job);
+    if (q('.mask #shOk')) out = { el: q('.mask .modal'), text: 'Type which part, then tap Send to the office' };
+    else if (q('[data-pick]')) out = { el: q('[data-pick="' + story.fitter + '"]'), text: 'Tap ' + f.name };
+    else if (q('.pinpad')) out = { el: q('.pinpad'), text: 'Put in ' + first + '\'s PIN, ' + (f.pin || '') };
+    else if (stage === 'start') {
+      if (story.started()) out = { el: q('.bigtimer') || null, text: 'Started. Press Next' };
+      else if (cur && cur === sr && q('#jOn')) out = { el: q('#jOn'), text: 'Tap ' + q('#jOn').textContent.trim() };
+      else if (cur) out = { el: q('#jBack'), text: 'Tap My jobs' };
+      else out = { el: q('.fjob[data-job="' + story.job + '"]'), text: 'Open ' + sr + ', the job the office just gave ' + first };
+    } else {
+      var j = WS.job(story.job), waiting = j && (fresh(), WS.job(story.job)).status === 'waiting_parts';
+      var nx = story.next(), nr = regOf(nx);
+      if (story.parted()) out = { el: q('.bigtimer') || null, text: 'Next job going. Press Next' };
+      else if (cur && cur === sr) out = waiting ? { el: q('#jBack'), text: 'Tap My jobs' } : { el: q('[data-prob="waiting_parts"]'), text: 'Tap Waiting on parts' };
+      else if (cur && cur === nr && q('#jOn')) out = { el: q('#jOn'), text: 'Tap ' + q('#jOn').textContent.trim() };
+      else if (cur) out = { el: q('#jBack'), text: 'Tap My jobs' };
+      else out = waiting ? { el: q('.fjob[data-job="' + nx + '"]'), text: 'Open ' + nr + ', his next job' } : { el: q('.fjob[data-job="' + story.job + '"]'), text: 'Open ' + sr };
+    }
+    // bring the control into view inside the phone, once each time it changes
+    if (out.el && out.el !== lastAct) {
+      lastAct = out.el;
+      try { out.el.scrollIntoView({ block: 'center', behavior: RMQ.matches ? 'auto' : 'smooth' }); } catch (e) { }
+    }
+    return out;
+  }
+  var RMQ = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+
   var WOW = [
     {
       id: 'wall',
-      // the board as it would sit on a screen on the wall: every bay in one view
+      // every bay in one view
       prep: function (done) { document.documentElement.classList.add('tr-wallview'); go('board'); setTimeout(done, 250); },
       leave: function () { document.documentElement.classList.remove('tr-wallview'); },
-      title: 'Your workshop board, on the wall',
-      body: 'Every bay, every lorry and every fitter, live on a screen in the workshop. No whiteboard.',
+      title: 'Your workshop, bay by bay',
+      body: 'Every bay, what\'s in and what\'s booked in today, all on one screen.',
       target: ['#view .board']
     },
     {
       id: 'live', hero: true, prep: function (done) { go('live'); setTimeout(done, 200); },
-      title: 'Who\'s on time, who\'s running over',
-      body: 'Every fitter, the job they\'re on and the clock against the estimate. Over time shows red.',
+      title: 'Live jobs, on the wall',
+      body: 'Every fitter, their job and the clock. Running over shows red. Put it on the workshop TV.',
       target: ['#view .lcol', '#view .grid.g4'], area: '#view .lcol', all: true
     },
     {
-      id: 'fitter',
-      prep: function (done) {
-        closeOverlays();
-        if (!phone() && O.openPhone) {
-          // Dave already signed in on the phone, so it opens on his day
-          try { localStorage.setItem('wsTour:fitter', 'f1'); } catch (e) { }
-          go('live'); O.openPhone();
-          setTimeout(function () { hideVoiceTip(); done(); }, 900);
-        } else {
-          try { localStorage.setItem('wsTour:fitter', 'f1'); } catch (e) { }
-          go('live'); peek('fitter.html?dock=1', 'Fitter app'); setTimeout(done, 900);
-        }
+      id: 'assign',
+      prep: function (done) { story.pick(); go('planner'); setTimeout(done, 250); },
+      title: 'The office assigns the work',
+      // a phone has no room to drag across, so there it is tap the job and pick the fitter
+      body: function () { return phone() ? 'Tap a job and pick a fitter. That\'s their work assigned.' : 'Drag a job onto a fitter. That\'s their work assigned.'; },
+      act: function () {
+        if (!phone()) return 'Drag ' + story.reg(story.job) + ' onto ' + story.fname();
+        return $('#jFit') ? 'Pick ' + story.fname() + ' as the fitter' : 'Tap ' + story.reg(story.job) + ', then pick ' + story.fname();
       },
-      title: 'The fitter app, on any phone',
-      body: 'Clock on, photos and parts from any phone, in the bay or out on the van.',
-      target: ['.pmask .psizer', '.tr-peek', '#wsPhone'],
-      leave: function () { try { localStorage.removeItem('wsTour:fitter'); } catch (e) { } unpeek(); if (O.closePhone) O.closePhone(); }
+      target: [function () { return $('#view .pjob[data-job="' + story.job + '"]') || $('#poolCard'); }],
+      rect: function () {
+        if (phone()) { var sel = $('#jFit'); return union([sel || $('#view .pjob[data-job="' + story.job + '"]')]); }
+        var a = $('#view .pjob[data-job="' + story.job + '"]'), c = $('#view .fcol[data-fitter="' + story.fitter + '"]');
+        return union([a, c]);
+      },
+      ready: function () { return story.assigned(); },
+      fallback: function () { story.assign(); }
     },
     {
-      id: 'approvals', prep: function (done) { go('approvals'); setTimeout(done, 200); },
-      title: 'Extra work, approved from their phone',
-      body: 'The fitter finds it, the customer sees the price and taps approve. No ringing round.',
-      target: ['#view .appr', '#view .grid']
+      id: 'fstart',
+      prep: function (done) {
+        try { localStorage.removeItem('wsTour:fitter'); } catch (e) { }   // the fitter signs in himself
+        openFitter(function () { done(); });
+      },
+      title: 'Their own app, own login',
+      body: 'Every fitter has the app on their own phone, with their own login.',
+      target: ['.pmask .psizer', '.tr-peek'],
+      phoneCard: true,
+      act: function () { return fitterAct('start').text; },
+      rect: function () { return frameRect(fitterAct('start').el); },
+      ready: function () { return story.started(); },
+      fallback: function () { story.start(); },
+      leave: function () { closeFitter(); }
+    },
+    {
+      id: 'office1',
+      prep: function (done) { go('live'); setTimeout(done, 300); },
+      title: 'Already showing in the office',
+      body: 'Back in the office, it\'s already showing as started.',
+      target: [function () { return story.liveCol(); }]
+    },
+    {
+      id: 'fparts',
+      prep: function (done) { openFitter(function () { done(); }); },
+      title: 'Waiting on parts, next job',
+      body: 'The fitter marks it waiting on parts, then starts his next job.',
+      target: ['.pmask .psizer', '.tr-peek'],
+      phoneCard: true,
+      act: function () { return fitterAct('parts').text; },
+      rect: function () { return frameRect(fitterAct('parts').el); },
+      ready: function () { return story.parted(); },
+      fallback: function () { story.parts(); },
+      leave: function () { closeFitter(); }
+    },
+    {
+      id: 'office2',
+      prep: function (done) { go('live'); setTimeout(done, 300); },
+      title: 'Paused for parts, next job going',
+      body: 'The office saw it all without a phone call.',
+      target: [function () { return story.liveCol(); }]
     },
     {
       id: 'sheet',
@@ -338,6 +562,7 @@
 
   /* the box to light up: the target, or the area round it (capped to the screen) */
   function rectFor(s) {
+    if (s.rect) { var rb = null; try { rb = s.rect(); } catch (e) { } if (rb) return rb; }
     var el = run && run.el;
     if (!el || !el.isConnected) { el = stepTarget(s); if (run) run.el = el; }
     if (!el) return null;
@@ -357,6 +582,7 @@
   function place() {
     if (!run || !spot || !card) return;
     var s = run.steps[run.i], vw = window.innerWidth, vh = window.innerHeight, pad = 6;
+    if (run.wow) liveBits(s);
     var box = rectFor(s);
     var mob = phone();
     var cr = card.getBoundingClientRect();
@@ -368,9 +594,12 @@
       return;
     }
     spot.classList.remove('none');
+    spot.classList.toggle('soft', !!s.phoneCard);
     card.classList.remove('center');
     // on a phone the card is a sheet: along the bottom, or along the top when the target sits low (fixed pop ups)
-    var atTop = mob && box.t > vh * 0.45;
+    var atTop = mob && !s.phoneCard && box.t > vh * 0.45;
+    var pk = $('.tr-peek');
+    if (pk && mob) pk.style.bottom = Math.round(cr.height + 18) + 'px';
     if (mob && card.classList.contains('attop') !== atTop) { card.classList.toggle('attop', atTop); cr = card.getBoundingClientRect(); }
     var maxB = mob && !atTop ? vh - cr.height - 10 : vh - 8, minT = atTop ? cr.bottom + 8 : 4;
     var l = Math.max(4, box.l - pad), t = Math.max(minT, box.t - pad), r = Math.min(vw - 4, box.r + pad), b = Math.min(maxB, box.b + pad);
@@ -378,6 +607,11 @@
     spot.style.left = l + 'px'; spot.style.top = t + 'px';
     spot.style.width = Math.max(0, r - l) + 'px'; spot.style.height = Math.max(0, b - t) + 'px';
     if (mob) { card.style.left = card.style.top = ''; return; }
+    // story steps in the phone: the card sits beside the whole phone, not the button
+    if (s.phoneCard && run.el && run.el.isConnected) {
+      var pr = run.el.getBoundingClientRect();
+      l = pr.left; t = Math.max(8, pr.top); r = pr.right; b = pr.bottom;
+    }
     // the card beside the highlight: right, left, below, above, else the bottom corner
     var cw = cr.width, ch = cr.height, gap = 16, x, y;
     if (r + gap + cw < vw - 8) { x = r + gap; y = t; }
@@ -388,6 +622,20 @@
     x = Math.max(8, Math.min(x, vw - cw - 8));
     y = Math.max(8, Math.min(y, vh - ch - 8));
     card.style.left = x + 'px'; card.style.top = y + 'px';
+  }
+
+  /* the live line on a story card: what to click now, and a tick once it is done */
+  function liveBits(s) {
+    if (!s.act && !s.ready) return;
+    var ok = false;
+    try { ok = !!(s.ready && s.ready()); } catch (e) { }
+    card.classList.toggle('ready', ok);
+    var d = card.querySelector('.tr-do span');
+    if (d && s.act) {
+      var t = '';
+      try { t = ok ? 'Done. Press Next' : s.act(); } catch (e) { }
+      if (t && d.textContent !== t) d.textContent = t;
+    }
   }
 
   function paintWow() {
@@ -402,7 +650,8 @@
       '<span class="tr-n">' + (run.i + 1) + ' of ' + n + '</span>' +
       '<button type="button" class="tr-x" data-tr="skip" aria-label="Close the tour" title="Close (Esc)">&times;</button></div>' +
       '<h2 class="tr-h">' + WS.esc(s.title) + '</h2>' +
-      '<p class="tr-p">' + WS.esc(s.body) + '</p>' +
+      '<p class="tr-p">' + WS.esc(typeof s.body === 'function' ? s.body() : s.body) + '</p>' +
+      (s.act ? '<div class="tr-do" aria-live="polite"><i aria-hidden="true"></i><span></span></div>' : '') +
       '<div class="tr-foot"><div class="tr-dots" aria-hidden="true">' + dots + '</div>' +
       '<div class="tr-btns"><button type="button" class="tr-back" data-tr="back"' + (run.i === 0 ? ' disabled' : '') + '>Back</button>' +
       '<button type="button" class="tr-next" data-tr="' + (last ? 'skip' : 'next') + '">' + (last ? 'Close' : 'Next') + '</button></div></div>';
@@ -414,6 +663,7 @@
     });
     ['pointerdown', 'mousedown', 'touchstart'].forEach(function (ev) { card.addEventListener(ev, function (e) { e.stopPropagation(); }); });
     card.classList.remove('in'); void card.offsetWidth; card.classList.add('in');
+    lastAct = null;
     place();
     var nb = card.querySelector('.tr-next');
     if (nb) try { nb.focus({ preventScroll: true }); } catch (e) { }
@@ -490,6 +740,8 @@
     if (!run || run.busy) return;
     var s = run.steps[run.i];
     if (run.i >= run.steps.length - 1) { stop(); return; }
+    // a story click that was skipped is done for him, so the next screens still make sense
+    if (s.fallback && s.ready) { var ok = false; try { ok = s.ready(); } catch (e) { } if (!ok) try { s.fallback(); } catch (e) { } }
     var fwd = function () { if (s.leave) s.leave(); show(run.i + 1, 1); };
     if (s.next) { run.busy = true; card.classList.add('busy'); s.next(function () { if (run) { run.busy = false; fwd(); } }); }
     else fwd();
@@ -521,6 +773,7 @@
     start: function (mode) {
       if (run) stop();
       var wow = mode === 'wow';
+      if (wow) { story.job = story.fitter = story.nextJob = null; story.pool = []; }
       var ctx = { fromSignin: !!$('#wsSignin') };
       var list = wow ? WOW.slice() : STEPS.filter(function (s) { return !s.when || s.when(ctx); });
       run = { steps: list, i: 0, busy: false, wow: wow };
@@ -535,7 +788,8 @@
     next: next,
     back: back,
     steps: function (mode) { return run ? run.steps.map(function (s) { return s.id; }) : (mode === 'wow' ? WOW : STEPS).map(function (s) { return s.id; }); },
-    wowCopy: function () { return WOW.map(function (s) { return { id: s.id, title: s.title, body: s.body }; }); },
+    wowCopy: function () { return WOW.map(function (s) { return { id: s.id, title: s.title, body: typeof s.body === 'function' ? s.body() : s.body }; }); },
+    story: function () { return { job: story.job, fitter: story.fitter, nextJob: story.nextJob, reg: story.reg(story.job), nextReg: story.reg(story.nextJob) }; },
     active: function () { return !!run; }
   };
 
@@ -556,6 +810,36 @@
     return true;
   }
 
+  /* highlights mode: Start tour in the wheel menu. On a laptop it sits in the wheel's foot next
+     to Full menu, on a phone it is the first tile in the sheet. */
+  function wowStart() { if (O.closeWheel) O.closeWheel(true); setTimeout(function () { WS.tour.start('wow'); }, 60); }
+  var openWheel0 = O.openWheel;
+  if (openWheel0) O.openWheel = function () {
+    var r = openWheel0.apply(this, arguments);
+    if (!WS.tourWow) return r;
+    var foot = document.querySelector('#wMenu .wm-foot');
+    if (foot && !document.getElementById('wmTour')) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.id = 'wmTour';
+      b.className = 'wm-all wm-tour';
+      b.innerHTML = TOUR_ICON + '<span>Start tour</span>';
+      b.onclick = function (e) { e.stopPropagation(); wowStart(); };
+      foot.insertBefore(b, foot.firstChild);
+    }
+    var grid = document.querySelector('#wSheet .ws-grid');
+    if (grid && !document.getElementById('wsTourTile')) {
+      var t = document.createElement('button');
+      t.type = 'button';
+      t.id = 'wsTourTile';
+      t.className = 'ws-tile ws-tour';
+      t.innerHTML = '<span class="wt-ic">' + TOUR_ICON.replace('width="15" height="15"', 'width="20" height="20"') + '</span><span class="wt-l">Start tour</span>';
+      t.onclick = function (e) { e.stopPropagation(); wowStart(); };
+      grid.insertBefore(t, grid.firstChild);
+    }
+    return r;
+  };
+
   /* no visitor name: the briefing just says Good morning */
   var greet0 = WS.greetName;
   WS.greetName = function (u) {
@@ -569,9 +853,7 @@
     boot0();
     var tries = 0;
     var t = setInterval(function () { if (addButton() || ++tries > 200) clearInterval(t); }, 100);
-    if (WS.tourWow) {
-      setTimeout(function () { WS.tour.start('wow'); }, 700);
-    } else if (WS.tourWanted) {
+    if (WS.tourWanted && !WS.tourWow) {
       WS.tourWanted = false;
       setTimeout(function () { WS.tour.start(); }, $('#wsSignin') ? 500 : 900);
     }
