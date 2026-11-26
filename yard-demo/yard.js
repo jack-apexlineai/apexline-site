@@ -61,11 +61,11 @@
     var GROUPS = ['Today', 'Jobs', 'Customers', 'Money', 'Yard', 'More'];
     var MAP = {
       home: ['Today', 'Home', 'home'], inbox: ['Today', 'Inbox', 'inbox'], board: ['Today', 'Yard board', 'dashboard'],
-      bookings: ['Jobs', 'Bookings', 'calendar'], plan: ['Jobs', 'Day plan', 'route'], skips: ['Jobs', 'Skips on site', 'skip'], permits: ['Jobs', 'Permits', 'certificate'], tracking: ['Jobs', 'Live tracking', 'map-pin'], quotes: ['Jobs', 'Quotes', 'file-text'],
-      customers: ['Customers', 'Customers', 'users'], portal: ['Customers', 'Customer portal', 'world'],
-      credit: ['Money', 'Credit control', 'lock'], money: ['Money', 'Money', 'pound'], trends: ['Money', 'Trends', 'trending-up'], prices: ['Money', 'Price list', 'list'], scoreboard: ['Money', 'Scoreboard', 'target'],
-      driver: ['Yard', 'Driver app', 'mobile'], tickets: ['Yard', 'Tickets and WTNs', 'receipt'], defra: ['Yard', 'Defra tracking', 'shield-check'], recycling: ['Yard', 'Recycling report', 'leaf'],
-      chasing: ['More', 'Chasing', 'bell'], orders: ['More', 'Order diary', 'calendar'], history: ['More'], today: ['More', 'Day summary', 'dashboard'], jobs: ['More', 'Partner jobs', 'truck'], sales: ['More', 'Sales', 'target'],
+      bookings: ['Jobs', 'Bookings', 'calendar'], plan: ['Jobs', 'Day plan', 'route'], skips: ['Jobs', 'Skips on site', 'skip'], permits: ['Jobs', 'Permits', 'certificate'], tracking: ['Jobs', 'Live tracking', 'map-pin'],
+      customers: ['Customers', 'Customers', 'users'], quotes: ['Customers', 'Quotes', 'file-text'], portal: ['Customers', 'Customer portal', 'world'],
+      credit: ['Money', 'Credit control', 'lock'], money: ['Money', 'Money', 'pound'],  prices: ['Money', 'Price list', 'list'], scoreboard: ['Money', 'Scoreboard', 'target'],
+      driver: ['Yard', 'Driver app', 'mobile'], tickets: ['Yard', 'Weighbridge and WTNs', 'stack'], defra: ['Yard', 'Defra tracking', 'shield-check'], recycling: ['Yard', 'Recycling report', 'leaf'],
+      trends: ['More', 'Trends', 'trending-up'], chasing: ['More', 'Chasing', 'bell'], orders: ['More', 'Order diary', 'calendar'], history: ['More'], today: ['More', 'Day summary', 'dashboard'], jobs: ['More', 'Partner jobs', 'truck'], sales: ['More', 'Sales', 'target'],
       team: ['More', 'Team', 'users'], suppliers: ['More', 'Supplier handbook', 'warehouse'], compliance: ['More'], find: ['More', 'Find a supplier', 'map-pin'], bills: ['More', 'Bill check', 'receipt'], paperwork: ['More', 'Duty of care', 'certificate'], reports: ['More', 'Waste and carbon', 'leaf']
     };
     var NEW = [
@@ -74,7 +74,7 @@
       { k: 'plan', sub: 'Drag a job onto a lorry. Drivers see the change straight away' },
       { k: 'skips', sub: 'Every skip out on hire, how long it has been there, and what is overdue' },
       { k: 'tracking', sub: 'Where every lorry is and how each job is going' },
-      { k: 'driver', sub: 'What your drivers see on their phones' },
+      { k: 'driver', hide: true, sub: 'What your drivers see on their phones' },
       { k: 'tickets', sub: 'Tip tickets matched to jobs, and waste transfer notes made by themselves' },
       { k: 'defra', sub: 'Every movement prepared for Defra\'s digital waste tracking' },
       { k: 'recycling', sub: 'Tonnes, recycling rate and carbon, for the company and for each customer' },
@@ -217,8 +217,8 @@
     /* ======================================================================
        HOME: calm, eight tiles by default, drag to rearrange, Arrange to add or hide
        ====================================================================== */
-    var TILE_DEF = ['credit', 'jobs', 'lorries', 'skips', 'inbox', 'defra', 'week', 'board'];
-    var TILE_EXTRA = ['recycle', 'league', 'tickets', 'permits', 'unassigned', 'quotes'];
+    var TILE_DEF = ['credit', 'jobs', 'lorries', 'skips', 'inbox', 'permits2'];
+    var TILE_EXTRA = ['defra', 'week', 'board', 'recycle', 'league', 'tickets', 'permits', 'unassigned', 'quotes'];
     function tiles() {
       var y = Y(), s = S(), t0 = YC.today(y), done = t0.filter(function (j) { return j.status === 'done'; }).length, road = YC.LORRIES.filter(function (l) { var w = YC.where(y, l.id); return w.state === 'onway' || w.state === 'onsite' || w.state === 'between'; }).length;
       var ag = aged(), st = stops(), cw = sum(cashWeek()), os = y.onsite.filter(function (o) { return !o.booked; }), od = os.filter(function (o) { return -o.since > o.hire; }).length, dueT = os.filter(function (o) { return -o.since === o.hire; }).length;
@@ -240,6 +240,7 @@
         tickets: { t: 'Tickets to match', v: unm, s: unm ? 'read from a photo' : 'All matched', bad: unm > 0, go: 'tickets', i: 'receipt' },
         permits: { t: 'Permits ending soon', v: perm, s: 'in the next 3 days', bad: perm > 0, go: 'skips', i: 'certificate' },
         unassigned: { t: 'Jobs without a lorry', v: un, s: 'drag them onto the plan', bad: un > 0, go: 'plan', i: 'route' },
+        permits2: { t: 'Permits', v: (y.permits || []).filter(function (p) { return p.status !== 'approved'; }).length, s: (function () { var n = (y.permits || []).filter(function (p) { return p.status === 'apply'; }).length; return n ? n + ' to apply for' : 'All applied for'; })(), bad: (y.permits || []).some(function (p) { return p.status === 'apply'; }), go: 'permits', i: 'certificate' },
         quotes: { t: 'Quotes gone quiet', v: quiet, s: 'sent 3 or more days ago', go: 'quotes', i: 'file-text' }
       };
     }
@@ -257,7 +258,7 @@
         return '<div class="yh-tile' + (t.hero ? ' hero' : '') + (t.bad ? ' bad' : '') + '" draggable="true" data-tile="' + k + '"><button class="yh-tb" data-act="' + (t.act || 'go') + '" data-v="' + (t.go || '') + '"><small>' + ic(t.i) + h(t.t) + '</small><b class="' + (t.icon ? 'ic-big' : '') + '">' + t.v + '</b><span>' + h(t.s) + '</span></button>' +
           (arr ? '<button class="yh-x" data-act="yTileHide" data-v="' + k + '" aria-label="Take ' + h(t.t) + ' off home">' + ic('x') + '</button>' : '') + '</div>';
       }).join('') + '</div>';
-      if (arr) o += '<div class="yh-tray"><b>Add a tile</b>' + (hidden.length ? hidden.map(function (k) { return '<button class="btn sm" data-act="yTileAdd" data-v="' + k + '">' + ic('plus') + h(T[k].t) + '</button>'; }).join('') : '<span class="muted">Every tile is on your home page.</span>') + '<span class="sp"></span><button class="btn sm" data-act="yTileReset">' + ic('refresh') + 'Back to the standard eight</button></div>';
+      if (arr) o += '<div class="yh-tray"><b>Add a tile</b>' + (hidden.length ? hidden.map(function (k) { return '<button class="btn sm" data-act="yTileAdd" data-v="' + k + '">' + ic('plus') + h(T[k].t) + '</button>'; }).join('') : '<span class="muted">Every tile is on your home page.</span>') + '<span class="sp"></span><button class="btn sm" data-act="yTileReset">' + ic('refresh') + 'Back to the standard six</button></div>';
       /* one calm row underneath: the road, and what needs you */
       o += '<div class="yh-low"><section class="card yh-road"><div class="yh-rh"><h3>' + ic('truck') + 'Today on the road</h3><button class="xh2-link yh-link" data-act="go" data-v="tracking">Open the map</button></div>' + roadRows(y) + '</section>' +
         '<section class="card yh-needs"><div class="yh-rh"><h3>' + ic('bell') + 'Needs you</h3></div>' + needsRows() + '</section></div>';
@@ -266,7 +267,7 @@
     function roadRows(y) {
       return '<div class="yh-rows">' + YC.LORRIES.map(function (l) {
         var list = YC.forLorry(y, l.id, 0), d = list.filter(function (j) { return j.status === 'done'; }).length, w = YC.where(y, l.id);
-        return '<button class="yh-lo" data-act="yFocus" data-v="' + l.id + '"><span class="ylo" style="--lc:' + l.col + '"><i></i>' + h(l.n) + '</span><span class="yh-st">' + h(stateLine(y, l, w)) + '</span><span class="yh-bar"><i style="width:' + (list.length ? Math.round(d / list.length * 100) : 0) + '%;background:' + l.col + '"></i></span><b>' + d + '/' + list.length + '</b></button>';
+        return '<button class="yh-lo" data-act="yFocus" data-v="' + l.id + '"><span class="yplate sm">' + h(l.reg) + '</span><span class="yh-st">' + h(stateLine(y, l, w)) + '</span><span class="yh-bar"><i style="width:' + (list.length ? Math.round(d / list.length * 100) : 0) + '%;background:' + l.col + '"></i></span><b>' + d + '/' + list.length + '</b></button>';
       }).join('') + '</div>';
     }
     function needsRows() {
@@ -283,7 +284,7 @@
     A.yArrange = function () { ui.yArr = !ui.yArr; if (ui.view !== 'home') { A.close(); go('home'); } else UI.render(); };
     A.yTileHide = function (el) { var k = el.dataset.v; setP(function (p) { p.tiles = tileOrder().filter(function (x) { return x !== k; }); }); UI.render(); };
     A.yTileAdd = function (el) { var k = el.dataset.v; setP(function (p) { var l = tileOrder(); if (l.indexOf(k) < 0) l.push(k); p.tiles = l; }); UI.render(); };
-    A.yTileReset = function () { setP(function (p) { delete p.tiles; }); UI.render(); toast('Home is back to the standard eight tiles', 'refresh'); };
+    A.yTileReset = function () { setP(function (p) { delete p.tiles; }); UI.render(); toast('Home is back to the standard six tiles', 'refresh'); };
     (function () {
       var dragT = null, vw = q('#view');
       vw.addEventListener('dragstart', function (e) { var t = e.target.closest && e.target.closest('[data-tile]'); if (!t) return; dragT = t.getAttribute('data-tile'); t.classList.add('ydrag'); try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragT); } catch (x) {} });
@@ -585,7 +586,9 @@
       }
       YC.LORRIES.forEach(function (l) {
         var w = YC.where(y, l.id);
-        if (!LM[l.id]) { LM[l.id] = window.L.marker([w.lat, w.lng], { icon: window.L.divIcon({ className: 'ylm', html: '<span style="--lc:' + l.col + '">' + ic('truck') + '<b>' + h(l.n.replace('Skip lorry ', 'Skip ')) + '</b></span>', iconSize: [96, 30], iconAnchor: [16, 15] }), zIndexOffset: 1000 }).addTo(MAP); LM[l.id].on('click', function () { ui.yFocus = l.id; UI.render(); }); }
+        var lbl = window.DSGLABEL ? window.DSGLABEL(l, w, y) : h(l.reg);
+        if (!LM[l.id]) { LM[l.id] = window.L.marker([w.lat, w.lng], { icon: window.L.divIcon({ className: 'ylm', html: lbl, iconSize: [190, 44], iconAnchor: [18, 22] }), zIndexOffset: 1000 }).addTo(MAP); LM[l.id]._lbl = lbl; LM[l.id].on('click', function () { ui.yLorry = l.id; ui.yFocusNow = l.id; UI.render(); }); }
+        else if (LM[l.id]._lbl !== lbl) { LM[l.id]._lbl = lbl; LM[l.id].setIcon(window.L.divIcon({ className: 'ylm', html: lbl, iconSize: [190, 44], iconAnchor: [18, 22] })); }
         LM[l.id].setLatLng([w.lat, w.lng]);
       });
       if (ui.yFocusNow) { var lf = ui.yFocusNow; ui.yFocusNow = null; var ww = YC.where(y, lf); MAP.setView([ww.lat, ww.lng], 12, { animate: true }); }
@@ -929,7 +932,7 @@
     var LIVEV = { home: 1, board: 1, plan: 1, tracking: 1, bookings: 1, skips: 0, tickets: 1, defra: 1, scoreboard: 1 };
     var lastV = -1;
     setInterval(function () {
-      var s = S(); if (!s) return; var y = Y(), ev = YC.tick(s, y, null, ui.view === 'driver' ? (ui.yDrv || 'L1') : null);
+      var s = S(); if (!s) return; var y = Y(), ev = YC.tick(s, y, null, q('#yDrvPop') ? ui.yDrv : null);
       if (ev.length) {
         save();
         ev.forEach(function (e) {
@@ -1341,10 +1344,136 @@
     };
 
     /* ======================================================================
+       ROUND 3, batch 2: live tracking with a lorry panel, the driver app from a button, the HGV wheel menu
+       ====================================================================== */
+    function outw(j) { return String(j.site.pc || '').split(' ')[0]; }
+    function lorryLine(l, w, y) {
+      if (w.state === 'onway') return l.first + ': On the way to ' + outw(w.job) + ', about ' + YC.etaMins(y, w.job) + ' min';
+      if (w.state === 'onsite') return l.first + ': On site, ' + outw(w.job);
+      if (w.state === 'returning') return l.first + ': Heading back to the yard';
+      return l.first + ': At the yard';
+    }
+    window.DSGLABEL = function (l, w, y) { return '<span class="ylm2"><b>' + h(l.reg) + '</b><small>' + h(lorryLine(l, w, y)) + '</small></span>'; };
+    /* the day of one lorry: what is still to go at the top with ETAs, done at the bottom with times. Tip runs and loading included */
+    function lorryDay(id) {
+      var y = Y(), L = YC.forLorry(y, id, 0), now = Date.now(), w = YC.where(y, id), steps = [], t = now;
+      function tip(j) { var s = (j.stream === 'soil' || j.stream === 'concrete') ? YC.TIPS.soil : YC.TIPS.yard; return s.n; }
+      L.forEach(function (j) {
+        var waste = YC.TYPES[j.type].waste, label = { deliver: 'Delivery', exchange: 'Swap', collect: 'Collection', grab: 'Grab', muck: 'Muckaway' }[j.type];
+        if (j.status === 'done') {
+          if (j.type === 'deliver') steps.push({ done: true, at: (j.at.onway || j.at.done) - 600000, k: 'Loading at the yard', s: YC.whatShort(j) });
+          steps.push({ done: true, at: j.at.done, k: label, s: YC.whatShort(j) + ', ' + j.site.name, j: j });
+          if (waste) steps.push({ done: true, at: j.at.done + 25 * 60000, k: 'Tip run', s: tip(j) + (j.ticket ? ', ticket ' + j.ticket : '') });
+          return;
+        }
+        if (j === w.job && w.state === 'onway') t = now + YC.etaMins(y, j) * 60000;
+        else if (j === w.job && w.state === 'onsite') t = now;
+        else { if (j.type === 'deliver') { t += 15 * 60000; steps.push({ at: t, k: 'Loading at the yard', s: YC.whatShort(j) }); } t += 25 * 60000; }
+        steps.push({ at: t, k: label, s: YC.whatShort(j) + ', ' + j.site.name, j: j, now: j === w.job ? w.state : null });
+        t += 20 * 60000;
+        if (waste) { t += 20 * 60000; steps.push({ at: t, k: 'Tip run', s: tip(j) }); }
+      });
+      var togo = steps.filter(function (x) { return !x.done; }), done = steps.filter(function (x) { return x.done; }).sort(function (a, b) { return b.at - a.at; });
+      return { togo: togo, done: done };
+    }
+    var trk0 = V.tracking;
+    V.tracking = function () {
+      var y = Y(), sel = ui.yLorry && YC.lorry(ui.yLorry);
+      if (ui.yFocus) { ui.yFocusNow = ui.yFocus; ui.yLorry = ui.yFocus; sel = YC.lorry(ui.yFocus); ui.yFocus = null; }
+      var head = '<div class="ybar ytr-bar"><span class="ytr-note">' + ic('map-pin') + '<span>Uses the GPS trackers already on your lorries, if your tracker provider allows linking. No trackers? The driver app does the same job, and the two work together.</span></span><button class="btn pri" data-act="yDrvOpen" id="yDrvOpen">' + ic('mobile') + 'Open the driver app</button></div>';
+      var side;
+      if (sel) {
+        var D = lorryDay(sel.id), w = YC.where(y, sel.id);
+        side = '<aside class="card ytrack-list" id="yLorryPanel"><div class="ylp-h"><button class="iconbtn sm" data-act="yLorryOff" aria-label="All lorries">' + ic('chevron-left') + '</button><span class="yplate sm">' + h(sel.reg) + '</span><div><b>' + h(sel.driver) + '</b><small>' + h(sel.n) + '</small></div></div>' +
+          '<p class="ylp-now">' + h(lorryLine(sel, w, y).replace(/^[^:]+: /, '')) + '</p>' +
+          '<h4>Still to go</h4>' + (D.togo.map(function (x) { return '<div class="ylp-s' + (x.now ? ' now' : '') + '"><span class="ylp-t">' + (x.now === 'onsite' ? 'Now' : 'ETA ' + CS.clock(x.at)) + '</span><span><b>' + h(x.k) + '</b><small>' + h(x.s) + '</small></span></div>'; }).join('') || '<p class="muted">Nothing left today.</p>') +
+          '<h4>Done today</h4>' + (D.done.map(function (x) { return '<div class="ylp-s done"><span class="ylp-t">' + CS.clock(x.at) + '</span><span><b>' + h(x.k) + '</b><small>' + h(x.s) + '</small></span></div>'; }).join('') || '<p class="muted">Nothing yet.</p>') + '</aside>';
+      } else {
+        side = '<aside class="card ytrack-list"><div class="yh-rh"><h3>' + ic('truck') + 'Lorries</h3><span class="livepill"><i></i>Live</span></div>' + YC.LORRIES.map(function (l) {
+          var w = YC.where(y, l.id), L = YC.forLorry(y, l.id, 0), d = L.filter(function (j) { return j.status === 'done'; }).length;
+          return '<button class="ytl-r" data-act="yLorry" data-v="' + l.id + '"><span class="ytl-top"><span class="yplate sm">' + h(l.reg) + '</span><small>' + d + ' of ' + L.length + ' done</small></span><span class="ytl-s">' + h(lorryLine(l, w, y)) + '</span></button>';
+        }).join('') + '<small class="muted ytl-note">Tap a lorry to see its day. Demo: the lorries are simulated.</small></aside>';
+      }
+      return head + '<div class="ytrack"><div class="ytrack-map" id="yMapSlot"></div>' + side + '</div>';
+    };
+    A.yLorry = function (el) { ui.yLorry = el.dataset.v; ui.yFocusNow = el.dataset.v; UI.render(); };
+    A.yLorryOff = function () { ui.yLorry = null; UI.render(); };
+    A.yFocus = function (el) { ui.yFocus = el.dataset.v; if (ui.view !== 'tracking') go('tracking'); else UI.render(); };
+
+    /* the driver app, opened from Live tracking: a phone beside the map, so the map moves as he works */
+    A.yDrvOpen = function () {
+      if (q('#yDrvPop')) return;
+      var d = document.createElement('div'); d.id = 'yDrvPop'; d.className = 'ydrvpop';
+      d.innerHTML = '<div class="ydp-bar"><b>' + ic('mobile') + 'Driver app</b><button class="iconbtn sm" data-act="yDrvClose" aria-label="Close the driver app">' + ic('x') + '</button></div><div class="ydp-ph"><iframe id="yDrvFrame" src="driver.html?embed=1" title="Driver app"></iframe></div>';
+      document.body.appendChild(d); document.body.classList.add('ydrv-on');
+    };
+    A.yDrvClose = function () { var d = q('#yDrvPop'); if (d) d.remove(); ui.yDrv = null; document.body.classList.remove('ydrv-on'); };
+
+    /* ---------- the HGV wheel menu: W or the wheel button, bottom right ---------- */
+    var WS = [['home', 'Home', 'home'], ['inbox', 'Inbox', 'inbox'], ['bookings', 'Bookings', 'calendar'], ['plan', 'Day plan', 'route'], ['skips', 'Skips on site', 'skip'], ['permits', 'Permits', 'certificate'],
+      ['tracking', 'Live tracking', 'map-pin'], ['board', 'Yard board', 'dashboard'], ['tickets', 'Weighbridge', 'stack'], ['credit', 'Credit control', 'lock']];
+    function hgvWheel(cls) {
+      function pt(r, d) { var a = d * Math.PI / 180; return [Math.round(r * Math.cos(a) * 100) / 100, Math.round(r * Math.sin(a) * 100) / 100]; }
+      var s = '<svg class="ywh-svg ' + (cls || '') + '" viewBox="-100 -100 200 200" aria-hidden="true"><defs><radialGradient id="ywT" r="100" cx="0" cy="0" gradientUnits="userSpaceOnUse"><stop offset=".62" stop-color="#2A303A"/><stop offset=".85" stop-color="#15181E"/><stop offset="1" stop-color="#07090C"/></radialGradient>' +
+        '<linearGradient id="ywA" x1="-60" y1="-60" x2="60" y2="60" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FBFCFD"/><stop offset=".3" stop-color="#9AA3AF"/><stop offset=".55" stop-color="#E8ECF0"/><stop offset=".8" stop-color="#737C88"/><stop offset="1" stop-color="#D9DEE4"/></linearGradient></defs>' +
+        '<circle r="99" fill="url(#ywT)"/>';
+      for (var t = 0; t < 40; t++) { var a = t * 9, q2 = pt(96, a); s += '<rect x="' + (q2[0] - 1.4) + '" y="' + (q2[1] - 3) + '" width="2.8" height="6" rx=".6" fill="#06080B" transform="rotate(' + (a + 90) + ' ' + q2[0] + ' ' + q2[1] + ')"/>'; }
+      s += '<circle r="70" fill="url(#ywA)"/><circle r="66" fill="none" stroke="#1F4FA8" stroke-width="3"/>';
+      for (var hh = 0; hh < 10; hh++) { var ha = hh * 36 + 18, hq = pt(52, ha); s += '<rect x="-4.6" y="-8" width="9.2" height="16" rx="4.6" fill="#1B1F27" transform="translate(' + hq[0] + ' ' + hq[1] + ') rotate(' + (ha + 90) + ')"/>'; }
+      s += '<circle r="40" fill="#B4BCC6" stroke="rgba(0,0,0,.25)"/>';
+      for (var n = 0; n < 10; n++) { var nq = pt(31, n * 36 - 90); s += '<g transform="translate(' + nq[0] + ' ' + nq[1] + ')"><path d="M5.2 0 2.6 4.5 -2.6 4.5 -5.2 0 -2.6 -4.5 2.6 -4.5Z" fill="#E6EAEF" stroke="#3E4550" stroke-width=".7"/><circle r="2.2" fill="#5B636F"/></g>'; }
+      s += '<circle r="18" fill="#1F4FA8" stroke="#fff" stroke-width="1.5"/><text y="5.5" text-anchor="middle" font-family="Archivo,Arial,sans-serif" font-weight="800" font-size="15" fill="#fff">DSG</text></svg>';
+      return s;
+    }
+    function wheelCounts() { var c = navCounts({}); return c; }
+    (function () {
+      var b = document.createElement('button'); b.type = 'button'; b.id = 'yWheelBtn'; b.className = 'ywheel-btn'; b.setAttribute('aria-label', 'Open the wheel menu (W)'); b.setAttribute('data-act', 'yWheel');
+      b.innerHTML = hgvWheel('mini') + '<span class="ywb-tip">Menu <kbd>W</kbd></span>'; document.body.appendChild(b);
+    })();
+    A.yWheel = function () {
+      if (q('#yWheel')) { A.yWheelClose(); return; }
+      var c = wheelCounts(), phone = window.innerWidth < 700, d = document.createElement('div'); d.id = 'yWheel'; d.className = 'ywheel' + (phone ? ' sheet' : ''); d.setAttribute('role', 'dialog'); d.setAttribute('aria-label', 'Wheel menu');
+      var items = WS.map(function (x, i) {
+        var n = c[x[0]] || 0, a = (i * 360 / WS.length - 90) * Math.PI / 180, R = 215, st = phone ? '' : ' style="left:calc(50% + ' + Math.round(R * Math.cos(a)) + 'px);top:calc(50% + ' + Math.round(R * Math.sin(a)) + 'px)"';
+        return '<button class="ywi' + (ui.view === x[0] ? ' on' : '') + '" data-act="yWheelGo" data-v="' + x[0] + '"' + st + '><span class="ywi-ic">' + ic(x[2]) + (n ? '<b>' + n + '</b>' : '') + '</span><span class="ywi-l">' + (i < 9 ? '<kbd>' + (i + 1) + '</kbd>' : '<kbd>0</kbd>') + h(x[1]) + '</span></button>';
+      }).join('');
+      d.innerHTML = '<div class="ywheel-bg" data-act="yWheelClose"></div><div class="ywheel-in"><div class="ywheel-s"><span>' + ic('search') + '</span><input id="yWheelQ" placeholder="Type to find any screen" autocomplete="off" aria-label="Find a screen"><div class="ywheel-r" id="yWheelR"></div></div>' + (phone ? '<b class="ywheel-t">Go to</b>' : '<div class="ywheel-hub">' + hgvWheel('big') + '<button class="ywheel-new" data-act="yWheelBook">' + ic('plus') + 'New booking</button></div>') + '<div class="ywheel-items">' + items + '</div>' + (phone ? '<button class="btn pri ywheel-newp" data-act="yWheelBook">' + ic('plus') + 'New booking</button>' : '') + '<button class="iconbtn ywheel-x" data-act="yWheelClose" aria-label="Close the wheel">' + ic('x') + '</button></div>';
+      document.body.appendChild(d); document.body.classList.add('ywheel-on');
+      setTimeout(function () { var i = q('#yWheelQ'); if (i && !phone) i.focus(); }, 30);
+    };
+    function wheelFind(v) {
+      v = String(v || '').trim().toLowerCase(); if (!v) return [];
+      function sc(x) { var n = (x.n || '').toLowerCase(); return n.indexOf(v) === 0 ? 0 : n.indexOf(v) > 0 ? 1 : 2; }
+      return UI.VIEWS.filter(function (x) { return !x.hide && ((x.n || '') + ' ' + (x.sub || '') + ' ' + x.k).toLowerCase().indexOf(v) >= 0; }).sort(function (a, b) { return sc(a) - sc(b); }).slice(0, 6);
+    }
+    document.addEventListener('input', function (e) {
+      if (e.target.id !== 'yWheelQ') return; var r = q('#yWheelR'), L = wheelFind(e.target.value);
+      r.innerHTML = e.target.value.trim() ? (L.map(function (x, i) { return '<button class="' + (i ? '' : 'on') + '" data-act="yWheelGo" data-v="' + x.k + '">' + ic(x.ic) + '<span><b>' + h(x.n) + '</b><small>' + h(x.sub || '') + '</small></span></button>'; }).join('') || '<p class="muted">Nothing matches.</p>') : '';
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.target.id !== 'yWheelQ') return;
+      if (e.key === 'Escape') { A.yWheelClose(); return; }
+      if (!e.target.value && /^[0-9]$/.test(e.key)) { var k = e.key === '0' ? 9 : +e.key - 1; if (WS[k]) { e.preventDefault(); A.yWheelGo({ dataset: { v: WS[k][0] } }); } return; }
+      if (e.key === 'Enter') { var L = wheelFind(e.target.value); if (L[0]) { e.preventDefault(); A.yWheelGo({ dataset: { v: L[0].k } }); } }
+    });
+    A.yWheelClose = function () { var d = q('#yWheel'); if (d) d.remove(); document.body.classList.remove('ywheel-on'); };
+    A.yWheelGo = function (el) { A.yWheelClose(); A.close(); go(el.dataset.v); };
+    A.yWheelBook = function () { A.yWheelClose(); A.yBook(); };
+    document.addEventListener('keydown', function (e) {
+      var t = e.target, typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+      if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+      if ((e.key === 'w' || e.key === 'W') && !q('#layer').innerHTML) { e.preventDefault(); A.yWheel(); return; }
+      if (q('#yWheel')) {
+        if (e.key === 'Escape') { A.yWheelClose(); return; }
+        var k = e.key === '0' ? 9 : parseInt(e.key, 10) - 1; if (k >= 0 && k < WS.length) { e.preventDefault(); A.yWheelGo({ dataset: { v: WS[k][0] } }); }
+      }
+    });
+
+    /* ======================================================================
        Steps for the guided tour
        ====================================================================== */
     var R = window.DSGG.RUN;
-    function closeAll() { var b = q('#boot'); if (b) b.remove(); A.close(); if (A.closePhone) A.closePhone(); if (A.closeSide) A.closeSide(); if (document.body.classList.contains('ytv')) A.yTVOff(); var sk = q('#skPanel'); if (sk && !sk.hidden && A.skToggle) A.skToggle(); ui.yArr = false; }
+    function closeAll() { var b = q('#boot'); if (b) b.remove(); A.close(); if (A.yWheelClose) A.yWheelClose(); if (A.yDrvClose) A.yDrvClose(); if (A.closePhone) A.closePhone(); if (A.closeSide) A.closeSide(); if (document.body.classList.contains('ytv')) A.yTVOff(); var sk = q('#skPanel'); if (sk && !sk.hidden && A.skToggle) A.skToggle(); ui.yArr = false; }
     R.yHome = function () { closeAll(); go('home'); };
     R.yBoard = function () { closeAll(); go('board'); };
     R.yTVShow = function () { closeAll(); go('board'); A.yTV(); };
@@ -1354,7 +1483,7 @@
     R.yPlan = function () { closeAll(); ui.yPlanDay = 0; go('plan'); };
     R.ySkips = function () { closeAll(); ui.ySkF = 'all'; go('skips'); };
     R.ySkipsOver = function () { closeAll(); ui.ySkF = 'over'; go('skips'); };
-    R.yDriver = function () { closeAll(); ui.yDrv = 'L1'; go('driver'); };
+    R.yDriver = function () { closeAll(); go('tracking'); A.yDrvOpen(); };
     R.yTrack = function () { closeAll(); go('tracking'); };
     R.yTickets = function () { closeAll(); ui.yTkTab = 'tickets'; go('tickets'); };
     R.yRoro = function () { closeAll(); ui.yTkTab = 'tickets'; go('tickets'); setTimeout(function () { var b = q('#yBridge'); if (b && b.scrollIntoView) b.scrollIntoView({ block: 'start' }); }, 60); };
