@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A workshop system built round your workshop | ApexLine</title>
+<meta name="description" content="For independent HGV and commercial vehicle workshops. Job cards, the workshop board, fitter clock-ons, inspection sheets and invoices on one screen, built round how you already work. Watch the 2-minute video.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://apexlineai.com/workshop-lander/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ApexLine">
+<meta property="og:url" content="https://apexlineai.com/workshop-lander/">
+<meta property="og:title" content="Your whole workshop on one screen">
+<meta property="og:description" content="No paper job cards, no whiteboard, no time cards. A workshop system for HGV and CV workshops, built round how you work. 2-minute video.">
+<meta property="og:image" content="https://apexlineai.com/workshop-lander/img/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="ApexLine workshop board: every bay and every lorry on one screen">
+<meta property="og:locale" content="en_GB">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Your whole workshop on one screen">
+<meta name="twitter:description" content="No paper job cards, no whiteboard, no time cards. Built round how your workshop works.">
+<meta name="twitter:image" content="https://apexlineai.com/workshop-lander/img/og.jpg">
+<meta name="theme-color" content="#0B0F1A">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230B0F1A'/%3E%3Cpath d='M6 26 L16 6 L26 26 M10.5 19 L21.5 19' stroke='%234DA8FF' stroke-width='2.5' stroke-linecap='square' stroke-linejoin='miter' fill='none'/%3E%3C/svg%3E">
+<link rel="preload" as="image" href="/workshop-lander/vsl-poster.jpg" fetchpriority="high">
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@600&f[]=satoshi@700,500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B0F1A; --bg2:#121829; --bg3:#161D31; --accent:#4DA8FF; --accent2:#6FB8FF; --accent-soft:rgba(77,168,255,.08); --accent-border:rgba(77,168,255,.22);
+  --silver:#A0B4C8; --text:#E8ECF0; --muted:#8392A6; --ok:#00D4AA; --warn:#FFB547; --line:rgba(160,180,200,.09); --line2:rgba(160,180,200,.16);
+  --display:'Clash Display',system-ui,sans-serif; --ui:'Satoshi',system-ui,sans-serif; --body:'DM Sans',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;height:auto;display:block}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+.eyebrow{font-family:var(--ui);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;line-height:1.08}
+h1{font-size:clamp(34px,5vw,60px)}
+h2{font-size:clamp(28px,3.8vw,44px)}
+h3{font-family:var(--ui);font-weight:700;font-size:20px;line-height:1.25}
+.lead{font-size:clamp(17px,1.6vw,20px);color:var(--silver)}
+section{padding:84px 0;position:relative}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;font-family:var(--ui);font-weight:700;font-size:16px;padding:15px 24px;border-radius:12px;transition:background .2s,transform .2s,box-shadow .2s;cursor:pointer;border:1px solid transparent;text-align:center}
+.btn-p{background:var(--accent);color:#06101F}
+.btn-p:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 10px 30px rgba(77,168,255,.25)}
+.btn-big{font-size:18px;padding:18px 30px;border-radius:14px;box-shadow:0 14px 40px rgba(77,168,255,.22)}
+.btn svg{width:18px;height:18px;flex:none}
+.center{text-align:center}
+.cta-row{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:40px}
+.promise{display:flex;gap:10px;align-items:flex-start;font-family:var(--ui);font-weight:500;font-size:15px;color:var(--silver);max-width:520px}
+.promise svg{flex:none;width:18px;height:18px;margin-top:2px;color:var(--ok)}
+.cta-row .promise{text-align:left}
+
+/* top bar: logo and one button, no links out */
+nav{position:sticky;top:0;z-index:50;background:rgba(11,15,26,.84);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;height:64px;gap:16px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:600;font-size:19px}
+.logo img{width:32px;height:32px}
+nav .btn{margin-left:auto;padding:10px 16px;font-size:14px}
+
+/* hero */
+.hero{padding:48px 0 72px;overflow:hidden;position:relative}
+.hero:before{content:"";position:absolute;top:-260px;right:-200px;width:820px;height:820px;background:radial-gradient(circle,rgba(77,168,255,.15),transparent 60%);pointer-events:none}
+.hgrid{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 360px;column-gap:64px;row-gap:0;grid-template-areas:"copy vid" "act vid";align-items:center}
+.hcopy{grid-area:copy;align-self:end}
+.hact{grid-area:act;align-self:start;margin-top:28px}
+.hvid{grid-area:vid}
+.pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--accent-border);background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:6px 14px;font-family:var(--ui);font-weight:700;font-size:13px;margin-bottom:22px}
+.pill i{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px rgba(0,212,170,.15)}
+.hero h1 .hl{color:var(--accent)}
+.hero .lead{margin-top:18px;max-width:600px}
+.hact .promise{margin-top:14px}
+.ticks{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:22px;font-family:var(--ui);font-weight:500;font-size:14px;color:var(--silver)}
+.ticks span:before{content:"\2713";color:var(--ok);font-weight:700;margin-right:7px}
+.slots{display:inline-flex;align-items:center;gap:12px;margin-top:22px;padding:10px 14px;border:1px solid rgba(255,181,71,.28);background:rgba(255,181,71,.07);border-radius:12px;font-family:var(--ui);font-weight:700;font-size:14px;color:var(--warn)}
+.dots{display:flex;gap:5px}
+.dots i{width:12px;height:12px;border-radius:3px;border:1.5px solid var(--warn)}
+.dots i.gone{background:var(--warn)}
+
+/* video */
+.vbox{position:relative;width:100%;aspect-ratio:9/16;border-radius:22px;overflow:hidden;background:#05080f;border:1px solid var(--line2);box-shadow:0 40px 120px rgba(0,0,0,.6),0 0 0 6px rgba(77,168,255,.06)}
+.vbox video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;background:#05080f}
+.vplay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:12px;padding:0 16px 16%;background:linear-gradient(180deg,rgba(11,15,26,0) 45%,rgba(11,15,26,.78));border:0;color:var(--text);cursor:pointer;width:100%;font:inherit}
+.vplay[hidden]{display:none}
+.ring{width:96px;height:96px;border-radius:50%;background:var(--accent);display:grid;place-items:center;box-shadow:0 0 0 12px rgba(77,168,255,.22),0 20px 50px rgba(0,0,0,.55);transition:transform .2s}
+.vplay:hover .ring{transform:scale(1.06)}
+.ring svg{width:36px;height:36px;margin-left:6px;color:#06101F}
+.vplay b{font-family:var(--ui);font-size:18px;text-shadow:0 2px 14px rgba(0,0,0,.8)}
+.vplay small{font-family:var(--ui);font-weight:500;font-size:14px;color:var(--text);opacity:.9;text-shadow:0 2px 12px rgba(0,0,0,.8)}
+.vnote{margin-top:12px;font-size:13px;color:var(--muted);text-align:center}
+
+/* proof wall */
+.proof{padding-top:24px}
+.proof h2{max-width:760px;margin:10px 0 28px}
+.feature{background:linear-gradient(160deg,rgba(77,168,255,.14),rgba(77,168,255,.03));border:1px solid var(--accent-border);border-radius:24px;padding:40px 44px;margin-bottom:16px}
+.feature blockquote{font-family:var(--display);font-weight:600;font-size:clamp(28px,4vw,48px);line-height:1.12;letter-spacing:-.01em}
+.feature blockquote:before,.q blockquote:before{content:"\201C";display:block;font-family:var(--display);font-size:56px;line-height:.55;color:var(--accent);margin-bottom:12px}
+.feature cite{display:block;margin-top:18px}
+cite{font-style:normal;font-family:var(--ui);font-weight:500;font-size:14px;color:var(--muted)}
+cite:before{content:"";display:inline-block;width:18px;height:2px;background:var(--accent);vertical-align:middle;margin-right:10px}
+.wall{columns:3;column-gap:16px}
+.q{break-inside:avoid;margin:0 0 16px;background:var(--bg2);border:1px solid var(--line);border-radius:20px;padding:26px 24px 22px;display:flex;flex-direction:column;gap:14px}
+.q blockquote{font-family:var(--ui);font-weight:700;font-size:20px;line-height:1.38}
+.q.big blockquote{font-family:var(--display);font-weight:600;font-size:32px;line-height:1.12}
+
+/* pain */
+.pain{background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+.pquote{font-family:var(--display);font-weight:600;font-size:clamp(30px,4.2vw,52px);line-height:1.08;color:var(--warn)}
+.pquote cite{display:block;margin-top:16px}
+.pain h2{margin:12px 0 16px}
+.pain p{color:var(--silver);font-size:18px}
+.plist{list-style:none;margin-top:24px;display:grid;gap:10px}
+.plist li{display:flex;gap:12px;align-items:flex-start;font-family:var(--ui);font-weight:500;color:var(--text)}
+.plist li:before{content:"";flex:none;width:8px;height:8px;margin-top:9px;border-radius:50%;background:var(--warn);box-shadow:0 0 0 4px rgba(255,181,71,.14)}
+
+/* what it does */
+.head{max-width:760px;margin-bottom:40px}
+.head h2{margin:10px 0 12px}
+.head p{color:var(--silver);font-size:18px}
+.rows{display:grid;gap:20px}
+.row{display:grid;grid-template-columns:1fr 1.25fr;background:var(--bg2);border:1px solid var(--line);border-radius:22px;overflow:hidden}
+.row .txt{padding:34px;align-self:center}
+.row h3{font-size:24px;margin-bottom:10px}
+.row p{color:var(--silver)}
+.row .pic{background:radial-gradient(circle at 70% 20%,rgba(77,168,255,.14),transparent 60%),var(--bg3);display:flex;align-items:center;justify-content:center;padding:26px;border-left:1px solid var(--line)}
+.row .pic img{border-radius:12px;border:1px solid var(--line2);box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.row .pic.phone img{max-height:360px;width:auto;border-radius:22px;border:5px solid #1c2438}
+.also{margin-top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.also div{border:1px solid var(--line);border-radius:16px;padding:20px;color:var(--muted)}
+.also b{display:block;color:var(--text);font-family:var(--ui);font-size:16px;margin-bottom:4px}
+.billed{margin-top:20px;border:1px solid rgba(0,212,170,.25);background:rgba(0,212,170,.06);border-radius:18px;padding:24px 28px;font-family:var(--ui);font-weight:700;font-size:clamp(18px,2vw,22px);line-height:1.4}
+.billed span{color:var(--ok)}
+
+/* the deal */
+.deal{background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.terms{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.term{background:var(--bg);border:1px solid var(--line2);border-radius:20px;padding:28px 26px}
+.term .n{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--accent-border);color:var(--accent)}
+.term .n svg{width:20px;height:20px}
+.term h3{margin:16px 0 8px;font-size:21px}
+.term p{color:var(--silver);font-size:15.5px}
+
+/* final */
+.final .box{background:radial-gradient(ellipse at top,rgba(77,168,255,.18),transparent 70%),var(--bg2);border:1px solid var(--accent-border);border-radius:28px;padding:60px 44px 48px;text-align:center}
+.final h2{max-width:760px;margin:12px auto 16px}
+.final .sub{max-width:620px;margin:0 auto;color:var(--silver);font-size:18px}
+.final .sub b{color:var(--text)}
+.bigslots{display:flex;justify-content:center;gap:10px;margin:28px 0 8px}
+.bigslots i{width:84px;height:56px;border-radius:12px;border:1.5px dashed rgba(255,181,71,.55);display:grid;place-items:center;font-style:normal;font-family:var(--ui);font-weight:700;font-size:13px;color:var(--warn)}
+.bigslots i.gone{border-style:solid;background:var(--warn);color:#1a1205}
+.steps{list-style:none;counter-reset:s;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:40px 0 0;text-align:left}
+.steps li{counter-increment:s;border:1px solid var(--line2);border-radius:18px;padding:22px;background:rgba(11,15,26,.5);font-family:var(--ui);font-weight:500;color:var(--silver)}
+.steps li:before{content:counter(s);display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--accent);color:#06101F;font-weight:700;margin-bottom:12px}
+.steps b{color:var(--text)}
+.again{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;text-align:left}
+.again .q{margin:0;background:rgba(11,15,26,.5)}
+.final .cta-row{margin-top:36px}
+.alt{font-size:14px;color:var(--muted)}
+.alt a{color:var(--silver);text-decoration:underline;text-underline-offset:3px}
+.who{margin-top:24px;font-size:14px;color:var(--muted)}
+
+footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);font-size:14px}
+
+@media(max-width:900px){
+  .hgrid{grid-template-columns:1fr;grid-template-areas:"copy" "vid" "act"}
+  .hvid{margin-top:28px;width:100%;max-width:440px;justify-self:center}
+  .hact{display:flex;flex-direction:column;align-items:center;text-align:center}
+  .hact .promise{text-align:left}
+  .ticks{justify-content:center}
+  .wall{columns:2}
+  .pgrid{grid-template-columns:1fr;gap:28px}
+  .row{grid-template-columns:1fr}
+  .row .pic{border-left:0;border-top:1px solid var(--line)}
+  .terms,.steps{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  section{padding:60px 0}
+  .hero{padding:30px 0 52px}
+  .pill{font-size:12px;margin-bottom:16px}
+  .hero .lead{margin-top:14px}
+  .hvid{max-width:none;margin-top:24px}
+  .vbox{border-radius:18px}
+  .hact{margin-top:22px}
+  .hact .btn,.cta-row .btn{width:100%}
+  .btn-big{font-size:17px;padding:17px 20px}
+  .feature{padding:28px 22px;border-radius:20px}
+  .wall{columns:1}
+  .q{padding:18px 18px 16px;gap:10px;margin-bottom:12px}
+  .q blockquote{font-size:18px}
+  .q blockquote:before{font-size:40px;margin-bottom:6px}
+  .q.big blockquote{font-size:26px}
+  .row .txt{padding:24px}
+  .row .pic{padding:18px}
+  .row .pic.phone img{max-height:300px}
+  .also{grid-template-columns:1fr}
+  .billed{padding:20px}
+  .final .box{padding:44px 18px 36px;border-radius:22px}
+  .bigslots{gap:6px}
+  .bigslots i{width:56px;height:48px;font-size:11px}
+  .again{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn,.ring{transition:none}}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <span class="logo"><img src="/img/apex-logo.webp" alt="" width="32" height="32">ApexLine</span>
+  <a class="btn btn-p" data-track="book_nav" href="https://calendly.com/jack-waste-hub/30min?utm_source=apexline&utm_campaign=workshops" target="_blank" rel="noopener">Book a call</a>
+</div></nav>
+
+<header class="hero"><div class="wrap hgrid">
+  <div class="hcopy">
+    <div class="pill"><i></i>For independent HGV and commercial vehicle workshops</div>
+    <h1>You spent years building your workshop. <span class="hl">Get a system built round it.</span></h1>
+    <p class="lead">Still on whiteboards and paper job cards, even after paying for software? Every bay, every fitter and every job, live on one screen on your wall. Built your way, not bent round someone else's.</p>
+  </div>
+
+  <div class="hvid" id="video">
+    <div class="vbox">
+      <video id="vsl" src="/workshop-lander/vsl.mp4" poster="/workshop-lander/vsl-poster.jpg" preload="none" playsinline webkit-playsinline width="720" height="1280" aria-label="Two-minute video: the workshop system"></video>
+      <button class="vplay" id="vplay" type="button" aria-label="Play the 2-minute video">
+        <span class="ring"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l11-6.5a1 1 0 0 0 0-1.72l-11-6.5A1 1 0 0 0 8 5.5z"/></svg></span>
+        <b>Watch the 2-minute video</b>
+        <small>Captions on screen, so sound off works too</small>
+      </button>
+    </div>
+  </div>
+
+  <div class="hact">
+    <a class="btn btn-p btn-big" data-track="book_top" href="https://calendly.com/jack-waste-hub/30min?utm_source=apexline&utm_campaign=workshops" target="_blank" rel="noopener">Book my 20-minute call
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    <p class="promise"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Before we speak, I'll build your workshop into the demo, with your logo on it.</p>
+    <div class="ticks"><span>Pay the rest only when it works</span><span>No lock-in</span><span>Live in two weeks</span></div>
+    <div class="slots"><span class="dots" aria-hidden="true"><i class="gone"></i><i></i><i></i><i></i><i></i></span>4 of 5 founder places left</div>
+  </div>
+</div></header>
+
+<!-- Quotes: real words from two clients' first demos, anonymous. Attributions only, no names, firms or towns. -->
+<section class="proof" id="quotes"><div class="wrap">
+  <div class="eyebrow">Real clients, first demo</div>
+  <h2>What clients said when they first saw it</h2>
+  <figure class="feature"><blockquote>This looks f***ing unreal. I can't believe you've built this in about three weeks.</blockquote><cite>Owner, HGV and commercial vehicle repair workshop</cite></figure>
+  <div class="wall">
+    <figure class="q"><blockquote>I'm actually kind of speechless, to be honest.</blockquote><cite>Managing Director, waste brokerage</cite></figure>
+    <figure class="q"><blockquote>I'm taking all the whiteboards down and I'm bolting plasmas to the wall. I'm blown away.</blockquote><cite>Owner, HGV and commercial vehicle repair workshop</cite></figure>
+    <figure class="q"><blockquote>This is absolutely worth it. This is fantastic. That's a no brainer.</blockquote><cite>Managing Director, waste brokerage</cite></figure>
+    <figure class="q big"><blockquote>Never seen anything like it.</blockquote><cite>Owner, HGV and commercial vehicle repair workshop</cite></figure>
+    <figure class="q"><blockquote>This is way past the realms of what I thought I was going to get.</blockquote><cite>Managing Director, waste brokerage</cite></figure>
+    <figure class="q"><blockquote>It looks a whole lot better than the other ones we've had, and we're only halfway through.</blockquote><cite>Owner, HGV and commercial vehicle repair workshop</cite></figure>
+    <figure class="q"><blockquote>If we could get this right, I can literally change my whole business strategy around the software.</blockquote><cite>Managing Director, waste brokerage</cite></figure>
+    <figure class="q"><blockquote>It's just so in-depth, so clever the way you've thought about things.</blockquote><cite>Owner, HGV and commercial vehicle repair workshop</cite></figure>
+    <figure class="q big"><blockquote>Absolutely incredible.</blockquote><cite>Owner, HGV and commercial vehicle repair workshop</cite></figure>
+    <figure class="q"><blockquote>I'm really impressed. I didn't know what to expect.</blockquote><cite>Managing Director, waste brokerage</cite></figure>
+    <figure class="q"><blockquote>He just keeps giving. You are so good at this.</blockquote><cite>Owner, HGV and commercial vehicle repair workshop</cite></figure>
+    <figure class="q big"><blockquote>You blown me away again.</blockquote><cite>Owner, HGV and commercial vehicle repair workshop</cite></figure>
+  </div>
+  <div class="cta-row">
+    <a class="btn btn-p btn-big" data-track="book_quotes" href="https://calendly.com/jack-waste-hub/30min?utm_source=apexline&utm_campaign=workshops" target="_blank" rel="noopener">Book my 20-minute call
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    <p class="promise"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>See your own workshop on screen, with your logo on it.</p>
+  </div>
+</div></section>
+
+<section class="pain" id="pain"><div class="wrap pgrid">
+  <figure class="pquote">I'm sick of paper. I'm sick of whiteboards.<cite>Owner, HGV and commercial vehicle repair workshop</cite></figure>
+  <div>
+    <div class="eyebrow">Ring any bells?</div>
+    <h2>Your workshop deserves a system that works your way.</h2>
+    <p>The big names sell you their system and expect you to bend your workshop round it. It should be the other way round.</p>
+    <ul class="plist">
+      <li>The whiteboard's out of date by ten o'clock.</li>
+      <li>Job cards lost, smudged or still in the cab.</li>
+      <li>Hours your fitters work that never get billed.</li>
+      <li>Invoices going out days late.</li>
+    </ul>
+  </div>
+</div></section>
+
+<section id="what"><div class="wrap">
+  <div class="head">
+    <div class="eyebrow">What it does</div>
+    <h2>Every bay, every fitter, every job. Live.</h2>
+    <p>Here's what goes in place of the whiteboard and the paper.</p>
+  </div>
+  <div class="rows">
+    <div class="row">
+      <div class="txt">
+        <h3>A live board on your wall</h3>
+        <p>Every bay, every fitter and every job on one screen on your workshop wall. See who's on time and who's running over, as it happens.</p>
+      </div>
+      <div class="pic"><img src="/workshop-lander/img/live.webp" alt="Live view: each fitter, the job they're on and whether it's running to time" width="1100" height="502" loading="lazy" decoding="async"></div>
+    </div>
+    <div class="row">
+      <div class="txt">
+        <h3>Fitters run it from their phone</h3>
+        <p>They clock on at the start of the day, right on their phone. Photos, parts and job cards all go on the job. Waiting on parts? The office sees it straight away.</p>
+      </div>
+      <div class="pic phone"><img src="/workshop-lander/img/fitter.webp" alt="The fitter app on a phone: today's jobs and the clock running on the current one" width="540" height="983" loading="lazy" decoding="async"></div>
+    </div>
+    <div class="row">
+      <div class="txt">
+        <h3>One click to invoice</h3>
+        <p>When the job's done, one click and the invoice goes straight into Xero or QuickBooks. Every hour billed, correctly. Nothing typed twice.</p>
+      </div>
+      <div class="pic"><img src="/workshop-lander/img/invoice.webp" alt="Finished jobs waiting to be billed, each with an Invoice it button" width="1100" height="506" loading="lazy" decoding="async"></div>
+    </div>
+  </div>
+  <div class="also">
+    <div><b>Reg in, vehicle filled in</b>Type in a reg and the vehicle fills itself in.</div>
+    <div><b>Inspection sheets that lock</b>Done on the phone, signed and locked.</div>
+    <div><b>Holidays and sickness</b>Sorted from the phone too.</div>
+  </div>
+  <p class="billed">Right now, you've no idea how many hours your fitters work that never get billed. <span>This tracks every single one.</span></p>
+</div></section>
+
+<section class="deal" id="deal"><div class="wrap">
+  <div class="head">
+    <div class="eyebrow">Your guarantee</div>
+    <h2>You don't pay in full until it works.</h2>
+    <p>Burned by software before? Here's how this is different.</p>
+  </div>
+  <div class="terms">
+    <div class="term"><span class="n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><h3>Half to start. The rest when it works.</h3><p>The rest is only due once it's live on your own domain, working exactly as agreed, and you've signed it off.</p></div>
+    <div class="term"><span class="n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><h3>Live in two weeks, or three months free.</h3><p>You're live within two weeks of your details landing. If not, your first three months are free.</p></div>
+    <div class="term"><span class="n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0"/></svg></span><h3>No lock-in. Your data is yours.</h3><p>Month to month, one month's notice. Your data is always yours to take with you.</p></div>
+  </div>
+  <div class="cta-row">
+    <a class="btn btn-p btn-big" data-track="book_deal" href="https://calendly.com/jack-waste-hub/30min?utm_source=apexline&utm_campaign=workshops" target="_blank" rel="noopener">Book my 20-minute call
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+  </div>
+</div></section>
+
+<section class="final" id="book"><div class="wrap">
+  <div class="box">
+    <div class="eyebrow">Founder pricing</div>
+    <h2>Five founder places. One's gone. Four left.</h2>
+    <div class="bigslots" aria-label="1 of 5 founder places taken, 4 left"><i class="gone">Taken</i><i>Open</i><i>Open</i><i>Open</i><i>Open</i></div>
+    <p class="sub">Get your deposit in by <b>Friday 18 December</b> and you start January on your own system.</p>
+    <ol class="steps">
+      <li><b>Pick a time.</b> Hit the button and choose a slot that suits.</li>
+      <li><b>I build your demo.</b> Before we speak, I'll build your workshop into the demo, with your logo on it.</li>
+      <li><b>Twenty minutes.</b> You're looking at your own workshop on screen. Then you decide.</li>
+    </ol>
+    <div class="again">
+      <figure class="q"><blockquote>This is absolutely worth it. This is fantastic. That's a no brainer.</blockquote><cite>Managing Director, waste brokerage</cite></figure>
+      <figure class="q"><blockquote>This looks f***ing unreal. I can't believe you've built this in about three weeks.</blockquote><cite>Owner, HGV and commercial vehicle repair workshop</cite></figure>
+    </div>
+    <div class="cta-row">
+      <a class="btn btn-p btn-big" data-track="book_bottom" href="https://calendly.com/jack-waste-hub/30min?utm_source=apexline&utm_campaign=workshops" target="_blank" rel="noopener">Book my 20-minute call
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <p class="alt">Rather text? <a data-track="whatsapp" href="https://wa.me/447949088642" target="_blank" rel="noopener">WhatsApp me a time that suits</a></p>
+    </div>
+    <div class="who">Jack Simpson, founder of ApexLine. I spent years at my dad's transfer station, where it all ran on paper tickets.</div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">Jack Simpson, ApexLine. &copy; 2026</div></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js" defer></script>
+<script>
+/* ---------- COUNTS: page views and button clicks, for HQ ----------
+   Off until Jack approves the Supabase table (see Workshop/sql/site_events.sql).
+   Then paste the project URL and the publishable (anon) key here. Sends no personal data:
+   event name, page, referring site and the utm tags only. No cookies, nothing stored. */
+var WS_TRACK = { url: '', key: '' };
+
+(function () {
+  var Q = new URLSearchParams(location.search);
+  var sent = window.__wsEvents = [];
+  function track(ev) {
+    var row = {
+      event: ev, page: location.pathname,
+      ref: document.referrer ? (function () { try { return new URL(document.referrer).hostname; } catch (e) { return ''; } })() : '',
+      utm_source: Q.get('utm_source') || '', utm_medium: Q.get('utm_medium') || '', utm_campaign: Q.get('utm_campaign') || '',
+      w: window.innerWidth < 700 ? 'phone' : 'desktop'
+    };
+    sent.push(row);
+    if (!WS_TRACK.url || !WS_TRACK.key) return;
+    try {
+      fetch(WS_TRACK.url.replace(/\/$/, '') + '/rest/v1/site_events', {
+        method: 'POST', keepalive: true,
+        headers: { 'Content-Type': 'application/json', apikey: WS_TRACK.key, Authorization: 'Bearer ' + WS_TRACK.key, Prefer: 'return=minimal' },
+        body: JSON.stringify(row)
+      }).catch(function () {});
+    } catch (e) {}
+  }
+  window.wsTrack = track;
+  track('view');
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('[data-track]');
+    if (a) track(a.getAttribute('data-track'));
+  });
+
+  /* video: poster with a big play button, controls on once it starts, never autoplays */
+  var v = document.getElementById('vsl'), btn = document.getElementById('vplay');
+  var started = false;
+  function start() {
+    btn.hidden = true;
+    v.controls = true;
+    if (!started) { started = true; track('play'); }
+  }
+  /* stream in short chunks so rewinding works everywhere and iPhones play it (the host can't serve parts of one big file) */
+  var HLS = '/workshop-lander/hls/vsl.m3u8', srcSet = false;
+  function setSource() {
+    if (srcSet) return; srcSet = true;
+    if (v.canPlayType('application/vnd.apple.mpegurl')) { v.src = HLS; return; }
+    if (window.Hls && window.Hls.isSupported()) {
+      var h = new window.Hls({ maxBufferLength: 30 });
+      h.loadSource(HLS); h.attachMedia(v);
+      h.on(window.Hls.Events.ERROR, function (e, d) {
+        if (d && d.fatal) { h.destroy(); v.src = '/workshop-lander/vsl.mp4'; v.play().catch(function () {}); }
+      });
+    }
+  }
+  btn.addEventListener('click', function () {
+    start();
+    setSource();
+    var p = v.play();
+    if (p && p.catch) p.catch(function () {});
+  });
+  v.addEventListener('play', start);
+  v.addEventListener('ended', function () { track('video_end'); });
+})();
+</script>
+</body>
+</html>
