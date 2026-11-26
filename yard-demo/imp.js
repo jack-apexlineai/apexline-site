@@ -136,7 +136,7 @@
       fields: [
         { key: 'cust', label: 'Customer', req: true, eg: 'Harbourside Builders Ltd', syn: ['customer', 'business name', 'company', 'account', 'customer name'] },
         { key: 'name', label: 'Site name', req: true, eg: 'Plot 12, Mill Lane', syn: ['site', 'site name', 'address', 'site address', 'job', 'location'] },
-        { key: 'pc', label: 'Postcode', req: true, eg: 'UB3 2HQ', syn: ['postcode', 'post code', 'pc', 'zip'] },
+        { key: 'pc', label: 'Postcode', req: true, eg: 'GU21 2HQ', syn: ['postcode', 'post code', 'pc', 'zip'] },
         { key: 'contact', label: 'Site contact', eg: 'Dale on site', syn: ['site contact', 'contact', 'site manager', 'foreman'] },
         { key: 'phone', label: 'Site phone', eg: '07700 900355', syn: ['site phone', 'phone', 'tel', 'mobile', 'contact number'] },
         { key: 'notes', label: 'Access notes', eg: 'Narrow lane, no artics', syn: ['notes', 'access', 'access notes', 'instructions'] }
@@ -144,7 +144,7 @@
       check: function (v, c) {
         var cu = custByName(v.cust);
         if (!cu) { c.note(v.cust + ' is not a customer yet. Import your customers first, then the sites.', 'skip'); return; }
-        if (!pcOk(v.pc)) { c.note('"' + v.pc + '" is not a full postcode, like UB3 2HQ.', 'skip'); return; }
+        if (!pcOk(v.pc)) { c.note('"' + v.pc + '" is not a full postcode, like GU21 2HQ.', 'skip'); return; }
         v.pc = pcTidy(v.pc);
         var key = cu.id + '|' + v.pc + '|' + v.name.toLowerCase();
         if (c.seen[key]) { c.note('is the same site as row ' + c.seen[key] + '.', 'skip'); return; }
@@ -168,10 +168,10 @@
         var c0 = S().customers[0], c1 = S().customers[1] || c0;
         return [['Customer name', 'Site address', 'Post code', 'Site manager', 'Contact number', 'Access'],
           [c0.name, 'Plot 12, Mill Lane', 'pe318lt', 'Dale', '07700 900355', 'Narrow lane, no artics'],
-          [c1.name, 'Wharf Street yard', 'W3 1AB', '', '', ''],
+          [c1.name, 'Wharf Street yard', 'GU21 1AB', '', '', ''],
           [c0.name, c0.sites[0].name, c0.sites[0].pc, '', '', ''],
-          ['Nobody Homes', 'Unit 4', 'UB1 1AA', '', '', ''],
-          [c1.name, 'High Street', 'Acton', '', '', '']];
+          ['Nobody Homes', 'Unit 4', 'GU22 1AA', '', '', ''],
+          [c1.name, 'High Street', 'Woking', '', '', '']];
       },
       see: function () { H.go('customers'); }, seeLabel: 'See the customers'
     },
@@ -183,9 +183,9 @@
         { key: 'name', label: 'Supplier name', req: true, eg: 'Northgate Skips', syn: ['supplier', 'name', 'company', 'business name', 'supplier name'] },
         { key: 'contact', label: 'Bookings contact', eg: 'Sarah', syn: ['contact', 'bookings contact', 'bookings', 'contact name'] },
         { key: 'phone', label: 'Phone', eg: '07700 900141', syn: ['phone', 'tel', 'telephone', 'mobile', 'bookings phone'] },
-        { key: 'base', label: 'Based in', eg: 'Hayes', syn: ['base', 'based in', 'town', 'yard', 'location', 'depot'] },
+        { key: 'base', label: 'Based in', eg: 'Woking', syn: ['base', 'based in', 'town', 'yard', 'location', 'depot'] },
         { key: 'services', label: 'Services', eg: 'Skip hire, Grab hire', hint: 'What they do for you, with commas between', syn: ['services', 'service', 'what they do', 'does'] },
-        { key: 'areas', label: 'Postcode areas covered', eg: 'UB3, UB4, UB8', hint: 'The first half of each postcode, with commas between', syn: ['areas', 'postcodes', 'postcode areas', 'covers', 'coverage', 'postcode areas covered'] },
+        { key: 'areas', label: 'Postcode areas covered', eg: 'GU21, GU22, GU23', hint: 'The first half of each postcode, with commas between', syn: ['areas', 'postcodes', 'postcode areas', 'covers', 'coverage', 'postcode areas covered'] },
         { key: 'hireDays', label: 'Hire period (days)', eg: '14', syn: ['hire period', 'hire days', 'standard hire', 'hire'] },
         { key: 'acc', label: 'Accounts contact', eg: 'Kelly', syn: ['accounts contact', 'accounts', 'accounts name'] },
         { key: 'accEmail', label: 'Accounts email', eg: 'accounts@northgateskips.example', syn: ['accounts email', 'email', 'accounts e-mail', 'remittance email'] },
@@ -224,11 +224,11 @@
       sample: function () {
         var known = (S().suppliers[0] || {}).name || 'Colne Valley Skips';
         return [['Supplier', 'Contact', 'Telephone', 'Town', 'What they do', 'Covers', 'Standard hire', 'Accounts name', 'Accounts email', 'Waste carrier licence'],
-          ['Northgate Skips', 'Becky', '07700 900401', 'Watford', 'Skip hire', 'WD17, WD18, WD24', '28', 'Kelly', 'accounts@northgateskips.example', 'CBDU204418'],
-          ['Westway Grab and Tipper', 'Liam', '07700 900412', 'Slough', 'Grab hire, muck away', 'SL1, SL2, SL3', '', '', '', ''],
+          ['Northgate Skips', 'Becky', '07700 900401', 'Guildford', 'Skip hire', 'GU1, GU2, GU4', '28', 'Kelly', 'accounts@northgateskips.example', 'CBDU204418'],
+          ['Westway Grab and Tipper', 'Liam', '07700 900412', 'Camberley', 'Grab hire, muck away', 'GU15, GU16, GU17', '', '', '', ''],
           ['', 'Nobody', '', '', '', '', '', '', '', ''],
           [known, 'New bookings contact', '07700 900423', '', '', '', '28', '', '', ''],
-          ['Brookside Skips', 'Jo', '07700 900434', 'Ruislip', 'Skip hire', 'HA4, UB10', '', '', 'jo at brooksideskips', '']];
+          ['Brookside Skips', 'Jo', '07700 900434', 'Farnham', 'Skip hire', 'GU9, GU10', '', '', 'jo at brooksideskips', '']];
       },
       see: function () { H.go('suppliers'); }, seeLabel: 'Open the supplier handbook'
     }

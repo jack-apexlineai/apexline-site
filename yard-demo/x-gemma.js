@@ -18,7 +18,7 @@
     /* the price, supplier and day come from the system's own reading of her first message, worked out once and kept */
     function facts(t) {
       if (t.gxF) return t.gxF;
-      var c = CS.cust('c7'), site = (c.sites && c.sites[0]) || { name: 'Canal wharf site, Willesden', pc: 'NW10 4QB' }, F = { qty: 1, site: site.name, pc: site.pc, day: 7, sell: 0, cost: 0, sup: null };
+      var c = CS.cust('c7'), site = (c.sites && c.sites[0]) || { name: 'Canal wharf site, Sheerwater', pc: 'GU21 5QB' }, F = { qty: 1, site: site.name, pc: site.pc, day: 7, sell: 0, cost: 0, sup: null };
       try {
         var an = CS.analyse(t), ln = an && an.lines && an.lines[0];
         if (ln) { F.sell = an.sell || ln.sell; F.cost = an.cost || ln.cost; F.sup = ln.sup; }
@@ -66,7 +66,7 @@
       var F = sfacts(t);
       if (t.sxDraft != null) return t.sxDraft;
       if (SIMPLE[t.id] === 'quote') return 'Hi Hannah,\n\nThanks for getting in touch. A 12 yard skip delivered to ' + F.pc + ' on ' + F.dayLong + ' is ' + money(F.sell) + ' + VAT.\n\nWant me to book it in?\n\nCheers, Dave';
-      return 'Hi Lee, yes no problem mate. Grab booked in for tomorrow at the Northolt site, ' + money(F.sell) + ' + VAT. Have requested AM, will confirm the window as soon as possible.';
+      return 'Hi Lee, yes no problem mate. Grab booked in for tomorrow at the Chobham site, ' + money(F.sell) + ' + VAT. Have requested AM, will confirm the window as soon as possible.';
     }
     /* Undo: the whole state is saved just before an action and put back on Undo (kept in memory, so it lasts until a reload) */
     var SNAP = {};
@@ -91,7 +91,7 @@
       var F = sfacts(t);
       return 'Hi ' + s.contact + ', can you do a grab lorry for soil and clay at ' + F.site + ', ' + F.pc + ' tomorrow, AM if possible? Confirming ' + money(s.cost) + ' as per your price. Ref Demo Skip & Grab-' + CS.S.counters.job + '. Thanks, Dave (Demo Skip & Grab)';
     }
-    function lcustMsg(t) { var s = lpick(t); return t.lxDraft != null ? t.lxDraft : 'Hi Lee, yes no problem mate. Grab booked in for tomorrow at the Northolt site, ' + money(s.sell) + ' + VAT. Have requested AM, will confirm the window as soon as possible.'; }
+    function lcustMsg(t) { var s = lpick(t); return t.lxDraft != null ? t.lxDraft : 'Hi Lee, yes no problem mate. Grab booked in for tomorrow at the Chobham site, ' + money(s.sell) + ' + VAT. Have requested AM, will confirm the window as soon as possible.'; }
     /* their price can be typed over: the gross profit and the message change with it */
     function money3(s, k) {
       return '<div class="gx-money" data-cost="' + s.cost + '"><span><small>Their price</small><label class="gx-pin">£<input class="gx-price" data-k="' + (k || '') + '" value="' + Math.round(s.sell) + '" inputmode="numeric" aria-label="Their price"></label></span><span><small>Supplier cost</small><b>' + money(s.cost) + '</b></span><span class="gp"><small>Gross profit</small><b class="gx-gp">' + money(s.sell - s.cost) + ' <em>' + (s.sell ? Math.round((s.sell - s.cost) / s.sell * 100) : 0) + '%</em></b></span></div>';

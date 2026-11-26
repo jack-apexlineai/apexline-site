@@ -2,7 +2,7 @@
 .apxi{
   --ai-ink:var(--ink,#111827); --ai-muted:var(--muted,#677084);
   --ai-line:var(--in-line,var(--line2,#D4D8DF)); --ai-card:var(--card,var(--panel,#fff));
-  --ai-soft:var(--soft,var(--sunk,#EEF1F6)); --ai-brand:var(--brand-fill,var(--brand,#EB9347));
+  --ai-soft:var(--soft,var(--sunk,#EEF1F6)); --ai-brand:var(--brand-fill,var(--brand,#1F4FA8));
   --ai-brand-on:var(--brand-on,#1A1A1A); --ai-ok:var(--ok,#15803D); --ai-bad:var(--bad,#B42318); --ai-warn:var(--warn,var(--amber,#B45309));
   color:var(--ai-ink); font-size:14px; line-height:1.45; min-width:0;
 }

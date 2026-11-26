@@ -75,7 +75,7 @@ button.cp-row:hover{background:var(--panel2)}
 .cp-tabs button{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:10px 12px;border-radius:11px;border:1px solid var(--line);background:var(--panel);font-weight:700;font-size:13px;color:var(--ink2);text-align:left;min-width:0}
 .cp-tabs button i{font-style:normal;font-size:11.5px;font-weight:800;background:var(--sunk);border-radius:999px;padding:1px 7px;color:var(--muted)}
 .cp-tabs button.on{background:var(--char);border-color:var(--char);color:#fff}
-:root[data-theme="dark"] .cp-tabs button.on{background:var(--brand);border-color:var(--brand);color:#1A1A1A}
+:root[data-theme="dark"] .cp-tabs button.on{background:var(--brand);border-color:var(--brand);color:#fff}
 .cp-tabs button.on i{background:rgba(255,255,255,.18);color:inherit}
 .cp-search{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line2);border-radius:11px;padding:0 12px;height:44px;min-width:0}
 .cp-search:focus-within{border-color:var(--brand)}
@@ -84,7 +84,7 @@ button.cp-row:hover{background:var(--panel2)}
 .cp-seg{display:flex;flex-wrap:wrap;gap:6px}
 .cp-seg button{padding:8px 13px;border-radius:999px;border:1px solid var(--line);background:var(--panel);font-weight:700;font-size:13px;color:var(--ink2)}
 .cp-seg button.on{background:var(--char);border-color:var(--char);color:#fff}
-:root[data-theme="dark"] .cp-seg button.on{background:var(--brand);border-color:var(--brand);color:#1A1A1A}
+:root[data-theme="dark"] .cp-seg button.on{background:var(--brand);border-color:var(--brand);color:#fff}
 
 /* ---------- book a job ---------- */
 .cp-wiz{display:flex;flex-direction:column;gap:14px;width:100%}
@@ -93,7 +93,7 @@ button.cp-row:hover{background:var(--panel2)}
 .cp-steps button,.cp-steps span.st{display:flex;align-items:center;gap:8px;width:100%;padding:9px 10px;border-radius:11px;background:var(--panel);border:1px solid var(--line);font-weight:700;font-size:13px;color:var(--muted);text-align:left;min-width:0}
 .cp-steps .n{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--sunk);font-size:12px;font-weight:800;flex:0 0 auto}
 .cp-steps .on button,.cp-steps .on span.st{border-color:var(--brand);color:var(--ink)}
-.cp-steps .on .n{background:var(--brand);color:#1A1A1A}
+.cp-steps .on .n{background:var(--brand);color:#fff}
 .cp-steps .done .n{background:var(--ok-l);color:var(--ok)}
 .cp-steps .done button{color:var(--ink2)}
 .cp-steps .lb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

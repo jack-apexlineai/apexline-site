@@ -327,7 +327,7 @@
       }).join('') +
         '<button class="cp-opt rowy' + (B.site === 'new' ? ' on' : '') + '" data-act="bkSite" data-site="new"><span class="pin">' + ic('plus') + '</span><span class="bd"><b>A new site</b><small>Somewhere we have not been for you yet. Demo Skip & Grab will send you a price first.</small></span>' + ic('chevron-right') + '</button></div>';
       if (B.site === 'new') out += '<div class="cp-form"><div class="field"><label for="bkAddr">Site address</label><input id="bkAddr" data-bind="addr" autocomplete="off" placeholder="12 Mill Lane" value="' + h(B.addr) + '"></div>' +
-        '<div class="field"><label for="bkPc">Postcode</label><input id="bkPc" data-bind="pc" autocomplete="off" placeholder="UB3 2AB" value="' + h(B.pc) + '"></div>' +
+        '<div class="field"><label for="bkPc">Postcode</label><input id="bkPc" data-bind="pc" autocomplete="off" placeholder="GU22 2AB" value="' + h(B.pc) + '"></div>' +
         '<button class="btn pri" data-act="bkNew">Next' + ic('arrow-right') + '</button></div>';
     } else if (B.step === 2) {
       var isNew = B.site === 'new', gr = rate(B.site, { svc: 'grab', qty: B.loads });

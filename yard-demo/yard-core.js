@@ -6,11 +6,11 @@
   var YC = window.DSGYC = {};
 
   /* ---------- fixed sample data ---------- */
-  YC.YARD = { name: 'Our yard and transfer station', addr: 'Hartwell Road, Park Royal NW10 7HQ', lat: 51.5283, lng: -0.2690, permit: 'EPR/DS4821PR' };
-  YC.CARRIER = { name: 'Demo Skip & Grab Ltd', reg: 'CBDU123456', addr: 'Hartwell Road, Park Royal NW10 7HQ' };
+  YC.YARD = { name: 'Our yard and transfer station', addr: 'Lakeside Way, Old Woking GU22 9JR', lat: 51.3050, lng: -0.5350, permit: 'EPR/DS4821WK' };
+  YC.CARRIER = { name: 'Demo Skip & Grab Ltd', reg: 'CBDU123456', addr: 'Lakeside Way, Old Woking GU22 9JR' };
   YC.TIPS = {
-    yard: { n: 'Our transfer station, Park Royal', permit: 'EPR/DS4821PR', lat: 51.5283, lng: -0.2690 },
-    soil: { n: 'Harefield Soil Recovery, Harefield', permit: 'EPR/HS2210HF', lat: 51.5985, lng: -0.4780 }
+    yard: { n: 'Our transfer station, Old Woking', permit: 'EPR/DS4821WK', lat: 51.3050, lng: -0.5350 },
+    soil: { n: 'Wey Valley Soil Recovery, Send', permit: 'EPR/WV2210SD', lat: 51.2790, lng: -0.5180 }
   };
   YC.STREAMS = {
     mixed:    { n: 'Mixed construction and demolition', ewc: '17 09 04', rec: 84, code: 'R13', dens: 0.19, form: 'Mixed' },
@@ -24,12 +24,12 @@
     house:    { n: 'Household clear-out', ewc: '20 03 01', rec: 68, code: 'R13', dens: 0.14, form: 'Mixed' }
   };
   YC.SIZES = [2, 4, 6, 8, 10, 12, 14, 16];
-  YC.RORO_SIZES = [20, 30, 35, 40];
+  YC.RORO_SIZES = [20, 40];
   /* the price list: London prices, ex VAT. RoRos carry a tonnage allowance; every tonne over it is charged at the over rate */
   YC.PRICES = {
-    skip: { 2: 140, 4: 220, 6: 260, 8: 300, 10: 340, 12: 370, 14: 400, 16: 430 },
-    roro: { 20: { price: 440, incl: 4 }, 30: { price: 520, incl: 6 }, 35: { price: 580, incl: 7 }, 40: { price: 650, incl: 8 } },
-    overRate: 75, grab: 350, muck: 330, hireDays: 14
+    skip: { 2: 150, 4: 230, 6: 280, 8: 320, 10: 360, 12: 395, 14: 430, 16: 460 },
+    roro: { 20: { price: 450, incl: 2 }, 40: { price: 595, incl: 3 } },
+    overRate: 75, grab: 380, muck: 360, hireDays: 14, permit: 65
   };
   YC.prices = function (Y) { if (Y && !Y.prices) Y.prices = JSON.parse(JSON.stringify(YC.PRICES)); return (Y && Y.prices) || YC.PRICES; };
   YC.isRoro = function (j) { return (j.size || 0) >= 20 && j.type !== 'grab' && j.type !== 'muck'; };
@@ -37,10 +37,10 @@
     var P = YC.prices(Y);
     if (j.type === 'grab') return P.grab * (j.loads || 1);
     if (j.type === 'muck') return P.muck * (j.loads || 1);
-    if (YC.isRoro(j)) return (P.roro[j.size] || P.roro[40]).price;
+    if (YC.isRoro(j)) return (P.roro[j.size >= 30 ? 40 : 20]).price;
     return P.skip[j.size] || P.skip[8];
   };
-  YC.inclFor = function (Y, j) { var P = YC.prices(Y); return YC.isRoro(j) ? (P.roro[j.size] || P.roro[40]).incl : null; };
+  YC.inclFor = function (Y, j) { var P = YC.prices(Y); return YC.isRoro(j) ? (P.roro[j.size >= 30 ? 40 : 20]).incl : null; };
   /* a RoRo ticket over its allowance: what is owed for the extra weight */
   YC.overCheck = function (Y, t, j) {
     if (!t || !j || !YC.isRoro(j) || t.over) return null;
@@ -52,11 +52,11 @@
   };
   YC.LOAD_T = 16;   /* a grab or muckaway 8-wheeler carries about 16 tonnes */
   YC.LORRIES = [
-    { id: 'L1', n: 'Skip lorry 1', reg: 'DS21 SKP', driver: 'Wayne Pike', first: 'Wayne', kind: 'skip', col: '#EB9347' },
-    { id: 'L2', n: 'Skip lorry 2', reg: 'DS22 SKP', driver: 'Darren Cole', first: 'Darren', kind: 'skip', col: '#2563EB' },
-    { id: 'L3', n: 'Hook lorry', reg: 'DS70 RRO', driver: 'Jason Hurst', first: 'Jason', kind: 'roro', col: '#7C3AED' },
-    { id: 'G1', n: 'Grab 1', reg: 'DS19 GRB', driver: 'Ricky Bell', first: 'Ricky', kind: 'grab', col: '#0E9F6E' },
-    { id: 'G2', n: 'Grab 2', reg: 'DS23 GRB', driver: 'Callum Reid', first: 'Callum', kind: 'grab', col: '#DB2777' }
+    { id: 'L1', n: 'Skip lorry 1', reg: 'DS21 SKP', driver: 'Wayne Pike', first: 'Wayne', kind: 'skip', col: '#1F4FA8' },
+    { id: 'L2', n: 'Skip lorry 2', reg: 'DS22 SKP', driver: 'Darren Cole', first: 'Darren', kind: 'skip', col: '#1F4FA8' },
+    { id: 'L3', n: 'Hook lorry', reg: 'DS70 RRO', driver: 'Jason Hurst', first: 'Jason', kind: 'roro', col: '#1F4FA8' },
+    { id: 'G1', n: 'Grab 1', reg: 'DS19 GRB', driver: 'Ricky Bell', first: 'Ricky', kind: 'grab', col: '#1F4FA8' },
+    { id: 'G2', n: 'Grab 2', reg: 'DS23 GRB', driver: 'Callum Reid', first: 'Callum', kind: 'grab', col: '#1F4FA8' }
   ];
   YC.KIND = { skip: 'Skip loader, up to 16 yards', roro: 'Hook lift, 20 and 40 yard', grab: '8-wheel grab lorry' };
   YC.TYPES = {
@@ -66,22 +66,23 @@
     grab: { n: 'Grab', ic: 'backhoe', waste: true },
     muck: { n: 'Muckaway', ic: 'truck', waste: true }
   };
-  /* site positions for the map (sample sites in west and north-west London) */
+  /* site positions for the map (sample sites in and around Woking) */
   var P = {
-    'UB2 4LP': [51.5030, -0.3830], 'UB6 9AQ': [51.5300, -0.3520], 'HA1 3XR': [51.5780, -0.3420], 'HA3 5RT': [51.5970, -0.3330], 'UB11 1QZ': [51.5090, -0.4470],
-    'W5 2HT': [51.5140, -0.3020], 'W7 3JX': [51.5090, -0.3400], 'W3 6RS': [51.5080, -0.2700], 'UB5 6TJ': [51.5480, -0.3700], 'HA4 7QW': [51.5740, -0.4180],
-    'NW10 4QB': [51.5400, -0.2380], 'HA3 8QN': [51.5830, -0.3110], 'NW10 5SD': [51.5320, -0.2240], 'TW8 0EX': [51.4860, -0.3060], 'UB3 4NN': [51.5060, -0.4210],
-    'TW3 3HN': [51.4670, -0.3660], 'HA7 4AR': [51.6160, -0.3110], 'UB8 1JT': [51.5460, -0.4800], 'HA1 2LT': [51.5800, -0.3300], 'UB10 0QA': [51.5310, -0.4480],
-    'UB8 2JP': [51.5290, -0.4830], 'TW13 4PH': [51.4460, -0.4120], 'HA5 1AA': [51.5930, -0.3810], 'HA8 7AA': [51.6130, -0.2770], 'UB6 7EF': [51.5360, -0.3200],
-    'HA0 3PS': [51.5570, -0.3010], 'TW12 2JB': [51.4180, -0.3690]
+    'GU21 2RX': [51.3180, -0.6100], 'KT14 6EX': [51.3380, -0.5050], 'GU21 4XR': [51.3290, -0.5660], 'GU24 0RT': [51.3040, -0.6330], 'KT14 7QZ': [51.3430, -0.4750],
+    'GU22 7HT': [51.3160, -0.5530], 'GU21 4JX': [51.3260, -0.5740], 'KT13 8RS': [51.3710, -0.4570], 'GU24 8TJ': [51.3470, -0.6030], 'GU18 5QW': [51.3470, -0.6670],
+    'GU21 5QB': [51.3300, -0.5280], 'GU22 8QN': [51.3170, -0.5060], 'KT16 0SD': [51.3640, -0.5270], 'KT15 1EX': [51.3690, -0.4900], 'GU21 3NN': [51.3180, -0.5890],
+    'GU15 3HN': [51.3370, -0.7440], 'GU23 6AR': [51.2990, -0.4910], 'GU1 3JT': [51.2360, -0.5720], 'GU22 8LT': [51.3220, -0.5400], 'GU24 9QA': [51.3260, -0.6300],
+    'KT15 3JP': [51.3510, -0.4970], 'KT16 9PH': [51.3890, -0.5080], 'GU19 5AA': [51.3600, -0.6920], 'GU21 7AA': [51.3120, -0.5820], 'GU22 0EF': [51.2930, -0.5670],
+    'GU24 9PS': [51.3380, -0.6320], 'GU23 7JB': [51.2850, -0.5290], 'GU22 7XQ': [51.3140, -0.5470]
   };
   YC.pos = function (pc) { var p = P[pc]; return p ? { lat: p[0], lng: p[1] } : { lat: YC.YARD.lat, lng: YC.YARD.lng }; };
   /* extra one-off sites (domestic and small trade, not account customers) */
   var ONEOFF = {
-    o1: { name: 'Mrs Helen Ashworth', site: 'Station Road, Edgware', pc: 'HA8 7AA', phone: '07700 900355' },
-    o2: { name: 'Mr Ian Pell', site: 'Greenway, Perivale', pc: 'UB6 7EF', phone: '07700 900366' },
-    o3: { name: 'Mrs Lisa Moreton', site: 'Holt Road, Wembley', pc: 'HA0 3PS', phone: '07700 900377' },
-    o4: { name: 'Mr Tom Garside', site: 'Linden Road, Hampton', pc: 'TW12 2JB', phone: '07700 900388' }
+    o1: { name: 'Mrs Helen Ashworth', site: 'Station Road, St Johns', pc: 'GU21 7AA', phone: '07700 900355' },
+    o2: { name: 'Mr Ian Pell', site: 'Greenway, Mayford', pc: 'GU22 0EF', phone: '07700 900366' },
+    o3: { name: 'Mrs Lisa Moreton', site: 'Holt Road, West End', pc: 'GU24 9PS', phone: '07700 900377' },
+    o4: { name: 'Mr Tom Garside', site: 'Linden Road, Send', pc: 'GU23 7JB', phone: '07700 900388' },
+    o5: { name: 'Mrs Sarah Okafor', site: '14 Oakfield Road, Woking', pc: 'GU22 7XQ', phone: '07700 900399' }
   };
   YC.oneoff = function (id) { return ONEOFF[id]; };
 
@@ -114,10 +115,7 @@
     var s = c && c.sites[idx || 0]; return s ? { name: s.name, pc: s.pc } : { name: 'Site', pc: 'HA1 2LT' };
   }
   function permitFor(pc, j, from, to) {
-    var out = String(pc).toUpperCase().split(' ')[0];
-    var B = { Ealing: ['UB1', 'UB2', 'UB5', 'UB6', 'W3', 'W5', 'W7', 'W13'], Hillingdon: ['UB3', 'UB4', 'UB7', 'UB8', 'UB9', 'UB10', 'UB11', 'HA4', 'HA6'], Brent: ['NW10', 'HA0', 'HA9'],
-      Harrow: ['HA1', 'HA2', 'HA3', 'HA5', 'HA7'], Barnet: ['HA8', 'EN4', 'EN5', 'NW7'], Hounslow: ['TW3', 'TW4', 'TW5', 'TW7', 'TW8', 'TW13', 'TW14'], 'Richmond upon Thames': ['TW1', 'TW2', 'TW12'] };
-    var council = 'London Borough of Ealing'; for (var k in B) if (B[k].indexOf(out) >= 0) council = 'London Borough of ' + k;
+    var council = 'Surrey County Council';   /* in Surrey the county council licenses skips on the road */
     return { council: council, ref: 'SKP/' + (2600 + hash(j) % 900), from: from, to: to };
   }
   YC.permitFor = permitFor;
@@ -133,7 +131,7 @@
       J('DSG-3113', 'L2', 660, 720, 'exchange', 'c13', 1, 8, 'house', { place: 'road' }),
       J('DSG-3114', 'L2', 810, 870, 'deliver', 'o2', 0, 4, 'house'),
       J('DSG-3115', 'L2', 900, 960, 'collect', 'c12', 1, 6, 'mixed', { place: 'road' }),
-      J('DSG-3120', 'L3', 420, 470, 'collect', 'c14', 1, 35, 'mixed'),
+      J('DSG-3120', 'L3', 420, 470, 'collect', 'c14', 1, 40, 'mixed'),
       J('DSG-3121', 'L3', 510, 590, 'deliver', 'c14', 0, 20, 'mixed'),
       J('DSG-3122', 'L3', 630, 720, 'exchange', 'c14', 2, 40, 'mixed'),
       J('DSG-3123', 'L3', 810, 900, 'collect', 'c1', 0, 20, 'hardcore'),
@@ -209,10 +207,64 @@
       }
     }
   }
+  /* ---------- days, capacity and Saturdays ---------- */
+  YC.CAP = { day: 26, sat: 10 };
+  YC.dayDate = function (off) { if (YC._CS && YC._CS.dayDate) return YC._CS.dayDate(off); var d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + off); return d; };
+  YC.isSat = function (off) { return YC.dayDate(off).getDay() === 6; };
+  YC.isSun = function (off) { return YC.dayDate(off).getDay() === 0; };
+  /* count working days from tomorrow: Saturdays count only if the yard works them */
+  YC.workDays = function (from, n, sat) { var o = [], d = from; while (o.length < n && d < from + 60) { var w = YC.dayDate(d).getDay(); if (w !== 0 && (sat || w !== 6)) o.push(d); d++; } return o; };
+  YC.nthWorkDay = function (n) { return YC.workDays(1, n, false)[n - 1]; };   /* Monday to Friday, for council permits */
+  YC.cap = function (off) { return YC.isSat(off) ? YC.CAP.sat : YC.CAP.day; };
+  YC.booked = function (Y, off) { return Y.jobs.filter(function (j) { return j.day === off; }).length; };
+  YC.full = function (Y, off) { return YC.booked(Y, off) >= YC.cap(off); };
+  YC.soonest = function (Y, from, sat) { var L = YC.workDays(from, 30, sat); for (var i = 0; i < L.length; i++) if (!YC.full(Y, L[i])) return L[i]; return L[L.length - 1]; };
+  function fillDay(S, Y, off, startN) {
+    var cs = ['c1', 'c2', 'c4', 'c11', 'c12', 'c13', 'c14', 'c6', 'c7'], ly = ['L1', 'L2', 'G1', 'G2', 'L3'], sat = YC.isSat(off), n = startN, k = 0;
+    var have = YC.forLorryAny ? 0 : 0;
+    while (YC.booked(Y, off) < YC.cap(off) && k < 40) {
+      var lid = ly[k % ly.length], lo = YC.lorry(lid), c = cs[(k * 5 + off) % cs.length], idx = k % 2, cust = (S.customers || []).filter(function (x) { return x.id === c; })[0];
+      if (cust && idx >= cust.sites.length) idx = 0;
+      var used = Y.jobs.filter(function (j) { return j.day === off && j.lorry === lid; }).length, w0 = 450 + used * 75;
+      if (sat && w0 > 690) { k++; continue; }
+      var type = lo.kind === 'grab' ? 'grab' : ['deliver', 'exchange', 'collect'][k % 3], size = lo.kind === 'roro' ? (k % 2 ? 20 : 40) : lo.kind === 'grab' ? null : [6, 8, 8, 12, 4][k % 5];
+      var j = J('DSG-' + (n++), lid, w0, w0 + 60, type, c, idx, size, type === 'grab' ? 'soil' : 'mixed');
+      var st = siteOf(S, c, idx); j.site = st; var p = YC.pos(st.pc); j.lat = p.lat; j.lng = p.lng; j.day = off; j.price = YC.priceFor(null, j); j.incl = YC.inclFor(null, j);
+      Y.jobs.push(j); k++;
+    }
+    return n;
+  }
   YC.fresh = function (S, CS) {
+    YC._CS = CS || YC._CS;
     YC.wd1 = CS && CS.wd ? CS.wd(1) : 1;
-    var Y = { v: 1, day: S.seededDay, made: Date.now(), jobs: seedJobs(S), onsite: seedOnsite(S), tickets: [], defra: [], problems: [], texts: [], feed: [], counters: { job: 3170, ticket: 48700, wtn: 5200 } };
+    var Y = { v: 1, day: S.seededDay, made: Date.now(), jobs: seedJobs(S), onsite: seedOnsite(S), tickets: [], defra: [], problems: [], texts: [], feed: [], counters: { job: 3300, ticket: 48700, wtn: 5200 } };
     seedHistory(S, Y);
+    /* tomorrow and the next working day are full, so New booking offers the soonest day with room */
+    var busy = YC.workDays(1, 2, true), nid = 3200; busy.forEach(function (off) { nid = fillDay(S, Y, off, nid); });
+    /* permits: every road job and road skip has a card; one booked half an hour ago has not been applied for yet */
+    var pn = 501, now0 = Date.now();
+    Y.permits = [];
+    function addP(o, st, paidBy, created, job) {
+      if (Y.permits.some(function (p) { return p.addr === o.site.name && p.pc === o.site.pc; })) return;
+      Y.permits.push({ id: 'PM-' + (pn++), job: job || null, skip: o.id && !job ? o.id : null, cust: o.cust, addr: o.site.name, pc: o.site.pc, council: 'Surrey County Council', status: st, paidBy: paidBy, price: YC.PRICES.permit,
+        ref: o.permit ? o.permit.ref : null, from: o.permit ? o.permit.from : null, to: o.permit ? o.permit.to : null, createdAt: created, log: [] });
+    }
+    Y.onsite.filter(function (o) { return o.permit; }).forEach(function (o, i) { addP(o, 'approved', i % 2 ? 'customer' : 'us', now0 - (20 + i) * 86400000); });
+    Y.jobs.filter(function (j) { return j.permit && j.day === 0; }).forEach(function (j, i) { addP(j, 'approved', i % 2 ? 'us' : 'customer', now0 - 6 * 86400000, j.id); });
+    Y.jobs.filter(function (j) { return j.permit && j.day > 0; }).forEach(function (j) { addP(j, 'waiting', 'customer', now0 - 3 * 86400000, j.id); });
+    var d4 = YC.nthWorkDay(4), d5 = YC.nthWorkDay(5);
+    [['DSG-3168', 'c2', 0, d4, 'applied', null, now0 - 2 * 86400000], ['DSG-3169', 'o5', 0, d5, 'apply', null, now0 - 29 * 60000]].forEach(function (r) {
+      var j = J(r[0], null, 450, 720, 'deliver', r[1], r[2], 8, r[1] === 'o5' ? 'house' : 'mixed', { place: 'road' }), st = siteOf(S, r[1], r[2]); j.site = st; var p = YC.pos(st.pc); j.lat = p.lat; j.lng = p.lng; j.day = r[3];
+      j.permit = permitFor(st.pc, j.id, r[3], r[3] + 14); j.price = YC.priceFor(null, j) + YC.PRICES.permit; j.incl = null; j.log.push({ at: r[6], t: 'Booked on the road, permit needed' });
+      Y.jobs.push(j); addP(j, r[4], r[5], r[6], j.id);
+    });
+    /* the inbox: two messages, one wants a price, one wants to book (a voice note, written out) */
+    Y.inbox = [
+      { id: 'm1', kind: 'quote', ch: 'wa', cust: 'c5', site: 0, size: 8, at: now0 - 14 * 60000, unread: true,
+        text: 'Hi Dave, how much for an 8 yard skip at Westgate Road in Weybridge? It can go on the drive. Thanks' },
+      { id: 'm2', kind: 'book', ch: 'wa', cust: 'c4', site: 1, size: 6, voice: 11, at: now0 - 6 * 60000, unread: true,
+        text: 'Morning Dave, it\'s Rob. Can you drop a 6 yarder at the Horsell job, first day you\'ve got, morning please. On the drive like last time. Cheers mate' }
+    ];
     /* two tickets read off a photo that did not match a job by themselves */
     Y.tickets.push({ id: 'T-48690', day: 0, time: 560, site: 'yard', lorry: 'L2', net: 1.84, gross: 11.62, stream: 'mixed', cust: null, job: null, matched: false, read: 'Photo of the ticket' });
     Y.tickets.push({ id: 'T-48691', day: 0, time: 605, site: 'soil', lorry: 'G1', net: 15.12, gross: 30.4, stream: 'soil', cust: null, job: null, matched: false, read: 'Photo of the ticket' });
@@ -227,7 +279,7 @@
     var heavy = Y.jobs.filter(function (j) { return j.id === 'DSG-3120'; })[0];
     if (heavy) {
       heavy.at.onway = b0.getTime() + 415 * 60000; heavy.at.arrived = b0.getTime() + 430 * 60000; heavy.eta = { at: heavy.at.onway, text: '' };
-      YC.complete(S, Y, heavy, { net: 9.64, plate: true }, b0.getTime() + 455 * 60000);
+      YC.complete(S, Y, heavy, { net: 4.86, plate: true }, b0.getTime() + 455 * 60000);
     }
     YC.settle(S, Y, true);
     return Y;
@@ -394,7 +446,7 @@
 
   /* sample photo, drawn here so the demo needs no image files */
   YC.samplePhoto = function (kind, size) {
-    var col = kind === 'collect' ? '#5B6B7A' : '#EB9347';
+    var col = kind === 'collect' ? '#5B6B7A' : '#1F4FA8';
     var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#BFD7EA"/><stop offset="1" stop-color="#E8F0F5"/></linearGradient></defs>' +
       '<rect width="320" height="220" fill="url(#s)"/><rect y="120" width="320" height="100" fill="#9A9A92"/><rect y="118" width="320" height="6" fill="#7E7E76"/>' +
       '<rect x="18" y="40" width="90" height="80" fill="#C9B8A0"/><rect x="34" y="62" width="22" height="22" fill="#8FB3CF"/><rect x="70" y="62" width="22" height="22" fill="#8FB3CF"/><path d="M12 42 L63 14 L114 42 Z" fill="#8A4B3A"/>' +

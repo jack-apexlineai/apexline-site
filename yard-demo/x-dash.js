@@ -41,7 +41,7 @@
         '<div class="xd-l"><div class="xd-top"><div><small class="xd-k">' + h(cur.long) + ' so far</small><b class="xd-big" data-count="' + Math.round(cur.s.rev) + '">' + money(cur.s.rev) + '</b>' +
         (prev ? '<span class="xd-d ' + (dr >= 0 ? 'up' : 'down') + '">' + (dr >= 0 ? '&#9650; ' : '&#9660; ') + money(Math.abs(dr)) + (dr >= 0 ? ' ahead of ' : ' behind ') + h(prev.long) + ' at this point</span>' : '') + '</div>' +
         '<div class="xd-leg"><span><i class="l1"></i>' + h(cur.long) + '</span>' + (prev ? '<span><i class="l2"></i>' + h(prev.long) + '</span>' : '') + '<span><i class="l3"></i>Estimate</span></div></div>' +
-        '<svg class="xd-chart" viewBox="0 0 ' + W + ' ' + Hh + '" role="img" aria-label="Sales this month day by day against last month, with an estimate for the rest of the month"><defs><linearGradient id="xdg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EB9347" stop-opacity=".42"/><stop offset="1" stop-color="#EB9347" stop-opacity="0"/></linearGradient></defs>' +
+        '<svg class="xd-chart" viewBox="0 0 ' + W + ' ' + Hh + '" role="img" aria-label="Sales this month day by day against last month, with an estimate for the rest of the month"><defs><linearGradient id="xdg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1F4FA8" stop-opacity=".42"/><stop offset="1" stop-color="#1F4FA8" stop-opacity="0"/></linearGradient></defs>' +
         grid + xs +
         (b ? '<path class="pm" d="' + path(b, plen) + '"/>' : '') +
         '<path class="ar" d="' + area + '"/><path class="tm" pathLength="1" d="' + path(a, dom) + '"/>' +

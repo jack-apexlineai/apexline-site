@@ -12,7 +12,7 @@
   var FLOOR = { skip: 25, grab: 30, muck: 30, welfare: 60, container: 30, toilet: 20, fencing: 40, sweeper: 25, concrete: 40, aggregates: 30, plant: 40 };
   var QTY = { grab: ['Loads', 1], muck: ['Loads', 1], aggregates: ['Loads', 1], welfare: ['Weeks', 4], container: ['Weeks', 4], toilet: ['Weeks', 4], fencing: ['Panels', 40], sweeper: ['Hours', 4], concrete: ['Cubic metres', 6], plant: ['Weeks', 1] };
   var REGIONS = [
-    ['Ealing and Acton', 'W5'], ['Hayes and Southall', 'UB3'], ['Harrow and Wembley', 'HA1'], ['Hounslow and Feltham', 'TW3'],
+    ['Woking', 'GU22'], ['Knaphill and Bisley', 'GU21'], ['Byfleet and Weybridge', 'KT14'], ['Chobham and Bagshot', 'GU24'],
     ['East London', 'E14'], ['Woking and Surrey', 'GU22'], ['Birmingham', 'B23'], ['Manchester', 'M1'], ['Liverpool', 'L1']
   ];
 
@@ -228,7 +228,7 @@
       '<div class="card" style="margin-bottom:16px"><div class="hd"><h2>' + ic('list') + 'Your skip prices, every area</h2><span class="muted" style="font-size:12.5px">Ideal price from today\'s best supplier and your rules. Tap any price to quote it.</span></div><div class="tw"><table class="t pbook"><thead><tr><th>Area</th>' + [4, 6, 8, 12, 16, 20, 40].map(function (z) { return '<th class="r">' + (z >= 20 ? z + 'yd RoRo' : z + ' yard') + '</th>'; }).join('') + '</tr></thead><tbody>' + REGIONS.map(row).join('') + '</tbody></table></div></div>' +
       '<div class="card"><div class="hd"><h2>' + ic('settings') + 'Your pricing rules</h2><span class="muted" style="font-size:12.5px">Set your target gross profit. Every price is worked out to give you that, rounded up to the nearest £5. You can still change any price by hand.</span></div><div class="tw"><table class="t"><thead><tr><th>Service</th><th class="r">Target gross profit</th><th class="r">Floor, at least</th><th class="hide-sm">Means</th></tr></thead><tbody>' +
       SVC_ORDER.map(function (k) {
-        var r = R[k]; var ex = k === 'skip' ? (function () { var b = (CS.lookup('UB6', { svc: 'skip', size: 8, qty: 1 }) || [])[0]; if (!b) return ''; var L = ladder('skip', b.cost); return 'UB6 8 yard: buy ' + money(L.cost) + ', floor ' + money(L.floor) + ', ideal ' + money(L.ideal) + ', stretch ' + money(L.stretch); })() : '';
+        var r = R[k]; var ex = k === 'skip' ? (function () { var b = (CS.lookup('GU21', { svc: 'skip', size: 8, qty: 1 }) || [])[0]; if (!b) return ''; var L = ladder('skip', b.cost); return 'GU21 8 yard: buy ' + money(L.cost) + ', floor ' + money(L.floor) + ', ideal ' + money(L.ideal) + ', stretch ' + money(L.stretch); })() : '';
         return '<tr><td><b>' + h(CS.svc(k).name) + '</b></td><td class="r"><input class="rin" data-rule="gp" data-k="' + k + '" value="' + r.gp + '" inputmode="numeric" aria-label="' + h(CS.svc(k).name) + ' target gross profit"> %</td><td class="r">£ <input class="rin" data-rule="floor" data-k="' + k + '" value="' + r.floor + '" inputmode="numeric" aria-label="' + h(CS.svc(k).name) + ' floor"></td><td class="hide-sm"><small class="muted">' + h(ex) + '</small></td></tr>';
       }).join('') + '</tbody></table></div></div>';
   };
@@ -249,7 +249,7 @@
   }
 
   /* ---------- Ask the assistant ---------- */
-  var ASK_SUGG = ['how much is an 8 yard skip in UB6?', 'who owes me money?', 'which skips have been out longest?', 'margin this month?', 'any WTNs missing?', 'who covers HA1 for grabs?'];
+  var ASK_SUGG = ['how much is an 8 yard skip in GU21?', 'who owes me money?', 'which skips have been out longest?', 'margin this month?', 'any WTNs missing?', 'who covers GU22 for grabs?'];
   function answer(q) {
     var lo = q.toLowerCase(), st = CS.stats(), ch = CS.chaseLists();
     if (/owe|overdue|debt|unpaid|chase.*pay/.test(lo)) {

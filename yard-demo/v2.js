@@ -238,7 +238,7 @@
       (c && c.stop ? '<div class="xwstop" id="ordStop" role="alert">' + ic('lock') + '<span><b>On stop. Speak to the accounts team.</b><small>' + h(c.name) + ' are on stop in Credit control, so no order can be placed for them.</small></span></div>' : '') +
       (c ? '' : '<div class="field"><label for="ordNew">Customer or company name</label><input id="ordNew" value="' + h(O.newName) + '" placeholder="For example Harlow Builders"></div>') +
       (c ? '<div class="field"><label for="ordSite">Site</label><select id="ordSite">' + c.sites.map(function (s, i) { return '<option value="' + i + '"' + (String(O.site) === String(i) ? ' selected' : '') + '>' + h(s.name) + ', ' + h(s.pc) + '</option>'; }).join('') + '<option value="other"' + (O.site === 'other' ? ' selected' : '') + '>A different address</option></select></div>' : '') +
-      (!c || O.site === 'other' ? '<div class="field xwpc"><label for="ordPc">Postcode</label><input id="ordPc" value="' + h(O.pc) + '" placeholder="UB5 5AB" autocomplete="off" autocapitalize="characters" spellcheck="false"><div class="xwpcst" id="ordPcSt" aria-live="polite">' + pcStHtml() + '</div></div>' +
+      (!c || O.site === 'other' ? '<div class="field xwpc"><label for="ordPc">Postcode</label><input id="ordPc" value="' + h(O.pc) + '" placeholder="GU21 5AB" autocomplete="off" autocapitalize="characters" spellcheck="false"><div class="xwpcst" id="ordPcSt" aria-live="polite">' + pcStHtml() + '</div></div>' +
         '<div class="frow"><div class="field" style="flex:1"><label for="ordHouse">House name or number</label><input id="ordHouse" value="' + h(O.house || '') + '" placeholder="15, or Rose Cottage"></div><div class="field" style="flex:1.4"><label for="ordAddr">Street</label><input id="ordAddr" value="' + h(O.addr) + '" placeholder="Found from the postcode"></div><div class="field" style="flex:1"><label for="ordTown">Town</label><input id="ordTown" value="' + h(O.town || '') + '" placeholder="Found from the postcode"></div></div>' : '') +
       '<div class="frow"><div class="field" style="flex:1"><label for="ordCn">Site contact name</label><input id="ordCn" value="' + h(O.cname) + '"></div><div class="field" style="flex:1"><label for="ordCp">Site contact number</label><input id="ordCp" value="' + h(O.cphone) + '" inputmode="tel"></div></div>' +
       (c ? '' : '<div class="field"><label for="ordEmail">Email, for the confirmation and receipt</label><input id="ordEmail" type="email" value="' + h(O.email || '') + '" placeholder="name@example.com" autocomplete="off"></div>') +
@@ -588,7 +588,7 @@
     var s = S(), t = s.threads.filter(function (x) { return x.party.type === 'customer' && x.party.id === 'c7' && !x.done && CS.needsYou(x); })[0];
     if (!t) {
       var i = -1; s.live.forEach(function (L, k) { if (k >= (s.liveIdx || 0) && L.party && L.party.id === 'c7') i = k; });
-      var L = i >= 0 ? s.live.splice(i, 1)[0] : { party: { type: 'customer', id: 'c7' }, ch: 'email', subject: 'Grab for the Willesden site', text: 'Hi Dave,\n\nCan we get a grab lorry to take clean soil from the Willesden site NW10 on Monday? How much would that be?\n\nThanks, Gemma' };
+      var L = i >= 0 ? s.live.splice(i, 1)[0] : { party: { type: 'customer', id: 'c7' }, ch: 'email', subject: 'Grab for the Sheerwater site', text: 'Hi Dave,\n\nCan we get a grab lorry to take clean soil from the Sheerwater site GU21 on Monday? How much would that be?\n\nThanks, Gemma' };
       t = CS.incoming(L); t.fresh = false; CS.commit();
     }
     return t.id;

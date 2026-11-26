@@ -80,7 +80,7 @@
     });
     s.feed = [
       { at: now - 26 * 60000, t: 'Read Colne Valley\'s email and matched the WTN to DSG-1043', ic: 'sparkles' },
-      { at: now - 85 * 60000, t: 'Westreach confirmed the grab for Dunmore at Greenford, 8am', ic: 'circle-check' },
+      { at: now - 85 * 60000, t: 'Westreach confirmed the grab for Dunmore at West Byfleet, 8am', ic: 'circle-check' },
       { at: now - 120 * 60000, t: 'Auto chase sent to Quayline Skips for DSG-1047', ic: 'bell' },
       { at: now - 200 * 60000, t: CS.bde() + ' sent Q-2230 to Kilner Builders, won 40 min later', ic: 'trending-up' }
     ];
@@ -485,7 +485,7 @@
       S.title = sup.name + ' can\'t do ' + CS.fmtDay(j.day) + ', offering ' + CS.fmtDay(thu);
       S.summary = 'No other supplier on file covers ' + CS.outward(s.pc) + ' for skips with a better on-time record, and it\'s on a drive so a day later is low risk. Your promise: if a slot slips, the customer hears it from you first, so ' + c.first + '\'s message is already written.';
       S.chips = [{ k: 'Job', v: j.id + ', ' + CS.jobDesc(j) }, { k: 'Was', v: CS.fmtDay(j.day) }, { k: 'Now', v: CS.fmtDay(thu) + ' first thing' }, { k: 'Customer', v: c.name }];
-      S.drafts.push({ to: 'customer', party: { type: 'customer', id: c.id }, ch: 'wa', text: greet(c.first) + ' heads up, the supplier\'s a driver down ' + CS.dayPhrase(j.day).replace(/^on /, '') + ' so your 8 yarder at Wealdstone is now ' + CS.dayPhrase(thu).replace(/^on /, '') + ' first thing. Sorry about that, shout if it causes a problem. ' + signoff(owner) });
+      S.drafts.push({ to: 'customer', party: { type: 'customer', id: c.id }, ch: 'wa', text: greet(c.first) + ' heads up, the supplier\'s a driver down ' + CS.dayPhrase(j.day).replace(/^on /, '') + ' so your 8 yarder at Brookwood is now ' + CS.dayPhrase(thu).replace(/^on /, '') + ' first thing. Sorry about that, shout if it causes a problem. ' + signoff(owner) });
       S.drafts.push({ to: 'supplier', party: { type: 'supplier', id: sup.id }, ch: 'wa', text: 'No worries ' + sup.contact + ', ' + CS.fmtDay(thu) + ' first thing is fine. Ref ' + j.id + '. Thanks, Dave (Demo Skip & Grab)' });
       S.approve = 'Approve: move it and tell both'; S.job = j.id; S.day = thu; S.mins = 6;
       return S;

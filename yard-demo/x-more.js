@@ -290,7 +290,7 @@
     } };
 
     /* ---------- half four: tomorrow's orders not on account and not paid ---------- */
-    var ONEOFF = [['Mrs Diane Palmer', '07700 900411', 'diane.palmer@example.com', '14 Mill Lane', 'UB6 6BE', 6], ['Kev Sharman', '07700 900432', 'kev.sharman@example.com', '3 Church Close', 'W7 5AT', 8], ['Steph Moran', '07700 900447', 'steph.moran@example.com', '27 Wodehouse Road', 'W7 6JD', 4]];
+    var ONEOFF = [['Mrs Diane Palmer', '07700 900411', 'diane.palmer@example.com', '14 Mill Lane', 'GU21 6BE', 6], ['Kev Sharman', '07700 900432', 'kev.sharman@example.com', '3 Church Close', 'GU22 5AT', 8], ['Steph Moran', '07700 900447', 'steph.moran@example.com', '27 Wodehouse Road', 'GU22 6JD', 4]];
     function seed430() {
       var s = S(); if (s.xu430) return; s.xu430 = 1;
       ONEOFF.forEach(function (o, i) {
@@ -379,7 +379,7 @@
         '<div class="field"><label>Main services</label><div class="chips" id="nsSvc">' + keys.map(function (k) { return '<button type="button" class="pk' + (NS.svc[k] ? ' on' : '') + '" data-act="nsSvc" data-v="' + k + '">' + h(SV[k].short) + '</button>'; }).join('') + '</div></div>' +
         '<div class="field"><label>Their price list</label><label class="drop xm-drop" for="nsFile">' + ic('download') + '<b>Drop their price list here</b><span>Excel, CSV, PDF, Word or a photo of it. Every price and postcode is read in for you to check.</span><input type="file" id="nsFile" accept=".xlsx,.xls,.csv,.pdf,.doc,.docx,.png,.jpg,.jpeg,.heic" hidden></label>' +
           '<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><span class="muted" style="font-size:12.5px">No file to hand?</span><button type="button" class="btn sm" data-act="nsSample">' + ic('file-text') + 'Try the sample: their price list, photographed</button></div><div id="nsRead"></div></div>' +
-        '<div class="grid g2">' + f('nsAreas', 'Main area, postcodes covered', 'UB3, UB4, HA') + f('nsBase', 'Yard or base town', 'Hayes') + '</div>' +
+        '<div class="grid g2">' + f('nsAreas', 'Main area, postcodes covered', 'GU21, GU22, KT') + f('nsBase', 'Yard or base town', 'Woking') + '</div>' +
         '<div class="grid g2">' + f('nsPh', 'WhatsApp number, if they use it', '07...', ' inputmode="tel"') + f('nsTel', 'Office phone', '01...', ' inputmode="tel"') + '</div>' +
         '<div class="grid g2">' + f('nsPo', 'Email to send purchase orders to', 'bookings@...', ' type="email"') + f('nsAcc', 'Accounts email, for bills and queries', 'accounts@...', ' type="email"') + '</div>' +
         '<div class="grid g2"><div class="field"><label for="nsTerms">Their payment terms</label><select id="nsTerms"><option>30 days</option><option>30 days end of month</option><option>14 days</option><option>7 days</option><option>On booking</option></select></div>' + f('nsHire', 'Standard hire period, days', '14', ' inputmode="numeric" value="14"') + '</div>' +
@@ -387,7 +387,7 @@
         '<p class="muted" style="font-size:12.5px;margin:10px 0 0">Their prices go in next: upload their price sheet, or forward their email and it gets read in. Until then they get starter prices you can change.</p>';
     }
     A.addSup = function () { NS = { svc: { skip: true } }; modal('Add a supplier', ic('warehouse') + ' Add a supplier', nsBody(), '<button class="btn" data-act="close">Cancel</button><span class="sp"></span><button class="btn pri" data-act="saveSup" id="nsSave">' + ic('check') + 'Add supplier</button>', true); };
-    var NSR = { 4: 160, 6: 190, 8: 215, 10: 250, 12: 275, 14: 300, 16: 325, 20: 430, 40: 575 }, NSA = ['UB1', 'UB2', 'UB3', 'UB4', 'UB5', 'UB6', 'W5', 'W7', 'HA1'];
+    var NSR = { 4: 160, 6: 190, 8: 215, 10: 250, 12: 275, 14: 300, 16: 325, 20: 430, 40: 575 }, NSA = ['GU21', 'GU22', 'GU23', 'GU24', 'KT14', 'KT15', 'KT16', 'GU18', 'GU19'];
     function nsRead(name) {
       var box = q('#nsRead'); if (!box) return;
       box.innerHTML = '<div class="note" style="margin-top:10px">' + ic('sparkles') + '<span>Reading ' + h(name) + '...</span></div>';
@@ -433,8 +433,8 @@
       }
       var bde = CS.bde();
       return [
-        { n: 'Dave Archer', r: 'Managing Director', c: '#EB9347', k: 'sales', s: sales('dave'), kpi: null },
-        { n: bde, r: 'Business Development Executive', c: '#7A3FF2', k: 'sales', s: sales('sam'), com: true },
+        { n: 'Dave Archer', r: 'Managing Director', c: '#1F4FA8', k: 'sales', s: sales('dave'), kpi: null },
+        { n: bde, r: 'Business Development Executive', c: '#52525B', k: 'sales', s: sales('sam'), com: true },
         { n: 'Ellie Ward', r: 'Office admin', c: '#0E9F6E', k: 'admin', a: { msgs: 64, reply: 7, orders: 18, etas: 22, wtn: 11 } },
         { n: 'Kate Morris', r: 'Accounts', c: '#2563EB', k: 'fin', f: { inv: 31, chased: 9, cash: 6480, over: 1150, bills: 14 } }
       ];

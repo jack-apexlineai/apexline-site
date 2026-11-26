@@ -68,7 +68,7 @@
       fld('company.name', 'Company name', { ac: 'organization', ph: 'For example Wendmoor Skip Hire Ltd' }) +
       fld('company.chno', 'Companies House number', { opt: true, im: 'numeric', ph: '8 digits, if you are a limited company' }) +
       fld('company.addr', 'Office address', { ac: 'street-address', ph: 'Unit, street and town' }) +
-      fld('company.pc', 'Postcode', { ac: 'postal-code', caps: true, ph: 'UB9 6RP' }) +
+      fld('company.pc', 'Postcode', { ac: 'postal-code', caps: true, ph: 'GU24 8RP' }) +
       fld('company.phone', 'Office phone', { type: 'tel', im: 'tel', ac: 'tel' }) +
       fld('company.email', 'Office email', { type: 'email', ac: 'email', ph: 'office@yourcompany.co.uk' }), 'warehouse');
   }
@@ -88,19 +88,19 @@
       '<div class="chips jchips">' + SVCS.map(function (k) { return chip('svc', k, F.svcs.indexOf(k) >= 0, h(CS.S.services[k].name)); }).join('') + '</div>' + err('svcs') +
       (F.svcs.indexOf('skip') >= 0 ? '<div class="field" style="margin-top:14px"><label>Skip sizes</label><div class="chips jchips">' + SIZES.map(function (z) { return chip('size', z, F.sizes.indexOf(z) >= 0, z + (z >= 20 ? ' yd RoRo' : ' yard')); }).join('') + '</div>' + err('sizes') + '</div>' : ''), 'list') +
       card('Where do you work?', 'Type the first half of each postcode you cover, with spaces between. Just the letters covers the whole area.',
-        '<div class="field jf' + (ERR.areas ? ' bad' : '') + '"><label for="f_areas">Postcodes you cover</label><textarea id="f_areas" data-f="areas" rows="2" autocapitalize="characters" placeholder="UB8 UB9 UB10 HA4">' + h(F.areas) + '</textarea>' + err('areas') + '</div>' +
+        '<div class="field jf' + (ERR.areas ? ' bad' : '') + '"><label for="f_areas">Postcodes you cover</label><textarea id="f_areas" data-f="areas" rows="2" autocapitalize="characters" placeholder="GU21 GU22 GU23 GU24">' + h(F.areas) + '</textarea>' + err('areas') + '</div>' +
         '<div class="chips jareas" id="jareas">' + areaChips(a) + '</div>', 'map-pin');
   }
   function areaChips(a) { return a.map(function (x) { return '<span class="tag ' + (goodArea(x) ? 'ok' : 'bad') + '">' + h(x) + (goodArea(x) ? '' : ', not a postcode') + '</span>'; }).join(''); }
   function p4() {
     var w = waste();
     return card('Depots', 'Where your lorries and skips are kept.',
-      F.depots.map(function (d, i) { return '<div class="jrow"><div class="jgrid">' + fld('depots.' + i + '.name', 'Depot name or town', { ph: 'For example Harefield yard' }) + fld('depots.' + i + '.pc', 'Postcode', { caps: true }) + '</div>' + (i ? '<button type="button" class="jx" data-j="rmDepot" data-v="' + i + '" aria-label="Remove this depot">' + ic('x') + '</button>' : '') + '</div>'; }).join('') +
+      F.depots.map(function (d, i) { return '<div class="jrow"><div class="jgrid">' + fld('depots.' + i + '.name', 'Depot name or town', { ph: 'For example Chobham yard' }) + fld('depots.' + i + '.pc', 'Postcode', { caps: true }) + '</div>' + (i ? '<button type="button" class="jx" data-j="rmDepot" data-v="' + i + '" aria-label="Remove this depot">' + ic('x') + '</button>' : '') + '</div>'; }).join('') +
       '<button type="button" class="jlink" data-j="addDepot">' + ic('plus') + 'Add another depot</button>', 'truck') +
       card('Where do you tip?', w ? 'Every site you take Demo Skip & Grab\'s waste to, and its environmental permit or exemption. A person at Demo Skip & Grab checks these.' : 'Only needed if you carry waste. You can skip this.',
         F.tips.map(function (t, i) {
           var p = 'tips.' + i;
-          return '<div class="jrow jtip"><div class="jgrid">' + fld(p + '.name', 'Site name', { ph: 'For example Fen Lane recycling, Harmondsworth' }) + fld(p + '.pc', 'Postcode', { caps: true }) + '</div>' +
+          return '<div class="jrow jtip"><div class="jgrid">' + fld(p + '.name', 'Site name', { ph: 'For example Fen Lane recycling, Normandy' }) + fld(p + '.pc', 'Postcode', { caps: true }) + '</div>' +
             '<div class="field"><label>Permit or exemption?</label><div class="chips">' + chip('tipKind', i + '|Permit', t.kind === 'Permit', 'Environmental permit') + chip('tipKind', i + '|Exemption', t.kind === 'Exemption', 'Waste exemption') + '</div></div>' +
             fld(p + '.no', t.kind === 'Permit' ? 'Permit number' : 'Exemption number', { caps: true, ph: t.kind === 'Permit' ? 'EPR/AB1234CD' : 'WEX123456' }) +
             (t.kind === 'Exemption' ? fld(p + '.exp', 'Exemption runs out on', { type: 'date', hint: 'Exemptions last 3 years.' }) : '') +
@@ -242,10 +242,10 @@
     if (!/\s/.test(who)) who += ' Marsh';
     var slug = nm.toLowerCase().replace(/\b(ltd|limited)\b/g, '').replace(/[^a-z]+/g, '').slice(0, 18) || 'yourfirm';
     var d = function (n) { return C.iso(n); };
-    if (s === 1) F.company = { name: nm, chno: '13820417', addr: 'Unit 4, Wendmoor Farm, Harefield', pc: 'UB9 6RP', phone: '01895 000412', email: 'office@' + slug + '.co.uk' };
+    if (s === 1) F.company = { name: nm, chno: '13820417', addr: 'Unit 4, Wendmoor Farm, Chobham', pc: 'GU24 8RP', phone: '01276 000412', email: 'office@' + slug + '.co.uk' };
     if (s === 2) { F.book = { name: who, phone: F.book.phone || '07700 900412', wa: true, email: 'bookings@' + slug + '.co.uk' }; F.acc = { name: 'Karen ' + who.split(' ').slice(-1)[0], email: 'accounts@' + slug + '.co.uk', phone: '01485 000413' }; F.ooh = '07700 900414'; }
-    if (s === 3) { F.svcs = ['skip', 'grab']; F.sizes = [4, 6, 8, 12, 16, 20]; F.areas = 'UB8 UB9 UB10 HA4 HA5 HA6 WD3 SL0 SL9'; }
-    if (s === 4) { F.depots = [{ name: 'Harefield yard', pc: 'UB9 6RP' }]; F.tips = [{ name: 'Wendmoor transfer station, Harefield', pc: 'UB9 6RP', kind: 'Permit', no: 'EPR/WB3184KX', exp: '', file: 'Environmental permit.pdf' }]; }
+    if (s === 3) { F.svcs = ['skip', 'grab']; F.sizes = [4, 6, 8, 12, 16, 20]; F.areas = 'GU21 GU22 GU23 GU24 KT14 KT15 KT16 GU18 GU19'; }
+    if (s === 4) { F.depots = [{ name: 'Chobham yard', pc: 'GU24 8RP' }]; F.tips = [{ name: 'Wendmoor transfer station, Chobham', pc: 'GU24 8RP', kind: 'Permit', no: 'EPR/WB3184KX', exp: '', file: 'Environmental permit.pdf' }]; }
     if (s === 5) { if (!F.svcs.length) fill(3); F.prices = { file: nm.split(' ')[0] + ' prices Nov 2026.pdf', rates: sampleRates(), later: false }; F.terms = '30 days'; }
     if (s === 6) { F.docs = { wcl: { no: 'CBDU533470', tier: 'Upper', exp: d(612), file: 'Carrier licence.jpg' }, pl: { cover: 5e6, exp: d(211), file: 'Public liability.pdf' }, el: { cover: 10e6, exp: d(211), file: 'Employers liability.jpg' }, git: { cover: 50000, exp: d(211), file: 'Goods in transit.pdf' }, fors: { level: 'Bronze', exp: d(140), file: 'FORS Bronze.pdf' }, chas: { exp: '', file: '' } }; }
     if (s === 7) { var t = Date.now(); F.cons = { terms: t, duty: t, data: t }; F.sig = { name: who, pos: 'Director', typed: who, drawn: '', mode: 'type' }; }

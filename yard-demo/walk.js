@@ -30,6 +30,8 @@
     { id: 'skips', act: 'ySkips', m: '1 min', t: 'Skips on site',
       p: 'Every skip out on hire, how many days it has been there, and which ones are over the hire period. Exchange or Collect is one tap: it goes on tomorrow\'s plan and the customer gets a text.',
       x: [{ l: 'Show only the overdue ones', act: 'ySkipsOver' }] },
+    { id: 'permits', act: 'yPermits', m: 'half a min', t: 'Permits',
+      p: 'Every road permit from To apply for, through Applied for, Paid and Waiting on council, to Approved. A road booking makes its permit card by itself, and if nobody has applied within 30 minutes, you get a nudge.' },
     { id: 'driver', act: 'yDriver', m: '1 min', t: 'The driver app',
       p: 'What the driver sees on his phone. Today\'s jobs in order, Navigate, and On my way, which texts the customer an ETA. On site: a photo, the customer signs on the screen, then the ticket and weight. Press the buttons on the phone.' },
     { id: 'tracking', act: 'yTrack', m: '1 min', t: 'Live tracking',
@@ -58,8 +60,8 @@
     { id: 'assistant', act: 'yAssist', m: '1 min', t: 'The assistant, and Report a problem',
       p: 'Ask it in plain words: which skips are overdue, where is Grab 1, who owes me money. Something not right? Report a problem and it goes straight to Jack with the details. Same-day fix or that month\'s free.',
       x: [{ l: 'Report a problem', act: 'yProblem' }] },
-    { id: 'inbox', act: 'inbox', m: '1 min', t: 'One inbox, replies written for you',
-      p: 'WhatsApp, email and website enquiries in one place. Each one is already read, priced and answered in your tone. You check it and press send. Nothing goes without you.' }
+    { id: 'inbox', act: 'yInbox', m: '1 min', t: 'One inbox, replies written for you',
+      p: 'Sian wants a price: the quote is worked out from your price list and the reply is written, so it is one tap to approve and send. Rob left a voice note to book: it is written out, and Book it in fills the booking for you to confirm.' }
   ];
   /* quiet version for a prospect on their own (?quiet=1): no scripted moments where a customer or supplier answers on a timer */
   if (new URLSearchParams(location.search).get('quiet') === '1') STEPS = STEPS.filter(function (s) { return s.id !== 'gemmabook' && s.id !== 'lee'; });

@@ -108,10 +108,10 @@
       { id: 'a1', code: 'wd7k2', name: 'Wendmoor Skip Hire Ltd', who: 'Lee', email: 'lee@wendmoorskips.co.uk', phone: '07700 900412', st: 'submitted', sentAt: at(-2, 15, 5), sentBy: ME, opened: at(-1, 15, 58), sub: at(-1, 16, 42),
         chk: { el: { by: 'Ellie Ward', at: at(-1, 17, 5) }, git: { by: 'Ellie Ward', at: at(-1, 17, 6) } },
         data: {
-          company: { name: 'Wendmoor Skip Hire Ltd', chno: '13820417', addr: 'Unit 4, Wendmoor Farm, Harefield', pc: 'UB9 6RP', phone: '01895 000412', email: 'office@wendmoorskips.co.uk' },
+          company: { name: 'Wendmoor Skip Hire Ltd', chno: '13820417', addr: 'Unit 4, Wendmoor Farm, Chobham', pc: 'GU24 8RP', phone: '01276 000412', email: 'office@wendmoorskips.co.uk' },
           book: { name: 'Lee Marsh', phone: '07700 900412', wa: true, email: 'bookings@wendmoorskips.co.uk' }, acc: { name: 'Karen Marsh', phone: '01485 000413', email: 'accounts@wendmoorskips.co.uk' }, ooh: '07700 900414',
-          depots: [{ name: 'Harefield yard', pc: 'UB9 6RP' }], tips: [{ name: 'Wendmoor transfer station, Harefield', pc: 'UB9 6RP', kind: 'Permit', no: 'EPR/WB3184KX', exp: '' }],
-          areas: ['UB8', 'UB9', 'UB10', 'HA4', 'HA5', 'HA6', 'WD3', 'SL0', 'SL9'], svcs: ['skip', 'grab'], sizes: [4, 6, 8, 12, 16, 20],
+          depots: [{ name: 'Chobham yard', pc: 'GU24 8RP' }], tips: [{ name: 'Wendmoor transfer station, Chobham', pc: 'GU24 8RP', kind: 'Permit', no: 'EPR/WB3184KX', exp: '' }],
+          areas: ['GU21', 'GU22', 'GU23', 'GU24', 'KT14', 'KT15', 'KT16', 'GU18', 'GU19'], svcs: ['skip', 'grab'], sizes: [4, 6, 8, 12, 16, 20],
           prices: { file: 'Wendmoor prices Nov 2026.pdf', rates: { skip: { 4: 150, 6: 178, 8: 199, 12: 262, 16: 312, 20: 420 }, grab: 300 } },
           terms: '30 days',
           docs: {
@@ -126,10 +126,10 @@
         } },
       { id: 'a2', code: 'hf3m8', name: 'Holmfen Grab and Muckaway', who: 'Dale', email: 'dale@holmfengrab.co.uk', phone: '07700 900427', st: 'submitted', sentAt: at(-4, 10, 12), sentBy: ME, opened: at(-3, 18, 3), sub: at(-3, 19, 26),
         data: {
-          company: { name: 'Holmfen Grab and Muckaway', chno: '', addr: 'Holmfen Lane, Colnbrook', pc: 'SL3 0NL', phone: '07700 900427', email: 'dale@holmfengrab.co.uk' },
+          company: { name: 'Holmfen Grab and Muckaway', chno: '', addr: 'Holmfen Lane, Pirbright', pc: 'GU24 0NL', phone: '07700 900427', email: 'dale@holmfengrab.co.uk' },
           book: { name: 'Dale Pryor', phone: '07700 900427', wa: true, email: 'dale@holmfengrab.co.uk' }, acc: { name: 'Dale Pryor', phone: '07700 900427', email: 'dale@holmfengrab.co.uk' }, ooh: '',
-          depots: [{ name: 'Colnbrook', pc: 'SL3 0NL' }], tips: [{ name: 'Fen Lane inert recycling, Harmondsworth', pc: 'UB7 0JR', kind: 'Exemption', no: 'WEX318842 (U1)', exp: C.iso(402) }],
-          areas: ['SL3', 'UB7', 'TW6', 'TW19', 'TW14', 'UB3', 'UB11'], svcs: ['grab', 'muck'], sizes: [],
+          depots: [{ name: 'Pirbright', pc: 'GU24 0NL' }], tips: [{ name: 'Fen Lane inert recycling, Normandy', pc: 'GU3 2JR', kind: 'Exemption', no: 'WEX318842 (U1)', exp: C.iso(402) }],
+          areas: ['GU24', 'GU3', 'GU15', 'GU16', 'GU19', 'GU21', 'GU22'], svcs: ['grab', 'muck'], sizes: [],
           prices: { file: 'price list photo.jpg', rates: { grab: 285, muck: 360 } },
           terms: '14 days',
           docs: {

@@ -99,7 +99,7 @@
 .ord .res .sec:first-child{margin-top:0}
 .ord .supopt{margin-bottom:6px}
 .mft .sp,.dft .sp{flex:1}
-.v2doc .dh2{display:flex;align-items:center;gap:14px;border-bottom:2px solid #EB9347;padding-bottom:12px;margin-bottom:12px}
+.v2doc .dh2{display:flex;align-items:center;gap:14px;border-bottom:2px solid #1F4FA8;padding-bottom:12px;margin-bottom:12px}
 .v2doc .dh2 img{height:38px}
 .v2doc .dh2 div{display:flex;flex-direction:column;margin-left:auto;text-align:right}
 .v2doc .dh2 small{color:#666}

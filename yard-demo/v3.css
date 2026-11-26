@@ -233,7 +233,7 @@ label.btn{cursor:pointer}
 #walk button{font:inherit;font-weight:700;font-size:12.5px;border-radius:9px;padding:7px 10px;color:#E4E4E7;background:#34343A;border:1px solid transparent;cursor:pointer;text-align:center}
 #walk button:hover{background:#404047;color:#fff}
 #walk button:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
-#walk button.pri{background:var(--brand);color:#1A1A1A;flex:1;font-size:13.5px;padding:9px 10px}
+#walk button.pri{background:var(--brand);color:#fff;flex:1;font-size:13.5px;padding:9px 10px}
 #walk button.pri:hover{background:var(--brand-hi,#F0A45E)}
 #walk button.mini{padding:3px 8px;font-size:11.5px;background:none;border-color:#3A3A40;color:#A9A9B0}
 #walk button.xtra{text-align:left;background:none;border-color:#3A3A40;font-weight:600}

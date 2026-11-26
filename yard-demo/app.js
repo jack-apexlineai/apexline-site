@@ -29,7 +29,7 @@
     { k: 'connections', hide: true, n: 'Connections', ic: 'link', sub: 'What the system plugs into, and what each one needs from you' },
     { k: 'import', hide: true, n: 'Import', ic: 'download', sub: 'Bring your team, customers, sites and suppliers in from a spreadsheet' }
   ];
-  var PARTY_COL = { customer: ['#EB9347', '#C7672A', '#D9853A', '#B9773F'], supplier: ['#3F3F46', '#52525B', '#27272A'], lead: ['#7A3FF2', '#6D28D9'] };
+  var PARTY_COL = { customer: ['#1F4FA8', '#173E86', '#2A5DBA', '#3F3F46'], supplier: ['#3F3F46', '#52525B', '#27272A'], lead: ['#52525B', '#3F3F46'] };
 
   /* ---------- helpers ---------- */
   function $(s, r) { return (r || document).querySelector(s); }
@@ -42,8 +42,8 @@
   function chTag(ch) { return '<span class="tag ' + (ch === 'wa' ? 'wa' : ch === 'email' ? 'mail' : ch === 'portal' ? 'brand' : 'web') + '">' + ic(chIcon(ch)) + CS.chName(ch).replace(/^./, function (x) { return x.toUpperCase(); }) + '</span>'; }
   function margTag(m, s) { var p = CS.pct(m, s); return '<span class="tag ' + (p >= 20 ? 'ok' : p >= 12 ? 'amber' : 'bad') + '">' + money(m) + ' · ' + p + '%</span>'; }
   var STATUS = {
-    booked: ['Waiting on supplier', 'amber', '#F59E0B'], confirmed: ['Confirmed', 'brand', '#EB9347'], onhire: ['On hire', 'ok', '#16A34A'],
-    exchange: ['Exchange booked', 'mail', '#2563EB'], collection: ['Collection booked', 'web', '#7C3AED'], done: ['Done', '', '#71717A']
+    booked: ['Waiting on supplier', 'amber', '#F59E0B'], confirmed: ['Confirmed', 'brand', '#1F4FA8'], onhire: ['On hire', 'ok', '#16A34A'],
+    exchange: ['Exchange booked', 'mail', '#2563EB'], collection: ['Collection booked', 'web', '#1F4FA8'], done: ['Done', '', '#71717A']
   };
   function stTag(st) { var s = STATUS[st]; return '<span class="tag ' + s[1] + '">' + s[0] + '</span>'; }
   function wtnTag(w) {
@@ -334,7 +334,7 @@
   };
 
   V.suppliers = function () {
-    var lk = ui.lookup || { pc: 'UB2 4LP', svc: 'skip', size: 8 };
+    var lk = ui.lookup || { pc: 'GU21 2RX', svc: 'skip', size: 8 };
     var res = CS.lookup(lk.pc, { svc: lk.svc, size: Number(lk.size) || 8, qty: 1, weeks: 4, panels: 20, m3: 6, hours: 4 });
     return X.rateAlert() + '<div class="card" style="margin-bottom:16px"><div class="hd"><h2>' + ic('map-pin') + 'Who covers this postcode?</h2></div><div class="bd">' +
       '<div class="row" style="flex-wrap:wrap;align-items:flex-end;gap:10px"><div class="field" style="margin:0;width:150px"><label for="lkPc">Site postcode</label><input id="lkPc" value="' + h(lk.pc) + '"></div>' +
@@ -550,14 +550,14 @@
     modal('Send a test WhatsApp as a customer',
       '<p class="muted" style="margin:0 0 14px;font-size:13px">Type anything a builder would send. It lands in the inbox and the assistant reads it, prices it and writes the reply and the supplier booking.</p>' +
       '<div class="field"><label for="tryWho">Send as</label><select id="tryWho">' + opts + '</select></div>' +
-      '<div class="cphone"><div class="scr"><div class="wh">' + ic('chevron-left') + '<span class="av sm" style="--c:#EB9347">Demo Skip & Grab</span><span><b>Demo Skip & Grab</b><small>online</small></span></div><div class="wb" id="tryBody"><div class="wm" style="align-self:flex-start;background:#fff">Morning, what can we sort for you today?</div></div>' +
-      '<div class="wi"><input id="tryText" placeholder="Message" value="need an 8 yarder in UB6 Tuesday" aria-label="Message"><button data-act="trySend" aria-label="Send">' + ic('send') + '</button></div></div></div>' +
-      '<div class="sugg">' + ['need an 8 yarder in UB6 Tuesday', 'new site UB3 9AA Monday 7am: an 8 yard skip and a grab lorry for the muck', 'can you swap the skip at Abbotsbury Lane tomorrow', 'price for a grab lorry HA1 Friday 8am', 'two 8 yard skips for 6 weeks W5 from Monday', '3 loads of muck away UB3 tomorrow, wait and load', 'need a skip'].map(function (s) { return '<button data-act="trySugg" data-v="' + h(s) + '">' + h(s) + '</button>'; }).join('') + '</div>');
+      '<div class="cphone"><div class="scr"><div class="wh">' + ic('chevron-left') + '<span class="av sm" style="--c:#1F4FA8">Demo Skip & Grab</span><span><b>Demo Skip & Grab</b><small>online</small></span></div><div class="wb" id="tryBody"><div class="wm" style="align-self:flex-start;background:#fff">Morning, what can we sort for you today?</div></div>' +
+      '<div class="wi"><input id="tryText" placeholder="Message" value="need an 8 yarder in GU21 Tuesday" aria-label="Message"><button data-act="trySend" aria-label="Send">' + ic('send') + '</button></div></div></div>' +
+      '<div class="sugg">' + ['need an 8 yarder in GU21 Tuesday', 'new site GU21 9AA Monday 7am: an 8 yard skip and a grab lorry for the muck', 'can you swap the skip at Abbotsbury Lane tomorrow', 'price for a grab lorry GU22 Friday 8am', 'two 8 yard skips for 6 weeks KT14 from Monday', '3 loads of muck away GU21 tomorrow, wait and load', 'need a skip'].map(function (s) { return '<button data-act="trySugg" data-v="' + h(s) + '">' + h(s) + '</button>'; }).join('') + '</div>');
     setTimeout(function () { var i = $('#tryText'); if (i) { i.focus(); i.select(); } }, 50);
   }
   function quickQuote() {
     var opts = S.customers.map(function (c) { return '<option value="' + c.id + '">' + h(c.name) + '</option>'; }).join('');
-    modal('Quick quote', '<div class="grid g2"><div class="field"><label for="qqCust">Customer</label><select id="qqCust">' + opts + '</select></div><div class="field"><label for="qqPc">Site postcode</label><input id="qqPc" value="UB2 4LP"></div>' +
+    modal('Quick quote', '<div class="grid g2"><div class="field"><label for="qqCust">Customer</label><select id="qqCust">' + opts + '</select></div><div class="field"><label for="qqPc">Site postcode</label><input id="qqPc" value="GU21 2RX"></div>' +
       '<div class="field"><label for="qqSvc">Service</label><select id="qqSvc">' + ['skip', 'grab', 'muck'].filter(function (k) { return S.services[k]; }).map(function (k) { return '<option value="' + k + '">' + S.services[k].name + '</option>'; }).join('') + '</select></div><div class="field"><label for="qqSize">Skip size</label><select id="qqSize">' + [4, 6, 8, 10, 12, 14, 16, 20, 40].map(function (z) { return '<option' + (z === 8 ? ' selected' : '') + ' value="' + z + '">' + z + ' yard</option>'; }).join('') + '</select></div></div>' +
       '<div id="qqRes"></div>', '<button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="qqSave">' + ic('check') + 'Save quote</button>');
     qqCalc();
@@ -579,6 +579,7 @@
       '<div class="rowline"><div class="bd"><b>Your BDE\'s first name</b><small>Shown on Sales, leads and their replies</small></div><input id="bdeName" value="' + h(CS.bde()) + '" style="width:130px;border:1px solid var(--line2);border-radius:10px;padding:7px 10px;background:var(--panel2)" aria-label="BDE first name"></div>' +
       '<div class="rowline"><div class="bd"><b>Your team</b><small>Dave, your BDE and the next hires, with what each one sees</small></div><button class="btn sm" data-act="team">' + ic('users') + 'Team</button></div>' +
       '<div class="rowline"><div class="bd"><b>Make it yours</b><small>Your menu order, your favourites at the top, your home tiles. Saved for each person</small></div><button class="btn sm" data-act="yMine">' + ic('star') + 'Open</button></div>' +
+      '<div class="rowline"><div class="bd"><b>Saturday mornings</b><small>Let customers book Saturday AM. Turn off if the yard does not work Saturdays</small></div><button class="switch' + (!(S.yard && S.yard.sat === false) ? ' on' : '') + '" data-act="ySat" aria-label="Saturday mornings"></button></div>' +
       '<div class="rowline"><div class="bd"><b>Reported problems</b><small>Everything you have reported through the assistant, and where it is up to</small></div><button class="btn sm" data-act="go" data-v="problems">' + ic('alert') + 'Open</button></div>' +
       '<div class="rowline"><div class="bd"><b>Import from a spreadsheet</b><small>Your team, customers, sites and suppliers. Download the template, fill it in, upload it</small></div><button class="btn sm" data-act="importOpen">' + ic('download') + 'Import</button></div>' +
       '<div class="rowline"><div class="bd"><b>Connections</b><small>WhatsApp, email, your accounts and card payments, and what each needs</small></div><button class="btn sm" data-act="connections">' + ic('link') + 'Open</button></div>' +
@@ -730,7 +731,7 @@
     lostWhy: function (el) { var q = CS.quote(el.dataset.id); q.status = 'lost'; q.lostWhy = el.dataset.v; CS.commit(); closeLayer(); toast(q.id + ' marked lost: ' + h(el.dataset.v.toLowerCase()), 'x'); },
     lookup: function () { ui.lookup = { pc: $('#lkPc').value, svc: $('#lkSvc').value, size: ($('#lkSize') || {}).value || 8 }; render(); },
     addSup: function () {
-      modal('Add a supplier', '<div class="field"><label for="nsName">Name</label><input id="nsName" placeholder="Supplier name"></div><div class="grid g2"><div class="field"><label for="nsPh">WhatsApp number</label><input id="nsPh" placeholder="07..."></div><div class="field"><label for="nsAreas">Postcodes covered</label><input id="nsAreas" placeholder="UB3, UB4, NR"></div></div><div class="field"><label for="nsCbdu">Carrier number (CBDU)</label><input id="nsCbdu" placeholder="CBDU..."></div><p class="muted" style="font-size:12.5px;margin:0">In the live system their rate card is added here too, and the licence is checked against the public register.</p>',
+      modal('Add a supplier', '<div class="field"><label for="nsName">Name</label><input id="nsName" placeholder="Supplier name"></div><div class="grid g2"><div class="field"><label for="nsPh">WhatsApp number</label><input id="nsPh" placeholder="07..."></div><div class="field"><label for="nsAreas">Postcodes covered</label><input id="nsAreas" placeholder="GU21, GU22, KT"></div></div><div class="field"><label for="nsCbdu">Carrier number (CBDU)</label><input id="nsCbdu" placeholder="CBDU..."></div><p class="muted" style="font-size:12.5px;margin:0">In the live system their rate card is added here too, and the licence is checked against the public register.</p>',
         '<button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="saveSup">' + ic('check') + 'Add supplier</button>');
     },
     saveSup: function () {

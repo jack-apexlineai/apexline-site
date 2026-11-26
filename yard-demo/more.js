@@ -213,14 +213,14 @@
         : '<div class="note" style="background:var(--bad-l)">' + ic('alert') + '<span><b>' + h(v) + ' is not a carrier number.</b> They start CBDU. Do not use this supplier for waste until they send one.</span></div>';
     };
     A.addSup = function () {
-      H.modal('Add a supplier', '<div class="field"><label for="nsName">Name</label><input id="nsName" placeholder="Supplier name"></div><div class="grid g2"><div class="field"><label for="nsPh">WhatsApp number</label><input id="nsPh" placeholder="07..."></div><div class="field"><label for="nsAreas">Postcodes covered</label><input id="nsAreas" placeholder="UB3, UB4, NR"></div></div>' +
+      H.modal('Add a supplier', '<div class="field"><label for="nsName">Name</label><input id="nsName" placeholder="Supplier name"></div><div class="grid g2"><div class="field"><label for="nsPh">WhatsApp number</label><input id="nsPh" placeholder="07..."></div><div class="field"><label for="nsAreas">Postcodes covered</label><input id="nsAreas" placeholder="GU21, GU22, KT"></div></div>' +
         '<div class="field"><label for="nsCbdu">Waste carrier number</label><div class="row"><input id="nsCbdu" placeholder="CBDU..." value="CBDU204417"><button class="btn" data-act="regCheck">' + ic('shield-check') + 'Check the register</button></div></div><div id="regRes"></div>' +
         '<p class="muted" style="font-size:12.5px;margin:10px 0 0">Their rate card goes in here too. Send them the price list template, or forward their email and it gets read in.</p>',
         '<button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="saveSup">' + ic('check') + 'Add supplier</button>');
     };
     A.briefing = function () {
       var on = S().settings.briefing !== false;
-      H.modal('Morning briefing', '<div class="cphone" style="max-width:420px"><div class="scr" style="height:auto"><div class="wh"><span class="av sm" style="--c:#EB9347">Demo Skip & Grab</span><span><b>Demo Skip & Grab office</b><small>07:30</small></span></div><div class="wb" style="justify-content:flex-start">' +
+      H.modal('Morning briefing', '<div class="cphone" style="max-width:420px"><div class="scr" style="height:auto"><div class="wh"><span class="av sm" style="--c:#1F4FA8">Demo Skip & Grab</span><span><b>Demo Skip & Grab office</b><small>07:30</small></span></div><div class="wb" style="justify-content:flex-start">' +
         '<div class="wm" style="align-self:flex-start;background:#fff;max-width:94%">' + CS.briefing().map(h).join('<br><br>') + '</div></div></div></div>' +
         '<div class="rowline" style="margin-top:12px"><div class="bd"><b>Send this to my WhatsApp at 07:30</b><small>Every working day, built from the live jobs</small></div><button class="switch' + (on ? ' on' : '') + '" data-act="toggle" data-k="briefing" aria-label="Morning briefing"></button></div>');
     };

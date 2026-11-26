@@ -10,7 +10,7 @@
   function needsYou(t) { return CS.needsYou(t); }
   function sorted() { return S.threads.slice().sort(function (a, b) { return (a.done ? 1 : 0) - (b.done ? 1 : 0) || b.last - a.last; }); }
   function chIcon(ch) { return ch === 'wa' ? 'whatsapp' : (ch === 'email' ? 'mail' : (ch === 'portal' ? 'link' : 'world')); }
-  function av(name, type) { var pal = type === 'supplier' ? ['#3F3F46', '#52525B'] : type === 'lead' ? ['#7A3FF2', '#6D28D9'] : ['#EB9347', '#C7672A', '#D9853A']; var n = 0; for (var i = 0; i < name.length; i++) n += name.charCodeAt(i); return '<span class="av" style="--c:' + pal[n % pal.length] + '">' + h(CS.initials(name)) + '</span>'; }
+  function av(name, type) { var pal = type === 'supplier' ? ['#3F3F46', '#52525B'] : type === 'lead' ? ['#52525B', '#3F3F46'] : ['#1F4FA8', '#173E86', '#2A5DBA']; var n = 0; for (var i = 0; i < name.length; i++) n += name.charCodeAt(i); return '<span class="av" style="--c:' + pal[n % pal.length] + '">' + h(CS.initials(name)) + '</span>'; }
   function toast(t, i) { var b = $('#toasts'), el = document.createElement('div'); el.className = 'toast'; el.innerHTML = ic(i || 'circle-check') + '<span>' + t + '</span>'; b.appendChild(el); setTimeout(function () { el.style.transition = 'opacity .4s'; el.style.opacity = 0; setTimeout(function () { el.remove(); }, 400); }, 3200); }
   function greeting() { var hr = new Date().getHours(); return hr < 12 ? 'Morning' : (hr < 18 ? 'Afternoon' : 'Evening'); }
 
@@ -48,7 +48,7 @@
   V.inbox = function () {
     return '<div class="plist">' + sorted().map(function (t) {
       var p = CS.party(t.party), last = CS.lastReal(t) || t.msgs[t.msgs.length - 1];
-      return '<button class="it' + (t.unread && !t.done ? ' unread' : '') + (t.done ? ' done' : '') + '" data-act="open" data-id="' + t.id + '"><span class="av" style="--c:' + (t.party.type === 'supplier' ? '#3F3F46' : t.party.type === 'lead' ? '#7A3FF2' : '#EB9347') + '">' + h(CS.initials(p.name)) + '<span class="ch ' + t.ch + '">' + ic(chIcon(t.ch)) + '</span></span><span class="bd"><span class="l1"><b>' + h(p.name) + '</b><time>' + CS.ago(t.last) + '</time></span><span class="l2">' + h(p.sub) + '</span><span class="l3">' + h((last.dir === 'out' ? 'You: ' : '') + last.text) + '</span></span></button>';
+      return '<button class="it' + (t.unread && !t.done ? ' unread' : '') + (t.done ? ' done' : '') + '" data-act="open" data-id="' + t.id + '"><span class="av" style="--c:' + (t.party.type === 'supplier' ? '#3F3F46' : t.party.type === 'lead' ? '#52525B' : '#1F4FA8') + '">' + h(CS.initials(p.name)) + '<span class="ch ' + t.ch + '">' + ic(chIcon(t.ch)) + '</span></span><span class="bd"><span class="l1"><b>' + h(p.name) + '</b><time>' + CS.ago(t.last) + '</time></span><span class="l2">' + h(p.sub) + '</span><span class="l3">' + h((last.dir === 'out' ? 'You: ' : '') + last.text) + '</span></span></button>';
     }).join('') + '</div>';
   };
   V.jobs = function () {
@@ -105,7 +105,7 @@
     noop: function () { toast('Attachment stored on the job', 'paperclip'); },
     test: function () {
       var opts = S.customers.map(function (c) { return '<option value="' + c.id + '">' + h(c.contact) + ', ' + h(c.name) + '</option>'; }).join('');
-      document.getElementById('layer').innerHTML = '<div class="scrim" data-act="closeL"></div><div class="modal" role="dialog" aria-label="Send a test message"><div class="mhd"><h2>Send as a customer</h2><button class="iconbtn" data-act="closeL" aria-label="Close">' + ic('x') + '</button></div><div class="mbd"><div class="field"><label for="ptWho">From</label><select id="ptWho">' + opts + '</select></div><div class="field"><label for="ptText">WhatsApp message</label><input id="ptText" value="need an 8 yarder in UB6 Tuesday"></div></div><div class="mft"><button class="btn pri" data-act="testSend">' + ic('send') + 'Send</button></div></div>';
+      document.getElementById('layer').innerHTML = '<div class="scrim" data-act="closeL"></div><div class="modal" role="dialog" aria-label="Send a test message"><div class="mhd"><h2>Send as a customer</h2><button class="iconbtn" data-act="closeL" aria-label="Close">' + ic('x') + '</button></div><div class="mbd"><div class="field"><label for="ptWho">From</label><select id="ptWho">' + opts + '</select></div><div class="field"><label for="ptText">WhatsApp message</label><input id="ptText" value="need an 8 yarder in GU21 Tuesday"></div></div><div class="mft"><button class="btn pri" data-act="testSend">' + ic('send') + 'Send</button></div></div>';
     },
     closeL: function () { document.getElementById('layer').innerHTML = ''; },
     testSend: function () {

@@ -52,10 +52,10 @@
   };
 
   /* ---------- opening a trade account ---------- */
-  var CH = { name: 'Harbourside Construction Ltd', no: '14907263', inc: 'March 2021', status: 'Active', office: 'Uxbridge Road, Hayes', dirs: ['Craig Barrett', 'Lisa Barrett'], accts: 'Filed on time, last made up to 31 Mar 2026', conf: 'Up to date', sic: '41202 Construction of domestic buildings' };
+  var CH = { name: 'Harbourside Construction Ltd', no: '14907263', inc: 'March 2021', status: 'Active', office: 'Commercial Way, Woking', dirs: ['Craig Barrett', 'Lisa Barrett'], accts: 'Filed on time, last made up to 31 Mar 2026', conf: 'Up to date', sic: '41202 Construction of domestic buildings' };
   function acctForm() {
     return '<div class="grid g2"><div class="field"><label for="taCo">Company name</label><input id="taCo" value="' + h(CH.name) + '"></div><div class="field"><label for="taCt">Contact</label><input id="taCt" value="Craig Barrett"></div>' +
-      '<div class="field"><label for="taPh">Mobile</label><input id="taPh" value="07700 900288"></div><div class="field"><label for="taSite">First site postcode</label><input id="taSite" value="UB3 2HQ"></div></div>' +
+      '<div class="field"><label for="taPh">Mobile</label><input id="taPh" value="07700 900288"></div><div class="field"><label for="taSite">First site postcode</label><input id="taSite" value="GU21 2HQ"></div></div>' +
       '<div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-act="chLookup">' + ic('search') + 'Check them on Companies House</button><span class="muted" style="font-size:12.5px">Free, official, takes a second</span></div><div id="chRes" style="margin-top:12px"></div>';
   }
   function chResult() {
@@ -76,8 +76,8 @@
     };
     var INB_ALL = function (n) { return [['mail', mail(n)], ['mail', 'info@demoskipandgrab.co.uk'], ['whatsapp', 'Demo Skip & Grab WhatsApp']]; };
     return '<p class="muted" style="font-size:13px;margin:0 0 6px">One login each. Each person links their own inbox, and you choose who also sees info@ and the WhatsApp number. Whoever picks a message up first answers it, so a customer gets the same answer whoever it is.</p>' +
-      row('JP', '#EB9347', 'Dave Archer', 'Managing Director', 'Everything: margin, supplier costs, credit, the whole team\'s pipeline', '<span class="tag brand">Owner</span>', INB_ALL('Dave')) +
-      row(CS.initials(bde), '#7A3FF2', bde, 'Business Development Executive', 'Leads, quotes and his own accounts. Sees the margin on what he sells', '<span class="tag amber">Starting soon</span>', INB_ALL(bde)) +
+      row('JP', '#1F4FA8', 'Dave Archer', 'Managing Director', 'Everything: margin, supplier costs, credit, the whole team\'s pipeline', '<span class="tag brand">Owner</span>', INB_ALL('Dave')) +
+      row(CS.initials(bde), '#52525B', bde, 'Business Development Executive', 'Leads, quotes and his own accounts. Sees the margin on what he sells', '<span class="tag amber">Starting soon</span>', INB_ALL(bde)) +
       extra.map(function (p) { return row(CS.initials(p.name), '#52525B', p.name, p.role, p.sees, p.imported ? '<span class="tag">Starting PIN set</span>' : '<span class="tag">' + ic('mail') + 'Invite sent</span>', p.role === 'Office and accounts' ? [['mail', mail(p.name)], ['mail', 'accounts@demoskipandgrab.co.uk']] : INB_ALL(p.name)); }).join('') +
       '<div class="card" style="box-shadow:none;margin-top:12px"><div class="bd"><b>Add the next hire</b><div class="grid g2" style="margin-top:8px"><div class="field"><label for="tmName">Name</label><input id="tmName" placeholder="First and last name"></div><div class="field"><label for="tmRole">Role</label><select id="tmRole"><option>Account manager</option><option>Office and accounts</option><option>Business Development Executive</option></select></div></div>' +
       '<p class="muted" style="font-size:12.5px;margin:0">They get a login link. Day one opens on a five minute walkthrough of their own screens, so nobody needs a training day.</p></div></div>';
@@ -160,7 +160,7 @@
       setTimeout(function () { var b = H.$('#chRes'); if (!b) return; b.innerHTML = chResult(); var s = H.$('#taSave'); if (s) s.disabled = false; }, 700);
     };
     A.saveAccount = function () {
-      var co = (H.$('#taCo').value || CH.name).trim(), ct = (H.$('#taCt').value || 'Craig Barrett').trim(), pc = (H.$('#taSite').value || 'UB3 2HQ').trim().toUpperCase();
+      var co = (H.$('#taCo').value || CH.name).trim(), ct = (H.$('#taCt').value || 'Craig Barrett').trim(), pc = (H.$('#taSite').value || 'GU21 2HQ').trim().toUpperCase();
       var lim = parseInt((H.$('#taLim') || {}).value || '3000', 10), terms = (H.$('#taTerms') || {}).value || '30 days';
       var id = 'c' + (S().customers.length + 20), fn = ct.split(' ')[0];
       S().customers.push({ id: id, limit: lim, name: co, contact: ct, first: fn, phone: (H.$('#taPh').value || '07700 900288'), email: fn.toLowerCase() + '@' + co.toLowerCase().replace(/ ltd$/, '').replace(/[^a-z]+/g, '') + '.co.uk', type: 'Builder', terms: lim ? ({ '30 days': '30 day account', '14 days': '14 day account' }[terms] || terms) : 'Card on order', owner: 'dave', sites: [{ name: 'First site', pc: pc }], isNew: true });

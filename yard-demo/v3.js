@@ -419,11 +419,11 @@
   function issues() {
     var d = D3();
     if (!d.issues) d.issues = [
-      { id: 'i1', sup: 's11', type: 'Late', off: CS.wd(-3), note: 'Two hours late to Brentford. The customer rang twice.', open: true },
-      { id: 'i2', sup: 's3', type: 'Missed delivery', off: CS.wd(-9), note: 'Did not turn up at Wealdstone. Came the next morning.', open: false },
-      { id: 'i3', sup: 's9', type: 'Late', off: CS.wd(-7), note: 'Afternoon instead of the morning, Kenton.', open: false },
+      { id: 'i1', sup: 's11', type: 'Late', off: CS.wd(-3), note: 'Two hours late to Addlestone. The customer rang twice.', open: true },
+      { id: 'i2', sup: 's3', type: 'Missed delivery', off: CS.wd(-9), note: 'Did not turn up at Brookwood. Came the next morning.', open: false },
+      { id: 'i3', sup: 's9', type: 'Late', off: CS.wd(-7), note: 'Afternoon instead of the morning, Pyrford.', open: false },
       { id: 'i4', sup: 's13', type: 'Wrong size', off: CS.wd(-14), note: 'Sent a 12 yard for a 16 yard order. Swapped the same day.', open: false },
-      { id: 'i5', sup: 's3', type: 'Damage', off: CS.wd(-19), note: 'Cracked a kerb on Uxbridge Road. Their insurer is dealing with it.', open: true }
+      { id: 'i5', sup: 's3', type: 'Damage', off: CS.wd(-19), note: 'Cracked a kerb on Guildford Road. Their insurer is dealing with it.', open: true }
     ];
     return d.issues;
   }
@@ -433,10 +433,10 @@
     var sc = Math.max(0, Math.min(100, Math.round(su.onTime * 0.55 + (notes != null ? notes : su.onTime) * 0.35 + Math.max(0, 10 - is.length * 3))));
     return { is: is, jobs: su.jobs || os.length, late: late, failed: failed, notes: notes, margin: CS.pct(t.margin, t.rev), score: sc, cls: sc >= 92 ? 'ok' : sc >= 85 ? 'amber' : 'bad' };
   }
-  function fnd() { var u = H.ui; if (!u.find) u.find = { pc: 'UB6', svc: 'skip', size: 8, sort: 'best' }; return u.find; }
+  function fnd() { var u = H.ui; if (!u.find) u.find = { pc: 'GU21', svc: 'skip', size: 8, sort: 'best' }; return u.find; }
   function findRes() {
     var f = fnd(), pc = f.pc.trim(), it = X2.itemOf({ svc: f.svc, size: f.size });
-    if (pc.length < 2) return '<div class="card"><div class="empty">' + ic('map-pin') + 'Type a postcode, or just the first half, like UB6.</div></div>';
+    if (pc.length < 2) return '<div class="card"><div class="empty">' + ic('map-pin') + 'Type a postcode, or just the first half, like GU21.</div></div>';
     var r0 = CS.lookup(pc, it), held = window.DSGOB ? window.DSGOB.findHeld(r0.held) : '', r = r0.map(function (x) { x.c = card(x.sup); return x; });
     if (!r.length) return '<div class="card"><div class="empty">' + ic('alert') + 'No supplier on file ' + (held ? 'who can be booked ' : '') + 'covers ' + h(CS.outward(pc)) + ' for ' + h(CS.svc(f.svc).name.toLowerCase()) + '. <button class="btn sm" data-act="addSup" style="margin-left:8px">' + ic('plus') + 'Add a supplier</button></div></div>' + held;
     var best = r[0].sup.id;
@@ -453,7 +453,7 @@
   }
   function findView() {
     var f = fnd(), s = S(), is = issues();
-    return '<div class="card pad dfil"><div class="field" style="max-width:190px"><label for="findPc">Postcode</label><input id="findPc" value="' + h(f.pc) + '" placeholder="UB2 4LP" autocomplete="off"></div>' +
+    return '<div class="card pad dfil"><div class="field" style="max-width:190px"><label for="findPc">Postcode</label><input id="findPc" value="' + h(f.pc) + '" placeholder="GU21 2RX" autocomplete="off"></div>' +
       '<div class="field grow"><label>Service</label><div class="chips">' + Object.keys(s.services).map(function (k) { return '<button type="button" class="pk sm' + (f.svc === k ? ' on' : '') + '" data-act="findSvc" data-v="' + k + '">' + h(s.services[k].short) + '</button>'; }).join('') + '</div></div>' +
       (f.svc === 'skip' ? '<div class="field"><label>Size</label><div class="chips">' + [4, 6, 8, 12, 16, 20].map(function (z) { return '<button type="button" class="pk sm' + (f.size === z ? ' on' : '') + '" data-act="findSize" data-v="' + z + '">' + z + ' yd</button>'; }).join('') + '</div></div>' : '') +
       '<div class="field"><label>Put first</label><div class="seg">' + [['best', 'Best overall'], ['price', 'Cheapest'], ['reliable', 'Most reliable']].map(function (x) { return '<button data-act="findSort" data-v="' + x[0] + '" class="' + (f.sort === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div></div></div>' +

@@ -2,7 +2,7 @@
 .top .xh-btn{flex:none;color:var(--muted)}
 .top .xh-btn:hover{color:var(--ink)}
 .modal.xh{width:min(520px,calc(100vw - 24px))}
-.xh-round{display:block;width:100%;text-align:left;background:var(--brand);color:#1A1A1A;border-radius:12px;padding:14px 16px;margin-bottom:16px}
+.xh-round{display:block;width:100%;text-align:left;background:var(--brand);color:#fff;border-radius:12px;padding:14px 16px;margin-bottom:16px}
 .xh-round:hover{filter:brightness(1.04)}
 .xh-round b{display:block;font-size:16px;font-weight:800}
 .xh-round small{display:block;font-size:13px;margin-top:2px;opacity:.85}
