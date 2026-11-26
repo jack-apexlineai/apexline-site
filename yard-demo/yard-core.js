@@ -117,10 +117,11 @@
     var s = c && c.sites[idx || 0]; return s ? { name: s.name, pc: s.pc } : { name: 'Site', pc: 'HA1 2LT' };
   }
   function permitFor(pc, j, from, to) {
-    var council = 'Surrey County Council';   /* in Surrey the county council licenses skips on the road */
+    var council = YC.councilFor(pc);   /* in Surrey the county council licenses skips on the road */
     return { council: council, ref: 'SKP/' + (2600 + hash(j) % 900), from: from, to: to };
   }
   YC.permitFor = permitFor;
+  YC.councilFor = function () { return 'Surrey County Council'; };
   function seedJobs(S) {
     var L = [
       J('DSG-3101', 'L1', 450, 510, 'deliver', 'c1', 0, 8, 'mixed'),
@@ -248,7 +249,7 @@
     Y.permits = [];
     function addP(o, st, paidBy, created, job) {
       if (Y.permits.some(function (p) { return p.addr === o.site.name && p.pc === o.site.pc; })) return;
-      Y.permits.push({ id: 'PM-' + (pn++), job: job || null, skip: o.id && !job ? o.id : null, cust: o.cust, addr: o.site.name, pc: o.site.pc, council: 'Surrey County Council', status: st, paidBy: paidBy, price: YC.PRICES.permit,
+      Y.permits.push({ id: 'PM-' + (pn++), job: job || null, skip: o.id && !job ? o.id : null, cust: o.cust, addr: o.site.name, pc: o.site.pc, council: YC.councilFor(o.site.pc), status: st, paidBy: paidBy, price: YC.PRICES.permit,
         ref: o.permit ? o.permit.ref : null, from: o.permit ? o.permit.from : null, to: o.permit ? o.permit.to : null, createdAt: created, log: [] });
     }
     Y.onsite.filter(function (o) { return o.permit; }).forEach(function (o, i) { addP(o, 'approved', i % 2 ? 'customer' : 'us', now0 - (20 + i) * 86400000); });
@@ -470,4 +471,5 @@
     var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 70"><path d="M10 50 C30 10 45 60 60 35 S90 20 100 45 S130 60 140 30 S170 15 180 40 S210 55 230 25" fill="none" stroke="#1A1A1A" stroke-width="2.4" stroke-linecap="round"/></svg>';
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
   };
+  if (window.DSGBRAND && DSGBRAND.yardCore) DSGBRAND.yardCore(YC);   /* personal links: move the sample patch (brand.js) */
 })();

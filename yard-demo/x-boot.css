@@ -44,7 +44,7 @@
 .xs-cells i.on::after{content:"";width:12px;height:12px;border-radius:50%;background:#fff}
 .xs-cells i.cur{border-color:#1F4FA8;box-shadow:0 0 0 3px rgba(31,79,168,.25)}
 .xs-err{min-height:18px;font-size:13px;color:#FCA5A5;margin:-2px 0 10px}
-.xs-go{height:48px;border-radius:12px;background:#1F4FA8;color:#1A1A1A;font-weight:800;font-size:15.5px;border:0;cursor:pointer}
-.xs-go:hover{background:#F0A45E}
+.xs-go{height:48px;border-radius:12px;background:#1F4FA8;color:#fff;font-weight:800;font-size:15.5px;border:0;cursor:pointer}
+.xs-go:hover{background:#2A5BB8}
 .xs-foot{margin-top:18px;font-size:12px;color:#71717A}
 body:has(#xsign) #walk,body:has(#xsign) .sk-fab,body:has(#xsign) #skFab,body:has(#xsign) .fab{display:none!important}

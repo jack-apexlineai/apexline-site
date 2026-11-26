@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#1A1A1A">
 <title>Demo Skip & Grab · Yard and office</title>
 <link rel="icon" href="brand/favicon.svg">
+<script src="brand.js?v=1"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Caveat:wght@600&display=swap" rel="stylesheet">
@@ -21,11 +22,11 @@
 <link rel="stylesheet" href="x-help.css?v=58">
 <link rel="stylesheet" href="x-gemma.css?v=58">
 <link rel="stylesheet" href="x-more.css?v=58">
-<link rel="stylesheet" href="x-boot.css?v=58">
+<link rel="stylesheet" href="x-boot.css?v=59">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script>/* dark cover from the first frame, so the start-up screen comes before the dashboard is seen (x-boot.js lifts it) */if(!/[?&]boot=0/.test(location.search))document.documentElement.classList.add("xb-pre");</script>
 <style>html.xb-pre body::before{content:"";position:fixed;inset:0;z-index:199;background:#101012}html.xb-pre #walk,html.xb-pre .toasts,html.xb-pre .fab{visibility:hidden}</style>
-<script>try{var s=JSON.parse(localStorage.getItem('dsg-v1')||'null');var p=new URLSearchParams(location.search).get('theme');document.documentElement.setAttribute('data-theme',p||(s&&s.settings&&s.settings.theme)||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}</script>
+<script>try{var s=JSON.parse(localStorage.getItem(window.DSGBRAND&&DSGBRAND.geo?'dsg-v1-'+DSGBRAND.geo:'dsg-v1')||'null');var p=new URLSearchParams(location.search).get('theme');document.documentElement.setAttribute('data-theme',p||(s&&s.settings&&s.settings.theme)||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}</script>
 </head>
 <body>
 <div class="shell">
@@ -57,7 +58,7 @@
 <script src="clock.js?v=58"></script>
 <script src="icons.js?v=58"></script>
 <script src="data.js?v=58"></script>
-<script src="store.js?v=58"></script>
+<script src="store.js?v=59"></script>
 <script src="onboard-core.js?v=58"></script>
 <script src="more.js?v=58"></script>
 <script src="plus.js?v=58"></script>
@@ -74,7 +75,7 @@
 <script src="x-dash.js?v=58"></script>
 <script src="x-help.js?v=58"></script>
 <script src="x-gemma.js?v=58"></script>
-<script src="x-boot.js?v=58"></script>
+<script src="x-boot.js?v=59"></script>
 <script src="walk.js?v=58"></script>
 <script src="words.js?v=58"></script>
 <link rel="stylesheet" href="x-quotes.css?v=58">
@@ -92,9 +93,9 @@
 <link rel="stylesheet" href="x-onboard.css?v=58">
 <script src="x-onboard.js?v=58"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<link rel="stylesheet" href="yard.css?v=1">
-<script src="yard-core.js?v=1"></script>
-<script src="yard.js?v=1"></script>
+<link rel="stylesheet" href="yard.css?v=2">
+<script src="yard-core.js?v=2"></script>
+<script src="yard.js?v=2"></script>
 <script src="wastein.js?v=1"></script>
 </body>
 </html>

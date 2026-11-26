@@ -130,7 +130,7 @@
   }
   setInterval(function () {
     if (!st.signed) return;
-    if (!host) { try { var raw = JSON.parse(localStorage.getItem('dsg-v1') || 'null'); if (raw && raw.yard && raw.yard.v !== st.seen) { CS.S = raw; } } catch (e) {} }
+    if (!host) { try { var raw = JSON.parse(localStorage.getItem(CS.KEY || 'dsg-v1') || 'null'); if (raw && raw.yard && raw.yard.v !== st.seen) { CS.S = raw; } } catch (e) {} }
     var y = Y(); if (y.v === st.seen) return;
     var ae = document.activeElement; if ($('#sheet').innerHTML || (ae && ae.tagName === 'INPUT')) return;
     draw();

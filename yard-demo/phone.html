@@ -7,12 +7,13 @@
 <meta name="theme-color" content="#1A1A1A">
 <title>Demo Skip & Grab · Phone</title>
 <link rel="icon" href="brand/favicon.svg">
+<script src="brand.js?v=1"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="app.css?v=58">
 <link rel="stylesheet" href="phone.css?v=58">
-<script>try{var s=JSON.parse(localStorage.getItem('dsg-v1')||'null');var p=new URLSearchParams(location.search).get('theme');document.documentElement.setAttribute('data-theme',p||(s&&s.settings&&s.settings.theme)||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}</script>
+<script>try{var s=JSON.parse(localStorage.getItem(window.DSGBRAND&&DSGBRAND.geo?'dsg-v1-'+DSGBRAND.geo:'dsg-v1')||'null');var p=new URLSearchParams(location.search).get('theme');document.documentElement.setAttribute('data-theme',p||(s&&s.settings&&s.settings.theme)||'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}</script>
 </head>
 <body class="pbody">
 <div class="papp" id="app">
@@ -25,7 +26,7 @@
 <script src="clock.js?v=58"></script>
 <script src="icons.js?v=58"></script>
 <script src="data.js?v=58"></script>
-<script src="store.js?v=58"></script>
+<script src="store.js?v=59"></script>
 <script src="onboard-core.js?v=58"></script>
 <script src="phone.js?v=58"></script>
 <script src="words.js?v=58"></script>

@@ -39,13 +39,13 @@
     }
     /* sign in first: the Demo Skip & Grab logo, username d.archer and a 4 digit PIN (1234 in the demo), then the start-up screen.
        In the real build each person has their own login and PIN, checked on the server. ?pin=0 skips this screen. */
-    var PIN = '1234', USER = 'd.archer';
+    var PIN = '1234', USER = (window.DSGBRAND && DSGBRAND.on && DSGBRAND.user) || 'd.archer';
     function signin(then) {
       if (new URLSearchParams(location.search).get('pin') === '0') { then(); return; }
       var old = document.getElementById('xsign'); if (old && old.parentNode) old.parentNode.removeChild(old);
       var w = document.createElement('div'); w.id = 'xsign'; w.className = 'xs';
       w.innerHTML = '<div class="xb-glow" aria-hidden="true"></div><form class="xs-card" id="xsForm" autocomplete="off" novalidate>' +
-        '<img class="xs-logo" src="brand/logo-inverted.svg" alt="Demo Skip & Grab"><div class="xs-cap">Office system</div><h1 class="xs-h">Sign in</h1>' +
+        '<img class="xs-logo" src="brand/logo-inverted.svg" alt="Demo Skip & Grab"><div class="xs-cap">Office system</div><h1 class="xs-h">' + (window.DSGBRAND && DSGBRAND.first ? 'Welcome, ' + DSGBRAND.first : 'Sign in') + '</h1>' +
         '<label class="xs-f"><span>Username</span><input id="xsUser" value="' + USER + '" autocapitalize="none" autocorrect="off" spellcheck="false"></label>' +
         '<label class="xs-f"><span>PIN</span><span class="xs-pin"><input id="xsPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="PIN"><span class="xs-cells" aria-hidden="true"><i></i><i></i><i></i><i></i></span></span></label>' +
         '<div class="xs-err" id="xsErr" role="alert"></div><button class="xs-go" type="submit">Sign in</button></form><div class="xs-foot">Demo Skip & Grab · sample data</div>';

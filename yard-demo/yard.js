@@ -43,6 +43,7 @@
        ====================================================================== */
     var PK = 'dsg-prefs';
     var USERS = [{ k: 'dave', n: 'Dave Archer', r: 'Managing Director', c: '#1F4FA8' }, { k: 'ellie', n: 'Ellie Ward', r: 'Office', c: '#0E9F6E' }, { k: 'sam', n: '', r: 'Sales', c: '#52525B' }];
+    (function (B) { if (!B || !B.on) return; if (B.name) USERS[0].n = B.name; if (B.role) USERS[0].r = B.role; if (B.colour) USERS[0].c = B.badge; })(window.DSGBRAND);   /* personal link (brand.js) */
     function uName(u) { return u.k === 'sam' ? CS.bde() : u.n; }
     function allP() { try { return JSON.parse(localStorage.getItem(PK) || '{}') || {}; } catch (e) { return {}; } }
     function meK() { var a = allP(); return USERS.some(function (u) { return u.k === a.user; }) ? a.user : 'dave'; }
@@ -617,7 +618,7 @@
           return '<button class="ytl-r" data-act="yFocus" data-v="' + l.id + '"><span class="ylo" style="--lc:' + l.col + '"><i></i>' + h(l.n) + '</span><small class="muted">' + h(l.driver + ' · ' + l.reg) + '</small><span class="ytl-s">' + h(stateLine(y, l, w)) + '</span><span class="yh-bar"><i style="width:' + (list.length ? Math.round(d / list.length * 100) : 0) + '%;background:' + l.col + '"></i></span><small>' + d + ' of ' + list.length + ' jobs done</small></button>';
         }).join('') +
         '<div class="ytl-leg"><span><i style="background:#A1A1AA"></i>Booked</span><span><i style="background:#1F4FA8"></i>On the way</span><span><i style="background:#2563EB"></i>On site</span><span><i style="background:#16A34A"></i>Done</span></div>' +
-        '<small class="muted ytl-note">Demo: the lorries are simulated. Live, positions come from the driver app on their phone or from your existing vehicle trackers.</small></aside></div>' +
+        '<small class="muted ytl-note">Sample data: the lorries are simulated. Live, positions come from the driver app on their phone or from your existing vehicle trackers.</small></aside></div>' +
         '<div class="card ytexts"><div class="yh-rh"><h3>' + ic('message') + 'Texts to customers today</h3><small class="muted">"On my way" with an ETA, sent when the driver sets off</small></div>' +
         (y.texts.slice(0, 5).map(function (t) { return '<div class="ytx"><small>' + CS.clock(t.at) + ' · ' + h(t.to) + '</small><span>' + h(t.text) + '</span></div>'; }).join('') || '<p class="muted">None yet today.</p>') + '</div>';
     };
@@ -1201,7 +1202,7 @@
         price: parseFloat(String(b.price == null ? '' : b.price).replace(/[^\d.]/g, '')) || b2Price(b), incl: YC.inclFor(y, J0), stream: b.stream, place: perm || (b.place === 'road' && J0.type === 'deliver') ? 'road' : 'drive',
         permit: perm ? YC.permitFor(site.pc, id, off, off + 14) : null, status: 'planned', at: {}, photos: [], sig: null, ticket: null, wtn: null, eta: null, notes: b.notes || '', log: [{ at: Date.now(), t: 'Booked by ' + uName(meU()).split(' ')[0] + (c && c.stop ? ', while on stop' : '') }], isNew: true };
       y.jobs.push(j);
-      if (perm) { y.permits = y.permits || []; y.permits.unshift({ id: 'PM-' + (600 + y.permits.length), job: id, cust: j.cust, addr: site.name, pc: site.pc, council: 'Surrey County Council', status: 'apply', paidBy: null, price: YC.prices(y).permit, ref: j.permit.ref, from: off, to: off + 14, createdAt: Date.now(), log: [] }); }
+      if (perm) { y.permits = y.permits || []; y.permits.unshift({ id: 'PM-' + (600 + y.permits.length), job: id, cust: j.cust, addr: site.name, pc: site.pc, council: YC.councilFor(site.pc), status: 'apply', paidBy: null, price: YC.prices(y).permit, ref: j.permit.ref, from: off, to: off + 14, createdAt: Date.now(), log: [] }); }
       if (b.fromMsg) { var m = msgs().filter(function (x) { return x.id === b.fromMsg; })[0]; if (m) { m.done = true; m.doneAt = Date.now(); m.job = id; m.reply = 'Booked in for ' + dayName(off) + ' morning, ' + (J0.size ? J0.size + ' yarder' : 'grab lorry') + ' on the drive at ' + site.name.split(',')[0] + '. Cheers, Dave'; } }
       y.v++; save(); A.close(); var from = b.fromMsg; ui.yb2 = null;
       toast('Booked ' + h(id) + ' for ' + h(dayLabel(off)) + ' ' + (b.time === 'pm' ? 'PM' : b.time === 'at' ? YC.hhmm(win[0]) : 'AM') + '. Give it a lorry on the day plan' + (perm ? '. Permit card made, apply within 30 minutes' : ''), 'circle-check');
@@ -1398,7 +1399,7 @@
         side = '<aside class="card ytrack-list"><div class="yh-rh"><h3>' + ic('truck') + 'Lorries</h3><span class="livepill"><i></i>Live</span></div>' + YC.LORRIES.map(function (l) {
           var w = YC.where(y, l.id), L = YC.forLorry(y, l.id, 0), d = L.filter(function (j) { return j.status === 'done'; }).length;
           return '<button class="ytl-r" data-act="yLorry" data-v="' + l.id + '"><span class="ytl-top"><span class="yplate sm">' + h(l.reg) + '</span><small>' + d + ' of ' + L.length + ' done</small></span><span class="ytl-s">' + h(lorryLine(l, w, y)) + '</span></button>';
-        }).join('') + '<small class="muted ytl-note">Tap a lorry to see its day. Demo: the lorries are simulated.</small></aside>';
+        }).join('') + '<small class="muted ytl-note">Tap a lorry to see its day. Sample data: the lorries are simulated.</small></aside>';
       }
       return head + '<div class="ytrack"><div class="ytrack-map" id="yMapSlot"></div>' + side + '</div>';
     };
@@ -1424,11 +1425,12 @@
         '<linearGradient id="ywA" x1="-60" y1="-60" x2="60" y2="60" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FBFCFD"/><stop offset=".3" stop-color="#9AA3AF"/><stop offset=".55" stop-color="#E8ECF0"/><stop offset=".8" stop-color="#737C88"/><stop offset="1" stop-color="#D9DEE4"/></linearGradient></defs>' +
         '<circle r="99" fill="url(#ywT)"/>';
       for (var t = 0; t < 40; t++) { var a = t * 9, q2 = pt(96, a); s += '<rect x="' + (q2[0] - 1.4) + '" y="' + (q2[1] - 3) + '" width="2.8" height="6" rx=".6" fill="#06080B" transform="rotate(' + (a + 90) + ' ' + q2[0] + ' ' + q2[1] + ')"/>'; }
-      s += '<circle r="70" fill="url(#ywA)"/><circle r="66" fill="none" stroke="#1F4FA8" stroke-width="3"/>';
+      s += '<circle r="70" fill="url(#ywA)"/><circle r="66" fill="none" stroke="' + (window.DSGBRAND && DSGBRAND.colour ? DSGBRAND.badge : '#1F4FA8') + '" stroke-width="3"/>';
       for (var hh = 0; hh < 10; hh++) { var ha = hh * 36 + 18, hq = pt(52, ha); s += '<rect x="-4.6" y="-8" width="9.2" height="16" rx="4.6" fill="#1B1F27" transform="translate(' + hq[0] + ' ' + hq[1] + ') rotate(' + (ha + 90) + ')"/>'; }
       s += '<circle r="40" fill="#B4BCC6" stroke="rgba(0,0,0,.25)"/>';
       for (var n = 0; n < 10; n++) { var nq = pt(31, n * 36 - 90); s += '<g transform="translate(' + nq[0] + ' ' + nq[1] + ')"><path d="M5.2 0 2.6 4.5 -2.6 4.5 -5.2 0 -2.6 -4.5 2.6 -4.5Z" fill="#E6EAEF" stroke="#3E4550" stroke-width=".7"/><circle r="2.2" fill="#5B636F"/></g>'; }
-      s += '<circle r="18" fill="#1F4FA8" stroke="#fff" stroke-width="1.5"/><text y="5.5" text-anchor="middle" font-family="Archivo,Arial,sans-serif" font-weight="800" font-size="15" fill="#fff">DSG</text></svg>';
+      var WB = window.DSGBRAND && DSGBRAND.on ? DSGBRAND : null, hubT = WB && WB.co ? WB.initials : 'DSG', hubC = WB && WB.colour ? WB.badge : '#1F4FA8';   /* personal link: their initials and colour on the hub */
+      s += '<circle r="18" fill="' + hubC + '" stroke="#fff" stroke-width="1.5"/><text y="5.5" text-anchor="middle" font-family="Archivo,Arial,sans-serif" font-weight="800" font-size="' + (hubT.length > 3 ? 12 : 15) + '" fill="#fff">' + h(hubT) + '</text></svg>';
       return s;
     }
     function wheelCounts() { var c = navCounts({}); return c; }

@@ -1,8 +1,9 @@
 /* Demo Skip & Grab demo store: state in this browser only, the message reader, supplier lookup, pricing, drafts and approvals.
    Nothing is ever sent anywhere. "Send" in this demo only adds the message to the screen. */
 (function () {
-  var KEY = 'dsg-v1', LKEY = 'dsg-leader';
+  var KEY = 'dsg-v1' + (window.DSGBRAND && DSGBRAND.geo ? '-' + DSGBRAND.geo : ''), LKEY = 'dsg-leader';
   var CS = window.CS = {};
+  CS.KEY = KEY;
   var listeners = [];
   var ME = Math.random().toString(36).slice(2);
   CS.me = ME;
