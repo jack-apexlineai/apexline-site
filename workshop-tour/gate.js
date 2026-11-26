@@ -155,7 +155,7 @@
     if (wowUrl()) {
       try {
         var q = new URLSearchParams(location.search), hex = String(q.get('colour') || q.get('color') || '').replace(/^#/, '');
-        p = { name: clean(q.get('name'), 24), co: clean(q.get('co'), 48), colour: /^[0-9a-fA-F]{6}$/.test(hex) ? '#' + hex.toUpperCase() : '' };
+        p = { name: clean(q.get('name'), 24), co: clean(q.get('co'), 48), colour: /^[0-9a-fA-F]{6}$/.test(hex) ? '#' + hex.toUpperCase() : '', logo: String(q.get('logo') || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 24) };
         sessionStorage.setItem(WOWP, JSON.stringify(p));
       } catch (e) { }
       return p || {};
@@ -163,6 +163,7 @@
     try { p = JSON.parse(sessionStorage.getItem(WOWP) || 'null'); } catch (e) { }
     return p || {};
   }
+  var WOW_LOGOS = { conway: 'brand/conway.png' };
   function initialsOf(co) {
     var w = co.replace(/\b(Ltd|Limited|LLP|PLC)\b\.?/gi, '').replace(/[^A-Za-z0-9\u00C0-\u024F ]/g, ' ').trim().split(/\s+/).filter(Boolean);
     var i = w.length > 1 ? w.slice(0, 3).map(function (x) { return x.charAt(0); }).join('') : (w[0] || '').slice(0, 2);
@@ -179,6 +180,9 @@
       ch = true;
     }
     if (p.colour && S.brand !== p.colour) { S.brand = p.colour; ch = true; }
+    /* a prospect's own logo, only from the files kept in brand/ */
+    var lg = p.logo && WOW_LOGOS[p.logo];
+    if (lg && S.logo !== lg) { S.logo = lg; S.logoStack = lg; S.logoName = S.name; ch = true; }
     return ch;
   }
   WS.beforeBoot = function (boot) {
