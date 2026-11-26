@@ -42,7 +42,7 @@ img{max-width:100%;height:auto;display:block}
 .wrap{max-width:1120px;margin:0 auto;padding:0 20px}
 .eyebrow{font-family:var(--ui);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
 h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em;line-height:1.08}
-h1{font-size:clamp(34px,5vw,60px)}
+h1{font-size:clamp(40px,6.2vw,80px)}
 h2{font-size:clamp(28px,3.8vw,44px)}
 h3{font-family:var(--ui);font-weight:700;font-size:20px;line-height:1.25}
 .lead{font-size:clamp(17px,1.6vw,20px);color:var(--silver)}
@@ -68,10 +68,10 @@ nav .btn{margin-left:auto;padding:10px 16px;font-size:14px}
 /* hero */
 .hero{padding:48px 0 72px;overflow:hidden;position:relative}
 .hero:before{content:"";position:absolute;top:-260px;right:-200px;width:820px;height:820px;background:radial-gradient(circle,rgba(77,168,255,.15),transparent 60%);pointer-events:none}
-.hgrid{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 360px;column-gap:64px;row-gap:0;grid-template-areas:"copy vid" "act vid";align-items:center}
-.hcopy{grid-area:copy;align-self:end}
+.hgrid{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 400px;column-gap:56px;row-gap:0;grid-template-areas:"copy copy" "act vid";align-items:start}
+.hcopy{grid-area:copy;max-width:1000px}
 .hact{grid-area:act;align-self:start;margin-top:28px}
-.hvid{grid-area:vid}
+.hvid{grid-area:vid;margin-top:28px}
 .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--accent-border);background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:6px 14px;font-family:var(--ui);font-weight:700;font-size:13px;margin-bottom:22px}
 .pill i{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px rgba(0,212,170,.15)}
 .hero h1 .hl{color:var(--accent)}
@@ -94,6 +94,21 @@ nav .btn{margin-left:auto;padding:10px 16px;font-size:14px}
 .ring svg{width:36px;height:36px;margin-left:6px;color:#06101F}
 .vplay b{font-family:var(--ui);font-size:18px;text-shadow:0 2px 14px rgba(0,0,0,.8)}
 .vplay small{font-family:var(--ui);font-weight:500;font-size:14px;color:var(--text);opacity:.9;text-shadow:0 2px 12px rgba(0,0,0,.8)}
+.vtile{display:flex;gap:16px;align-items:center;width:100%;padding:12px 18px 12px 12px;border-radius:20px;border:1px solid var(--accent-border);background:linear-gradient(135deg,rgba(77,168,255,.13),rgba(255,255,255,.02));color:var(--text);text-align:left;font:inherit;cursor:pointer;box-shadow:0 24px 60px rgba(0,0,0,.45);transition:transform .2s,border-color .2s}
+.vtile:hover{transform:translateY(-2px);border-color:var(--accent)}
+.vthumb{position:relative;flex:0 0 92px;aspect-ratio:9/16;border-radius:12px;overflow:hidden;background:#05080f}
+.vthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.vthumb .ring{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;box-shadow:0 0 0 6px rgba(77,168,255,.25);animation:vpulse 2.2s ease-out infinite}
+.vthumb .ring svg{width:18px;height:18px;margin-left:3px}
+@keyframes vpulse{0%{box-shadow:0 0 0 0 rgba(77,168,255,.55)}70%{box-shadow:0 0 0 14px rgba(77,168,255,0)}100%{box-shadow:0 0 0 0 rgba(77,168,255,0)}}
+.vtxt em{display:block;font-style:normal;font-family:var(--ui);font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.vtxt b{display:block;font-family:var(--display);font-weight:600;font-size:23px;line-height:1.15;margin:6px 0 6px}
+.vtxt small{display:block;font-family:var(--ui);font-weight:500;font-size:14px;line-height:1.45;color:var(--silver)}
+.vtxt .go{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-family:var(--ui);font-weight:700;font-size:14px;color:var(--accent)}
+.vmodal{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:24px;background:rgba(5,8,15,.94)}
+.vmodal[hidden]{display:none}
+.vmodal .vbox{width:min(calc(88vh * 9 / 16),calc(100vw - 48px));box-shadow:0 40px 120px rgba(0,0,0,.7)}
+.vclose{position:fixed;top:16px;right:16px;z-index:101;width:46px;height:46px;border-radius:50%;border:1px solid var(--line2);background:rgba(255,255,255,.1);color:#fff;font-size:28px;line-height:1;cursor:pointer}
 .vnote{margin-top:12px;font-size:13px;color:var(--muted);text-align:center}
 
 /* proof wall */
@@ -171,7 +186,7 @@ footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);f
 
 @media(max-width:900px){
   .hgrid{grid-template-columns:1fr;grid-template-areas:"copy" "vid" "act"}
-  .hvid{margin-top:28px;width:100%;max-width:440px;justify-self:center}
+  .hvid{margin-top:26px;width:100%;max-width:460px;justify-self:center}
   .hact{display:flex;flex-direction:column;align-items:center;text-align:center}
   .hact .promise{text-align:left}
   .ticks{justify-content:center}
@@ -186,7 +201,9 @@ footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);f
   .hero{padding:30px 0 52px}
   .pill{font-size:12px;margin-bottom:16px}
   .hero .lead{margin-top:14px}
-  .hvid{max-width:none;margin-top:24px}
+  .hvid{max-width:none;margin-top:22px}
+  .vtxt b{font-size:20px}
+  .vthumb{flex-basis:84px}
   .vbox{border-radius:18px}
   .hact{margin-top:22px}
   .hact .btn,.cta-row .btn{width:100%}
@@ -207,7 +224,7 @@ footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);f
   .bigslots i{width:56px;height:48px;font-size:11px}
   .again{grid-template-columns:1fr}
 }
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn,.ring{transition:none}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn,.ring,.vtile{transition:none}.vthumb .ring{animation:none}}
 </style>
 </head>
 <body>
@@ -225,14 +242,10 @@ footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);f
   </div>
 
   <div class="hvid" id="video">
-    <div class="vbox">
-      <video id="vsl" src="/workshop-lander/vsl.mp4" poster="/workshop-lander/vsl-poster.jpg" preload="none" playsinline webkit-playsinline width="720" height="1280" aria-label="Two-minute video: the workshop system"></video>
-      <button class="vplay" id="vplay" type="button" aria-label="Play the 2-minute video">
-        <span class="ring"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l11-6.5a1 1 0 0 0 0-1.72l-11-6.5A1 1 0 0 0 8 5.5z"/></svg></span>
-        <b>Watch the 2-minute video</b>
-        <small>Captions on screen, so sound off works too</small>
-      </button>
-    </div>
+    <button class="vtile" id="vplay" type="button" aria-label="Play the 2-minute video">
+      <span class="vthumb"><img src="/workshop-lander/vsl-poster.jpg" alt="" width="92" height="164" decoding="async"><span class="ring"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l11-6.5a1 1 0 0 0 0-1.72l-11-6.5A1 1 0 0 0 8 5.5z"/></svg></span></span>
+      <span class="vtxt"><em>Watch this first</em><b>See it in 2 minutes</b><small>Hear what a workshop owner said when he first saw his own system. Captions on, so sound off works.</small><span class="go">Play the video <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span>
+    </button>
   </div>
 
   <div class="hact">
@@ -243,6 +256,11 @@ footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);f
     <div class="slots"><span class="dots" aria-hidden="true"><i class="gone"></i><i></i><i></i><i></i><i></i></span>4 of 5 founder places left</div>
   </div>
 </div></header>
+
+<div class="vmodal" id="vmodal" hidden role="dialog" aria-modal="true" aria-label="The 2-minute video">
+  <button class="vclose" id="vclose" type="button" aria-label="Close the video">&times;</button>
+  <div class="vbox"><video id="vsl" src="/workshop-lander/vsl.mp4" poster="/workshop-lander/vsl-poster.jpg" preload="none" playsinline webkit-playsinline width="720" height="1280" aria-label="Two-minute video: the workshop system"></video></div>
+</div>
 
 <!-- Quotes: real words from two clients' first demos, anonymous. Attributions only, no names, firms or towns. -->
 <section class="proof" id="quotes"><div class="wrap">
@@ -400,11 +418,12 @@ var WS_TRACK = { url: '', key: '' };
     if (a) track(a.getAttribute('data-track'));
   });
 
-  /* video: poster with a big play button, controls on once it starts, never autoplays */
+  /* video: a small tile; clicking it opens the video in a pop-up, full screen on phones */
   var v = document.getElementById('vsl'), btn = document.getElementById('vplay');
+  var modal = document.getElementById('vmodal'), closeBtn = document.getElementById('vclose');
+  var touch = window.matchMedia && matchMedia('(pointer: coarse)').matches;
   var started = false;
   function start() {
-    btn.hidden = true;
     v.controls = true;
     if (!started) { started = true; track('play'); }
   }
@@ -421,12 +440,30 @@ var WS_TRACK = { url: '', key: '' };
       });
     }
   }
-  btn.addEventListener('click', function () {
+  function openVideo() {
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
     start();
     setSource();
+    if (touch) { v.playsInline = false; v.removeAttribute('playsinline'); v.removeAttribute('webkit-playsinline'); }
     var p = v.play();
     if (p && p.catch) p.catch(function () {});
-  });
+    if (touch && v.requestFullscreen) { var f = v.requestFullscreen(); if (f && f.catch) f.catch(function () {}); }
+  }
+  function closeVideo() {
+    if (modal.hidden) return;
+    v.pause();
+    modal.hidden = true;
+    document.body.style.overflow = '';
+    if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
+    btn.focus();
+  }
+  btn.addEventListener('click', openVideo);
+  closeBtn.addEventListener('click', closeVideo);
+  modal.addEventListener('click', function (e) { if (e.target === modal) closeVideo(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeVideo(); });
+  v.addEventListener('webkitendfullscreen', closeVideo);
+  document.addEventListener('fullscreenchange', function () { if (touch && !document.fullscreenElement) closeVideo(); });
   v.addEventListener('play', start);
   v.addEventListener('ended', function () { track('video_end'); });
 })();
