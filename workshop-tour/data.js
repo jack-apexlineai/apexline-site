@@ -167,8 +167,8 @@ WS.seed = function () {
   /* Neutral brand for the self-serve tour: a made-up workshop, sample address and phone
      (01632 960 numbers are reserved for drama and examples). */
   var settings = {
-    name: 'Demo Truck Services Ltd',
-    initials: 'DTS',
+    name: 'DEMO Commercials Ltd',
+    initials: 'DC',
     brand: '#1F6F8B',
     logo: 'brand/demo-badge.svg',
     logoStack: 'brand/demo-badge.svg',
@@ -205,7 +205,7 @@ WS.seed = function () {
       salesAccount: '200', partsAccount: '310', taxType: 'OUTPUT2',
       autoSend: true, lastSync: ''
     },
-    notify: { sms: true, email: true, whatsapp: true, fromName: 'Demo Truck Services' },
+    notify: { sms: true, email: true, whatsapp: true, fromName: 'DEMO Commercials Ltd' },
     erTargets: { pmiOnTime: 95, defectsPerPmi: 2.5, motFirstTime: 90, driverChecks: 95 },
     overtimeAfter: 8,
     overtimeRate: 1.5

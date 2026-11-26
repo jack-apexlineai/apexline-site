@@ -183,6 +183,110 @@
     }
   ];
 
+
+  /* ---------------- the highlights tour (?tour=wow) ----------------
+     The wow moments only, for a narrated screen recording. No gate, no sign in, no prices,
+     and nothing the demo does not do (no voice, no look-ups). */
+  function hideVoiceTip() {
+    // the phone's side panel lists the voice preview: not part of the highlights
+    document.querySelectorAll('.pmsteps li').forEach(function (li) { if (/speak/i.test(li.textContent)) li.remove(); });
+  }
+  /* on a phone the fitter app and the portal open in a panel above the tour card, not a new page */
+  function peek(src, label) {
+    unpeek();
+    var w = document.createElement('div');
+    w.className = 'tr-peek';
+    w.innerHTML = '<iframe src="' + src + '" title="' + WS.esc(label) + '"></iframe>';
+    document.body.appendChild(w);
+  }
+  function unpeek() { var w = $('.tr-peek'); if (w) w.remove(); }
+  var WOW = [
+    {
+      id: 'wall',
+      // the board as it would sit on a screen on the wall: every bay in one view
+      prep: function (done) { document.documentElement.classList.add('tr-wallview'); go('board'); setTimeout(done, 250); },
+      leave: function () { document.documentElement.classList.remove('tr-wallview'); },
+      title: 'Your workshop board, on the wall',
+      body: 'Every bay, every lorry and every fitter, live on a screen in the workshop. No whiteboard.',
+      target: ['#view .board']
+    },
+    {
+      id: 'live', hero: true, prep: function (done) { go('live'); setTimeout(done, 200); },
+      title: 'Who\'s on time, who\'s running over',
+      body: 'Every fitter, the job they\'re on and the clock against the estimate. Over time shows red.',
+      target: ['#view .lcol', '#view .grid.g4'], area: '#view .lcol', all: true
+    },
+    {
+      id: 'fitter',
+      prep: function (done) {
+        closeOverlays();
+        if (!phone() && O.openPhone) {
+          // Dave already signed in on the phone, so it opens on his day
+          try { localStorage.setItem('wsTour:fitter', 'f1'); } catch (e) { }
+          go('live'); O.openPhone();
+          setTimeout(function () { hideVoiceTip(); done(); }, 900);
+        } else {
+          try { localStorage.setItem('wsTour:fitter', 'f1'); } catch (e) { }
+          go('live'); peek('fitter.html?dock=1', 'Fitter app'); setTimeout(done, 900);
+        }
+      },
+      title: 'The fitter app, on any phone',
+      body: 'Clock on, photos and parts from any phone, in the bay or out on the van.',
+      target: ['.pmask .psizer', '.tr-peek', '#wsPhone'],
+      leave: function () { try { localStorage.removeItem('wsTour:fitter'); } catch (e) { } unpeek(); if (O.closePhone) O.closePhone(); }
+    },
+    {
+      id: 'approvals', prep: function (done) { go('approvals'); setTimeout(done, 200); },
+      title: 'Extra work, approved from their phone',
+      body: 'The fitter finds it, the customer sees the price and taps approve. No ringing round.',
+      target: ['#view .appr', '#view .grid']
+    },
+    {
+      id: 'sheet',
+      prep: function (done) { go('vehicles'); var id = pmiWithSheet(); if (id && O.sheetView) O.sheetView(id); setTimeout(done, 300); },
+      title: 'Inspection sheets that lock',
+      body: 'Filled in on the fitter\'s phone and signed off. Once it\'s signed, nobody can change it.',
+      target: ['.modal', '.mbox', '[role="dialog"]'],
+      leave: function () { if (O.closeModal) O.closeModal(); }
+    },
+    {
+      id: 'invoice', prep: function (done) { if (O.setMoneyView) O.setMoneyView('invoices'); go('money'); setTimeout(done, 200); },
+      title: 'Job done to invoice, one click',
+      body: 'Finished jobs line up here. One click raises the invoice, ready to go across to Xero.',
+      target: [function () {
+        var h = [].slice.call(document.querySelectorAll('#view .card h2')).filter(function (x) { return /waiting to be billed/i.test(x.textContent); })[0];
+        return h && h.closest('.card');
+      }, '#view .grid'],
+      clip: 300,
+      leave: function () { if (O.setMoneyView) O.setMoneyView('overview'); }
+    },
+    {
+      id: 'pay', prep: function (done) { if (O.setMoneyView) O.setMoneyView('pay'); go('money'); setTimeout(done, 200); },
+      title: 'Fitter pay that adds itself up',
+      body: 'Hours come straight off the clock, so no time cards. One spreadsheet for the accountant.',
+      target: [function () { var t = $('#view .mview table'); return t && t.closest('.card'); }, '#view .mview .card', '#view .mview'],
+      leave: function () { if (O.setMoneyView) O.setMoneyView('overview'); }
+    },
+    {
+      id: 'portal',
+      prep: function (done) {
+        closeOverlays();
+        if (!phone() && O.openPortal) { go('home'); O.openPortal('o1'); setTimeout(done, 900); }
+        else { go('home'); peek('portal.html?dock=1&as=o1', 'Customer portal'); setTimeout(done, 900); }
+      },
+      title: 'Your customers get their own portal',
+      body: 'They see their fleet and due dates, book lorries in and approve work, under your name.',
+      target: ['.pmask .bwin', '.tr-peek', '#wsPortal'],
+      leave: function () { unpeek(); if (O.closePortal) O.closePortal(); }
+    },
+    {
+      id: 'end', prep: function (done) { go('live'); setTimeout(done, 150); },
+      end: true,
+      title: 'Built round how your workshop already works.',
+      body: 'Your bays, your fitters, your sheets and your customers. Set up the way you run it.'
+    }
+  ];
+
   /* --------------------------- the engine --------------------------- */
   var run = null;   // { steps, i, busy }
   var spot, card, ticker;
@@ -221,7 +325,7 @@
     document.removeEventListener('keydown', onKey, true);
     window.removeEventListener('resize', place);
     window.removeEventListener('scroll', place, true);
-    document.documentElement.classList.remove('touring');
+    document.documentElement.classList.remove('touring', 'tr-wow');
   }
   function onKey(e) {
     if (!run || run.busy) return;
@@ -238,6 +342,7 @@
     if (!el || !el.isConnected) { el = stepTarget(s); if (run) run.el = el; }
     if (!el) return null;
     var r = el.getBoundingClientRect(), box = { l: r.left, t: r.top, r: r.right, b: r.bottom };
+    if (s.clip) box.b = Math.min(box.b, box.t + s.clip);
     if (s.area) {
       var areas = s.all ? [].slice.call(document.querySelectorAll(s.area)) : [].concat(s.area).map(function (x) { return $(x); });
       areas.forEach(function (a) {
@@ -285,7 +390,37 @@
     card.style.left = x + 'px'; card.style.top = y + 'px';
   }
 
+  function paintWow() {
+    var s = run.steps[run.i], n = run.steps.length, last = s.end;
+    var dots = '';
+    for (var k = 0; k < n; k++) dots += '<i class="' + (k < run.i ? 'done' : k === run.i ? 'on' : '') + '"></i>';
+    card.classList.toggle('end', !!last);
+    card.classList.toggle('hero', !!s.hero);
+    card.innerHTML =
+      (last ? '<img class="tr-badge" src="' + WS.esc(WS.state.settings.logo || 'brand/demo-badge.svg') + '" alt="" width="52" height="52">' : '') +
+      '<div class="tr-top"><span class="tr-kick">' + WS.esc(WS.state.settings.name) + '</span>' +
+      '<span class="tr-n">' + (run.i + 1) + ' of ' + n + '</span>' +
+      '<button type="button" class="tr-x" data-tr="skip" aria-label="Close the tour" title="Close (Esc)">&times;</button></div>' +
+      '<h2 class="tr-h">' + WS.esc(s.title) + '</h2>' +
+      '<p class="tr-p">' + WS.esc(s.body) + '</p>' +
+      '<div class="tr-foot"><div class="tr-dots" aria-hidden="true">' + dots + '</div>' +
+      '<div class="tr-btns"><button type="button" class="tr-back" data-tr="back"' + (run.i === 0 ? ' disabled' : '') + '>Back</button>' +
+      '<button type="button" class="tr-next" data-tr="' + (last ? 'skip' : 'next') + '">' + (last ? 'Close' : 'Next') + '</button></div></div>';
+    card.querySelectorAll('[data-tr]').forEach(function (b) {
+      var a = b.getAttribute('data-tr');
+      if (a === 'next') b.onclick = next;
+      else if (a === 'back') b.onclick = back;
+      else if (a === 'skip') b.onclick = stop;
+    });
+    ['pointerdown', 'mousedown', 'touchstart'].forEach(function (ev) { card.addEventListener(ev, function (e) { e.stopPropagation(); }); });
+    card.classList.remove('in'); void card.offsetWidth; card.classList.add('in');
+    place();
+    var nb = card.querySelector('.tr-next');
+    if (nb) try { nb.focus({ preventScroll: true }); } catch (e) { }
+  }
+
   function paint() {
+    if (run.wow) { paintWow(); return; }
     var s = run.steps[run.i], n = run.steps.length, last = s.end;
     var body = typeof s.body === 'function' ? s.body() : s.body;
     card.classList.toggle('end', !!last);
@@ -374,6 +509,8 @@
     var s = run.steps[run.i];
     if (s && s.leave) try { s.leave(); } catch (e) { }
     if ($('#wsBoot') && O.startupContinue) O.startupContinue();
+    document.documentElement.classList.remove('tr-wallview');
+    unpeek();
     run = null;
     teardown();
     document.documentElement.removeAttribute('data-tour-step');
@@ -381,21 +518,24 @@
   }
 
   WS.tour = {
-    start: function () {
+    start: function (mode) {
       if (run) stop();
+      var wow = mode === 'wow';
       var ctx = { fromSignin: !!$('#wsSignin') };
-      var list = STEPS.filter(function (s) { return !s.when || s.when(ctx); });
-      run = { steps: list, i: 0, busy: false };
+      var list = wow ? WOW.slice() : STEPS.filter(function (s) { return !s.when || s.when(ctx); });
+      run = { steps: list, i: 0, busy: false, wow: wow };
       window.__tourDone = false;
       window.__tourMissing = [];
       document.documentElement.classList.add('touring');
+      document.documentElement.classList.toggle('tr-wow', wow);
       build();
       show(0, 1);
     },
     stop: stop,
     next: next,
     back: back,
-    steps: function () { return run ? run.steps.map(function (s) { return s.id; }) : STEPS.map(function (s) { return s.id; }); },
+    steps: function (mode) { return run ? run.steps.map(function (s) { return s.id; }) : (mode === 'wow' ? WOW : STEPS).map(function (s) { return s.id; }); },
+    wowCopy: function () { return WOW.map(function (s) { return { id: s.id, title: s.title, body: s.body }; }); },
     active: function () { return !!run; }
   };
 
@@ -411,7 +551,7 @@
     b.title = 'Start the guided tour';
     b.setAttribute('aria-label', 'Guided tour');
     b.innerHTML = TOUR_ICON + '<span>Tour</span>';
-    b.onclick = function () { closeOverlays(); WS.tour.start(); };
+    b.onclick = function () { closeOverlays(); WS.tour.start(WS.tourWow ? 'wow' : ''); };
     g.insertBefore(b, g.firstChild);
     return true;
   }
@@ -429,7 +569,9 @@
     boot0();
     var tries = 0;
     var t = setInterval(function () { if (addButton() || ++tries > 200) clearInterval(t); }, 100);
-    if (WS.tourWanted) {
+    if (WS.tourWow) {
+      setTimeout(function () { WS.tour.start('wow'); }, 700);
+    } else if (WS.tourWanted) {
       WS.tourWanted = false;
       setTimeout(function () { WS.tour.start(); }, $('#wsSignin') ? 500 : 900);
     }

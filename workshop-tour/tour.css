@@ -84,3 +84,81 @@ html[data-theme="dark"] .tr-wa { background: #14301F; color: #8BE0AB; border-col
 
 /* the Tour button in the demo bar */
 .tourbtn { font-weight: 700; }
+
+/* ---------- the highlights tour (?tour=wow), built for a screen recording ---------- */
+html.tr-wow .tr-spot { border-radius: 14px;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 6px rgba(42,134,166,.55), 0 0 42px 8px rgba(42,134,166,.45), 0 0 0 9999px rgba(6,10,18,.66);
+  transition: left .45s cubic-bezier(.2,.8,.2,1), top .45s cubic-bezier(.2,.8,.2,1), width .45s cubic-bezier(.2,.8,.2,1), height .45s cubic-bezier(.2,.8,.2,1); }
+html.tr-wow .tr-spot.none { box-shadow: 0 0 0 9999px rgba(6,10,18,.66); }
+html.tr-wow .tr-card { width: 400px; padding: 20px 22px 18px; border-radius: 18px; background: #0F1A2A; color: #F4F7FB;
+  border: 1px solid rgba(255,255,255,.08); box-shadow: 0 24px 70px rgba(0,0,0,.55), 0 0 0 1px rgba(42,134,166,.25);
+  transition: opacity .2s ease, left .45s cubic-bezier(.2,.8,.2,1), top .45s cubic-bezier(.2,.8,.2,1); }
+html.tr-wow .tr-card.busy { opacity: 0; }
+html.tr-wow .tr-card.in { animation: trIn .35s cubic-bezier(.2,.8,.2,1); }
+@keyframes trIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+html.tr-wow .tr-card.center.in { animation: trInC .35s cubic-bezier(.2,.8,.2,1); }
+@keyframes trInC { from { opacity: 0; transform: translate(-50%, calc(-50% + 8px)); } to { opacity: 1; transform: translate(-50%, -50%); } }
+html.tr-wow .tr-top { margin-bottom: 12px; }
+html.tr-wow .tr-kick { font-size: 11.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #6CC3E0; flex: 1; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html.tr-wow .tr-n { font-size: 12.5px; font-weight: 700; color: #8FA0B6; font-variant-numeric: tabular-nums; }
+html.tr-wow .tr-x { font: inherit; font-size: 22px; line-height: 1; width: 30px; height: 30px; border-radius: 9px; border: 0; cursor: pointer;
+  background: rgba(255,255,255,.06); color: #B8C4D4; display: grid; place-items: center; }
+html.tr-wow .tr-x:hover { background: rgba(255,255,255,.12); color: #fff; }
+html.tr-wow .tr-h { font-size: 24px; line-height: 1.2; letter-spacing: -.015em; margin: 0 0 8px; color: #fff; }
+html.tr-wow .tr-p { font-size: 15.5px; line-height: 1.5; color: #C3CEDC; margin: 0 0 18px; }
+html.tr-wow .tr-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+html.tr-wow .tr-dots { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+html.tr-wow .tr-dots i { width: 7px; height: 7px; border-radius: 99px; background: rgba(255,255,255,.18); transition: width .3s ease, background .3s ease; }
+html.tr-wow .tr-dots i.done { background: rgba(108,195,224,.55); }
+html.tr-wow .tr-dots i.on { width: 22px; background: #6CC3E0; }
+html.tr-wow .tr-btns { flex: none; }
+html.tr-wow .tr-back { background: rgba(255,255,255,.08); color: #E6ECF4; }
+html.tr-wow .tr-back[disabled] { opacity: .3; }
+html.tr-wow .tr-next { background: #2A86A6; color: #fff; min-width: 92px; box-shadow: 0 6px 18px rgba(42,134,166,.35); }
+html.tr-wow .tr-next:hover { background: #3194B6; }
+html.tr-wow .tr-back:focus-visible, html.tr-wow .tr-next:focus-visible, html.tr-wow .tr-x:focus-visible { outline: 3px solid rgba(108,195,224,.6); outline-offset: 2px; }
+html.tr-wow .tr-card.end { width: 460px; padding: 28px 28px 22px; }
+html.tr-wow .tr-card.end .tr-h { font-size: 30px; }
+html.tr-wow .tr-card.end .tr-next { background: #2A86A6; color: #fff; }
+html.tr-wow .tr-card.hero { box-shadow: 0 24px 70px rgba(0,0,0,.55), 0 0 0 1px rgba(229,72,77,.45), 0 0 36px rgba(229,72,77,.25); }
+html.tr-wow .tr-card.hero .tr-kick { color: #FF8A8E; }
+html.tr-wow .tr-card.hero .tr-dots i.on { background: #FF6B70; }
+/* the hero moment: the jobs running over glow red */
+html.tr-wow[data-tour-step="live"] .lrow.bad { animation: trOver 1.6s ease-in-out infinite; position: relative; z-index: 1; }
+@keyframes trOver { 0%, 100% { box-shadow: inset 0 0 0 0 rgba(229,72,77,0); } 50% { box-shadow: inset 0 0 0 2px rgba(229,72,77,.85), 0 0 22px rgba(229,72,77,.35); } }
+@media (max-width: 760px) {
+  html.tr-wow .tr-card, html.tr-wow .tr-card.end { width: auto; padding: 16px 16px 14px; border-radius: 16px; }
+  html.tr-wow .tr-h { font-size: 20px; }
+  html.tr-wow .tr-card.end .tr-h { font-size: 24px; }
+  html.tr-wow .tr-p { font-size: 14.5px; margin-bottom: 14px; }
+  html.tr-wow .tr-btns .tr-back, html.tr-wow .tr-btns .tr-next { flex: none; padding: 10px 14px; }
+  html.tr-wow .tr-next { min-width: 84px; }
+  html.tr-wow .tr-card.center.in, html.tr-wow .tr-card.in { animation-name: trIn; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tr-spot, .tr-card, html.tr-wow .tr-spot, html.tr-wow .tr-card, .tr-bar i, html.tr-wow .tr-dots i { transition: none !important; }
+  html.tr-wow .tr-card.in, html.tr-wow .tr-card.center.in { animation: none !important; }
+  html.tr-wow[data-tour-step="live"] .lrow.bad { animation: none; box-shadow: inset 0 0 0 2px rgba(229,72,77,.85); }
+}
+/* the wall screen: the whole board in one view, no page chrome above it */
+html.tr-wallview #view .board { zoom: .74; }
+html.tr-wallview .topbar { display: none; }
+html.tr-wow .pmsteps { display: none; }
+html.tr-wow .tr-badge { display: block; width: 52px; height: 52px; margin: 0 0 14px; border-radius: 13px; }
+html.tr-wow[data-tour-step="live"] .lrow .bar i.bad { box-shadow: 0 0 10px rgba(229,72,77,.85); }
+html.tr-wow[data-tour-step="live"] .lrow .ov { text-shadow: 0 0 12px rgba(229,72,77,.45); }
+@media (max-width: 760px) {
+  html.tr-wallview #view .board { zoom: 1; }
+  html.tr-wow .tr-badge { width: 40px; height: 40px; margin-bottom: 10px; }
+}
+/* phone: the fitter app or the portal in a panel above the tour card */
+.tr-peek { position: fixed; z-index: 2147482980; left: 10px; right: 10px; top: 10px; bottom: 232px; border-radius: 14px; overflow: hidden;
+  background: #F3F5F9; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+.tr-peek iframe { display: block; width: 100%; height: 100%; border: 0; }
+/* the demo bar fits a 390 phone with the Tour button in it */
+@media (max-width: 420px) {
+  .dbar { gap: 5px; padding: 7px 8px; }
+  .dbar .sp { gap: 4px; }
+  .dbar button.phonebtn { padding: 4px 6px; }
+}

@@ -129,7 +129,25 @@
     setTimeout(function () { try { w.querySelector('#tgTour').focus({ preventScroll: true }); } catch (e) { } }, 60);
   }
 
+  /* ?tour=wow: the highlights tour for a screen recording. No gate, no welcome choice, no lead
+     sent, fresh sample data, already signed in as the owner, no start-up or pop ups. */
+  function wowMode() {
+    try { return new URLSearchParams(location.search).get('tour') === 'wow'; } catch (e) { return false; }
+  }
   WS.beforeBoot = function (boot) {
+    if (wowMode()) {
+      WS.tourWow = true;
+      try {
+        localStorage.removeItem('wsTour:state');
+        localStorage.removeItem('wsTour:fitter');
+        sessionStorage.setItem('wsTour:who', 'owner');
+        sessionStorage.setItem('wsTour:introSeen', '1');
+        sessionStorage.setItem('wsTour:urgentSeen', '["*"]');
+      } catch (e) { }
+      if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+      boot();
+      return;
+    }
     var l = getLead();
     if (l && WS.validEmail(l.email)) {
       useName(l);
