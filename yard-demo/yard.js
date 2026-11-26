@@ -499,7 +499,7 @@
           return '<section class="ycol" data-col="' + l.id + '"><header><span class="yreg">' + h(l.reg) + '</span><small>' + h(l.driver) + '</small>' + (dn.length ? '<small class="ycap">' + plural(dn.length, 'job') + ' done today</small>' : '') + '</header><div class="ycol-b">' + open.map(card).join('') + (open.length ? '' : '<p class="ycol-e">Drop a job here</p>') + '</div></section>';
         }).join('') + '</div></div>';
       }).join('');
-      return '<div class="ybar"><div class="seg">' + [[0, 'Today'], [t1, dayName(t1)]].map(function (x) { return '<button data-act="yPlanDay" data-v="' + x[0] + '" class="' + (d === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div><span class="yhint">' + ic('route') + 'Drag a job onto a registration. Skips go on skip lorries, RoRos on the hook lift, grabs and muckaway on grab lorries.</span><span class="sp"></span><button class="btn pri" data-act="yBook">' + ic('plus') + 'New booking</button></div>' +
+      return '<div class="ybar"><div class="seg">' + [[0, 'Today'], [t1, 'Tomorrow']].map(function (x) { return '<button data-act="yPlanDay" data-v="' + x[0] + '" class="' + (d === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div><span class="yhint">' + ic('route') + 'Drag a job onto a registration. Skips go on skip lorries, RoRos on the hook lift, grabs and muckaway on grab lorries.</span><span class="sp"></span><button class="btn pri" data-act="yBook">' + ic('plus') + 'New booking</button></div>' +
         '<div class="yplan2" id="yPlan">' + tray + '<div class="ygrps">' + groups + '</div></div>';
     };
     A.yPlanDay = function (el) { ui.yPlanDay = +el.dataset.v; UI.render(); };
