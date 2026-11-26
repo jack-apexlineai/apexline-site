@@ -333,6 +333,16 @@
     if (go) go.onclick = function () {
       var ids = Object.keys(bk.sel);
       if (!ids.length || !bk.date) return;
+      // the day may have filled up since it was picked: a full or closed day is never booked
+      if (WS._pull) WS._pull();
+      var room = WS.dayCapacity(bk.date);
+      if (room.closed || room.free < Math.max(need(), 1)) {
+        var was = WS.dayLabel(bk.date);
+        bk.date = '';
+        render();
+        WS.toast(was + ' is full now. Pick another day.', 'bad');
+        return;
+      }
       var jobs = WS.bookVehicles({
         operatorId: me.id, by: me.contact, date: bk.date, time: bk.time,
         items: ids.map(function (id) {

@@ -20,8 +20,15 @@ then the tour test, then push. The build stops if anything names a real customer
 | File | What it does |
 |---|---|
 | `gate.js` | Email gate (name and workshop optional), then "Guided tour" or "I'll do it myself, thanks" once per session. Posts the lead to the `enquiry` edge function, which emails apexlineai@gmail.com. Remembered in `wsTourLead`, so a returning visitor skips the gate. |
-| `tour.js` | The guided tour: 17 steps (and the 12 step highlights tour for screen recordings: open `?tour=wow`, no gate, sign in as owner with PIN 1234, let the start-up play, then Start tour in the W wheel menu) over the real screens, Next, Back, Skip, the count, arrow keys and Esc. The Tour button in the demo bar starts it again. |
+| `tour.js` | The guided tour: 17 steps over the real screens, Next, Back, Skip, the count, arrow keys and Esc. The Tour button in the demo bar starts it again. |
 | `tour.css` | Gate, choice and tour styles. On a phone the card is a sheet along the bottom (or the top when the highlight is low). |
 | `brand/demo-badge.svg` | The neutral logo. |
+
+## Recording mode
+
+Open `?tour=wow` to screen-record the plain system: no email gate, no guided tour and no Tour
+button, fresh sample data on every load, the normal sign in (username `owner`, PIN `1234`) and
+the full start-up. The urgent pop ups are held back and the demo's sample Xero link is already
+on. All of that is in `gate.js`. Test: `node Workshop/tests/wow-tour.test.js`.
 
 Test: `node Workshop/tests/tour.test.js` (needs localhost:8765 serving apexline-site).

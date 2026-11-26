@@ -605,9 +605,10 @@
     return '<div class="jcard" data-job="' + j.id + '">' +
       '<div class="r1"><span class="rg">' + esc(v ? v.reg : j.type) + '</span>' + chip(j.type, 'go') + '</div>' +
       '<div class="op">' + esc(o ? o.name : 'Internal') + '</div>' +
-      '<div class="r2">' + pill(WS.statusLabel(j.status), WS.statusCls(j.status)) +
+      '<div class="r2">' + (j.status === 'qc' || j.status === 'done' ? '<span class="pill ok">' + PTICK + 'Complete</span>' : pill(WS.statusLabel(j.status), WS.statusCls(j.status))) +
       (f ? '<span class="muted sm">' + esc(f.name.split(' ')[0]) + '</span>' : '<span class="muted sm">no fitter</span>') +
-      (p.state === 'over' ? chip('over time', 'bad') : '') + '</div></div>';
+      // the fitter has finished it: it stays in the bay until the office passes QC on the job card
+      (j.status === 'qc' ? chip('QC to pass', 'warn') : p.state === 'over' ? chip('over time', 'bad') : '') + '</div></div>';
   }
 
   W.board = function () {
@@ -658,6 +659,14 @@
       '<label class="f"><span class="lb">Priority</span><select class="in" id="bPri">' +
       '<option value="normal">Normal</option><option value="high">Urgent</option></select></label>' +
       '</div>' +
+      '<div class="row">' +
+      '<label class="f"><span class="lb">Booking</span><select class="in" id="bRep">' +
+      '<option value="once"' + (d.rep === 'sched' ? '' : ' selected') + '>One-off job</option>' +
+      '<option value="sched"' + (d.rep === 'sched' ? ' selected' : '') + '>On a schedule (repeat inspections)</option></select></label>' +
+      '<label class="f" id="bRepWL"' + (d.rep === 'sched' ? '' : ' hidden') + '><span class="lb">Repeat every</span><select class="in" id="bRepW">' +
+      [6, 8, 10, 12].map(function (w) { return '<option value="' + w + '"' + (+d.repW === w ? ' selected' : '') + '>' + w + ' weeks</option>'; }).join('') + '</select></label>' +
+      '</div>' +
+      '<div class="hint" id="bRepHint"' + (d.rep === 'sched' ? '' : ' hidden') + ' style="margin:-4px 0 12px"></div>' +
       '<label class="f"><span class="lb">Notes for the fitter</span><textarea class="in" id="bNotes" placeholder="What the driver reported, what to look at">' + esc(d.notes || '') + '</textarea></label>' +
       '<div id="bWarn"></div>' +
       '<div class="inline" style="margin-top:6px"><button class="btn lg" id="bGo">Create the job card</button>' +
@@ -705,6 +714,48 @@
 
     /* type a reg, Look up: the lorry fills itself (DVLA and DVSA on the real system) */
     var regIn = $('bReg'), look = $('bLook');
+    /* a reg nobody has on their fleet yet: pick whose lorry it is and add it, right here */
+    function addBox(r) {
+      var cur = op.value && op.value !== '__new' ? op.value : '';
+      return '<div class="rl-add" id="bLookBox" style="margin:10px 0 6px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--soft)">' +
+        '<div class="b" style="margin-bottom:8px">' + esc(r.reg) + ' is not on a customer\'s fleet yet. Whose lorry is it?</div>' +
+        '<div class="inline" style="gap:8px;flex-wrap:wrap">' +
+        '<select class="in" id="bLookOp" aria-label="Customer" style="width:auto;min-width:220px;flex:1 1 220px"><option value="">Pick the customer</option>' +
+        O.opts(WS.state.operators, cur, 'id', 'name') + '<option value="__new">+ Add a new operator</option></select>' +
+        '<button class="btn" id="bLookAdd" type="button">Add ' + esc(r.reg) + ' to their fleet</button></div></div>';
+    }
+    function showLook(r) {
+      var box = $('bLookRes');
+      if (!box) return;
+      r = WS.regLookup(r.reg) || r;                 // it may have been added since
+      box.innerHTML = WS.regLookupHtml(r) + (r.inFleet ? '' : addBox(r));
+      if (r.inFleet) {
+        op.value = r.vehicle.operatorId; O.bookinDraft.op = op.value; O.bookinDraft.veh = r.vehicle.id; fillVeh();
+        veh.value = r.vehicle.id; checkDue();
+        return;
+      }
+      var lop = $('bLookOp');
+      lop.onchange = function () {
+        if (lop.value === '__new') { lop.value = ''; O.addOperator(); return; }
+        op.value = lop.value; O.bookinDraft.op = op.value; O.bookinDraft.veh = ''; fillVeh();
+      };
+      $('bLookAdd').onclick = function () {
+        if (!lop.value) { WS.toast('Pick the customer first.', 'bad'); lop.focus(); return; }
+        var o = WS.operator(lop.value);
+        var v = {
+          id: WS.uid('v'), reg: r.reg, vin: '', make: r.make, model: r.model, year: r.year,
+          type: r.weight >= 32000 ? 'Hook loader 32t' : 'Skip loader 26t', operatorId: lop.value,
+          odometer: 0, pmiWeeks: 6, lastPmi: '', nextPmi: '', annualTest: '',
+          brakeTest: '', tacho: '', loler: '', vor: false, notes: 'Sample details (demo).', docs: []
+        };
+        WS.state.vehicles.push(v); WS.save();
+        op.value = lop.value; O.bookinDraft.op = op.value; O.bookinDraft.veh = v.id;
+        fillVeh(); veh.value = v.id; checkDue();
+        $('bLookBox').innerHTML = '<div class="inline" style="gap:8px;flex-wrap:wrap"><span class="pill ok">Added to ' + esc(WS.shortName(o.name)) + '\'s fleet</span>' +
+          '<span class="muted sm">Now pick the job and the day below, as a one-off or on a schedule.</span></div>';
+        WS.toast(r.reg + ' added to ' + WS.shortName(o.name) + '\'s fleet.', 'ok');
+      };
+    }
     function doLook() {
       var r = WS.regLookup && WS.regLookup(regIn.value);
       if (!r) { WS.toast('Type a registration first.', 'bad'); regIn.focus(); return; }
@@ -715,34 +766,28 @@
       setTimeout(function () {
         look.disabled = false;
         if (!$('bLookRes')) return;
-        box.innerHTML = WS.regLookupHtml(r) + (r.inFleet ? '' :
-          '<div class="inline" style="margin:10px 0 4px;gap:10px;flex-wrap:wrap"><label class="inline sm" style="gap:6px">Inspections every <select class="in" id="bLookW" style="width:auto;padding:4px 8px"><option>6</option><option>8</option><option>10</option><option>12</option></select> weeks, next on ' +
-          '<input class="in" type="date" id="bLookN" value="' + WS.day(14) + '" style="width:auto;padding:4px 8px"></label></div>' +
-          '<div class="inline" style="margin:6px 0 4px"><button class="btn" id="bLookAdd" type="button">Add ' + esc(r.reg) + ' to ' +
-          (op.value && op.value !== '__new' ? esc(WS.shortName(WS.operator(op.value).name)) + '\'s fleet' : 'the fleet') + '</button>' +
-          '<span class="muted sm">Pick the operator below first</span></div>');
-        if (r.inFleet) {
-          op.value = r.vehicle.operatorId; O.bookinDraft.op = op.value; O.bookinDraft.veh = r.vehicle.id; fillVeh();
-          veh.value = r.vehicle.id; checkDue();
-          WS.toast(r.reg + ' found: ' + r.make + ' ' + r.model + ', ' + WS.shortName(r.operator ? r.operator.name : '') + '.', 'ok');
-        } else {
-          $('bLookAdd').onclick = function () {
-            if (!op.value || op.value === '__new') { WS.toast('Pick the operator first.', 'bad'); op.focus(); return; }
-            var v = {
-              id: WS.uid('v'), reg: r.reg, vin: '', make: r.make, model: r.model, year: r.year,
-              type: r.weight >= 32000 ? 'Hook loader 32t' : 'Skip loader 26t', operatorId: op.value,
-              odometer: r.odo, pmiWeeks: +$('bLookW').value || 6, lastPmi: '', nextPmi: $('bLookN').value || WS.day(14), annualTest: r.testDue,
-              brakeTest: '', tacho: '', loler: '', vor: false, notes: 'Sample details (demo).', docs: []
-            };
-            WS.state.vehicles.push(v); WS.save();
-            O.bookinDraft.op = op.value; O.bookinDraft.veh = v.id;
-            fillVeh(); veh.value = v.id; checkDue();
-            $('bLookAdd').parentNode.innerHTML = '<span class="pill ok">Added to the fleet</span><span class="muted sm">Inspections every ' + v.pmiWeeks + ' weeks from ' + WS.dateShort(v.nextPmi) + ', on the calendar. Now pick the job and the day</span>';
-            WS.toast(r.reg + ' added: ' + r.make + ' ' + r.model + ', annual test due ' + WS.dateShort(r.testDue) + '.', 'ok');
-          };
-        }
+        O.bookinDraft.looked = r.reg;
+        showLook(r);
+        if (r.inFleet) WS.toast(r.reg + ' found: ' + r.make + ' ' + r.model + ', ' + WS.shortName(r.operator ? r.operator.name : '') + '.', 'ok');
       }, 900);
     }
+    /* coming back to the screen (a new operator was just added, say): the look up is still there */
+    if (O.bookinDraft.looked && O.bookinDraft.looked === O.bookinDraft.reg) { var again = WS.regLookup(O.bookinDraft.reg); if (again) showLook(again); }
+
+    /* one-off, or on a schedule: the inspection comes round every so many weeks from this date */
+    var rep = $('bRep'), repW = $('bRepW');
+    function repHint() {
+      var on = rep.value === 'sched';
+      $('bRepWL').hidden = !on; $('bRepHint').hidden = !on;
+      O.bookinDraft.rep = rep.value; O.bookinDraft.repW = +repW.value;
+      if (!on) return;
+      if (type.value !== 'PMI') { type.value = 'PMI'; est.value = WS.stdTime('PMI'); }
+      var d0 = $('bDate').value || WS.day(0), nx = WS.parse(d0);
+      nx.setDate(nx.getDate() + (+repW.value) * 7);
+      $('bRepHint').innerHTML = 'Inspection every <b>' + (+repW.value) + ' weeks</b> from ' + esc(WS.dateShort(d0)) + '. The one after this is <b>' + esc(WS.dateShort(WS.iso(nx))) + '</b>, and they all go on the vehicle calendar.';
+    }
+    rep.onchange = repHint; repW.onchange = repHint; $('bDate').onchange = repHint;
+    repHint();
     look.onclick = doLook;
     regIn.onkeydown = function (e) { if (e.key === 'Enter') { e.preventDefault(); doLook(); } };
 
@@ -769,9 +814,17 @@
         audit: [{ at: WS.nowStamp(), who: 'Office', what: 'Job card created' }]
       };
       WS.state.jobs.push(j);
+      var more = '';
+      if ($('bRep').value === 'sched' && v) {
+        // on a schedule: this date is the first inspection and it comes round every so many weeks
+        v.pmiWeeks = +$('bRepW').value || 6; v.nextPmi = date; v.pmiMoves = {};
+        var nx = WS.parse(date); nx.setDate(nx.getDate() + v.pmiWeeks * 7);
+        more = ' Repeats every ' + v.pmiWeeks + ' weeks, next one ' + WS.dateShort(WS.iso(nx)) + '.';
+        WS.audit(j, 'Office', 'Booked on a schedule, every ' + v.pmiWeeks + ' weeks');
+      }
       WS.save();
       O.bookinDraft = {};
-      WS.toast(j.no + ' created for ' + (v ? v.reg : t) + '.', 'ok');
+      WS.toast(j.no + ' created for ' + (v ? v.reg : t) + '.' + more, 'ok');
       O.go(fit ? 'planner' : 'board');
     };
   };

@@ -60,15 +60,12 @@
       '<div class="rl-g">' +
       row('Colour', esc(r.colour)) + row('First registered', esc(r.first)) + row('Fuel', esc(r.fuel)) +
       row('Gross weight', r.weight.toLocaleString('en-GB') + ' kg') +
-      row('Road tax', esc(r.tax + ' until ' + WS.dateUK(r.taxDue))) +
-      row('Annual test', '<b>Valid until ' + esc(WS.dateUK(r.testDue)) + '</b>') +
+      row('Road tax', r.inFleet ? esc(r.tax + ' until ' + WS.dateUK(r.taxDue)) : '<span class="muted">Arrives with the DVLA link</span>') +
+      row('Annual test', r.inFleet ? '<b>Valid until ' + esc(WS.dateUK(r.testDue)) + '</b>' : '<span class="muted">Arrives with the DVSA link</span>') +
       (r.nextPmi ? row('Next PMI', esc(WS.dateUK(r.nextPmi))) : '') +
       '</div>' +
-      (r.tests.length ? '<div class="rl-l">Test history</div><ul class="rl-t">' + r.tests.map(function (t) {
-        return '<li><span class="pill ' + (t.result === 'Pass' ? 'ok' : 'warn') + '">' + esc(t.result) + '</span>' +
-          '<span>' + esc(WS.dateUK(t.date)) + '</span><span class="muted">' + t.km.toLocaleString('en-GB') + ' km</span>' +
-          (t.note ? '<div class="muted sm" style="flex-basis:100%">' + esc(t.note) + '</div>' : '') + '</li>';
-      }).join('') + '</ul>' : '') +
+      /* no invented test results: the history is only shown once the workshop's own DVSA link is on */
+      '<div class="rl-l">MOT history</div><div class="rl-mot muted sm" style="padding:2px 0 8px">MOT history arrives with the DVSA link.</div>' +
       '<div class="rl-note">Sample details for the demo.</div>' +
       '</div>';
   };

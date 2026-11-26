@@ -246,11 +246,13 @@
   function allTargets() {
     var list = [{ id: 'home', name: 'Home' }];
     O.NAV.forEach(function (n) { if (n.id && n.id !== 'home') list.push({ id: n.id, name: n.name }); });
+    // two screens that live inside Money: typed in the wheel they open straight on the right view
+    list.push({ id: 'fitterpay', name: 'Fitter pay' }, { id: 'credit', name: 'Credit control' });
     list.push({ id: 'settings', name: 'Settings' }, { id: 'alerts', name: 'Alerts' });
     return list;
   }
   var ALIAS = {
-    money: 'invoices invoice bills pay payroll xero accounts wages', stock: 'parts bins purchase orders', board: 'jobs bays',
+    money: 'invoices invoice bills xero accounts', fitterpay: 'pay payroll wages', credit: 'owed overdue chase debt', stock: 'parts bins purchase orders', board: 'jobs bays',
     bookin: 'book new job', checks: 'defects walkaround driver', compliance: 'pmi mot test inspections', er: 'dvsa earned',
     timesheets: 'hours clock', campaigns: 'recalls', approvals: 'authorise extra work', planner: 'plan day schedule',
     live: 'clocked fitters now', vcal: 'pmi mot annual test loler tacho brake due dates calendar booking bookings', vehicles: 'fleet trucks lorries reg', settings: 'team users brand appearance', reports: 'margin revenue'

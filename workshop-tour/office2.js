@@ -352,9 +352,20 @@
           '<div class="g"><span>Total</span><span>' + WS.money(t.total) + '</span></div></div>' +
           '<div class="inline" style="margin-top:12px">' +
           (a.status === 'Sent'
-            ? '<button class="btn alt sm" data-chase="' + a.id + '">Chase them</button>' +
-              '<button class="btn alt sm" data-aview="' + a.id + '">See what they see</button>' +
-              '<span class="muted sm right">Sent by ' + esc(a.channel) + ' at ' + esc(WS.timeUK(a.sentAt)) + '</span>'
+            ? (function () {
+              // the count runs from the last time anyone contacted them: the send, or the latest chase
+              var c = (a.chases || []).length ? a.chases[a.chases.length - 1] : null, from = c ? c.at : a.sentAt;
+              return '<div class="await" style="flex-basis:100%;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;padding:9px 12px;border-radius:10px;background:var(--warn-l);color:var(--ink);font-size:13.5px">' +
+                '<span style="width:8px;height:8px;border-radius:50%;background:var(--warn);flex:none"></span>' +
+                '<b>' + (c ? 'Chased by ' + esc(c.by) : 'Sent') + ' <span data-ago="' + esc(from) + '">' + esc(WS.agoText(from)) + '</span>, no response</b>' +
+                '<span class="muted sm">' + (c ? 'first sent ' : 'sent ') + 'by ' + esc(a.channel) + ' at ' + esc(WS.timeUK(a.sentAt)) +
+                ((a.chases || []).length ? ' · chased ' + a.chases.length + (a.chases.length === 1 ? ' time' : ' times') : '') + '</span></div>' +
+                '<span class="muted sm b">Chase by</span>' +
+                '<button class="btn alt sm" data-chase="' + a.id + '" data-by="WhatsApp">WhatsApp</button>' +
+                '<button class="btn alt sm" data-chase="' + a.id + '" data-by="text">Text</button>' +
+                '<button class="btn alt sm" data-chase="' + a.id + '" data-by="phone">Call</button>' +
+                '<button class="btn alt sm right" data-aview="' + a.id + '">See what they see</button>';
+            })()
             : '<span class="muted sm">' + esc(a.status) + ' by ' + esc(a.decidedBy || (o ? o.contact : '')) + ' at ' + esc(WS.whenUK(a.decidedAt)) + '</span>') +
           '</div></div>';
       }).join('') : '<div class="card">' + empty('Nothing here.') + '</div>');
@@ -367,20 +378,31 @@
     document.querySelectorAll('[data-chase]').forEach(function (b) {
       b.onclick = function () {
         var a = WS.approval(b.dataset.chase), o = WS.operator(a.operatorId), v = WS.vehicle(a.vehicleId);
-        WS.notify(o.contact + ', ' + o.name, WS.channels(), 'Reminder: extra work on ' + (v ? v.reg : ''),
-          'Just a reminder that ' + (v ? v.reg : 'your vehicle') + ' is waiting on your OK for ' + a.title + '.', 'approval');
+        var by = b.dataset.by || 'WhatsApp';
+        // logged on the request, and the "no response" count starts again from now
+        a.chases = a.chases || [];
+        a.chases.push({ at: WS.stampSec(), by: by, who: (WS.me && WS.me() ? WS.me().first : '') || 'Office' });
+        if (by === 'phone') {
+          WS.notify(o.contact + ', ' + o.name, 'phone', 'Call logged: extra work on ' + (v ? v.reg : ''),
+            'Rang ' + o.contact + ' on ' + (o.phone || 'the number on file') + ' about ' + a.title + '.', 'approval');
+        } else {
+          WS.notify(o.contact + ', ' + o.name, by === 'text' ? 'SMS' : 'WhatsApp', 'Reminder: extra work on ' + (v ? v.reg : ''),
+            'Just a reminder that ' + (v ? v.reg : 'your vehicle') + ' is waiting on your OK for ' + a.title + '.', 'approval');
+        }
         WS.save();
-        WS.toast('Chased ' + o.contact + ' by ' + WS.channels() + '.', 'ok');
+        WS.toast(by === 'phone' ? 'Call to ' + o.contact + ' logged on the request.' : 'Demo: chased ' + o.contact + ' by ' + by + ', nothing was actually sent.', 'ok');
+        O.render();
       };
     });
     document.querySelectorAll('[data-aview]').forEach(function (b) {
       b.onclick = function () {
-        var a = WS.approval(b.dataset.aview);
-        window.open('portal.html#' + (WS.operator(a.operatorId) || {}).id, '_blank');
+        var a = WS.approval(b.dataset.aview), oid = (WS.operator(a.operatorId) || {}).id;
+        // on a laptop the customer's portal opens over the office, signed in as them
+        if (O.openPortal && window.innerWidth > 760) O.openPortal(oid); else window.open('portal.html#' + oid, '_blank');
       };
     });
     var p = $('aPortal');
-    if (p) p.onclick = function () { window.open('portal.html', '_blank'); };
+    if (p) p.onclick = function () { if (O.openPortal && window.innerWidth > 760) O.openPortal(null, { site: true }); else window.open('portal.html', '_blank'); };
   };
 
   /* ============================ driver checks ============================ */

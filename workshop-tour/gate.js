@@ -131,8 +131,8 @@
 
   /* ?tour=wow: recording mode. The plain system for a screen recording: no email gate, no welcome
      choice, no lead sent, no guided tour and no Tour button. Fresh sample data on every load,
-     then the normal sign in and the full start-up, exactly as a real user sees it. Nothing is
-     hidden. The flag is kept for the browser session so it survives a reload or a sign out. */
+     then the normal sign in and the full start-up, exactly as a real user sees it. Only the
+     urgent pop ups that slide in over the screen are held back. The flag is kept for the browser session so it survives a reload or a sign out. */
   var WOW = 'wsTourWow';
   function wowUrl() {
     try { return new URLSearchParams(location.search).get('tour') === 'wow'; } catch (e) { return false; }
@@ -141,18 +141,74 @@
     if (wowUrl()) { try { sessionStorage.setItem(WOW, '1'); } catch (e) { } return true; }
     try { return sessionStorage.getItem(WOW) === '1'; } catch (e) { return false; }
   }
+  /* recording mode can be made personal from the link, and it is remembered for the session:
+       name=    the owner's first name (sign in tile, Good morning, top bar)
+       co=      the company name everywhere the brand shows, with its initials on the badge
+       colour=  the brand accent, a hex like 1F6F8B (the app keeps the contrast right)
+     Plain text only: letters, numbers, spaces and . , & - are kept, the rest is dropped. */
+  var WOWP = 'wsTourWowP';
+  function clean(v, max) {
+    return String(v == null ? '' : v).replace(/[^A-Za-z0-9\u00C0-\u024F .,&-]/g, '').replace(/\s+/g, ' ').trim().slice(0, max);
+  }
+  function wowParams() {
+    var p = null;
+    if (wowUrl()) {
+      try {
+        var q = new URLSearchParams(location.search), hex = String(q.get('colour') || q.get('color') || '').replace(/^#/, '');
+        p = { name: clean(q.get('name'), 24), co: clean(q.get('co'), 48), colour: /^[0-9a-fA-F]{6}$/.test(hex) ? '#' + hex.toUpperCase() : '' };
+        sessionStorage.setItem(WOWP, JSON.stringify(p));
+      } catch (e) { }
+      return p || {};
+    }
+    try { p = JSON.parse(sessionStorage.getItem(WOWP) || 'null'); } catch (e) { }
+    return p || {};
+  }
+  function initialsOf(co) {
+    var w = co.replace(/\b(Ltd|Limited|LLP|PLC)\b\.?/gi, '').replace(/[^A-Za-z0-9\u00C0-\u024F ]/g, ' ').trim().split(/\s+/).filter(Boolean);
+    var i = w.length > 1 ? w.slice(0, 3).map(function (x) { return x.charAt(0); }).join('') : (w[0] || '').slice(0, 2);
+    return i.toUpperCase() || 'WS';
+  }
+  /* put the company on the loaded sample data: every screen, email and invoice reads it from here */
+  function brandAs(p) {
+    var S = WS.state.settings, ch = false;
+    if (p.co && S.name !== p.co) {
+      S.name = p.co; S.initials = initialsOf(p.co);
+      S.logo = ''; S.logoStack = ''; S.logoName = '';      // the neutral badge says DEMO: their initials instead
+      if (S.notify) S.notify.fromName = p.co;
+      if (S.xero) S.xero.tenantName = p.co;
+      ch = true;
+    }
+    if (p.colour && S.brand !== p.colour) { S.brand = p.colour; ch = true; }
+    return ch;
+  }
   WS.beforeBoot = function (boot) {
     if (wowMode()) {
       WS.tourWow = true;
+      var wp = wowParams();
+      if (wp.name) { WS.ownerFirst = wp.name.charAt(0).toUpperCase() + wp.name.slice(1); WS.ownerLast = ''; }
       if (wowUrl()) {
         try {
           localStorage.removeItem('wsTour:state');
           localStorage.removeItem('wsTour:fitter');
           sessionStorage.removeItem('wsTour:who');
           sessionStorage.removeItem('wsTour:introSeen');
-          sessionStorage.removeItem('wsTour:urgentSeen');
+          sessionStorage.setItem('wsTour:urgentSeen', '["*"]');   // the urgent pop ups would slide in over a recording
         } catch (e) { }
         if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+        // the demo's sample Xero link is already on, so an invoice goes across in one click on
+        // camera (it is the demo's own stand-in: nothing reaches a real Xero)
+        try {
+          WS.load();
+          var x = WS.state.settings.xero;
+          if (x && !WS.xeroOk()) {
+            x.key = 'sample-demo-key-0000000000000000'; x.connected = true; x.autoSend = true;
+            x.tenantName = WS.state.settings.name; x.lastSync = WS.nowStamp();
+          }
+          brandAs(wp);
+          WS.persist();
+        } catch (e) { }
+      } else if (wp.co || wp.colour) {
+        try { WS.load(); if (brandAs(wp)) WS.persist(); } catch (e) { }
       }
       boot();
       return;

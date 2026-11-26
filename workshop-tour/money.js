@@ -12,6 +12,7 @@
   var VIEWS = [
     ['overview', 'Overview'],
     ['invoices', 'Invoices out (receivables)'],
+    ['credit', 'Credit control'],
     ['bills', 'Bills in (payables)'],
     ['pay', 'Fitter and staff pay']
   ];
@@ -53,7 +54,7 @@
 
   S.money = function () {
     var v = O.getMoneyView();
-    var inner = v === 'invoices' ? S.invoices() : v === 'bills' ? billsScreen() : v === 'pay' ? S.fitterpay() : overview();
+    var inner = v === 'invoices' ? S.invoices() : v === 'credit' ? creditScreen() : v === 'bills' ? billsScreen() : v === 'pay' ? S.fitterpay() : overview();
     return bar(v) + '<div class="mview" data-mview="' + v + '">' + inner + '</div>';
   };
 
@@ -67,6 +68,7 @@
     if (v === 'invoices') W.invoices();
     else if (v === 'pay') W.fitterpay();
     else if (v === 'bills') wireBills();
+    else if (v === 'credit') wireCredit();
     else wireOverview();
   };
 
@@ -113,7 +115,7 @@
       '</tbody></table></div></div>' +
 
       '<div class="grid g2 m1">' +
-      '<div class="card"><div class="ch"><h2>Owed to us, oldest first</h2><div class="sp"><button class="btn alt sm" data-go="invoices">All invoices</button></div></div>' +
+      '<div class="card"><div class="ch"><h2>Owed to us, oldest first</h2><div class="sp"><button class="btn sm" data-go="credit">Credit control</button><button class="btn alt sm" data-go="invoices">All invoices</button></div></div>' +
       (owedUs.length ? '<div class="tablewrap"><table class="tbl"><tbody>' +
         owedUs.slice(0, 6).map(function (i) {
           var o = WS.operator(i.operatorId);
@@ -135,6 +137,72 @@
     if (overdue(x)) return pill('overdue', 'bad');
     var d = WS.daysBetween(WS.day(0), x.due);
     return pill('due ' + WS.dateShort(x.due), d <= 7 ? 'warn' : '');
+  }
+
+  /* ============================ credit control ============================
+     Who owes what: every unpaid invoice with how late it is, a Chase button (in the demo nothing
+     is really sent, the reminder is logged on the invoice) and the totals along the top. */
+  function daysLate(i) { return WS.daysBetween(i.due, WS.day(0)); }
+  function lastChase(i) { var c = i.chases || []; return c.length ? c[c.length - 1] : null; }
+  function creditScreen() {
+    var unpaid = WS.state.invoices.filter(function (i) { return !i.paid; }).sort(byDue);
+    var late = unpaid.filter(overdue);
+    var chasedToday = unpaid.filter(function (i) { var c = lastChase(i); return c && String(c.at).slice(0, 10) === WS.day(0); });
+    var by = {}, who = [];
+    unpaid.forEach(function (i) {
+      var k = i.operatorId || '';
+      if (!by[k]) { by[k] = { op: WS.operator(k), owed: 0, late: 0, n: 0, oldest: 0 }; who.push(by[k]); }
+      by[k].owed += i.total; by[k].n++;
+      if (overdue(i)) { by[k].late += i.total; by[k].oldest = Math.max(by[k].oldest, daysLate(i)); }
+    });
+    who.sort(function (a, b) { return b.late - a.late || b.owed - a.owed; });
+    return head('Credit control', 'Who owes you, how late it is, and a reminder in one click') +
+      '<div class="grid g4" style="margin-bottom:16px">' +
+      stat('Owed to you', WS.money0(sum(unpaid, 'total')), n(unpaid.length, 'unpaid invoice', 'unpaid invoices'), unpaid.length ? 'warn' : 'ok') +
+      stat('Overdue', WS.money0(sum(late, 'total')), late.length ? n(late.length, 'invoice', 'invoices') + ' past the due date' : 'nothing overdue', late.length ? 'bad' : 'ok') +
+      stat('Oldest', late.length ? n(Math.max.apply(null, late.map(daysLate)), 'day', 'days') : 'None', late.length ? 'overdue' : 'nothing is late', late.length ? 'bad' : 'ok') +
+      stat('Chased today', chasedToday.length, chasedToday.length ? 'reminders logged below' : 'no reminders sent yet today', chasedToday.length ? 'ok' : '') +
+      '</div>' +
+
+      '<div class="card"><div class="ch"><h2>Who owes what</h2></div>' +
+      (who.length ? '<div class="tablewrap"><table class="tbl fitsm" id="ccWho"><thead><tr><th>Customer</th><th class="num hide-sm">Invoices</th><th class="num">Owed</th><th class="num">Overdue</th><th class="num hide-sm">Oldest</th></tr></thead><tbody>' +
+        who.map(function (w) {
+          return '<tr><td class="b">' + esc(w.op ? w.op.name : 'No customer') + '</td><td class="num hide-sm">' + w.n + '</td>' +
+            '<td class="num b">' + WS.money(r2(w.owed)) + '</td>' +
+            '<td class="num"' + (w.late ? ' style="color:var(--bad);font-weight:700"' : '') + '>' + (w.late ? WS.money(r2(w.late)) : '-') + '</td>' +
+            '<td class="num hide-sm">' + (w.oldest ? n(w.oldest, 'day', 'days') : '-') + '</td></tr>';
+        }).join('') + '</tbody></table></div>' : empty('Nobody owes you anything.')) + '</div>' +
+
+      '<div class="card m1"><div class="ch"><h2>Unpaid invoices, most overdue first</h2></div>' +
+      (unpaid.length ? '<div class="tablewrap"><table class="tbl fitsm" id="ccInv"><thead><tr><th>Customer</th><th class="hide-sm">Invoice</th><th class="hide-sm">Due</th><th>Days overdue</th><th class="num">Amount</th><th></th></tr></thead><tbody>' +
+        unpaid.map(function (i) {
+          var o = WS.operator(i.operatorId), d = daysLate(i), c = lastChase(i);
+          var link = '<button type="button" class="linkbtn" data-ccview="' + i.id + '" style="background:none;border:0;padding:0;font:inherit;font-weight:500;color:var(--brand-ink);cursor:pointer;text-decoration:underline;text-underline-offset:2px">' + esc(i.no) + '</button>';
+          return '<tr data-cc="' + i.id + '"><td class="b">' + esc(o ? o.name : '') + '<div class="only-sm">' + link + '</div></td>' +
+            '<td class="hide-sm">' + link + '</td>' +
+            '<td class="hide-sm">' + esc(WS.dateShort(i.due)) + '</td>' +
+            '<td>' + (d > 0 ? pill(n(d, 'day', 'days') + ' overdue', 'bad') : pill(d === 0 ? 'due today' : 'due in ' + n(-d, 'day', 'days'), d >= -7 ? 'warn' : '')) +
+            (c ? '<div class="muted sm" style="margin-top:4px">Reminder sent <span data-ago="' + esc(c.at) + '">' + esc(WS.agoText(c.at)) + '</span>' + ((i.chases || []).length > 1 ? ' (' + i.chases.length + ' sent)' : '') + '</div>' : '') + '</td>' +
+            '<td class="num b">' + WS.money(i.total) + '</td>' +
+            '<td class="num"><button class="btn sm" data-ccchase="' + i.id + '">Chase</button></td></tr>';
+        }).join('') + '</tbody></table></div>' : empty('Every invoice is paid.')) + '</div>';
+  }
+  function wireCredit() {
+    document.querySelectorAll('[data-ccview]').forEach(function (b) { b.onclick = function () { O.invoiceView(b.dataset.ccview); }; });
+    document.querySelectorAll('[data-ccchase]').forEach(function (b) {
+      b.onclick = function () {
+        var i = WS.invoice(b.dataset.ccchase), o = WS.operator(i.operatorId) || {};
+        i.chases = i.chases || [];
+        i.chases.push({ at: WS.stampSec(), by: (WS.me && WS.me() ? WS.me().first : '') || 'Office' });
+        var d = daysLate(i);
+        WS.notify((o.contact ? o.contact + ', ' : '') + (o.name || ''), 'email', 'Reminder: invoice ' + i.no,
+          'Invoice ' + i.no + ' for ' + WS.money(i.total) + (d > 0 ? ' is now ' + n(d, 'day', 'days') + ' overdue.' : ' is due on ' + WS.dateShort(i.due) + '.') + ' Could you let us know when it will be paid?', 'invoice');
+        WS.save();
+        WS.toast('Demo: reminder for ' + i.no + ' logged for ' + (o.name || 'the customer') + ', nothing was actually sent.', 'ok');
+        O.render();
+      };
+    });
+    O.wireGo();
   }
 
   function wireOverview() {

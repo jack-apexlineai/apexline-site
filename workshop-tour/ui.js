@@ -88,6 +88,7 @@
       if (!briefing && O.urgentScan) setTimeout(O.urgentScan, 900);
       WS.onChange(function () { if (O.urgentScan && O.startupState !== 'playing' && O.startupState !== 'paused') O.urgentScan(); });
       setInterval(function () { if (O.screen === 'live' || O.screen === 'planner') O.paintTimers && O.paintTimers(); }, 1000);
+      setInterval(O.paintAgo, 5000);
       setInterval(function () { if (!O.dragging && (O.screen === 'live' || O.screen === 'planner')) O.render(); }, 30000);
     }
   };
@@ -393,8 +394,29 @@
     });
   }
 
+  /* how long ago something happened, in plain words, and a stamp to the second to count from.
+     Anything on screen with data-ago="stamp" counts up by itself (see the ticker in boot). */
+  WS.stampSec = function (d) { d = d || new Date(); return WS.stampOf(d).slice(0, -2) + String(d.getSeconds()).padStart(2, '0'); };
+  WS.agoText = function (t) {
+    if (!t) return '';
+    var s = Math.max(0, Math.round((Date.now() - new Date(t).getTime()) / 1000));
+    if (s < 60) return 'just now';
+    var m = Math.floor(s / 60);
+    if (m < 60) return m + (m === 1 ? ' minute ago' : ' minutes ago');
+    var h = Math.floor(m / 60), r = m % 60;
+    if (h < 24) return h + (h === 1 ? ' hour' : ' hours') + (r ? ' ' + r + (r === 1 ? ' minute' : ' minutes') : '') + ' ago';
+    var d = Math.floor(h / 24);
+    return d + (d === 1 ? ' day ago' : ' days ago');
+  };
+  O.paintAgo = function () {
+    document.querySelectorAll('[data-ago]').forEach(function (el) {
+      var t = WS.agoText(el.dataset.ago);
+      if (el.textContent !== t) el.textContent = t;
+    });
+  };
+
   /* the old money screens all open inside Money now, on the right view */
-  var MONEY_VIEWS = { invoices: 'invoices', bills: 'bills', fitterpay: 'pay', payroll: 'pay' };
+  var MONEY_VIEWS = { invoices: 'invoices', bills: 'bills', fitterpay: 'pay', payroll: 'pay', credit: 'credit' };
   O.go = function (s) {
     if (MONEY_VIEWS[s] && O.setMoneyView) { O.setMoneyView(MONEY_VIEWS[s]); s = 'money'; }
     if (!O.SCREENS[s]) s = 'home';
@@ -428,9 +450,12 @@
   O.pill = function (text, cls) { return '<span class="pill ' + (cls || '') + '">' + esc(text) + '</span>'; };
   O.chip = function (text, cls) { return '<span class="chip ' + (cls || '') + '">' + esc(text) + '</span>'; };
   O.stat = function (key, val, foot, cls, screenTo) {
-    return '<button class="stat" ' + (screenTo ? 'data-go="' + screenTo + '"' : '') + '>' +
+    // a box that goes somewhere is a button; one that only shows a figure is a plain panel, so
+    // nothing on screen looks clickable and then does nothing
+    var tag = screenTo ? 'button' : 'div';
+    return '<' + tag + ' class="stat' + (screenTo ? '' : ' still') + '" ' + (screenTo ? 'data-go="' + screenTo + '"' : '') + '>' +
       '<div class="k">' + esc(key) + '</div><div class="v ' + (cls || '') + '">' + esc(String(val)) + '</div>' +
-      (foot ? '<div class="f">' + esc(foot) + '</div>' : '') + '</button>';
+      (foot ? '<div class="f">' + esc(foot) + '</div>' : '') + '</' + tag + '>';
   };
   O.kpi = function (label, val, foot, cls, bar) {
     return '<div class="k"><div class="l">' + esc(label) + '</div><div class="v ' + (cls || '') + '">' + esc(String(val)) + '</div>' +
