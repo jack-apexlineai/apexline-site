@@ -54,11 +54,13 @@
   YC.LORRIES = [
     { id: 'L1', n: 'Skip lorry 1', reg: 'DS21 SKP', driver: 'Wayne Pike', first: 'Wayne', kind: 'skip', col: '#1F4FA8' },
     { id: 'L2', n: 'Skip lorry 2', reg: 'DS22 SKP', driver: 'Darren Cole', first: 'Darren', kind: 'skip', col: '#1F4FA8' },
+    { id: 'L4', n: 'Skip lorry 3', reg: 'DS24 SKP', driver: 'Marcus Dunn', first: 'Marcus', kind: 'skip', col: '#1F4FA8' },
     { id: 'L3', n: 'Hook lorry', reg: 'DS70 RRO', driver: 'Jason Hurst', first: 'Jason', kind: 'roro', col: '#1F4FA8' },
     { id: 'G1', n: 'Grab 1', reg: 'DS19 GRB', driver: 'Ricky Bell', first: 'Ricky', kind: 'grab', col: '#1F4FA8' },
     { id: 'G2', n: 'Grab 2', reg: 'DS23 GRB', driver: 'Callum Reid', first: 'Callum', kind: 'grab', col: '#1F4FA8' }
   ];
   YC.KIND = { skip: 'Skip loader, up to 16 yards', roro: 'Hook lift, 20 and 40 yard', grab: '8-wheel grab lorry' };
+  YC.GROUPS = [['skip', 'Skip lorries'], ['roro', 'Hook lift / RoRo'], ['grab', 'Grab lorries']];
   YC.TYPES = {
     deliver: { n: 'Deliver', ic: 'skip', waste: false },
     exchange: { n: 'Exchange', ic: 'exchange', waste: true },
@@ -282,6 +284,14 @@
       YC.complete(S, Y, heavy, { net: 4.86, plate: true }, b0.getTime() + 455 * 60000);
     }
     YC.settle(S, Y, true);
+    /* the day plan starts nearly empty: each lorry keeps what it has done and the job it is on, the rest of today waits in Unplanned */
+    /* and whatever the time of day, there is a list of jobs waiting to be planned */
+    var nowM = YC.nowMin(), base = Math.max(480, Math.min(nowM + 30, 900)), FILL = [['deliver', 'c2', 1, 6, 'mixed'], ['grab', 'c1', 1, null, 'soil'], ['exchange', 'c12', 0, 8, 'plaster'], ['collect', 'c11', 0, 12, 'wood'], ['muck', 'c14', 0, null, 'soil'], ['deliver', 'c14', 1, 20, 'mixed'], ['deliver', 'o1', 0, 4, 'house']];
+    FILL.forEach(function (f, i) {
+      var w0 = Math.min(990, base + i * 25), j = J('DSG-' + (3180 + i), null, w0, w0 + 60, f[0], f[1], f[2], f[3], f[4]), st = siteOf(S, f[1], f[2]);
+      j.site = st; var pp = YC.pos(st.pc); j.lat = pp.lat; j.lng = pp.lng; j.price = YC.priceFor(null, j); j.incl = YC.inclFor(null, j); Y.jobs.push(j);
+    });
+    YC.LORRIES.forEach(function (lo) { var act = YC.active(YC.forLorry(Y, lo.id, 0)); Y.jobs.forEach(function (j) { if (j.day === 0 && j.lorry === lo.id && j.status === 'planned' && j !== act) j.lorry = null; }); });
     return Y;
   };
   YC.ensure = function (S, CS) {

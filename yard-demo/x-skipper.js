@@ -104,7 +104,7 @@
   };
 
   /* ---------- Skipper ---------- */
-  var SUGG = ['Which skips are overdue?', 'Where is Grab 1?', 'Who owes me money?', 'What is ready for Defra?', 'What needs me?'];
+  var SUGG = ['Which skips are overdue?', 'Where is DS19 GRB?', 'Who owes me money?', 'What is ready for Defra?', 'What needs me?'];
   var started = false;
   function build() {
     if ($('#skFab')) return;

@@ -705,3 +705,47 @@ body.ydrv-on .ywheel-btn{display:none}
 .ywheel-r p{margin:0;padding:10px 14px}
 .ywheel.sheet .ywheel-s{position:static;transform:none;width:auto;margin:4px 0 10px}
 .ywheel.sheet .ywheel-s input{box-shadow:none;border:1px solid var(--line2)}
+
+/* day plan by registration */
+.yplan2{display:flex;flex-direction:column;gap:16px}
+.yplan2>.ycol.none{min-height:0}
+.yplan2>.ycol.none .ycol-b{flex-direction:row;flex-wrap:wrap}
+.yplan2>.ycol.none .ypc{width:210px}
+.ygrps{display:flex;gap:14px;align-items:flex-start}
+.ygrp{flex:var(--n) 1 0;min-width:0}
+.ygrp-h{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 2px 6px}
+.ygrp-c{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:10px}
+.yreg{display:inline-block;align-self:flex-start;background:#F5C518;color:#111;border:2px solid #111;border-radius:6px;padding:5px 9px;font:800 17px/1 "Arial Black",Arial,sans-serif;letter-spacing:.05em;white-space:nowrap}
+.ycol header small{font-size:12.5px}
+.ycol-e{color:var(--faint);font-size:12.5px;text-align:center;border:1.5px dashed var(--line2);border-radius:10px;padding:16px 6px;margin:0}
+.yplate.yx{font-size:11px;padding:2px 6px;border-width:1.5px}
+@media (max-width:1100px){.ygrps{flex-direction:column;align-items:stretch}.ygrp-c{grid-template-columns:repeat(var(--n),minmax(0,1fr))}}
+@media (max-width:700px){.ygrp-c{grid-template-columns:1fr}.yplan2>.ycol.none .ypc{width:100%}}
+
+/* Waste in, laid out like WasteLine */
+.wif{padding:16px 18px;margin-bottom:16px}
+.wig{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.wig.two{grid-template-columns:1fr 1fr}
+.wiseg{display:flex;flex-wrap:wrap}
+.wiseg button{padding:7px 11px;font-size:12.5px}
+.wbox{display:flex;align-items:flex-end;gap:12px;background:var(--sunk);border-radius:12px;padding:12px 14px;margin:4px 0 14px;flex-wrap:wrap}
+.wbox .field{margin:0;flex:1;min-width:120px}
+.kgin{display:flex;align-items:center;gap:6px}
+.kgin input{flex:1;min-width:0;border:1px solid var(--line2);border-radius:10px;padding:10px 11px;background:var(--panel);font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+.kgin span{color:var(--muted);font-weight:700}
+.wminus{font-size:22px;color:var(--muted);padding-bottom:10px}
+.wnet b{display:block;font-size:22px;font-variant-numeric:tabular-nums}.wnet small{color:var(--muted)}
+.wicalc{font-size:15px;margin:-4px 0 14px;min-height:20px}
+.wiacts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:6px}
+.wiacts.left{justify-content:flex-start}
+.wipick{background:var(--brand-l);border-radius:12px;padding:12px 14px;margin:0 0 14px;font-size:13.5px}
+.wipick .muted{font-size:12.5px;margin:2px 0 6px}
+.ufil{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0 12px}
+.wiq{flex:1;min-width:200px;border:1px solid var(--line2);border-radius:10px;padding:9px 12px;background:var(--panel)}
+.widone{padding:14px 18px;margin-bottom:16px;border-left:4px solid var(--ok)}
+.wiopen{padding:14px 18px;margin-bottom:16px}
+.wiest{margin:0 0 16px}
+.wiest .yplate{margin-left:4px}
+.btn.on{border-color:var(--brand);color:var(--brand)}
+@media (max-width:1100px){.wig{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.wig,.wig.two{grid-template-columns:1fr}.wbox{flex-direction:column;align-items:stretch}.wminus{display:none}}

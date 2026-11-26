@@ -42,7 +42,7 @@
   }
   function pick() {
     $('#main').innerHTML = '<section class="dv-hi"><h1>Which lorry are you on?</h1><p class="dv-sub">Tap your lorry, then put your PIN in.</p></section>' +
-      YC.LORRIES.map(function (l) { return '<button class="dv-pick" data-a="pick" data-v="' + l.id + '"><span class="dv-plate">' + h(l.reg) + '</span><span><b>' + h(l.driver) + '</b><small>' + h(l.n) + '</small></span>' + ic('chevron-right') + '</button>'; }).join('');
+      YC.LORRIES.map(function (l) { return '<button class="dv-pick" data-a="pick" data-v="' + l.id + '"><span class="dv-plate">' + h(l.reg) + '</span><span><b>' + h(l.driver) + '</b></span>' + ic('chevron-right') + '</button>'; }).join('');
   }
   function pin() {
     var dots = ''; for (var i = 0; i < 4; i++) dots += '<i class="' + (i < st.pin.length ? 'on' : '') + '"></i>';
