@@ -87,7 +87,7 @@
       if (O.wheelBoot) O.wheelBoot(briefing);
       if (!briefing && O.urgentScan) setTimeout(O.urgentScan, 900);
       WS.onChange(function () { if (O.urgentScan && O.startupState !== 'playing' && O.startupState !== 'paused') O.urgentScan(); });
-      setInterval(function () { if (O.screen === 'live') O.paintTimers && O.paintTimers(); }, 1000);
+      setInterval(function () { if (O.screen === 'live' || O.screen === 'planner') O.paintTimers && O.paintTimers(); }, 1000);
       setInterval(function () { if (!O.dragging && (O.screen === 'live' || O.screen === 'planner')) O.render(); }, 30000);
     }
   };

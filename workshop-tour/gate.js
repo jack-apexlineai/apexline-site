@@ -129,11 +129,10 @@
     setTimeout(function () { try { w.querySelector('#tgTour').focus({ preventScroll: true }); } catch (e) { } }, 60);
   }
 
-  /* ?tour=wow: the highlights tour for a screen recording. No email gate and no welcome choice,
-     no lead sent. Fresh sample data, then the normal sign in and the full start-up, exactly as a
-     real user sees it. Only the urgent pop ups are held back, so nothing covers the screen. The
-     tour itself starts from the wheel menu (Start tour) or the Tour button, never on its own.
-     The flag is kept for the browser session so it survives a reload or a sign out. */
+  /* ?tour=wow: recording mode. The plain system for a screen recording: no email gate, no welcome
+     choice, no lead sent, no guided tour and no Tour button. Fresh sample data on every load,
+     then the normal sign in and the full start-up, exactly as a real user sees it. Nothing is
+     hidden. The flag is kept for the browser session so it survives a reload or a sign out. */
   var WOW = 'wsTourWow';
   function wowUrl() {
     try { return new URLSearchParams(location.search).get('tour') === 'wow'; } catch (e) { return false; }
@@ -151,7 +150,7 @@
           localStorage.removeItem('wsTour:fitter');
           sessionStorage.removeItem('wsTour:who');
           sessionStorage.removeItem('wsTour:introSeen');
-          sessionStorage.setItem('wsTour:urgentSeen', '["*"]');
+          sessionStorage.removeItem('wsTour:urgentSeen');
         } catch (e) { }
         if (location.hash) history.replaceState(null, '', location.pathname + location.search);
       }

@@ -205,6 +205,17 @@
     return out;
   }
 
+  /* the same live status the live view shows: Complete with a tick, In progress with the running
+     time, Waiting on parts */
+  var PTICK = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-1px;margin-right:4px"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  function pstate(j, p) {
+    var fin = j.status === 'done' || j.status === 'qc';
+    if (fin) return '<span class="pill ok">' + PTICK + 'Complete</span>' + (p.actual ? '<span class="muted sm mono">' + WS.hhmm(p.actual) + '</span>' : '');
+    if (p.running) return '<span class="pill go">In progress</span><span class="sm mono b" data-timer="' + j.id + '"' +
+      (p.state === 'over' ? ' style="color:var(--bad)" title="Over the estimate by ' + WS.hhmm(p.over) + '"' : '') + '>' + WS.hms(p.actual * 3600000) + '</span>';
+    if (j.status === 'waiting_parts') return '<span class="pill warn">Waiting on parts</span>' + (p.actual ? '<span class="muted sm mono">' + WS.hhmm(p.actual) + '</span>' : '');
+    return pill(WS.statusLabel(j.status), WS.statusCls(j.status)) + (p.actual ? '<span class="muted sm mono">' + WS.hhmm(p.actual) + '</span>' : '');
+  }
   function pjob(j, inPool, i, n) {
     var v = WS.vehicle(j.vehicleId), op = WS.operator(j.operatorId);
     var p = WS.jobProgress(j);
@@ -218,7 +229,7 @@
       '<span class="rg">' + esc(v ? v.reg : j.type) + '</span>' +
       '<span class="es">' + WS.hrs(j.estHours) + '</span></div>' +
       '<div class="t2">' + (v ? esc(j.type) + (op ? ' · ' + esc(op.name) : '') : 'Internal work') + '</div>' +
-      '<div class="t3">' + pill(WS.statusLabel(j.status), WS.statusCls(j.status)) +
+      '<div class="t3">' + pstate(j, p) +
       (j.priority === 'high' ? chip('urgent', 'bad') : '') +
       (j.source !== 'Office' ? chip(j.source, 'warn') : '') + '</div>' +
       (inPool ? '' : '<div class="hd">' +
@@ -564,7 +575,8 @@
       if (!j) return;
       var c = (j.clockOns || []).filter(function (x) { return !x.end; })[0];
       if (!c) return;
-      el.textContent = WS.hms(Date.now() - new Date(c.start).getTime());
+      // all the time on the job so far, the same figure as "run" and "over by" beside it
+      el.textContent = WS.hms(WS.hoursOn(j) * 3600000);
     });
   };
 

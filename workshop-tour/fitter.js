@@ -148,13 +148,14 @@
       (open ? '<div class="card tight" style="border-color:var(--brand);margin-bottom:14px">' +
         '<div class="muted sm">Working on</div>' +
         '<div class="inline" style="margin-top:4px"><span class="rg" style="font-size:18px;font-weight:800">' + esc((WS.vehicle(open.vehicleId) || {}).reg) + '</span>' +
-        '<span class="bigtimer right" id="hdrTimer" data-start="' + open.clockOns.filter(function (c) { return !c.end; })[0].start + '">00:00:00</span></div></div>' : '') +
+        '<span class="bigtimer right" id="hdrTimer" data-tjob="' + open.id + '">' + WS.hms(WS.hoursOn(open) * 3600000) + '</span></div></div>' : '') +
       (!open && nextJob(list) ? '<div class="card tight upnext"><div class="muted sm">Up next</div>' +
         '<div class="inline" style="margin-top:4px"><span class="rg" style="font-size:18px;font-weight:800">' + esc((WS.vehicle(nextJob(list).vehicleId) || {}).reg || nextJob(list).type) + '</span>' +
         '<span class="chip">' + esc(nextJob(list).type) + '</span>' +
         '<button class="btn right" id="fNextOn">' + esc(startLabel(nextJob(list))) + '</button></div></div>' : '') +
-      (list.length ? list.map(jobRow).join('') : '<div class="card"><div class="empty">Nothing left on your list today.</div></div>') +
-      (done.length ? '<h3 style="margin:20px 0 10px" class="muted">Finished today</h3>' + done.map(jobRow).join('') : '');
+      (done.length ? '<h3 style="margin:6px 0 10px" class="muted">Finished today</h3>' + done.map(jobRow).join('') +
+        (list.length ? '<h3 style="margin:20px 0 10px" class="muted">Still to do</h3>' : '') : '') +
+      (list.length ? list.map(jobRow).join('') : '<div class="card"><div class="empty">Nothing left on your list today.</div></div>');
   }
 
   function jobRow(j) {
@@ -164,17 +165,28 @@
     var fill = Math.min(100, p.est ? p.actual / (p.est * 1.2) * 100 : 0);
     var fin = j.status === 'done' || j.status === 'qc';
     var barCls = fin ? 'ok' : p.state === 'over' ? 'bad' : p.state === 'close' ? 'warn' : running ? '' : 'ok';
-    return '<div class="fjob" data-job="' + j.id + '">' +
+    /* one clear state along the top of the card: Complete with a tick, In progress with the
+       running clock, or Waiting on parts. The clock is the whole time on the job, the same
+       figure as the bar underneath and as the office screens. */
+    var TICK = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+    var strip = function (bg, fg, html) {
+      return '<div class="fstate" style="display:flex;align-items:center;gap:7px;margin:-15px -16px 12px;padding:8px 16px;border-radius:var(--r) var(--r) 0 0;background:' + bg + ';color:' + fg + ';font-size:13px;font-weight:800;letter-spacing:.02em">' + html + '</div>';
+    };
+    var top = fin ? strip('var(--ok-l)', 'var(--ok)', TICK + '<span>Complete</span>' + (h ? '<span style="margin-left:auto;font-weight:700" class="mono">' + WS.hhmm(h) + '</span>' : ''))
+      : running ? strip('var(--brand-l)', 'var(--brand-ink, var(--brand))', '<span class="fdot" style="width:8px;height:8px;border-radius:50%;background:currentColor"></span><span>In progress</span><span class="mono" style="margin-left:auto" data-tjob="' + j.id + '">' + WS.hms(h * 3600000) + '</span>')
+      : j.status === 'waiting_parts' ? strip('var(--warn-l)', 'var(--warn)', '<span>Waiting on parts</span>' + (h ? '<span style="margin-left:auto;font-weight:700" class="mono">' + WS.hhmm(h) + '</span>' : ''))
+      : '';
+    return '<div class="fjob" data-job="' + j.id + '"' + (fin ? ' style="border-color:var(--ok)"' : '') + '>' + top +
       '<div class="r1">' +
       (j._planStart != null ? '<span class="muted sm mono">' + WS.clockHM(j._planStart) + '</span>' : '') +
       '<span class="rg">' + esc(v.reg || j.type) + '</span>' +
       '<span class="chip">' + esc(j.type) + '</span>' +
-      (running ? '<span class="timer right" data-start="' + running.start + '">00:00:00</span>' : (h ? '<span class="muted sm right mono">' + WS.hhmm(h) + '</span>' : '<span class="muted sm right mono">' + WS.hrs(p.est) + '</span>')) + '</div>' +
+      (running ? '<span class="muted sm right mono">' + WS.hrs(p.est) + ' allowed</span>' : (h ? '<span class="muted sm right mono">' + WS.hhmm(h) + '</span>' : '<span class="muted sm right mono">' + WS.hrs(p.est) + '</span>')) + '</div>' +
       '<div class="mk">' + esc((v.make || '') + ' ' + (v.model || '')) + (o.name ? ' · ' + esc(o.name) : '') + '</div>' +
       (p.actual ? '<div class="bar" style="margin-top:9px"><i class="' + barCls + '" style="width:' + fill + '%"></i><u style="left:83.3%"></u></div>' +
         '<div class="muted sm" style="margin-top:5px">' + WS.hhmm(p.actual) + ' of ' + WS.hrs(p.est) +
         (p.state === 'over' && !fin ? ' <b style="color:var(--bad)">over by ' + WS.hhmm(p.over) + '</b>' : '') + '</div>' : '') +
-      '<div class="r2"><span class="pill ' + WS.statusCls(j.status) + '">' + esc(WS.statusLabel(j.status)) + '</span>' +
+      '<div class="r2"><span class="pill ' + (fin ? 'ok' : WS.statusCls(j.status)) + '">' + esc(fin ? 'Complete' : WS.statusLabel(j.status)) + '</span>' +
       (j.bay ? '<span class="muted sm">' + esc(j.bay) + '</span>' : '<span class="muted sm">no bay yet</span>') +
       (j.priority === 'high' ? '<span class="chip bad">urgent</span>' : '') +
       (j.fitterId === me.id ? '' : '<span class="pill">spare job</span>') + '</div></div>';
@@ -252,7 +264,7 @@
       (j.notes ? '<div style="margin-top:12px;padding:11px 12px;background:var(--soft);border-radius:10px;font-size:13.5px">' + esc(j.notes) + '</div>' : '') +
       '<div class="sep"></div>' +
       '<div class="inline"><div><div class="muted sm">Time on this job</div>' +
-      '<div class="bigtimer" ' + (running ? 'data-start="' + running.start + '"' : '') + '>' + (running ? '00:00:00' : WS.hhmm(h)) + '</div></div>' +
+      '<div class="bigtimer" ' + (running ? 'data-tjob="' + j.id + '"' : '') + '>' + (running ? WS.hms(h * 3600000) : WS.hhmm(h)) + '</div></div>' +
       '<div class="right">' + (running
         ? '<button class="btn alt lg" id="jOff">Pause</button>'
         : '<button class="btn lg" id="jOn">' + esc(startLabel(j)) + '</button>') + '</div></div>' +
@@ -577,15 +589,18 @@
     if ($('jDone')) $('jDone').onclick = function () { finish(j); };
   }
 
+  /* clock ons are stamped to the second, so a job just started reads 00:00:00 and counts up
+     (the minute stamps used elsewhere would start it part way through the minute) */
+  function clockStamp() { var d = new Date(); return WS.stampOf(d).slice(0, -2) + String(d.getSeconds()).padStart(2, '0'); }
   function clockOn(j) {
     var prev = openJob();
     if (prev && prev.id !== j.id) {
-      prev.clockOns.forEach(function (c) { if (c.fitterId === me.id && !c.end) c.end = WS.nowStamp(); });
+      prev.clockOns.forEach(function (c) { if (c.fitterId === me.id && !c.end) c.end = clockStamp(); });
       WS.audit(prev, me.name, 'Clocked off (moved to ' + (WS.vehicle(j.vehicleId) || {}).reg + ')');
       WS.toast('Paused ' + (WS.vehicle(prev.vehicleId) || {}).reg + '.', '');
     }
     j.clockOns = j.clockOns || [];
-    j.clockOns.push({ fitterId: me.id, start: WS.nowStamp(), end: '' });
+    j.clockOns.push({ fitterId: me.id, start: clockStamp(), end: '' });
     if (!j.fitterId) j.fitterId = me.id;
     if (j.status === 'booked' || j.status === 'in_bay') j.status = 'in_progress';
     WS.audit(j, me.name, 'Clocked on');
@@ -595,7 +610,7 @@
   }
 
   function clockOff(j) {
-    j.clockOns.forEach(function (c) { if (c.fitterId === me.id && !c.end) c.end = WS.nowStamp(); });
+    j.clockOns.forEach(function (c) { if (c.fitterId === me.id && !c.end) c.end = clockStamp(); });
     WS.audit(j, me.name, 'Clocked off');
     WS.save();
     WS.toast('Paused.', 'ok');
@@ -773,7 +788,7 @@
     }
     var undone = (j.tasks || []).filter(function (t) { return !t.done; }).length;
     if (undone) (j.tasks || []).forEach(function (t) { t.done = true; });
-    j.clockOns.forEach(function (c) { if (c.fitterId === me.id && !c.end) c.end = WS.nowStamp(); });
+    j.clockOns.forEach(function (c) { if (c.fitterId === me.id && !c.end) c.end = clockStamp(); });
     j.status = 'qc';
     WS.audit(j, me.name, 'Job marked done, sent to QC');
     WS.save();
@@ -1098,7 +1113,7 @@
     }
     WS.audit(j, me.name, 'Inspection signed off and locked');
     (j.tasks || []).forEach(function (t) { t.done = true; });
-    (j.clockOns || []).forEach(function (c) { if (c.fitterId === me.id && !c.end) c.end = WS.nowStamp(); });
+    (j.clockOns || []).forEach(function (c) { if (c.fitterId === me.id && !c.end) c.end = clockStamp(); });
     j.status = 'qc';
     WS.audit(j, me.name, 'Job marked done, sent to QC');
     WS.save();
@@ -1212,6 +1227,12 @@
   function tick() {
     document.querySelectorAll('[data-start]').forEach(function (el) {
       el.textContent = WS.hms(Date.now() - new Date(el.dataset.start).getTime());
+    });
+    /* a job's clock is all the time on it so far (every clock on, plus the one running), so the
+       clock, the bar and "over by" always agree, here and on the office screens */
+    document.querySelectorAll('[data-tjob]').forEach(function (el) {
+      var j = WS.job(el.dataset.tjob);
+      if (j) el.textContent = WS.hms(WS.hoursOn(j) * 3600000);
     });
   }
 })();
