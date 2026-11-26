@@ -17,7 +17,7 @@
 
   var LOCAL_SKIP = { 4: 210, 6: 250, 8: 290, 10: 330, 12: 365, 14: 395, 16: 425, 20: 520, 40: 690 };
   var SUPPLIERS = [
-    { id: 's1', recov: 94, hireDays: 14, weekRate: 25, name: 'Colne Valley Skips', contact: 'Sarah', phone: '07700 900141', base: 'Addlestone', services: ['skip'],
+    { id: 's1', recov: 94, hireDays: 14, weekRate: 25, name: 'Hollin Vale Skips', contact: 'Sarah', phone: '07700 900141', base: 'Addlestone', services: ['skip'],
       areas: ['KT', 'TW', 'GU'], rates: { skip: LOCAL_SKIP },
       resp: 14, onTime: 97, wtn: 99, jobs: 61, cbdu: 'CBDU418027', licExp: 640, preferred: true },
     { id: 's13', pref: 'email', recov: 88, hireDays: 28, weekRate: 25, name: 'Ringway Skip Hire', contact: 'Gav', phone: '07700 900162', base: 'Guildford', services: ['skip'],
@@ -89,20 +89,20 @@
       sites: [{ name: 'Plot 4, Chobham', pc: 'GU24 8TJ' }, { name: 'Lightwater phase 2', pc: 'GU18 5QW' }] },
     { id: 'c7', limit: 4000, name: 'Marram Landscapes', contact: 'Gemma Shaw', first: 'Gemma', phone: '07700 900271', email: 'gemma@marramlandscapes.co.uk', type: 'Landscaping', terms: '30 day account', owner: 'sam',
       sites: [{ name: 'Canal wharf site, Sheerwater', pc: 'GU21 5QB' }] },
-    { id: 'c8', limit: 1000, name: 'Greaves Roofing', contact: 'Paul Greaves', first: 'Paul', phone: '07700 900283', email: 'paul@greavesroofing.co.uk', type: 'Roofing', terms: '30 day account', owner: 'sam',
+    { id: 'c8', limit: 1000, name: 'Gravelyn Roofing', contact: 'Paul Greaves', first: 'Paul', phone: '07700 900283', email: 'paul@gravelynroofing.co.uk', type: 'Roofing', terms: '30 day account', owner: 'sam',
       sites: [{ name: 'Pyrford job', pc: 'GU22 8QN' }] },
-    { id: 'c9', limit: 0, name: 'Tidemill Construction', contact: 'Tom Ellis', first: 'Tom', phone: '07700 900294', email: 'tom@tidemillconstruction.co.uk', type: 'General builder', terms: 'Card on order', owner: 'sam',
+    { id: 'c9', limit: 0, name: 'Tidmoor Construction', contact: 'Tom Ellis', first: 'Tom', phone: '07700 900294', email: 'tom@tidmoorconstruction.co.uk', type: 'General builder', terms: 'Card on order', owner: 'sam',
       sites: [{ name: 'Ottershaw refurb', pc: 'KT16 0SD' }] },
     { id: 'c10', limit: 1500, name: 'Kilner Builders', contact: 'Andy Kilner', first: 'Andy', phone: '07700 900298', email: 'andy@kilnerbuilders.co.uk', type: 'General builder', terms: '30 day account', owner: 'sam',
       sites: [{ name: 'Addlestone terrace', pc: 'KT15 1EX' }] },
     /* local trade and one-off customers the yard's own lorries serve */
-    { id: 'c11', limit: 1500, name: 'Northfield Joinery', contact: 'Nathan Hale', first: 'Nathan', phone: '07700 900311', email: 'nathan@northfieldjoinery.co.uk', type: 'Joinery', terms: '30 day account', owner: 'dave',
+    { id: 'c11', limit: 1500, name: 'Nethercott Joinery', contact: 'Nathan Hale', first: 'Nathan', phone: '07700 900311', email: 'nathan@nethercottjoinery.co.uk', type: 'Joinery', terms: '30 day account', owner: 'dave',
       sites: [{ name: 'Nursery Lane workshop, Goldsworth Park', pc: 'GU21 3NN' }, { name: 'Bircham Road job, Camberley', pc: 'GU15 3HN' }] },
     { id: 'c12', limit: 3000, name: 'Fairholme Renovations', contact: 'Priya Mistry', first: 'Priya', phone: '07700 900322', email: 'priya@fairholmerenovations.co.uk', type: 'Renovation', terms: '30 day account', owner: 'dave',
       sites: [{ name: 'High Street barn, Ripley', pc: 'GU23 6AR' }, { name: 'Market Place shop, Guildford', pc: 'GU1 3JT' }] },
-    { id: 'c13', limit: 0, name: 'Northgate Lettings', contact: 'Owen Price', first: 'Owen', phone: '07700 900333', email: 'owen@northgatelettings.co.uk', type: 'Landlord', terms: 'Card on order', owner: 'sam',
+    { id: 'c13', limit: 0, name: 'Norbridge Lettings', contact: 'Owen Price', first: 'Owen', phone: '07700 900333', email: 'owen@norbridgelettings.co.uk', type: 'Landlord', terms: 'Card on order', owner: 'sam',
       sites: [{ name: 'Gayton Road flats, Maybury', pc: 'GU22 8LT' }, { name: 'Larch Road house, Bisley', pc: 'GU24 9QA' }] },
-    { id: 'c14', limit: 8000, name: 'Fenway Developments', contact: 'Ruth Fenway', first: 'Ruth', phone: '07700 900344', email: 'ruth@fenwaydevelopments.co.uk', type: 'Developer', terms: '30 day account', owner: 'dave',
+    { id: 'c14', limit: 8000, name: 'Fernlow Developments', contact: 'Ruth Farrow', first: 'Ruth', phone: '07700 900344', email: 'ruth@fernlowdevelopments.co.uk', type: 'Developer', terms: '30 day account', owner: 'dave',
       sites: [{ name: 'Packet Boat plots, New Haw', pc: 'KT15 3JP' }, { name: 'Old depot strip-out, Chertsey', pc: 'KT16 9PH' }, { name: 'Chapel Lane plots, Bagshot', pc: 'GU19 5AA' }] }
   ];
 
@@ -207,7 +207,7 @@
     { id: 'l5', company: 'Quillan Roofing', contact: 'Ben Quillan', area: 'Weybridge KT13', type: 'Roofing', source: 'Website', stage: 'contacted', value: 900, next: 5, nextWhat: 'Check in after the price', last: -9, lastWhat: 'Lost Q-2226 on price' },
     { id: 'l6', company: 'Pennant Fit-Out', contact: 'Zoe Pennant', area: 'Ripley GU23', type: 'Fit-out', source: 'LinkedIn', stage: 'contacted', value: 1500, next: 1, nextWhat: 'Send intro pack', last: -3, lastWhat: 'LinkedIn chat' },
     { id: 'l7', company: 'Tarrant and Lowe Landscapes', contact: 'Matt Lowe', area: 'Chertsey KT16', type: 'Landscaping', source: 'Cold call', stage: 'new', value: 700, next: 0, nextWhat: 'First call', last: null, lastWhat: '' },
-    { id: 'l8', company: 'Kelling Developments', contact: 'Nick Kelling', area: 'Addlestone KT15', type: 'Developer', source: 'Referral', stage: 'won', value: 3800, next: 5, nextWhat: 'Account review', last: -6, lastWhat: 'Account opened' },
+    { id: 'l8', company: 'Kellow Developments', contact: 'Nick Kellow', area: 'Addlestone KT15', type: 'Developer', source: 'Referral', stage: 'won', value: 3800, next: 5, nextWhat: 'Account review', last: -6, lastWhat: 'Account opened' },
     { id: 'l9', company: 'Oakmere Builders', contact: 'Steve Oakes', area: 'Knaphill GU21', type: 'General builder', source: 'Cold call', stage: 'contacted', value: 1100, next: 0, nextWhat: 'Call back after 2pm', last: -1, lastWhat: 'Call, busy' },
     { id: 'l10', company: 'Rendle Groundworks', contact: 'Gary Rendle', area: 'Byfleet KT14', type: 'Groundworks', source: 'LinkedIn', stage: 'new', value: 2600, next: 1, nextWhat: 'Connect and message', last: null, lastWhat: '' },
     { id: 'l11', company: 'Brentmoor Homes', contact: 'Claire Brent', area: 'Farnham GU9', type: 'Developer', source: 'Website', stage: 'quoted', value: 3300, next: 1, nextWhat: 'Chase quote', last: -2, lastWhat: 'Quote sent' },
@@ -218,10 +218,10 @@
   var THREADS = [];   /* the yard demo's inbox lives in yard-core.js: two messages only */
   var THREADS_UNUSED = [
     { id: 't1', party: { type: 'customer', id: 'c1' }, ch: 'wa', unread: true, scn: { kind: 'exchange', job: 'DSG-1041' },
-      msgs: [m('out', 'Morning Dan, Colne Valley are dropping the 8 yarder at Abbotsbury Lane before 10. Cheers, Dave', 7210, { by: 'Dave' }),
+      msgs: [m('out', 'Morning Dan, Hollin Vale are dropping the 8 yarder at Abbotsbury Lane before 10. Cheers, Dave', 7210, { by: 'Dave' }),
              m('in', 'Morning Dave, can you swap the 8 yarder at Abbotsbury Lane tomorrow? its full to the brim', 18)] },
     { id: 't2', party: { type: 'supplier', id: 's1' }, ch: 'email', unread: true, subject: 'Delivered DSG-1043 Horsell', scn: { kind: 'wtn', job: 'DSG-1043' },
-      msgs: [m('in', 'Hi Dave,\n\n12 yard dropped at the Elmcroft Avenue extension, Horsell at 08:40, on the drive as asked. Waste transfer note attached.\n\nThanks, Sarah\nColne Valley Skips', 26, { att: [{ n: 'WTN-DSG-1043.pdf', t: 'wtn' }, { n: 'delivered-heacham.jpg', t: 'photo' }] })] },
+      msgs: [m('in', 'Hi Dave,\n\n12 yard dropped at the Elmcroft Avenue extension, Horsell at 08:40, on the drive as asked. Waste transfer note attached.\n\nThanks, Sarah\nHollin Vale Skips', 26, { att: [{ n: 'WTN-DSG-1043.pdf', t: 'wtn' }, { n: 'delivered-heacham.jpg', t: 'photo' }] })] },
     { id: 't3', party: { type: 'lead', id: 'l1' }, ch: 'web', unread: true, subject: 'Get a quote, demoskipandgrab.co.uk', scn: { kind: 'parse', owner: 'dave' },
       form: { 'Your name': 'Hannah Price', Company: 'Price and Rowe Builders', Email: 'hannah@priceandrowe.co.uk', Phone: '07700 900302', 'Site postcode': 'GU21 0RT', 'Service needed': 'Skip Hire', 'Came from': 'Google Ads, skip hire Woking' },
       msgs: [m('in', 'Looking for a 12 yard skip for a 6 week job starting 1st December. What\'s the cost, please?', 3)] },
@@ -250,7 +250,7 @@
       msgs: [m('in', 'Hi mate, need a grab at Chobham for tomorrow please if possible. Soil and clay. Ideally morning', 12)] },
     { id: 't12', party: { type: 'customer', id: 'c4' }, ch: 'wa', unread: false, done: true,
       msgs: [m('in', 'Can you collect the 6 yarder at Marlow Parade tomorrow Dave', 1500),
-             m('out', 'No problem Rob, booked with Colne Valley for tomorrow. Cheers, Dave', 1490, { by: 'Dave' })] },
+             m('out', 'No problem Rob, booked with Hollin Vale for tomorrow. Cheers, Dave', 1490, { by: 'Dave' })] },
     { id: 't13', party: { type: 'supplier', id: 's13' }, ch: 'wa', unread: false, done: true,
       msgs: [m('out', 'Hi Gav, still need the WTN for DSG-1037 Byfleet Road please. Cheers, Dave (Demo Skip & Grab)', 1440, { by: 'Auto chase' })] }
   ];

@@ -749,3 +749,41 @@ body.ydrv-on .ywheel-btn{display:none}
 .btn.on{border-color:var(--brand);color:var(--brand)}
 @media (max-width:1100px){.wig{grid-template-columns:1fr 1fr}}
 @media (max-width:560px){.wig,.wig.two{grid-template-columns:1fr}.wbox{flex-direction:column;align-items:stretch}.wminus{display:none}}
+
+/* yard board, WasteLine's yard picture */
+.ybw-site{display:block;width:100%;text-align:left;background:#2A2410;border:1px solid #5B4A10;color:#F4E7B0;border-radius:12px;padding:12px 16px;margin-bottom:14px;font-size:15px}
+.ybw-site.red{background:#3A1414;border-color:#7A2020;color:#FFD5D5}
+.ybw-site span{text-decoration:underline;margin-left:6px}
+.ybw-tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:16px}
+.ybw-t{background:#1D1D20;border:1px solid #2A2A2E;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.ybw-t b{font-size:34px;font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums;color:#fff}
+.ybw-t b i{font-style:normal;font-size:20px;color:#71717A}
+.ybw-t span{color:#D4D4D8;font-weight:700}
+.ybw-t small{color:#A1A1AA}
+.ybw-t em{font-style:normal;color:#F87171;font-weight:700}
+.ybw-t.bad b{color:#F87171}
+.ybw-t.warn small{color:#7FA6EE;font-weight:700}
+.ybw-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.ybw-stk{display:grid;grid-template-columns:110px 44px 90px minmax(0,1fr);align-items:center;gap:6px 10px;padding:7px 0;border-top:1px solid #2A2A2E}
+.ybw-stk:first-of-type{border-top:0}
+.ybw-sz{font-weight:700;color:#fff}
+.ybw-stk b{font-size:20px;text-align:right;color:#fff;font-variant-numeric:tabular-nums}
+.ybw-in{color:#A1A1AA;font-size:12.5px}
+.ybw-bar{height:8px;background:#2A2A2E;border-radius:99px;overflow:hidden}
+.ybw-bar i{display:block;height:100%;background:#7FA6EE;border-radius:99px}
+.ybw-stk small{grid-column:2/-1;color:#A1A1AA;font-size:12px;margin-top:-4px}
+.ybw-stk.low b{color:#F87171}
+.ybw-r{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid #2A2A2E;font-size:14.5px}
+.ybw-r:first-of-type{border-top:0}
+.ybw-r.done{opacity:.75}
+.ybw-tm{font-variant-numeric:tabular-nums;color:#A1A1AA;width:44px;flex:none}
+.ybw-c{flex:1;min-width:0;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ybw-c small{display:block;color:#A1A1AA;font-size:12px}
+.ybw-r b{color:#fff;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ybw-open{background:#1C2A44;color:#DCE6F8;border-radius:10px;padding:8px 10px;margin-bottom:8px;font-size:13px}
+body.ytv .ybw-t b{font-size:44px}
+body.ytv .ybw-r{font-size:17px}
+@media (max-width:1100px){.ybw-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}.ybw-g{grid-template-columns:1fr}}
+@media (max-width:560px){.ybw-tiles{grid-template-columns:1fr 1fr}.ybw-t b{font-size:26px}.ybw-stk{grid-template-columns:90px 36px minmax(0,1fr)}.ybw-in{display:none}}
+.ybw-g>*,.ybw-tiles>*{min-width:0}
+.ybw-stk>*{min-width:0}

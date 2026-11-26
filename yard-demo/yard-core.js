@@ -273,8 +273,8 @@
     /* loads other carriers tipped at our transfer station today: the Defra receipt is ours to report */
     Y.incoming = [
       { id: 'IN-771', time: 545, carrier: 'Ringway Skip Hire', reg: 'CBDU377415', veh: 'RM68 SKP', stream: 'mixed', net: 2.12, est: false },
-      { id: 'IN-772', time: 610, carrier: 'Westfield Roofing (own waste)', reg: '', veh: 'WR19 VAN', stream: 'wood', net: 0.86, est: false, why: 'No carrier registration number, and no reason given' },
-      { id: 'IN-773', time: 655, carrier: 'Colne Valley Skips', reg: 'CBDU418027', veh: 'SS70 HKL', stream: 'mixed', net: null, est: true, why: 'No weight: the weighbridge was down, so an estimate has to be entered' }
+      { id: 'IN-772', time: 610, carrier: 'Westmarsh Roofing (own waste)', reg: '', veh: 'WR19 VAN', stream: 'wood', net: 0.86, est: false, why: 'No carrier registration number, and no reason given' },
+      { id: 'IN-773', time: 655, carrier: 'Hollin Vale Skips', reg: 'CBDU418027', veh: 'SS70 HKL', stream: 'mixed', net: null, est: true, why: 'No weight: the weighbridge was down, so an estimate has to be entered' }
     ];
     /* the first RoRo of the day came back heavy: it waits on the weighbridge screen for one tap */
     var b0 = new Date(); b0.setHours(0, 0, 0, 0);

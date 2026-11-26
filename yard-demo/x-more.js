@@ -375,7 +375,7 @@
     function nsBody() {
       var SV = S().services, keys = Object.keys(SV);
       function f(id, label, ph, extra) { return '<div class="field"><label for="' + id + '">' + label + '</label><input id="' + id + '" placeholder="' + ph + '" autocomplete="off"' + (extra || '') + '></div>'; }
-      return '<div class="grid g2">' + f('nsName', 'Company name', 'For example Colne Valley Skips') + f('nsContact', 'Main contact', 'Who you book with') + '</div>' +
+      return '<div class="grid g2">' + f('nsName', 'Company name', 'For example Hollin Vale Skips') + f('nsContact', 'Main contact', 'Who you book with') + '</div>' +
         '<div class="field"><label>Main services</label><div class="chips" id="nsSvc">' + keys.map(function (k) { return '<button type="button" class="pk' + (NS.svc[k] ? ' on' : '') + '" data-act="nsSvc" data-v="' + k + '">' + h(SV[k].short) + '</button>'; }).join('') + '</div></div>' +
         '<div class="field"><label>Their price list</label><label class="drop xm-drop" for="nsFile">' + ic('download') + '<b>Drop their price list here</b><span>Excel, CSV, PDF, Word or a photo of it. Every price and postcode is read in for you to check.</span><input type="file" id="nsFile" accept=".xlsx,.xls,.csv,.pdf,.doc,.docx,.png,.jpg,.jpeg,.heic" hidden></label>' +
           '<div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap"><span class="muted" style="font-size:12.5px">No file to hand?</span><button type="button" class="btn sm" data-act="nsSample">' + ic('file-text') + 'Try the sample: their price list, photographed</button></div><div id="nsRead"></div></div>' +

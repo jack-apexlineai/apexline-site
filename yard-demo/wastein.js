@@ -29,7 +29,7 @@
       PY68TIP: { customer: 'Pyrford Plastering Ltd', biz: true, tare: 7820, driver: 'Carl', load: 'Tipper', waste: 'plaster', origin: 'Coldharbour Road job, Pyrford', lic: 'CBDU271144', email: 'accounts@pyrfordplastering.co.uk' },
       BL20LND: { customer: 'Byfleet Landscapes', biz: true, tare: 6950, driver: 'Mo', load: 'Tipper', waste: 'green', origin: 'Oyster Lane garden, Byfleet', lic: 'CBDU350912', email: 'office@byfleetlandscapes.co.uk' },
       RM68SKP: { customer: 'Ringway Skip Hire', biz: true, tare: 9840, driver: 'Gav', load: '8 yard skip', waste: 'mixed', origin: 'Customer skips, Guildford', lic: 'CBDU377415', email: 'accounts@ringwayskips.co.uk' },
-      WR19VAN: { customer: 'Westfield Roofing', biz: true, tare: 2310, driver: 'Steve', load: 'Van / loose', waste: 'wood', origin: 'Kingfield roof strip, Woking', lic: 'CBDU312987', email: '' },
+      WR19VAN: { customer: 'Westmarsh Roofing', biz: true, tare: 2310, driver: 'Steve', load: 'Van / loose', waste: 'wood', origin: 'Kingfield roof strip, Woking', lic: 'CBDU312987', email: '' },
       TL70BLD: { customer: 'R. Tolhurst Builders', biz: true, tare: 3420, driver: 'Rob', load: 'Van / loose', waste: 'mixed', origin: 'Elmcroft Avenue extension, Horsell', lic: 'CBDU300177', email: 'rob@tolhurstbuilders.co.uk' }
     };
     function own(reg) { var k = regKey(reg); return YC.LORRIES.filter(function (l) { return regKey(l.reg) === k; })[0] || null; }
@@ -284,6 +284,48 @@
       modal(ic('pencil') + ' Fix ' + h(o.no), '<p class="muted" style="margin:0 0 10px">' + h(o.customer) + ' tipped without a waste carrier number. Add it from their licence.</p><div class="field"><label for="wiFixReg">Carrier registration</label><input id="wiFixReg" placeholder="CBDU123456"></div>', '<button class="btn" data-act="close">Cancel</button><span class="sp"></span><button class="btn pri" data-act="wiFixGo" data-no="' + o.no + '">' + ic('check') + 'Save, it is ready</button>');
     };
     A.wiFixGo = function (el) { var o = W().list.filter(function (x) { return x.no === el.dataset.no; })[0], v = ((q('#wiFixReg') || {}).value || '').trim(); if (!o) return; if (!v) { toast('Add the carrier number', 'alert'); return; } o.lic = v.toUpperCase(); Y().v++; save(); A.close(); UI.render(); toast(h(o.no) + ' fixed and ready for Defra', 'circle-check'); };
+
+    /* ---------- the yard board, WasteLine's yard picture: what is in, what is going out, skip stock, lorries by reg ---------- */
+    var STOCK = [['4 yard', 4, 30, 18], ['6 yard', 6, 45, 31], ['8 yard', 8, 60, 47], ['12 yard', 12, 25, 17], ['16 yard', 16, 12, 9], ['20 yard RoRo', 20, 10, 6], ['40 yard RoRo', 40, 8, 5]];
+    function stock() {
+      var y = Y();
+      return STOCK.map(function (s) {
+        var out = s[3] + y.onsite.filter(function (o) { return o.size === s[1]; }).length - 2;
+        var deliv = YC.today(y).filter(function (j) { return j.type === 'deliver' && j.size === s[1] && j.status !== 'planned'; }).length, back = YC.today(y).filter(function (j) { return j.type === 'collect' && j.size === s[1] && j.status === 'done'; }).length;
+        out = Math.max(0, out + deliv - back); return { size: s[0], owned: s[2], out: Math.min(out, s[2]), yard: Math.max(0, s[2] - out) };
+      });
+    }
+    function wasteOut(y) {
+      if (!y.wasteout) y.wasteout = [
+        { no: 'WO-301', time: '09:40', reg: 'DS19 GRB', to: 'Wey Valley Soil Recovery, Send', waste: 'soil', t: 15.8, done: true },
+        { no: 'WO-302', time: '11:15', reg: 'DS70 RRO', to: 'Mole Valley Recycling, Leatherhead', waste: 'mixed', t: 7.2, done: true },
+        { no: 'WO-303', time: '13:30', reg: 'DS23 GRB', to: 'Wey Valley Soil Recovery, Send', waste: 'hardcore', t: 14.6, done: true },
+        { no: 'WO-304', time: '15:30', reg: 'DS70 RRO', to: 'Mole Valley Recycling, Leatherhead', waste: 'wood', t: 4.1, done: false },
+        { no: 'WO-305', time: '16:15', reg: 'DS19 GRB', to: 'Wey Valley Soil Recovery, Send', waste: 'soil', t: 15, done: false }
+      ];
+      return y.wasteout;
+    }
+    V.board = function () {
+      var y = Y(), w = W(), now = new Date(), tv = document.body.classList.contains('ytv'), t0 = YC.today(y), dn = t0.filter(function (j) { return j.status === 'done'; }).length;
+      var inT = w.list.filter(function (o) { return o.day === 0 && o.status !== 'Open'; }).sort(function (a, b) { return a.time < b.time ? 1 : -1; }), open = w.list.filter(function (o) { return o.status === 'Open'; });
+      var tin = inT.reduce(function (a, o) { return a + (o.net || 0); }, 0) / 1000, WO = wasteOut(y), wdone = WO.filter(function (o) { return o.done; }), tout = wdone.reduce(function (a, o) { return a + o.t; }, 0);
+      var over = y.onsite.filter(function (o) { return -o.since > o.hire && !o.booked; }).length, due = y.onsite.filter(function (o) { var d = -o.since; return d <= o.hire && o.hire - d <= 3 && !o.booked; }).length, ST = stock(), outAll = ST.reduce(function (a, s) { return a + s.out; }, 0);
+      var t1 = YC.workDays(1, 1, true)[0], tmr = y.jobs.filter(function (j) { return j.day === t1; }), tmrUn = tmr.filter(function (j) { return !j.lorry; }).length;
+      var C = 2 * Math.PI * 42, pct = t0.length ? dn / t0.length : 0;
+      function tile(v, l, s, cls) { return '<div class="ybw-t ' + (cls || '') + '"><b>' + v + '</b><span>' + l + '</span>' + (s ? '<small>' + s + '</small>' : '') + '</div>'; }
+      return '<div class="yboard ybw' + (tv ? ' tv' : '') + '" id="yBoard"><div class="yb-top"><div><b class="yb-clock">' + YC.hhmm(now.getHours() * 60 + now.getMinutes()) + '</b><small>' + h(YC.dayDate(0).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })) + ' · ' + h(YC.YARD.addr) + '</small></div><span class="sp"></span>' +
+        (tv ? '<button class="btn" data-act="yTVOff">' + ic('x') + 'Exit full screen</button>' : '<button class="btn pri" data-act="yTV">' + ic('dashboard') + 'Full screen for the TV</button>') + '</div>' +
+        (over || due ? '<button class="ybw-site' + (over ? ' red' : '') + '" data-act="go" data-v="skips"><b>' + (over ? over + ' skip' + (over > 1 ? 's have' : ' has') + ' been out longer than the 14-day hire period.' : due + ' skip' + (due > 1 ? 's are' : ' is') + ' nearly at the end of the hire period.') + '</b> ' + (over && due ? due + ' more coming up. ' : '') + '<span>View skips on site</span></button>' : '') +
+        '<div class="ybw-tiles">' + tile(dn + '<i>/' + t0.length + '</i>', 'Jobs today', (t0.length - dn) + ' still to do') + tile(inT.length, 'Loads in today', tin.toFixed(1) + ' t over the weighbridge') + tile(wdone.length, 'Loads out today', tout.toFixed(1) + ' t to the tip and recyclers') +
+        tile(outAll, 'Skips out on hire', over ? '<em>' + over + ' over the hire period</em>' : 'none over the hire period', over ? 'bad' : '') + tile(tmr.length, 'Jobs tomorrow', tmrUn ? tmrUn + ' not planned yet' : 'all planned', tmrUn ? 'warn' : '') + '</div>' +
+        '<div class="ybw-g"><section class="yb-p ybw-stock"><h3>' + ic('skip') + 'Skip stock in the yard</h3>' + ST.map(function (s) { var low = s.yard <= Math.max(1, Math.round(s.owned * 0.1)), p = s.owned ? Math.round(s.out / s.owned * 100) : 0; return '<div class="ybw-stk' + (low ? ' low' : '') + '"><span class="ybw-sz">' + h(s.size) + '</span><b>' + s.yard + '</b><span class="ybw-in">in the yard</span><span class="ybw-bar"><i style="width:' + p + '%"></i></span><small>' + s.out + ' out on hire · ' + s.owned + ' owned</small></div>'; }).join('') + '</section>' +
+        '<section class="yb-p ybw-wi"><h3>' + ic('stack') + 'Waste in: on the weighbridge today</h3>' + (open.length ? '<div class="ybw-open">' + open.map(function (o) { return '<span class="yplate sm">' + h(o.reg) + '</span> ' + h(o.customer) + ' weighed full, waiting to weigh out'; }).join('<br>') + '</div>' : '') +
+          inT.slice(0, 6).map(function (o) { return '<div class="ybw-r"><span class="ybw-tm">' + h(o.time) + '</span><span class="yplate sm">' + h(o.reg) + '</span><span class="ybw-c">' + h(o.customer) + '<small>' + h((YC.STREAMS[o.waste] || {}).n || '') + '</small></span><b>' + ((o.net || 0) / 1000).toFixed(2) + ' t</b></div>'; }).join('') + '</section>' +
+        '<section class="yb-p ybw-lor"><h3>' + ic('truck') + 'Lorries</h3>' + YC.LORRIES.map(function (l) { var wq = YC.where(y, l.id), L = YC.forLorry(y, l.id, 0), d = L.filter(function (j) { return j.status === 'done'; }).length, cur = wq.job; var now1 = wq.state === 'onway' ? 'En route to ' + cur.site.name.split(',').pop().trim() + ', ' + YC.etaMins(y, cur) + ' min' : wq.state === 'onsite' ? 'On site at ' + cur.site.name.split(',').pop().trim() : wq.state === 'returning' ? 'Heading back to the yard' : 'In the yard'; return '<div class="ybw-r"><span class="yplate sm">' + h(l.reg) + '</span><span class="ybw-c">' + h(l.driver) + '<small>' + h(now1) + '</small></span><b>' + d + '/' + L.length + '</b></div>'; }).join('') + '</section>' +
+        '<section class="yb-p ybw-out"><h3>' + ic('route') + 'Waste out: going out today</h3>' + WO.map(function (o) { return '<div class="ybw-r' + (o.done ? ' done' : '') + '"><span class="ybw-tm">' + h(o.time) + '</span><span class="yplate sm">' + h(o.reg) + '</span><span class="ybw-c">' + h(o.to) + '<small>' + h(YC.STREAMS[o.waste].n) + ', WTN ' + h(o.no) + '</small></span><b>' + (o.done ? o.t.toFixed(1) + ' t' : 'Booked') + '</b></div>'; }).join('') + '</section></div>' +
+        '<small class="ybd-foot">Updates by itself: the weighbridge, the drivers and the trackers feed it.</small></div>';
+    };
+
     window.DSGWASTEIN = { seed: seed, regs: REGS, rate: RATE };
     if (location.hash === '#wastein') ui.view = 'wastein';
     UI.render();

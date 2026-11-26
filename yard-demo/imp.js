@@ -83,10 +83,10 @@
       label: 'Customers', one: 'customer', many: 'customers', file: 'customers', canUpdate: true, show: 4,
       what: 'One row for each customer, with the person you deal with there.',
       fields: [
-        { key: 'name', label: 'Business name', req: true, eg: 'Harbourside Builders Ltd', syn: ['name', 'business', 'customer', 'company', 'account', 'account name', 'customer name'] },
+        { key: 'name', label: 'Business name', req: true, eg: 'Harbourlea Builders Ltd', syn: ['name', 'business', 'customer', 'company', 'account', 'account name', 'customer name'] },
         { key: 'contact', label: 'Contact name', eg: 'Craig Barrett', syn: ['contact', 'person', 'buyer', 'site manager'] },
         { key: 'phone', label: 'Phone', eg: '07700 900288', syn: ['phone', 'tel', 'telephone', 'mobile'] },
-        { key: 'email', label: 'Email', eg: 'craig@harboursidebuilders.example', syn: ['email', 'e-mail', 'email address'] },
+        { key: 'email', label: 'Email', eg: 'craig@harbourleabuilders.example', syn: ['email', 'e-mail', 'email address'] },
         { key: 'type', label: 'Type of customer', eg: 'Builder', syn: ['type', 'trade', 'sector', 'customer type'] },
         { key: 'terms', label: 'Payment terms', eg: '30 day account', hint: '30 day account, 14 day account or Card on order', syn: ['terms', 'payment terms', 'payment'] },
         { key: 'limit', label: 'Credit limit', eg: '3000', syn: ['credit limit', 'limit', 'credit'] }
@@ -121,7 +121,7 @@
       sample: function () {
         var known = (S().customers[0] || {}).name || 'Dunmore Groundworks';
         return [['Customer', 'Contact', 'Telephone', 'Email', 'Trade', 'Terms', 'Credit limit'],
-          ['Harbourside Builders Ltd', 'Craig Barrett', '07700 900288', 'craig@harboursidebuilders.example', 'Builder', '30 day account', '3000'],
+          ['Harbourlea Builders Ltd', 'Craig Barrett', '07700 900288', 'craig@harbourleabuilders.example', 'Builder', '30 day account', '3000'],
           ['Fieldgate Roofing', 'Maya Petrov', '07700 900299', 'maya at fieldgateroofing', 'Roofing', 'Card on order', ''],
           ['', 'No name', '', '', '', '', ''],
           [known, 'New contact', '07700 900277', '', '', '', ''],
@@ -134,7 +134,7 @@
       label: 'Sites', one: 'site', many: 'sites', file: 'sites', show: 4,
       what: 'One row for each site you deliver to, against the customer it belongs to.',
       fields: [
-        { key: 'cust', label: 'Customer', req: true, eg: 'Harbourside Builders Ltd', syn: ['customer', 'business name', 'company', 'account', 'customer name'] },
+        { key: 'cust', label: 'Customer', req: true, eg: 'Harbourlea Builders Ltd', syn: ['customer', 'business name', 'company', 'account', 'customer name'] },
         { key: 'name', label: 'Site name', req: true, eg: 'Plot 12, Mill Lane', syn: ['site', 'site name', 'address', 'site address', 'job', 'location'] },
         { key: 'pc', label: 'Postcode', req: true, eg: 'GU21 2HQ', syn: ['postcode', 'post code', 'pc', 'zip'] },
         { key: 'contact', label: 'Site contact', eg: 'Dale on site', syn: ['site contact', 'contact', 'site manager', 'foreman'] },
@@ -222,7 +222,7 @@
         return n ? 'Their prices come in next: open each one in the handbook and upload their price sheet.' : '';
       },
       sample: function () {
-        var known = (S().suppliers[0] || {}).name || 'Colne Valley Skips';
+        var known = (S().suppliers[0] || {}).name || 'Hollin Vale Skips';
         return [['Supplier', 'Contact', 'Telephone', 'Town', 'What they do', 'Covers', 'Standard hire', 'Accounts name', 'Accounts email', 'Waste carrier licence'],
           ['Northgate Skips', 'Becky', '07700 900401', 'Guildford', 'Skip hire', 'GU1, GU2, GU4', '28', 'Kelly', 'accounts@northgateskips.example', 'CBDU204418'],
           ['Westway Grab and Tipper', 'Liam', '07700 900412', 'Camberley', 'Grab hire, muck away', 'GU15, GU16, GU17', '', '', '', ''],

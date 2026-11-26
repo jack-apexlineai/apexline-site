@@ -79,7 +79,7 @@
       if (j.wtn === 'received') j.log.push({ at: now - 86400000 * Math.max(0.2, -j.day), t: 'WTN received and filed' });
     });
     s.feed = [
-      { at: now - 26 * 60000, t: 'Read Colne Valley\'s email and matched the WTN to DSG-1043', ic: 'sparkles' },
+      { at: now - 26 * 60000, t: 'Read Hollin Vale\'s email and matched the WTN to DSG-1043', ic: 'sparkles' },
       { at: now - 85 * 60000, t: 'Westreach confirmed the grab for Dunmore at West Byfleet, 8am', ic: 'circle-check' },
       { at: now - 120 * 60000, t: 'Auto chase sent to Quayline Skips for DSG-1047', ic: 'bell' },
       { at: now - 200 * 60000, t: CS.bde() + ' sent Q-2230 to Kilner Builders, won 40 min later', ic: 'trending-up' }
