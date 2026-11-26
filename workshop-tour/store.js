@@ -382,7 +382,7 @@ WS.ensureUsers = function (s) {
   if (!s.users) {
     changed = true;
     s.users = [
-      { id: 'u1', first: WS.ownerFirst || 'Alex', last: WS.ownerFirst ? (WS.ownerLast || '') : 'Morgan', username: 'owner', role: 'Director', title: 'Owner', owner: true, signIn: 'pin', pin: '1234', status: 'active', perms: WS.rolePerms('Director'), addedBy: '', addedAt: seedAt },
+      { id: 'u1', first: WS.ownerFirst || 'Danny', last: WS.ownerFirst ? (WS.ownerLast || '') : '', username: 'owner', role: 'Director', title: 'Owner', owner: true, signIn: 'pin', pin: '1234', status: 'active', perms: WS.rolePerms('Director'), addedBy: '', addedAt: seedAt },
       { id: 'u2', first: 'Office', last: 'Admin', username: 'office', role: 'Office', title: 'Office and accounts', shared: true, signIn: 'pin', pin: '1234', status: 'active',
         perms: (function () { var p = WS.rolePerms('Office'); p.money = p.xero = p.pay = true; return p; })(), addedBy: 'owner', addedAt: seedAt }
     ];
