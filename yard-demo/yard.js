@@ -63,7 +63,7 @@
       home: ['Today', 'Home', 'home'], inbox: ['Today', 'Inbox', 'inbox'], board: ['Today', 'Yard board', 'dashboard'],
       bookings: ['Jobs', 'Bookings', 'calendar'], plan: ['Jobs', 'Day plan', 'route'], skips: ['Jobs', 'Skips on site', 'skip'], tracking: ['Jobs', 'Live tracking', 'map-pin'], quotes: ['Jobs', 'Quotes', 'file-text'],
       customers: ['Customers', 'Customers', 'users'], portal: ['Customers', 'Customer portal', 'world'],
-      credit: ['Money', 'Credit control', 'lock'], money: ['Money', 'Money', 'pound'], trends: ['Money', 'Trends', 'trending-up'], scoreboard: ['Money', 'Scoreboard', 'target'],
+      credit: ['Money', 'Credit control', 'lock'], money: ['Money', 'Money', 'pound'], trends: ['Money', 'Trends', 'trending-up'], prices: ['Money', 'Price list', 'list'], scoreboard: ['Money', 'Scoreboard', 'target'],
       driver: ['Yard', 'Driver app', 'mobile'], tickets: ['Yard', 'Tickets and WTNs', 'receipt'], defra: ['Yard', 'Defra tracking', 'shield-check'], recycling: ['Yard', 'Recycling report', 'leaf'],
       chasing: ['More', 'Chasing', 'bell'], orders: ['More', 'Order diary', 'calendar'], history: ['More'], today: ['More', 'Day summary', 'dashboard'], jobs: ['More', 'Partner jobs', 'truck'], sales: ['More', 'Sales', 'target'],
       team: ['More', 'Team', 'users'], suppliers: ['More', 'Supplier handbook', 'warehouse'], compliance: ['More'], find: ['More', 'Find a supplier', 'map-pin'], bills: ['More', 'Bill check', 'receipt'], paperwork: ['More', 'Duty of care', 'certificate'], reports: ['More', 'Waste and carbon', 'leaf']
@@ -78,6 +78,7 @@
       { k: 'tickets', sub: 'Tip tickets matched to jobs, and waste transfer notes made by themselves' },
       { k: 'defra', sub: 'Every movement prepared for Defra\'s digital waste tracking' },
       { k: 'recycling', sub: 'Tonnes, recycling rate and carbon, for the company and for each customer' },
+      { k: 'prices', sub: 'Skips, RoRos with the tonnage included, grabs and muckaway. New bookings price from here' },
       { k: 'scoreboard', sub: 'Who is top this week, in the office and on the road, with commission worked out' },
       { k: 'problems', hide: true, n: 'Reported problems', ic: 'alert', sub: 'Everything reported through the assistant, and where it is up to' }
     ];
@@ -272,6 +273,7 @@
       if (od.length) r.push(['skip', plural(od.length, 'skip') + ' over the hire period', 'Exchange or collect in one tap', 'skips', 'amber']);
       var un = YC.today(y).filter(function (j) { return !j.lorry; }).length; if (un) r.push(['route', plural(un, 'job') + ' without a lorry today', 'Drag them onto the day plan', 'plan', 'amber']);
       var err = YC.defraRows(s, y).filter(function (x) { return x.status === 'error'; }).length; if (err) r.push(['shield-check', plural(err, 'Defra record') + ' to fix', 'Missing a weight or a carrier number', 'defra', 'amber']);
+      var ovr = overTickets(); if (ovr.length) r.unshift(['stack', plural(ovr.length, 'RoRo') + ' over its tonnage', 'Invoice for the extra weight is ready to send', 'tickets', 'amber']);
       var unm = y.tickets.filter(function (t) { return !t.matched; }).length; if (unm) r.push(['receipt', plural(unm, 'tip ticket') + ' to match', 'Read from a photo, no job found', 'tickets', '']);
       return '<div class="yh-rows">' + r.slice(0, 5).map(function (x) { return '<button class="yh-nd" data-act="go" data-v="' + x[3] + '"><span class="yh-ni ' + x[4] + '">' + ic(x[0]) + '</span><span class="bd"><b>' + x[1] + '</b><small>' + x[2] + '</small></span>' + ic('chevron-right') + '</button>'; }).join('') + (r.length ? '' : '<p class="muted">Nothing needs you right now.</p>') + '</div>';
     }
@@ -303,9 +305,10 @@
       YC.LORRIES.forEach(function (l) { if (!lorryFits(l, j)) return; var n = YC.forLorry(y, l.id, day).length; if (n < bn) { bn = n; best = l; } });
       return best;
     }
-    function bk() { if (!ui.yb) ui.yb = { cust: 'c1', site: 0, svc: 'skip', type: 'deliver', size: 8, loads: 1, stream: 'mixed', place: 'drive', day: 'tomorrow', win: 1, lorry: 'auto', notes: '', sure: false }; return ui.yb; }
+    function bk() { if (!ui.yb) ui.yb = { cust: 'c1', site: 0, svc: 'skip', type: 'deliver', size: 8, rsize: 35, loads: 1, price: null, stream: 'mixed', place: 'drive', day: 'tomorrow', win: 1, lorry: 'auto', notes: '', sure: false }; return ui.yb; }
     function bkDayOff(b) { return b.day === 'today' ? 0 : b.day === 'tomorrow' ? CS.wd(1) : Math.max(0, Math.round((new Date(b.date) - CS.dayDate(0)) / 86400000)) || CS.wd(1); }
-    function bkJob(b) { return { type: b.svc === 'skip' ? b.type : b.svc, size: b.svc === 'skip' ? b.size : null, loads: b.svc === 'skip' ? null : b.loads }; }
+    function bkSkipish(b) { return b.svc === 'skip' || b.svc === 'roro'; }
+    function bkJob(b) { return { type: bkSkipish(b) ? b.type : b.svc, size: b.svc === 'skip' ? b.size : b.svc === 'roro' ? b.rsize : null, loads: bkSkipish(b) ? null : b.loads }; }
     function creditBox(cid) {
       if (!cid || cid === 'new') return '<div class="ycr ok">' + ic('pound') + '<span><b>New customer.</b> Card on order until an account is opened.</span></div>';
       var c = CS.cust(cid), a = agedC(cid), cr = CS.credit(cid, 0) || {};
@@ -326,12 +329,15 @@
         (c ? '<div class="field"><label for="ybSite">Site</label><select id="ybSite" data-yb="site">' + c.sites.map(function (x, i) { return '<option value="' + i + '"' + (i === +b.site ? ' selected' : '') + '>' + h(x.name + ', ' + x.pc) + '</option>'; }).join('') + '</select></div>'
           : '<div class="ybk2"><div class="field"><label for="ybName">Name</label><input id="ybName" data-ybt="nname" value="' + h(b.nname || '') + '" placeholder="Mrs Jane Smith"></div><div class="field"><label for="ybPhone">Mobile</label><input id="ybPhone" data-ybt="nphone" value="' + h(b.nphone || '') + '" placeholder="07700 900000"></div></div>' +
             '<div class="ybk2"><div class="field"><label for="ybAddr">Address</label><input id="ybAddr" data-ybt="naddr" value="' + h(b.naddr || '') + '" placeholder="12 Church Lane, Greenford"></div><div class="field"><label for="ybPc">Postcode</label><input id="ybPc" data-ybt="npc" value="' + h(b.npc || '') + '" placeholder="UB6 9AQ"></div></div>') +
-        '<div class="field"><label>What</label>' + seg('svc', b.svc, [['skip', 'Skip hire'], ['grab', 'Grab hire'], ['muck', 'Muckaway']]) + '</div>' +
-        (b.svc === 'skip' ? '<div class="field"><label>Job</label>' + seg('type', b.type, [['deliver', 'Deliver'], ['exchange', 'Exchange'], ['collect', 'Collect']]) + '</div>' +
-          '<div class="field"><label>Skip size</label><div class="ysizes">' + YC.SIZES.map(function (z) { return '<button type="button" data-act="yBkSet" data-k="size" data-v="' + z + '" class="' + (+b.size === z ? 'on' : '') + '">' + z + (z >= 20 ? '<small>RoRo</small>' : '<small>yard</small>') + '</button>'; }).join('') + '</div></div>'
+        '<div class="field"><label>What</label>' + seg('svc', b.svc, [['skip', 'Skip hire'], ['roro', 'RoRo'], ['grab', 'Grab hire'], ['muck', 'Muckaway']]) + '</div>' +
+        (bkSkipish(b) ? '<div class="field"><label>Job</label>' + seg('type', b.type, [['deliver', 'Deliver'], ['exchange', 'Exchange'], ['collect', 'Collect']]) + '</div>' +
+          (b.svc === 'skip' ? '<div class="field"><label>Skip size</label><div class="ysizes">' + YC.SIZES.map(function (z) { return '<button type="button" data-act="yBkSet" data-k="size" data-v="' + z + '" class="' + (+b.size === z ? 'on' : '') + '">' + z + '<small>yard</small></button>'; }).join('') + '</div></div>'
+            : '<div class="field"><label>RoRo size</label><div class="ysizes four">' + YC.RORO_SIZES.map(function (z) { var r = YC.prices(Y()).roro[z]; return '<button type="button" data-act="yBkSet" data-k="rsize" data-v="' + z + '" class="' + (+b.rsize === z ? 'on' : '') + '">' + z + '<small>yard, ' + r.incl + ' t incl</small></button>'; }).join('') + '</div>' +
+              '<div class="ycr ok" id="yRoroIncl">' + ic('stack') + '<span><b>Includes ' + YC.prices(Y()).roro[b.rsize].incl + ' tonnes.</b> Anything over is ' + money(YC.prices(Y()).overRate) + ' a tonne, invoiced from the weighbridge ticket when it comes back.</span></div></div>')
           : '<div class="field"><label>Loads</label><div class="ystep"><button type="button" data-act="yBkSet" data-k="loads" data-v="' + Math.max(1, b.loads - 1) + '" aria-label="One less load">-</button><b>' + b.loads + '</b><button type="button" data-act="yBkSet" data-k="loads" data-v="' + Math.min(8, b.loads + 1) + '" aria-label="One more load">+</button><span class="muted">8-wheeler, about ' + (b.loads * YC.LOAD_T) + ' tonnes</span></div></div>') +
         '<div class="field"><label for="ybStream">Waste</label><select id="ybStream" data-yb="stream">' + Object.keys(YC.STREAMS).map(function (k) { return '<option value="' + k + '"' + (k === b.stream ? ' selected' : '') + '>' + h(YC.STREAMS[k].n) + '</option>'; }).join('') + '</select><small class="yewc-line">' + ic('certificate') + 'EWC code <b>' + st.ewc + '</b> goes on the job, the waste transfer note and the Defra record</small></div>' +
-        (b.svc === 'skip' && b.type === 'deliver' ? '<div class="field"><label>Where it goes</label>' + seg('place', b.place, [['drive', 'On the drive or site'], ['road', 'On the road']]) + '</div>' +
+        '<div class="field"><label for="ybPrice">Price</label><div class="yprice"><span>£</span><input id="ybPrice" data-ybt="price" inputmode="decimal" value="' + h(b.price != null ? b.price : YC.priceFor(Y(), J0)) + '"><span class="muted">+ VAT, from your price list</span></div></div>' +
+        (bkSkipish(b) && b.type === 'deliver' ? '<div class="field"><label>Where it goes</label>' + seg('place', b.place, [['drive', 'On the drive or site'], ['road', 'On the road']]) + '</div>' +
           (perm ? '<div class="ycr amber" id="yPermit">' + ic('certificate') + '<span><b>Road permit needed</b> from ' + h(perm.council) + '. It goes on the permit list with its dates, the lights and cones go on the driver\'s job, and you are reminded before it runs out.</span></div>' : '') : '') +
         '<div class="ybk2"><div class="field"><label>Day</label>' + seg('day', b.day, [['today', 'Today'], ['tomorrow', dayName(CS.wd(1))], ['pick', 'Pick a day']]) + (b.day === 'pick' ? '<input type="date" id="ybDate" data-yb="date" value="' + h(b.date || '') + '" style="margin-top:6px">' : '') + '</div>' +
         '<div class="field"><label for="ybWin">Time</label><select id="ybWin" data-yb="win">' + WINS.map(function (w, i) { return '<option value="' + i + '"' + (i === +b.win ? ' selected' : '') + '>' + YC.hhmm(w[0]) + ' to ' + YC.hhmm(w[1]) + '</option>'; }).join('') + '</select></div></div>' +
@@ -353,8 +359,9 @@
       modal(ic('plus') + ' New booking', bookHTML(), bookFoot(), 'ybkm');
     };
     A.yBkSet = function (el) {
-      var b = bk(), k = el.dataset.k, v = el.dataset.v; b[k] = /^(size|loads|win)$/.test(k) ? +v : v; b.sure = false;
-      if (k === 'svc') { if (v === 'skip') { b.stream = 'mixed'; } else { b.stream = 'soil'; b.place = 'drive'; } }
+      var b = bk(), k = el.dataset.k, v = el.dataset.v; b[k] = /^(size|rsize|loads|win)$/.test(k) ? +v : v; b.sure = false;
+      if (k === 'svc') { if (v === 'skip' || v === 'roro') { b.stream = 'mixed'; } else { b.stream = 'soil'; b.place = 'drive'; } }
+      if (/^(svc|size|rsize|loads)$/.test(k)) b.price = null;
       if (k === 'type' && v !== 'deliver') b.place = 'drive';
       if (k === 'day' && v === 'pick' && !b.date) { var d = CS.dayDate(CS.wd(2)); b.date = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
       bookDraw();
@@ -377,7 +384,7 @@
       else site = { name: (c.sites[b.site] || c.sites[0]).name, pc: (c.sites[b.site] || c.sites[0]).pc };
       var p = YC.pos(site.pc), id = 'DSG-' + (y.counters.job++);
       var j = { id: id, day: off, lorry: lo ? lo.id : null, win: WINS[b.win].slice(), type: J0.type, cust: c ? c.id : 'new:' + id, cname: c ? null : String(b.nname).trim(), site: site, lat: p.lat, lng: p.lng,
-        size: J0.size, loads: J0.loads, stream: b.stream, place: b.place, permit: b.place === 'road' && J0.type === 'deliver' ? YC.permitFor(site.pc, id, off, off + 14) : null, status: 'planned', at: {}, photos: [], sig: null, ticket: null, wtn: null, eta: null, notes: b.notes || '', log: [{ at: Date.now(), t: 'Booked by ' + uName(meU()).split(' ')[0] + (c && c.stop ? ', while on stop' : '') }], isNew: true };
+        size: J0.size, loads: J0.loads, price: parseFloat(String(b.price == null ? '' : b.price).replace(/[^\d.]/g, '')) || YC.priceFor(y, J0), incl: YC.inclFor(y, J0), stream: b.stream, place: b.place, permit: b.place === 'road' && J0.type === 'deliver' ? YC.permitFor(site.pc, id, off, off + 14) : null, status: 'planned', at: {}, photos: [], sig: null, ticket: null, wtn: null, eta: null, notes: b.notes || '', log: [{ at: Date.now(), t: 'Booked by ' + uName(meU()).split(' ')[0] + (c && c.stop ? ', while on stop' : '') }], isNew: true };
       y.jobs.push(j); y.v++;
       var nm = c ? c.first || c.contact : String(b.nname).trim().split(' ').slice(-1)[0];
       y.texts.unshift({ at: Date.now(), job: id, to: c ? c.name : j.cname, text: 'Booked: ' + YC.what(j).toLowerCase() + ' at ' + site.name + ', ' + dayName(off).toLowerCase() + ' ' + YC.hhmm(j.win[0]) + ' to ' + YC.hhmm(j.win[1]) + '. We will text when the lorry is on its way.' });
@@ -422,6 +429,8 @@
         '<dt>Lorry</dt><dd>' + (lo ? h(lo.n + ', ' + lo.reg + ', ' + lo.driver) : 'Not given a lorry yet') + '</dd><dt>Waste</dt><dd>' + h(st.n) + '</dd><dt>EWC code</dt><dd>' + st.ewc + '</dd>' +
         (j.permit ? '<dt>Road permit</dt><dd>' + h(j.permit.council) + ', ref ' + h(j.permit.ref) + ', until ' + h(dayName(j.permit.to)) + '</dd>' : '') +
         (t ? '<dt>Tip ticket</dt><dd>' + h(t.id) + ', ' + t.net.toFixed(2) + ' t net at ' + h(YC.TIPS[t.site].n) + '</dd>' : '') +
+        (j.price ? '<dt>Price</dt><dd>' + money(j.price) + ' + VAT</dd>' : '') + (j.incl != null && YC.isRoro(j) ? '<dt>Tonnage included</dt><dd>' + j.incl + ' t, then ' + money(YC.prices(Y()).overRate) + ' a tonne</dd>' : '') +
+        (t && t.over ? '<dt>Extra weight</dt><dd>' + t.over.over.toFixed(2) + ' t over, ' + money(t.over.amount, true) + ' + VAT, ' + (t.over.status === 'sent' ? 'invoiced on ' + h(t.over.inv) : 'waiting on the weighbridge screen') + '</dd>' : '') +
         (j.notes ? '<dt>Driver note</dt><dd>' + h(j.notes) + '</dd>' : '') + '</dl>' +
         (j.eta && j.eta.text ? '<div class="ytext">' + ic('message') + '<span><b>Text to the customer, ' + CS.clock(j.eta.at) + '</b>' + h(j.eta.text) + '</span></div>' : '') +
         (j.photos.length || j.sig ? '<div class="yproof">' + j.photos.map(function (p) { return '<figure><img src="' + h(p.src || YC.samplePhoto(p.k, j.size)) + '" alt="Photo on ' + (p.k === 'drop' ? 'drop' : 'collection') + '"><figcaption>' + (p.k === 'drop' ? 'On drop' : 'On collection') + ', ' + CS.clock(p.at) + '</figcaption></figure>'; }).join('') +
@@ -517,7 +526,7 @@
     A.ySkip = function (el) {
       var y = Y(), o = y.onsite.filter(function (x) { return x.id === el.dataset.id; })[0]; if (!o || o.booked) return;
       var k = el.dataset.k, day = CS.wd(1), J0 = { type: k, size: o.size }, lo = suggest(J0, day), last = YC.forLorry(y, lo.id, day).pop(), w0 = last ? Math.min(960, last.win[1]) : 450;
-      var id = 'DSG-' + (y.counters.job++), j = { id: id, day: day, lorry: lo.id, win: [w0, w0 + 60], type: k, cust: o.cust, site: o.site, lat: o.lat, lng: o.lng, size: o.size, loads: null, stream: o.stream, place: o.place, permit: o.permit || null, status: 'planned', at: {}, photos: [], sig: null, ticket: null, wtn: null, eta: null, notes: 'Skip ' + o.id, log: [{ at: Date.now(), t: (k === 'exchange' ? 'Exchange' : 'Collection') + ' booked from skips on site' }], isNew: true };
+      var id = 'DSG-' + (y.counters.job++), j = { id: id, day: day, lorry: lo.id, win: [w0, w0 + 60], type: k, cust: o.cust, site: o.site, lat: o.lat, lng: o.lng, size: o.size, loads: null, price: YC.priceFor(y, { type: k, size: o.size }), incl: YC.inclFor(y, { type: k, size: o.size }), stream: o.stream, place: o.place, permit: o.permit || null, status: 'planned', at: {}, photos: [], sig: null, ticket: null, wtn: null, eta: null, notes: 'Skip ' + o.id, log: [{ at: Date.now(), t: (k === 'exchange' ? 'Exchange' : 'Collection') + ' booked from skips on site' }], isNew: true };
       y.jobs.push(j); o.booked = (k === 'exchange' ? 'Exchange ' : 'Collection ') + dayName(day).toLowerCase(); y.v++;
       y.texts.unshift({ at: Date.now(), job: id, to: YC.custName(S(), o.cust), text: 'Your ' + o.size + ' yard skip is booked for ' + (k === 'exchange' ? 'an exchange' : 'collection') + ' ' + dayName(day).toLowerCase() + ', ' + YC.hhmm(j.win[0]) + ' to ' + YC.hhmm(j.win[1]) + '.' });
       save(); UI.render();
@@ -905,6 +914,7 @@
         if (/recycl|landfill|diversion|carbon/.test(lo)) { var cu = REC.months[REC.months.length - 1]; return '<p>' + cu.rec + '% recycled or recovered this month so far, from ' + cu.t.toLocaleString('en-GB') + ' tonnes. Sample figures.</p>' + btn('recycling', 'Open the recycling report'); }
         if (/permit/.test(lo)) { var ps = y.onsite.filter(function (o) { return o.permit; }); return '<p>' + plural(ps.length, 'skip is', 'skips are') + ' on the road with a council permit.</p>' + rows(ps.slice(0, 5).map(function (o) { return [o.id + ', ' + o.site.name, o.permit.council, 'until ' + dayName(o.permit.to)]; })) + btn('skips', 'See skips on site'); }
         if (/(how many|jobs?).*(today|on)|today.*jobs/.test(lo)) { var t0 = YC.today(y), d = t0.filter(function (j) { return j.status === 'done'; }).length; return '<p>' + t0.length + ' jobs today, ' + d + ' done and ' + (t0.length - d) + ' to go.</p>' + btn('plan', 'Open the day plan'); }
+        if (/roro|extra weight|overweight|over weight|tonnage/.test(lo)) { var ot = overTickets(); return '<p>' + (ot.length ? plural(ot.length, 'RoRo is', 'RoRos are') + ' over the tonnage included, with the invoice ready to send.' : 'No RoRo is over its tonnage right now.') + '</p>' + rows(ot.slice(0, 4).map(function (t) { return [t.job + ', ' + YC.custName(s, t.cust), t.net.toFixed(2) + ' t, ' + t.over.over.toFixed(2) + ' t over', money(t.over.amount, true) + ' + VAT']; })) + btn('tickets', 'Open the weighbridge'); }
         if (/ticket|weighbridge|wtn|transfer note/.test(lo)) { var um = y.tickets.filter(function (t) { return !t.matched; }).length; return '<p>' + plural(y.tickets.filter(function (t) { return t.day === 0; }).length, 'ticket') + ' today, ' + um + ' waiting to be matched. Every finished collection already has its transfer note.</p>' + btn('tickets', 'Open tickets and WTNs'); }
         return null;
       }
@@ -934,6 +944,106 @@
       if (ui.view === 'board') { var c = q('.yb-clock'); if (c) { var n = new Date(); c.textContent = YC.hhmm(n.getHours() * 60 + n.getMinutes()); } }
     }, 1000);
 
+
+    /* ======================================================================
+       PRICE LIST: skips, RoRos with tonnage included and the over rate, grabs, muckaway
+       ====================================================================== */
+    V.prices = function () {
+      var P = YC.prices(Y());
+      function inp(k, v, lbl, w) { return '<label class="ypl-in"><span>£</span><input class="yplin" data-k="' + k + '" inputmode="decimal" value="' + v + '" aria-label="' + h(lbl) + '"' + (w ? ' style="width:' + w + 'px"' : '') + '></label>'; }
+      return '<div class="ypl">' +
+        '<section class="card"><div class="yh-rh"><h3>' + ic('skip') + 'Skips</h3><small class="muted">' + P.hireDays + ' days hire included</small></div><div class="ypl-grid">' +
+        YC.SIZES.map(function (z) { return '<div class="ypl-c"><b>' + z + ' yard</b>' + inp('skip.' + z, P.skip[z], z + ' yard skip price') + '</div>'; }).join('') + '</div></section>' +
+        '<section class="card" id="yRoroList"><div class="yh-rh"><h3>' + ic('truck') + 'RoRos</h3><small class="muted">Price, and the tonnage it includes</small></div>' +
+        '<div class="tw"><table class="t ytab"><thead><tr><th>Size</th><th>Tonnage included</th><th>Price</th></tr></thead><tbody>' +
+        YC.RORO_SIZES.map(function (z) { var r = P.roro[z]; return '<tr><td><b>' + z + ' yard RoRo</b></td><td><label class="ypl-in"><input class="yplin" data-k="roro.' + z + '.incl" inputmode="decimal" value="' + r.incl + '" aria-label="' + z + ' yard tonnes included" style="width:56px"><span>t included</span></label></td><td>' + inp('roro.' + z + '.price', r.price, z + ' yard RoRo price') + '</td></tr>'; }).join('') +
+        '</tbody></table></div><div class="ypl-over"><span><b>Over the allowance</b><small>Charged per tonne from the weighbridge ticket, and invoiced in one tap</small></span>' + inp('overRate', P.overRate, 'Over rate per tonne', 70) + '<span class="muted">a tonne</span></div></section>' +
+        '<section class="card"><div class="yh-rh"><h3>' + ic('backhoe') + 'Grab and muckaway</h3><small class="muted">8-wheeler, about ' + YC.LOAD_T + ' tonnes a load</small></div><div class="ypl-grid two"><div class="ypl-c"><b>Grab, per load</b>' + inp('grab', P.grab, 'Grab price per load') + '</div><div class="ypl-c"><b>Muckaway, per load</b>' + inp('muck', P.muck, 'Muckaway price per load') + '</div></div></section>' +
+        '</div><p class="muted yfoot">All prices are ex VAT and sample figures. Change one and every new booking uses it straight away. Jobs already booked keep their price.</p>';
+    };
+    document.addEventListener('change', function (e) {
+      var el = e.target; if (!el.classList || !el.classList.contains('yplin')) return;
+      var v = parseFloat(String(el.value).replace(/[^\d.]/g, '')); if (!(v >= 0)) { UI.render(); return; }
+      var P = YC.prices(Y()), path = el.dataset.k.split('.'), o = P; for (var i = 0; i < path.length - 1; i++) o = o[path[i]];
+      o[path[path.length - 1]] = v; save(); toast('Price list saved. New bookings use it straight away', 'pound');
+    });
+
+    /* ======================================================================
+       WEIGHBRIDGE: a RoRo weighs in, the plate is read, matched to its job, extra weight invoiced in one tap
+       ====================================================================== */
+    function overTickets() { return Y().tickets.filter(function (t) { return t.over && t.over.status === 'pending'; }).sort(function (a, b) { return (b.onBridge || 0) - (a.onBridge || 0); }); }
+    function plate(reg) { return '<span class="yplate">' + h(reg) + '</span>'; }
+    function overMsg(t, j) {
+      var c = CS.cust(j.cust), first = c ? (c.first || String(c.contact).split(' ')[0]) : YC.custFirst(S(), j.cust);
+      if (t.over && t.over.msg != null) return t.over.msg;
+      return 'Hi ' + first + ', the ' + j.size + ' yard RoRo from ' + j.site.name + ' came in at ' + t.net.toFixed(2) + ' tonnes on the weighbridge, so ' + t.over.over.toFixed(2) + ' over the ' + t.over.incl + ' included. That\'s ' + money(t.over.amount, true) + ' + VAT for the extra weight, ticket and invoice attached. Cheers, Dave';
+    }
+    function bridgeCard() {
+      var L = overTickets(), y = Y(), s = S();
+      var head = '<div class="yh-rh"><h3>' + ic('stack') + 'Weighbridge</h3><button class="btn sm" data-act="yWeigh">' + ic('truck') + 'Weigh a lorry in</button></div>';
+      if (!L.length) {
+        var last = y.tickets.filter(function (t) { return t.over && t.over.status === 'sent'; }).pop();
+        return '<section class="card ywb" id="yBridge">' + head + (last ? '<div class="ywb-done">' + ic('circle-check') + '<span><b>Extra weight invoiced.</b> ' + h(last.over.inv) + ' sent to ' + h(YC.custName(s, last.cust)) + ', ' + money(last.over.amount * 1.2, true) + ' with VAT, ticket ' + h(last.id) + ' attached. On the job and in the inbox.</span></div>' : '<p class="muted" style="margin:0">Nothing on the bridge. When a RoRo comes back over its tonnage, it shows here with the invoice ready to send.</p>') + '</section>';
+      }
+      var t = L[0], j = jobById(t.job), lo = YC.lorry(t.lorry), c = YC.custName(s, t.cust), ov = t.over, tare = t.tare != null ? t.tare : Math.round((t.gross - t.net) * 100) / 100;
+      var ch = CS.cust(t.cust) && CS.cust(t.cust).phone ? 'WhatsApp' : 'Email';
+      return '<section class="card ywb" id="yBridge">' + head +
+        '<div class="ywb-top">' + plate(lo ? lo.reg : '') + '<div><b>Number plate read: ' + h(lo ? lo.reg : '') + '</b><small>' + ic('check') + 'Matched to ' + h(t.job) + ', ' + h(YC.what(j).replace(/^./, function (x) { return x.toLowerCase(); })) + ' for ' + h(c) + ', by lorry, time and site</small></div></div>' +
+        '<div class="ywb-figs"><div><small>Gross</small><b>' + t.gross.toFixed(2) + ' t</b></div><div><small>Tare</small><b>' + tare.toFixed(2) + ' t</b></div><div><small>Net</small><b>' + t.net.toFixed(2) + ' t</b></div><div><small>Included</small><b>' + ov.incl + ' t</b></div><div class="bad"><small>Over</small><b>' + ov.over.toFixed(2) + ' t</b></div></div>' +
+        '<p class="ywb-q" id="yOverQ">' + h((lo ? lo.reg : '') + ' from ' + t.job + ' for ' + c + ' came in at ' + t.net.toFixed(2) + ' t, ' + ov.over.toFixed(2) + ' t over. Send ' + c + ' the invoice for the extra weight?') + '</p>' +
+        '<div class="ywb-sum" id="yOverSum"><span>' + ov.over.toFixed(2) + ' t x ' + money(ov.rate) + '</span><span>' + money(ov.amount, true) + '</span><span>VAT</span><span>' + money(ov.vat, true) + '</span><b>Total</b><b>' + money(ov.amount + ov.vat, true) + '</b></div>' +
+        '<div class="field" style="margin:12px 0 0"><label for="yOverMsg">' + ch + ' to ' + h(c) + ', with the invoice and ticket ' + h(t.id) + ' attached</label><textarea id="yOverMsg" rows="3">' + h(overMsg(t, j)) + '</textarea></div>' +
+        '<div class="ywb-acts"><button class="btn" data-act="yOverHold" data-id="' + t.id + '">Not now</button><button class="btn pri lg" data-act="yOverSend" data-id="' + t.id + '" id="yOverSend">' + ic('send') + 'Yes, send the invoice</button></div>' +
+        (L.length > 1 ? '<small class="muted">' + plural(L.length - 1, 'more RoRo') + ' over the allowance after this one</small>' : '') + '</section>';
+    }
+    document.addEventListener('input', function (e) { if (e.target.id !== 'yOverMsg') return; var t = overTickets()[0]; if (t) { t.over.msg = e.target.value; save(); } });
+    var tk0 = V.tickets;
+    V.tickets = function () { return bridgeCard() + tk0.apply(this, arguments); };
+    A.yOverSend = function (el) {
+      var y = Y(), s = S(), t = y.tickets.filter(function (x) { return x.id === el.dataset.id; })[0]; if (!t || !t.over || t.over.status !== 'pending') return;
+      var j = jobById(t.job), c = CS.cust(t.cust), ta = q('#yOverMsg'), text = (ta && ta.value.trim()) || overMsg(t, j);
+      var acc = c && c.limit, inv = { id: CS.nextId('inv', 'INV-'), cust: t.cust, amount: t.over.amount, issued: 0, due: acc ? 30 : 0, status: 'unpaid', jobs: [], pay: acc ? 'account' : 'link', what: 'Extra weight, ' + t.over.over.toFixed(2) + ' t on ' + t.job, ticket: t.id };
+      if (c) s.invoices.unshift(inv);
+      t.over.status = 'sent'; t.over.inv = inv.id; t.over.at = Date.now();
+      j.log.push({ at: Date.now(), t: 'Extra weight invoiced on ' + inv.id + ', ' + t.over.over.toFixed(2) + ' t over, ticket ' + t.id + ' attached' });
+      CS.feed('Extra weight on ' + t.job + ' invoiced to ' + (c ? c.name : 'the customer') + ', ' + inv.id + ' for ' + money(t.over.amount, true) + ' + VAT', 'receipt');
+      if (c) { var th = CS.threadFor({ type: 'customer', id: c.id }, c.phone ? 'wa' : 'email'); CS.addMsg(th, 'out', text, { by: 'Dave', att: [{ n: inv.id + '.pdf', t: 'inv', job: inv.id }, { n: 'Weighbridge ticket ' + t.id + '.pdf', t: 'doc' }] }); }
+      y.v++; CS.commit();
+      toast('Sent. ' + h(inv.id) + ' for ' + money(t.over.amount * 1.2, true) + ' with VAT to ' + h(c ? c.name : 'the customer') + ', ticket attached', 'send');
+    };
+    A.yOverHold = function (el) { var t = Y().tickets.filter(function (x) { return x.id === el.dataset.id; })[0]; if (!t) return; t.over.status = 'held'; Y().v++; save(); UI.render(); toast('Left for now. It stays on the job and the ticket', 'clock'); };
+    function weighCand(lid) {
+      var L = Y().jobs.filter(function (j) { return j.day === 0 && j.lorry === lid && YC.TYPES[j.type].waste && !j.ticket; });
+      var rank = { onsite: 0, onway: 1, done: 2, planned: 3 };
+      return L.sort(function (a, b) { return rank[a.status] - rank[b.status] || a.win[0] - b.win[0]; })[0] || null;
+    }
+    function weighBody(lid, gross) {
+      var lo = YC.lorry(lid), j = weighCand(lid), s = S(), tare = lo.kind === 'skip' ? 9.8 : 15.2;
+      return '<div class="field"><label for="yWLorry">Lorry on the bridge</label><select id="yWLorry">' + YC.LORRIES.map(function (l) { return '<option value="' + l.id + '"' + (l.id === lid ? ' selected' : '') + '>' + h(l.reg + ', ' + l.n) + '</option>'; }).join('') + '</select></div>' +
+        '<div class="ywb-top">' + plate(lo.reg) + '<div><b>Number plate read: ' + h(lo.reg) + '</b><small>' + (j ? ic('check') + 'Matched to ' + h(j.id) + ', ' + h(YC.what(j).replace(/^./, function (x) { return x.toLowerCase(); })) + ' for ' + h(YC.custName(s, j.cust)) + ', by lorry, time and site' : 'No open job for this lorry today') + '</small></div></div>' +
+        (j ? '<div class="ybk2" style="margin-top:12px"><div class="field"><label for="yWGross">Gross on the bridge</label><input id="yWGross" inputmode="decimal" value="' + gross + '"></div><div class="field"><label>Tare for ' + h(lo.reg) + '</label><input value="' + tare.toFixed(2) + '" disabled></div></div>' +
+          (YC.isRoro(j) ? '<small class="muted">This ' + j.size + ' yard RoRo includes ' + (j.incl != null ? j.incl : YC.inclFor(Y(), j)) + ' tonnes.</small>' : '') : '');
+    }
+    A.yWeigh = function () {
+      var lid = 'L3', j = weighCand(lid), tare = 15.2, g = j && YC.isRoro(j) ? (tare + (j.incl || 8) + 3.2).toFixed(2) : (tare + 6).toFixed(2);
+      modal(ic('stack') + ' Weigh a lorry in', '<div id="yWeighBox">' + weighBody(lid, g) + '</div>', '<button class="btn" data-act="close">Cancel</button><span class="sp"></span><button class="btn pri" data-act="yWeighGo" id="yWeighGo">' + ic('check') + 'Weigh in</button>');
+    };
+    document.addEventListener('change', function (e) {
+      if (e.target.id !== 'yWLorry') return; var lid = e.target.value, lo = YC.lorry(lid), j = weighCand(lid), tare = lo.kind === 'skip' ? 9.8 : 15.2;
+      var g = j ? (YC.isRoro(j) ? tare + (j.incl || 8) + 3.2 : tare + YC.weight(j)).toFixed(2) : tare.toFixed(2);
+      q('#yWeighBox').innerHTML = weighBody(lid, g);
+    });
+    A.yWeighGo = function () {
+      var lid = (q('#yWLorry') || {}).value || 'L3', lo = YC.lorry(lid), j = weighCand(lid), tare = lo.kind === 'skip' ? 9.8 : 15.2, gross = parseFloat(((q('#yWGross') || {}).value || '').replace(/[^\d.]/g, ''));
+      if (!j) { toast('No open job for ' + h(lo.reg) + ' today, so there is nothing to match the weight to', 'alert'); return; }
+      if (!(gross > tare)) { toast('Put the gross weight in. It has to be more than the tare of ' + tare.toFixed(2) + ' t', 'alert'); return; }
+      var net = Math.round((gross - tare) * 100) / 100, y = Y();
+      YC.complete(S(), y, j, { net: net, gross: gross, tare: tare, plate: true }, Date.now());
+      var t = y.tickets.filter(function (x) { return x.id === j.ticket; })[0]; if (t) t.onBridge = Date.now();
+      save(); A.close(); ui.yTkTab = 'tickets'; if (ui.view !== 'tickets') go('tickets'); else UI.render();
+      toast(h(lo.reg) + ' weighed in at ' + net.toFixed(2) + ' t net, matched to ' + h(j.id) + (t && t.over ? '. ' + t.over.over.toFixed(2) + ' t over the allowance' : '. Inside the allowance'), 'stack');
+    };
+
     /* ======================================================================
        Steps for the guided tour
        ====================================================================== */
@@ -951,6 +1061,9 @@
     R.yDriver = function () { closeAll(); ui.yDrv = 'L1'; go('driver'); };
     R.yTrack = function () { closeAll(); go('tracking'); };
     R.yTickets = function () { closeAll(); ui.yTkTab = 'tickets'; go('tickets'); };
+    R.yRoro = function () { closeAll(); ui.yTkTab = 'tickets'; go('tickets'); setTimeout(function () { var b = q('#yBridge'); if (b && b.scrollIntoView) b.scrollIntoView({ block: 'start' }); }, 60); };
+    R.yRoroWeigh = function () { closeAll(); ui.yTkTab = 'tickets'; go('tickets'); A.yWeigh(); };
+    R.yPrices = function () { closeAll(); go('prices'); setTimeout(function () { var b = q('#yRoroList'); if (b && b.scrollIntoView) b.scrollIntoView({ block: 'center' }); }, 60); };
     R.yWtn = function () { closeAll(); ui.yTkTab = 'wtn'; go('tickets'); var j = Y().jobs.filter(function (x) { return x.wtn; })[0]; if (j) A.yWtn({ dataset: { id: j.id } }); };
     R.yCredit = function () { closeAll(); go('credit'); };
     R.yDefra = function () { closeAll(); ui.yDfF = 'all'; go('defra'); };

@@ -23,7 +23,33 @@
     metal:    { n: 'Mixed metals', ewc: '17 04 07', rec: 100, code: 'R4', dens: 0.25, form: 'Solid' },
     house:    { n: 'Household clear-out', ewc: '20 03 01', rec: 68, code: 'R13', dens: 0.14, form: 'Mixed' }
   };
-  YC.SIZES = [2, 4, 6, 8, 10, 12, 14, 16, 20, 40];
+  YC.SIZES = [2, 4, 6, 8, 10, 12, 14, 16];
+  YC.RORO_SIZES = [20, 30, 35, 40];
+  /* the price list: London prices, ex VAT. RoRos carry a tonnage allowance; every tonne over it is charged at the over rate */
+  YC.PRICES = {
+    skip: { 2: 140, 4: 220, 6: 260, 8: 300, 10: 340, 12: 370, 14: 400, 16: 430 },
+    roro: { 20: { price: 440, incl: 4 }, 30: { price: 520, incl: 6 }, 35: { price: 580, incl: 7 }, 40: { price: 650, incl: 8 } },
+    overRate: 75, grab: 350, muck: 330, hireDays: 14
+  };
+  YC.prices = function (Y) { if (Y && !Y.prices) Y.prices = JSON.parse(JSON.stringify(YC.PRICES)); return (Y && Y.prices) || YC.PRICES; };
+  YC.isRoro = function (j) { return (j.size || 0) >= 20 && j.type !== 'grab' && j.type !== 'muck'; };
+  YC.priceFor = function (Y, j) {
+    var P = YC.prices(Y);
+    if (j.type === 'grab') return P.grab * (j.loads || 1);
+    if (j.type === 'muck') return P.muck * (j.loads || 1);
+    if (YC.isRoro(j)) return (P.roro[j.size] || P.roro[40]).price;
+    return P.skip[j.size] || P.skip[8];
+  };
+  YC.inclFor = function (Y, j) { var P = YC.prices(Y); return YC.isRoro(j) ? (P.roro[j.size] || P.roro[40]).incl : null; };
+  /* a RoRo ticket over its allowance: what is owed for the extra weight */
+  YC.overCheck = function (Y, t, j) {
+    if (!t || !j || !YC.isRoro(j) || t.over) return null;
+    var incl = j.incl != null ? j.incl : YC.inclFor(Y, j), rate = YC.prices(Y).overRate;
+    if (!(t.net > incl)) return null;
+    var over = Math.round((t.net - incl) * 100) / 100, amt = Math.round(over * rate * 100) / 100;
+    t.over = { incl: incl, over: over, rate: rate, amount: amt, vat: Math.round(amt * 20) / 100, status: 'pending' };
+    return t.over;
+  };
   YC.LOAD_T = 16;   /* a grab or muckaway 8-wheeler carries about 16 tonnes */
   YC.LORRIES = [
     { id: 'L1', n: 'Skip lorry 1', reg: 'DS21 SKP', driver: 'Wayne Pike', first: 'Wayne', kind: 'skip', col: '#EB9347' },
@@ -107,8 +133,9 @@
       J('DSG-3113', 'L2', 660, 720, 'exchange', 'c13', 1, 8, 'house', { place: 'road' }),
       J('DSG-3114', 'L2', 810, 870, 'deliver', 'o2', 0, 4, 'house'),
       J('DSG-3115', 'L2', 900, 960, 'collect', 'c12', 1, 6, 'mixed', { place: 'road' }),
-      J('DSG-3121', 'L3', 480, 570, 'deliver', 'c14', 0, 20, 'mixed'),
-      J('DSG-3122', 'L3', 630, 720, 'exchange', 'c14', 1, 40, 'mixed'),
+      J('DSG-3120', 'L3', 420, 470, 'collect', 'c14', 1, 35, 'mixed'),
+      J('DSG-3121', 'L3', 510, 590, 'deliver', 'c14', 0, 20, 'mixed'),
+      J('DSG-3122', 'L3', 630, 720, 'exchange', 'c14', 2, 40, 'mixed'),
       J('DSG-3123', 'L3', 810, 900, 'collect', 'c1', 0, 20, 'hardcore'),
       J('DSG-3131', 'G1', 480, 540, 'grab', 'c1', 1, null, 'soil', { loads: 2 }),
       J('DSG-3132', 'G1', 600, 660, 'grab', 'c4', 1, null, 'hardcore'),
@@ -126,6 +153,7 @@
     L.forEach(function (j) {
       var s = siteOf(S, j.cust, j.site); j.site = s; var p = YC.pos(s.pc); j.lat = p.lat; j.lng = p.lng;
       if (j.place === 'road') j.permit = permitFor(s.pc, j.id, -2, 12);
+      j.price = YC.priceFor(null, j); j.incl = YC.inclFor(null, j);
     });
     /* tomorrow, so the plan has a next day to look at */
     var t1 = YC.wd1 || 1, T = [
@@ -133,7 +161,7 @@
       J('DSG-3163', 'L2', 480, 540, 'exchange', 'c12', 0, 12, 'plaster'), J('DSG-3164', 'L3', 480, 570, 'deliver', 'c14', 0, 40, 'mixed'),
       J('DSG-3165', 'G1', 480, 540, 'grab', 'c11', 1, null, 'soil', { loads: 2 }), J('DSG-3166', 'G2', 540, 600, 'muck', 'c14', 0, null, 'soil', { loads: 4 })
     ];
-    T.forEach(function (j) { j.day = t1; var s = siteOf(S, j.cust, j.site); j.site = s; var p = YC.pos(s.pc); j.lat = p.lat; j.lng = p.lng; if (j.place === 'road') j.permit = permitFor(s.pc, j.id, t1 - 1, t1 + 13); });
+    T.forEach(function (j) { j.price = YC.priceFor(null, j); j.incl = YC.inclFor(null, j); j.day = t1; var s = siteOf(S, j.cust, j.site); j.site = s; var p = YC.pos(s.pc); j.lat = p.lat; j.lng = p.lng; if (j.place === 'road') j.permit = permitFor(s.pc, j.id, t1 - 1, t1 + 13); });
     return L.concat(T);
   }
   function seedOnsite(S) {
@@ -194,6 +222,13 @@
       { id: 'IN-772', time: 610, carrier: 'Westfield Roofing (own waste)', reg: '', veh: 'WR19 VAN', stream: 'wood', net: 0.86, est: false, why: 'No carrier registration number, and no reason given' },
       { id: 'IN-773', time: 655, carrier: 'Colne Valley Skips', reg: 'CBDU418027', veh: 'SS70 HKL', stream: 'mixed', net: null, est: true, why: 'No weight: the weighbridge was down, so an estimate has to be entered' }
     ];
+    /* the first RoRo of the day came back heavy: it waits on the weighbridge screen for one tap */
+    var b0 = new Date(); b0.setHours(0, 0, 0, 0);
+    var heavy = Y.jobs.filter(function (j) { return j.id === 'DSG-3120'; })[0];
+    if (heavy) {
+      heavy.at.onway = b0.getTime() + 415 * 60000; heavy.at.arrived = b0.getTime() + 430 * 60000; heavy.eta = { at: heavy.at.onway, text: '' };
+      YC.complete(S, Y, heavy, { net: 9.64, plate: true }, b0.getTime() + 455 * 60000);
+    }
     YC.settle(S, Y, true);
     return Y;
   };
@@ -210,7 +245,9 @@
   function tipFor(j) { return (j.stream === 'soil' || j.stream === 'concrete' || (j.stream === 'hardcore' && (j.type === 'grab' || j.type === 'muck'))) ? 'soil' : 'yard'; }
   YC.weight = function (j) {
     if (j.type === 'grab' || j.type === 'muck') return Math.round(j.loads * rnd(j.id, 13.2, 16.4) * 100) / 100;
-    return Math.round((j.size || 8) * YC.STREAMS[j.stream].dens * rnd(j.id + 'w', 0.85, 1.2) * 100) / 100;
+    var w = Math.round((j.size || 8) * YC.STREAMS[j.stream].dens * rnd(j.id + 'w', 0.85, 1.2) * 100) / 100;
+    if (YC.isRoro(j)) { var inc = j.incl != null ? j.incl : YC.inclFor(null, j); if (w > inc * 0.95) w = Math.round(inc * rnd(j.id + 'r', 0.78, 0.94) * 100) / 100; }   /* the weighbridge decides if a RoRo is over; a normal day stays inside */
+    return w;
   };
   YC.complete = function (S, Y, j, data, when) {
     data = data || {}; when = when || Date.now();
@@ -220,8 +257,10 @@
     if (YC.TYPES[j.type].waste && !j.ticket) {
       var lo = YC.lorry(j.lorry), net = data.net != null ? data.net : YC.weight(j);
       var t = { id: data.ticketNo || ('T-' + (Y.counters.ticket++)), day: 0, time: Math.min(1020, (new Date(when).getHours() * 60 + new Date(when).getMinutes()) + 25), site: tipFor(j), lorry: j.lorry, net: net,
-        gross: Math.round((net + (lo && lo.kind === 'grab' ? 15.2 : 9.8)) * 100) / 100, stream: j.stream, cust: j.cust, job: j.id, matched: true, read: data.ticketNo ? 'Driver typed it in' : 'Weighbridge' };
+        gross: Math.round((net + (lo && lo.kind !== 'skip' ? 15.2 : 9.8)) * 100) / 100, stream: j.stream, cust: j.cust, job: j.id, matched: true, read: data.ticketNo ? 'Driver typed it in' : data.plate ? 'Weighbridge, number plate read' : 'Weighbridge' };
+      if (data.gross) { t.gross = data.gross; t.tare = data.tare; }
       Y.tickets.push(t); j.ticket = t.id;
+      if (YC.overCheck(Y, t, j)) { t.onBridge = when; j.log.push({ at: when, t: t.net.toFixed(2) + ' t on the weighbridge, ' + t.over.over.toFixed(2) + ' t over the ' + t.over.incl + ' t included' }); }
     }
     if (YC.TYPES[j.type].waste && !j.wtn) j.wtn = 'WTN-' + (Y.counters.wtn++);
     j.log.push({ at: when, t: 'Done' });
