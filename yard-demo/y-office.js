@@ -49,7 +49,7 @@
     }
     function invNo(o) { return 'INV-' + (30000 + (parseInt(String(o.id).replace(/\D/g, ''), 10) || 0)); }
     function invLines(o) {
-      var L = [[YC.what(o), o.permit ? o.price - YC.prices(Y()).permit : o.price]];
+      var t0 = ticketOf(o), L = o.perT && t0 ? [[(o.stream === 'mixed' ? 'Mixed waste' : YC.STREAMS[o.stream].n) + ' grab, ' + t0.net.toFixed(2) + ' t at ' + money(o.perT) + '/t (ticket ' + t0.id + ')', o.price]] : [[YC.what(o), o.permit ? o.price - YC.prices(Y()).permit : o.price]];
       if (o.permit) L.push(['Council road permit, ' + o.permit.council + ', ref ' + o.permit.ref, YC.prices(Y()).permit]);
       var t = ticketOf(o); if (t && t.over) L.push(['Excess weight ' + t.over.over.toFixed(2) + ' t at ' + money(t.over.rate) + '/t (ticket ' + t.id + ', ' + t.over.incl + ' t included)', t.over.amount]);
       return L;
@@ -140,19 +140,26 @@
     /* ======================================================================
        INBOX: every channel in one list
        ====================================================================== */
-    var CH = { wa: ['WhatsApp', 'whatsapp', 'wa'], voice: ['Voice note', 'microphone', 'ai'], email: ['Email', 'mail', 'mail'], web: ['Website enquiry', 'world', 'web'], call: ['Missed call', 'phone', 'bad'] };
+    var CH = { wa: ['WhatsApp', 'whatsapp', 'wa'], email: ['Email', 'mail', 'mail'], web: ['Website enquiry', 'world', 'web'] };
     function seedInbox() {
-      var y = Y(); if (y.inboxV) return; y.inboxV = 1; var now = Date.now(); y.inbox = y.inbox || [];
-      y.inbox.forEach(function (m) { if (!m.ch || m.ch === 'wa') m.ch = m.voice ? 'voice' : 'wa'; });
+      var y = Y(); if (y.inboxV === 2) return; if (y.inboxV === 1) { (y.inbox || []).forEach(fixCh); y.inboxV = 2; save(); return; } y.inboxV = 2; var now = Date.now(); y.inbox = y.inbox || [];
+
       y.inbox.push(
         { id: 'm3', kind: 'quote', ch: 'web', who: 'Mrs Jane Barker', phone: '07700 900455', email: 'jane.barker@example.com', pc: 'GU21 4XR', size: 6, at: now - 22 * 60000, unread: true, text: 'Hello, I need a 6 yard skip for a garden clearance next week at Anchor Hill, Knaphill GU21 4XR. It can go on the drive. How much would it be please?' },
-        { id: 'm4', kind: 'call', ch: 'call', cust: 'c14', at: now - 9 * 60000, unread: true, text: 'Missed call from Ruth Farrow, Fernlow Developments, 07700 900344. No voicemail. Last spoke about the 40 yard RoRo at the Brookwood plots.' },
+        { id: 'm4', kind: 'call', ch: 'call', cust: 'c14', at: now - 9 * 60000, unread: true },
         { id: 'm5', kind: 'book', ch: 'email', cust: 'c11', site: 0, type: 'exchange', size: 8, at: now - 41 * 60000, unread: true, subject: 'Swap please', text: 'Hi Dave, can you swap the 8 yarder at the Sheerwater workshop tomorrow morning? It\'s full of offcuts. Thanks, Nathan' },
         { id: 'm6', kind: 'reply', ch: 'email', cust: 'c12', at: now - 68 * 60000, unread: false, subject: 'Transfer note', text: 'Morning, could you send me the waste transfer note for last Tuesday\'s collection at Gayton Road? Our client is asking for it. Priya', draft: 'Hi Priya, here is the transfer note for Tuesday\'s collection at Gayton Road, signed, with the weight from the weighbridge. Any others you need, just shout. Dave' },
         { id: 'm7', kind: 'reply', ch: 'wa', cust: 'c13', at: now - 95 * 60000, unread: false, text: 'Can the next skip go on the road outside 14 Oak Road instead of the drive? Tenants are moving in.', draft: 'Hi Owen, yes, we can put it on the road. It needs a council permit, which takes 3 to 5 working days and adds £65. Shall I apply for it? Dave' },
-        { id: 'm8', kind: 'quote', ch: 'voice', cust: 'c7', site: 0, size: 12, voice: 17, at: now - 130 * 60000, unread: false, text: 'Hi Dave, Gemma at Marram. Can you price me a 12 yarder for green waste at the usual site, and how soon could it come? Ta.' }
+        { id: 'm8', kind: 'quote', ch: 'wa', cust: 'c7', site: 0, size: 12, at: now - 130 * 60000, unread: false, text: 'Hi Dave, Gemma at Marram. Can you price me a 12 yarder for green waste at the usual site, and how soon could it come? Ta.' }
       );
-      save();
+      y.inbox.forEach(fixCh); save();
+    }
+    /* three channels only: a voice note becomes a WhatsApp, a missed call becomes Ruth's email */
+    function fixCh(m) {
+      if (m.voice) { delete m.voice; m.ch = 'wa'; m.text = String(m.text).replace(/^Morning Dave, it's Rob\. /, 'Morning Dave, Rob here. '); }
+      if (m.ch === 'voice') m.ch = 'wa';
+      if (m.ch === 'call' || m.kind === 'call') { m.kind = 'reply'; m.ch = 'email'; m.subject = 'RoRo at the Brookwood plots'; m.text = 'Hi Dave, can the 40 yard RoRo at the Brookwood plots be swapped Monday instead of Tuesday? The groundworkers finish early. Ruth'; m.draft = 'Hi Ruth, no problem, I have moved the 40 yard swap at the Brookwood plots to Monday morning. Same lorry, same driver. Dave'; }
+      if (!m.ch || !CH[m.ch]) m.ch = 'wa';
     }
     function mWho(m) { var c = m.cust ? CS.cust(m.cust) : null; return { name: c ? c.contact : m.who, co: c ? c.name : 'New customer', phone: c ? c.phone : m.phone, ini: CS.initials(c ? c.contact : m.who) }; }
     function mSite(m) { var c = m.cust ? CS.cust(m.cust) : null; if (c) { var s = c.sites[m.site || 0] || c.sites[0]; return s; } var a = window.DSGY3.addrs(m.pc)[0]; return { name: a, pc: m.pc }; }
@@ -167,13 +174,13 @@
       var chips = '<div class="ychips yin-f">' + [['all', 'All']].concat(Object.keys(CH).map(function (k) { return [k, CH[k][0]]; })).map(function (x) { return '<button class="ychip' + (f === x[0] ? ' on' : '') + '" data-act="y4InF" data-v="' + x[0] + '">' + (x[0] !== 'all' ? ic(CH[x[0]][1]) : '') + x[1] + (x[0] === 'all' ? ' <b>' + L.filter(function (z) { return !z.done; }).length + '</b>' : cnt[x[0]] ? ' <b>' + cnt[x[0]] + '</b>' : '') + '</button>'; }).join('') + '</div>';
       var list = '<div class="yin-list">' + show.map(function (x) {
         var w = mWho(x);
-        return '<button class="yin-i' + (x.id === sel ? ' on' : '') + '" data-act="yMsg" data-id="' + x.id + '"><span class="av" style="--c:#3F3F46">' + h(w.ini) + '</span><span class="bd"><b>' + h(w.name) + '</b><small>' + h(w.co) + '</small>' + chTag(x) + '<span class="yin-p">' + h(x.text.slice(0, 70)) + '...</span></span><span class="yin-r"><small>' + h(CS.ago(x.at)) + '</small>' + (x.done ? '<span class="tag ok">' + ic('check') + 'Done</span>' : x.unread ? '<i class="yin-dot"></i>' : '') + '</span></button>';
+        return '<button class="yin-i' + (x.id === sel ? ' on' : '') + '" data-act="yMsg" data-id="' + x.id + '"><span class="av" style="--c:#3F3F46">' + h(w.ini) + '</span><span class="bd"><b>' + h(w.name) + ' <span class="yin-chn ' + (CH[x.ch] || CH.wa)[2] + '">· ' + h((CH[x.ch] || CH.wa)[0]) + '</span></b><small>' + h(w.co) + '</small><span class="yin-p">' + h(x.text.slice(0, 70)) + '...</span></span><span class="yin-r"><small>' + h(CS.ago(x.at)) + '</small>' + (x.done ? '<span class="tag ok">' + ic('check') + 'Done</span>' : x.unread ? '<i class="yin-dot"></i>' : '') + '</span></button>';
       }).join('') + '</div>';
-      var top = '<div class="yin-top"><span class="yhint">' + ic('inbox') + 'Email, WhatsApp, website enquiries, voice notes and missed calls, in one list. Each one has its reply or next step ready.</span></div>' + chips;
+      var top = '<div class="yin-top"><span class="yhint">' + ic('inbox') + 'WhatsApp, email and website enquiries, in one list. Each one has its reply or next step ready.</span></div>' + chips;
       if (!m) return top + '<div class="yinb">' + list + '</div>';
       m.unread = false;
       var w = mWho(m), s = mSite(m), so = YC.soonest(Y(), 1, K.sat()), cm = CH[m.ch] || CH.wa;
-      var bub = '<div class="yin-b in">' + (m.subject ? '<b class="yin-subj">' + h(m.subject) + '</b>' : '') + (m.ch === 'voice' ? '<div class="yin-voice">' + ic('play') + '<i></i><span>0:' + String(m.voice || 12).padStart(2, '0') + '</span></div><small class="yin-wo">Written out</small>' : '') + '<p>' + h(m.text) + '</p><small>' + ic(cm[1]) + cm[0] + ', ' + h(CS.ago(m.at)) + '</small></div>' +
+      var bub = '<div class="yin-b in">' + (m.subject ? '<b class="yin-subj">' + h(m.subject) + '</b>' : '') + '<p>' + h(m.text) + '</p><small>' + ic(cm[1]) + cm[0] + ', ' + h(CS.ago(m.at)) + '</small></div>' +
         (m.reply ? '<div class="yin-b out"><p>' + h(m.reply) + '</p><small>' + ic('check') + (m.kind === 'call' ? 'Called back ' : 'Sent ') + h(CS.ago(m.doneAt || Date.now())) + '</small></div>' : '');
       var card = '';
       if (m.done) card = '<div class="card yin-a done">' + ic('circle-check') + '<span>' + (m.kind === 'quote' ? 'Quote ' + h(m.quote || '') + ' sent to ' + h(w.name) + '.' : m.kind === 'book' ? 'Booked in as ' + h(m.job || '') + '. It is on the day plan to give it a lorry.' : m.kind === 'call' ? 'Called back. Logged on ' + h(w.co) + '.' : 'Reply sent to ' + h(w.name) + '.') + '</span></div>';

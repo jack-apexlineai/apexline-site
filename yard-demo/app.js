@@ -271,7 +271,7 @@
       '<button class="btn" data-act="briefing">' + ic('sun') + 'Briefing</button><button class="btn" data-act="go" data-v="inbox">' + ic('inbox') + 'Open the inbox</button></div>' +
       '<div class="grid g4 kpis" style="margin-bottom:16px">' +
       '<button class="card kpi" data-act="go" data-v="inbox"><small>' + ic('inbox') + 'Needs you</small><b>' + st.needs + '</b><span class="d">all drafted, one tap each</span></button>' +
-      '<button class="card kpi" data-act="go" data-v="jobs"><small>' + ic('truck') + 'Jobs today and tomorrow</small><b>' + (st.today + st.tomorrow) + '</b><span class="d">' + st.onhire + ' on hire, ' + st.awaiting + ' waiting on supplier</span></button>' +
+      '<button class="card kpi" data-act="go" data-v="jobs"><small>' + ic('truck') + 'Jobs today and tomorrow</small><b>' + (st.today + st.tomorrow) + '</b><span class="d">' + st.onhire + ' on hire, ' + st.awaiting + ' waiting for a lorry</span></button>' +
       '<button class="card kpi hero" data-act="go" data-v="money"><small>' + ic('pound') + 'Margin this month</small><b>' + money(mtd.margin) + '</b><span class="d">' + CS.pct(mtd.margin, mtd.rev) + '% on ' + money(mtd.rev) + ' sales</span></button>' +
       '<button class="card kpi" data-act="go" data-v="chasing"><small>' + ic('pound') + 'Overdue to you</small><b>' + money(st.overdue) + '</b><span class="d">' + ch.pay.length + ' invoices, reminders ready</span></button></div>' + X.todayStrip() +
       '<div class="grid g64"><div class="grid" style="align-content:start">' +
@@ -604,7 +604,7 @@
     var b = document.createElement('div'); b.className = 'boot'; b.id = 'boot';
     b.innerHTML = '<div class="in"><img src="brand/logo-inverted.svg" alt="Demo Skip & Grab"><h2>' + greeting() + ', Dave.</h2>' +
       '<div class="ln" style="animation-delay:1s"><b>' + st.needs + '</b> messages need you. Every one already has a draft.</div>' +
-      '<div class="ln" style="animation-delay:1.35s"><b>' + st.awaiting + '</b> jobs waiting on suppliers, being chased.</div>' +
+      '<div class="ln" style="animation-delay:1.35s"><b>' + st.awaiting + '</b> jobs booked and waiting for a lorry.</div>' +
       '<div class="ln" style="animation-delay:1.7s"><b>' + money(mtd.margin) + '</b> margin booked this month.</div>' +
       '<div class="bootbtns"><button class="btn pri" data-boot="tour">' + ic('play') + 'Show me round</button><button class="btn ghost" data-boot="go">Straight in</button></div><small>One number for everything. Same person, every time.</small></div>';
     document.body.appendChild(b);

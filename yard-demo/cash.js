@@ -60,11 +60,11 @@
         '<div class="ycash-sum"><div><small>Cash sales in ' + h(monthName) + '</small><b>' + gbp(pn) + '</b><span>before VAT</span></div><div><small>VAT on them</small><b>' + gbp(pv) + '</b><span>in your VAT return</span></div><div><small>Total</small><b>' + gbp(pg) + '</b><span>' + plural(posted.length, 'sale') + '</span></div></div>' +
         '<div class="tw"><table class="t ytab"><thead><tr><th>Sale</th><th>Customer</th><th class="hide-sm">Job</th><th class="r">Net</th><th class="r">VAT</th><th class="r">Total</th><th>In your accounts</th></tr></thead><tbody>' +
         posted.map(function (x) { var c = x.cash; return '<tr><td><b>' + h(c.post.ref) + '</b><small>' + h(dayTxt(x.day)) + '</small></td><td>' + h(x.cname) + '<small>' + h(x.site) + '</small></td><td class="hide-sm">' + h(x.what) + '<small>' + h(lorryOf(x.lorry).driver) + '</small></td><td class="r num">' + gbp(c.net) + '</td><td class="r num">' + gbp(c.vat) + '</td><td class="r num"><b>' + gbp(c.gross) + '</b></td>' +
-          '<td>' + (c.post.kind === 'paid' ? '<span class="tag ok">' + ic('check') + 'Paid cash sale</span><small>' + (c.banked ? 'Banked' : 'With ' + h(lorryOf(x.lorry).first) + ', to bank') + '</small>' : c.settled ? '<span class="tag ok">' + ic('check') + 'Sale, paid by ' + h(c.settled.how) + '</span>' : '<span class="tag bad">Sale, owed</span><small>Chased like any invoice</small>') + '</td></tr>'; }).join('') +
+          '<td>' + (c.post.kind === 'paid' ? '<span class="tag ok">' + ic('check') + 'Paid cash sale</span><small>Collected by ' + h(lorryOf(x.lorry).first) + '</small>' : c.settled ? '<span class="tag ok">' + ic('check') + 'Sale, paid by ' + h(c.settled.how) + '</span>' : '<span class="tag bad">Sale, owed</span><small>Chased like any invoice</small>') + '</td></tr>'; }).join('') +
         '<tr class="ycash-totr"><td colspan="3"><b>' + h(monthName) + ' so far</b></td><td class="r num"><b>' + gbp(pn) + '</b></td><td class="r num"><b>' + gbp(pv) + '</b></td><td class="r num"><b>' + gbp(pg) + '</b></td><td></td></tr></tbody></table></div></div>' +
         '<p class="muted yfoot">A cash job goes to your accounts package the moment the driver answers: collected is a paid cash sale with its VAT; not collected is an unpaid sale, chased like any invoice. Cash income is always in your sales figures and your VAT return. Sample figures, nothing is sent in this demo.</p>';
 
-      return kpis + '<div class="ycash-g">' + dueC + notC + '</div>' + handC + postC;
+      return kpis + '<div class="ycash-g">' + dueC + notC + '</div>' + postC;
     };
 
     function setBanked(x, on) { x.cash.banked = on; x.cash.bankedAt = on ? Date.now() : null; x.cash.bankedDay = on ? 0 : null; }
