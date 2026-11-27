@@ -18,6 +18,8 @@
     function lorryOf(id) { return YC.lorry(id) || { reg: '', driver: 'Driver', first: 'Driver' }; }
     function key(x) { return x.job ? x.job.id : x.ref; }
     function find(k) { return YC.cashItems(S(), Y()).filter(function (x) { return key(x) === k; })[0]; }
+    /* the same time windows as the day plan: 7 to 9, 8 to 12, 12 to 4 */
+    function winTxt(j) { return YC.winBand(j); }
     function plate(id) { var l = YC.lorry(id); return l ? '<span class="yplate yx">' + h(l.reg) + '</span>' : ''; }
 
     V.cash = function () {
@@ -36,7 +38,7 @@
         '<div class="card kpi"><small>' + ic('alert') + 'Not collected</small><b class="' + (notOpen.length ? 'bad' : '') + '" id="cashNot">' + gbp(sum(notOpen)) + '</b><span class="d">' + plural(notOpen.length, 'job') + ' to chase</span></div></div>';
 
       var dueC = '<section class="card ycash-c" id="cashDueList"><div class="yh-rh"><h3>' + ic('clock') + 'Still to collect today</h3><small class="muted">The driver is asked on his phone before the job goes to the office</small></div>' +
-        (due.length ? due.map(function (x) { var j = x.job; return '<div class="ych"><span class="bd"><b>' + h(x.cname) + ' ' + YC.cashTag(j) + '</b><small>' + h(j.id) + ' · ' + h(x.what) + ' · ' + h(x.site) + ' · ' + h(YC.win(j)) + '</small></span>' + (j.lorry ? plate(j.lorry) : '<span class="tag bad">No lorry yet</span>') + '<button class="btn sm" data-act="yJob" data-id="' + j.id + '">' + ic('eye') + 'Job</button></div>'; }).join('') : '<p class="muted">Nothing left to collect today.</p>') +
+        (due.length ? due.map(function (x) { var j = x.job; return '<div class="ych"><span class="bd"><b>' + h(x.cname) + ' ' + YC.cashTag(j) + '</b><small>' + h(j.id) + ' · ' + h(x.what) + ' · ' + h(x.site) + ' · ' + h(winTxt(j)) + '</small></span>' + (j.lorry ? plate(j.lorry) : '<span class="tag bad">No lorry yet</span>') + '<button class="btn sm" data-act="yJob" data-id="' + j.id + '">' + ic('eye') + 'Job</button></div>'; }).join('') : '<p class="muted">Nothing left to collect today.</p>') +
         (later.length ? '<p class="muted" style="font-size:12.5px;margin:8px 0 0">' + plural(later.length, 'cash job') + ' booked on later days: ' + later.slice(0, 4).map(function (j) { return h(j.id) + ' ' + h(gbp(YC.cashAmt(j).gross)); }).join(', ') + '.</p>' : '') + '</section>';
 
       var notC = '<section class="card ycash-c" id="cashNotList"><div class="yh-rh"><h3>' + ic('alert') + 'Cash not collected</h3><small class="muted">Still a sale in your accounts package, owed until it is paid</small></div>' +

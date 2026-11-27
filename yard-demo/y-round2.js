@@ -57,8 +57,8 @@
     function qSite(b) { var c = b.cust && CS.cust(b.cust); if (c && b.site != null) return c.sites[+b.site]; if (b.oneoff) { var o = YC.oneoff(b.oneoff); return { name: o.site, pc: o.pc }; } return b.pc ? { name: T.addrs(b.pc)[0], pc: b.pc } : null; }
     function qText(b) {
       var w = qWho(b), s = qSite(b), J0 = qJob(b), p = qPrice(b), so = YC.soonest(Y(), K.b2Earliest(b), K.sat());
-      var what = J0.type === 'grab' || J0.type === 'muck' ? plural(J0.loads, J0.type === 'grab' ? 'grab load' : 'muckaway load') : 'a ' + J0.size + ' yard ' + (J0.size >= 20 ? 'RoRo' : 'skip');
-      return 'Hi ' + w.first + ', ' + what + ' at ' + (s ? s.name.split(',')[0] : 'your site') + ' is ' + money(p) + ' + VAT' + (J0.size && J0.size < 20 ? ', with ' + YC.prices(Y()).hireDays + ' days hire' : '') + (K.b2Permit(b) ? ', including the council permit' : '') + '. Soonest I can do it is ' + K.dayName(so) + '. Want me to book it in? Cheers, Dave';
+      var what = J0.type === 'grab' || J0.type === 'muck' ? plural(J0.loads, J0.type === 'grab' ? 'grab load' : 'muckaway load') : (J0.size === 8 ? 'an ' : 'a ') + J0.size + ' yard ' + (J0.size >= 20 ? 'RoRo' : 'skip') + (J0.type === 'wait' ? ' on wait and load (' + YC.waitLine(J0, Y()) + ')' : '');
+      return 'Hi ' + w.first + ', ' + what + ' at ' + (s ? s.name.split(',')[0] : 'your site') + ' is ' + money(p) + ' + VAT' + (J0.size && J0.size < 20 && J0.type !== 'wait' ? ', with ' + YC.prices(Y()).hireDays + ' days hire' : '') + (K.b2Permit(b) ? ', including the council permit' : '') + '. Soonest I can do it is ' + K.dayName(so) + '. Want me to book it in? Cheers, Dave';
     }
     function qChips(k, v, opts) { return '<div class="y3chips">' + opts.map(function (o) { return '<button type="button" class="y3c' + (String(v) === String(o[0]) ? ' on' : '') + '" data-act="yqSet" data-k="' + k + '" data-v="' + h(o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
     function qHTML() {
@@ -69,7 +69,7 @@
       if (b.pick === 'new') o += '<div class="ybk2"><div class="field"><label for="yqName">Name</label><input id="yqName" data-yq="nname" value="' + h(b.nname) + '" placeholder="Mrs Jane Smith"></div><div class="field"><label for="yqPhone">Mobile or email</label><input id="yqPhone" data-yq="nphone" value="' + h(b.nphone) + '" placeholder="07700 900000"></div></div>';
       if (b.pick) {
         o += '<div class="y3-s"><span class="y3-n">2</span><div class="field"><label>Service</label>' + qChips('svc', b.svc, [['skip', 'Skip'], ['roro', 'RoRo'], ['grab', 'Grab'], ['muck', 'Muckaway']]) +
-          (skipish ? qChips('type', b.type, [['deliver', 'Deliver'], ['exchange', 'Exchange'], ['collect', 'Collect']]) + (b.svc === 'skip' ? qChips('size', b.size, YC.SIZES.map(function (z) { return [z, z + ' yd']; })) : qChips('rsize', b.rsize, YC.RORO_SIZES.map(function (z) { return [z, z + ' yd, ' + P.roro[z].incl + ' t incl']; }))) + (b.type === 'deliver' ? qChips('place', b.place, [['site', 'On the drive or site'], ['road', 'On the road, with a permit']]) : '')
+          (skipish ? qChips('type', b.type, [['deliver', 'Delivery'], ['exchange', 'Exchange'], ['collect', 'Collection'], ['wait', 'Wait and load']]) + (b.svc === 'skip' ? qChips('size', b.size, YC.SIZES.map(function (z) { return [z, z + ' yd']; })) : qChips('rsize', b.rsize, YC.RORO_SIZES.map(function (z) { return [z, z + ' yd, ' + P.roro[z].incl + ' t incl']; }))) + (b.type === 'deliver' ? qChips('place', b.place, [['site', 'On the drive or site'], ['road', 'On the road, with a permit']]) : '')
             : qChips('loads', b.loads, [[1, '1 load'], [2, '2 loads'], [3, '3 loads'], [4, '4 loads']])) + '</div></div>' +
           '<div class="y3-s"><span class="y3-n">3</span><div class="field"><label>Price</label>' + qChips('pmode', b.pmode, [['std', 'Standard price ' + money(qStd(b))], ['custom', 'Custom price']]) +
           (b.pmode === 'custom' ? '<div class="yprice"><span>£</span><input id="yqPrice" data-yq="price" inputmode="decimal" value="' + h(b.price != null ? b.price : qStd(b)) + '"><span class="muted">+ VAT</span></div>' : '<small class="muted">From your price list. Change it in Price list.</small>') + '</div></div>' +
@@ -88,7 +88,7 @@
     A.yqGo = function () {
       var b = qst(); if (!b.pick) return; if (b.pick === 'new' && !String(b.nname).trim()) { toast('Put their name in first', 'alert'); return; }
       var s = qSite(b), J0 = qJob(b), id = CS.nextId('quote', 'Q-'), w = qWho(b), p = qPrice(b), t = (q('#yqMsg') || {}).value || qText(b);
-      S().quotes.unshift({ id: id, cust: b.cust || null, who: b.cust ? null : w.name, oneoff: b.oneoff, desc: (J0.size ? J0.size + ' yard ' + (J0.size >= 20 ? 'RoRo' : 'skip') : plural(J0.loads, J0.type === 'grab' ? 'grab load' : 'muckaway load')) + ', ' + (s ? s.name.split(',')[0] : b.pc), pc: b.pc, sell: p, priceMode: b.pmode, status: 'sent', day: 0, owner: 'dave', ch: b.ch, text: t, job: J0 });
+      S().quotes.unshift({ id: id, cust: b.cust || null, who: b.cust ? null : w.name, oneoff: b.oneoff, desc: (J0.size ? J0.size + ' yard ' + (J0.size >= 20 ? 'RoRo' : 'skip') + (J0.type === 'wait' ? ', wait and load' : '') : plural(J0.loads, J0.type === 'grab' ? 'grab load' : 'muckaway load')) + ', ' + (s ? s.name.split(',')[0] : b.pc), pc: b.pc, sell: p, priceMode: b.pmode, status: 'sent', day: 0, owner: 'dave', ch: b.ch, text: t, job: J0 });
       CS.save(); A.close(); toast('Quote ' + h(id) + ' for ' + money(p) + ' + VAT sent to ' + h(w.name) + ' by ' + (b.ch === 'wa' ? 'WhatsApp' : 'email') + (b.pmode === 'custom' ? ', custom price' : '') + '. Demo, nothing is sent', 'send');
       if (ui.view === 'quotes') UI.render(); else K.go('quotes');
     };
@@ -131,33 +131,88 @@
     function planSort(a, b) { var o = { early: 0, am: 1, pm: 2 }, ra = rule(a), rb = rule(b); return o[winOf(a)] - o[winOf(b)] || (rb ? 1 : 0) - (ra ? 1 : 0) || a.win[0] - b.win[0]; }
     function pcard(j) {
       var locked = j.status !== 'planned', r = rule(j), k = kind(j);
-      return '<div class="ypc y2pc svc-' + k + (locked ? ' locked' : '') + '" ' + (locked ? '' : 'draggable="true"') + ' data-pj="' + j.id + '" data-kind="' + k + '"><button class="ypc-b" data-act="yJob" data-id="' + j.id + '"><span class="ypc-t"><b>' + winLbl(j) + '</b>' + (r ? '<i class="y2bang" title="' + h(r.note) + '" aria-label="' + h(r.note) + '">!</i>' : '') + '<small class="y2sug">' + (locked ? '' : 'suggested') + '</small>' + (locked ? K.stTag(j) : '') + '</span><b>' + h(YC.whatShort(j)) + '</b><small>' + h(YC.custName(S(), j.cust)) + '</small><small>' + h(j.site.pc + ', ' + j.site.name.split(',')[0]) + '</small>' +
-        '<span class="ypc-x"><span class="tag svc">' + (k === 'grab' ? 'Grab' : k === 'roro' ? 'RoRo' : 'Skip') + '</span>' + (j.permit ? '<span class="tag">Permit</span>' : '') + K.cashBadge(j) + '</span></button>' +
+      return '<div class="ypc y2pc svc-' + k + (locked ? ' locked' : '') + '" ' + (locked ? '' : 'draggable="true"') + ' data-pj="' + j.id + '" data-kind="' + k + '"><button class="ypc-b" data-act="yJob" data-id="' + j.id + '"><span class="ypc-t"><b>' + winLbl(j) + '</b>' + (r ? '<i class="y2bang" data-tip="' + h(r.note) + '" aria-label="Access note: ' + h(r.note) + '" tabindex="0">!</i>' : '') + '<small class="y2sug">' + (locked ? '' : 'suggested') + '</small>' + (locked ? K.stTag(j) : '') + '</span><b>' + h(YC.whatShort(j)) + '</b><small>' + h(YC.custName(S(), j.cust)) + '</small><small>' + h(j.site.pc + ', ' + j.site.name.split(',')[0]) + '</small>' +
+        '<span class="ypc-x"><span class="tag svc">' + (k === 'grab' ? 'Grab' : k === 'roro' ? 'RoRo' : 'Skip') + '</span>' + (j.type === 'wait' ? '<span class="tag ywl">' + ic('clock') + 'Wait and load, ' + YC.waitTerms(j).incl + ' min</span>' : '') + (j.permit ? '<span class="tag">Permit</span>' : '') + K.cashBadge(j) + '</span></button>' +
         (locked ? '' : '<label class="ypc-mv"><span>Move to</span><select class="ymove" data-id="' + j.id + '" aria-label="Move ' + j.id + ' to a lorry"><option value="none"' + (!j.lorry ? ' selected' : '') + '>Unplanned</option>' + YC.LORRIES.map(function (l) { return '<option value="' + l.id + '"' + (j.lorry === l.id ? ' selected' : '') + '>' + h(l.reg + ', ' + l.driver) + '</option>'; }).join('') + '</select></label>') + '</div>';
     }
+    /* the day being planned: today, tomorrow (the next day the yard works) or any date picked */
+    var UNT = [['skip', 'Skips', 'skip job'], ['grab', 'Grabs', 'grab job'], ['roro', 'RoRos', 'RoRo job']];
+    function nextDay() { return YC.workDays(1, 1, true)[0]; }
+    function planDay() { return ui.yPlanDay == null ? 0 : ui.yPlanDay; }
+    function dayTitle(d) { var t = YC.dayDate(d).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }); return d === 0 ? 'Today, ' + t : d === 1 ? 'Tomorrow, ' + t : t; }
+    function unTab(un) {
+      if (ui.yUnTab) return ui.yUnTab;
+      var f = UNT.filter(function (x) { return un.some(function (j) { return kind(j) === x[0]; }); })[0];
+      return f ? f[0] : 'skip';
+    }
+    K.planWin = winLbl;
     K.planBase = function () {
       seedPlan();
-      var y = Y(), d = ui.yPlanDay == null ? 0 : ui.yPlanDay, t1 = CS.wd(1);
-      var un = y.jobs.filter(function (j) { return j.day === d && !j.lorry; }).sort(planSort);
-      var tray = '<section class="ycol none" data-col="none"><header><b>Unplanned</b><small>' + (un.length ? plural(un.length, 'job') + ' waiting. Drag each one onto a registration' : 'Every job is on a lorry. Drag one back here to take it off') + '</small></header><div class="ycol-b">' + un.map(pcard).join('') + '</div></section>';
+      var y = Y(), d = planDay(), t1 = nextDay(), picked = d !== 0 && d !== t1;
+      var un = y.jobs.filter(function (j) { return j.day === d && !j.lorry; }).sort(planSort), tab = unTab(un), shown = un.filter(function (j) { return kind(j) === tab; }), T = UNT.filter(function (x) { return x[0] === tab; })[0];
+      var tabs = '<div class="y3tabs" role="tablist" aria-label="Unplanned work by type">' + UNT.map(function (x) {
+        var n = un.filter(function (j) { return kind(j) === x[0]; }).length;
+        return '<button type="button" role="tab" aria-selected="' + (tab === x[0]) + '" class="y3tab svc-' + x[0] + (tab === x[0] ? ' on' : '') + '" data-act="yUnTab" data-v="' + x[0] + '"><i class="y3dot"></i>' + x[1] + ' <b class="y3n">' + n + '</b>' + (n ? '<i class="y2bang" data-tip="Work still to plan" aria-label="Work still to plan">!</i>' : '') + '</button>';
+      }).join('') + '</div>';
+      var key = '<div class="y3key" aria-label="Colour key"><span><i class="svc-skip"></i>Skip</span><span><i class="svc-grab"></i>Grab</span><span><i class="svc-roro"></i>RoRo</span><span class="y3key-n"><b class="y2bang">!</b>Access note, hover or tap to read</span></div>';
+      var tray = key + '<section class="ycol none y3un" data-col="none"><header><b class="y3un-k">Unplanned</b>' + tabs + '<h2 class="y3un-t" id="yUnTitle">' + T[1] + '</h2><small>' + (shown.length ? plural(shown.length, T[2]) + ' still to plan for ' + h(d === 0 ? 'today' : d === 1 ? 'tomorrow' : K.dayLong(d).replace(/^\w+, /, '')) + '. Drag each one onto a registration' : 'Every ' + T[2] + ' for ' + h(d === 0 ? 'today' : d === 1 ? 'tomorrow' : YC.dayDate(d).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })) + ' is on a lorry. Drag one back here to take it off') + '</small></header><div class="ycol-b">' + shown.map(pcard).join('') + '</div></section>';
       var groups = YC.GROUPS.map(function (g) {
         var L = YC.LORRIES.filter(function (l) { return l.kind === g[0]; });
         return '<div class="ygrp ygrp-' + g[0] + '" style="--n:' + L.length + '"><div class="ygrp-h">' + h(g[1]) + '</div><div class="ygrp-c">' + L.map(function (l) {
           var js = y.jobs.filter(function (j) { return j.day === d && j.lorry === l.id; }).sort(planSort), dn = js.filter(function (j) { return j.status === 'done'; }), open = js.filter(function (j) { return j.status !== 'done'; });
-          return '<section class="ycol" data-col="' + l.id + '" data-lk="' + l.kind + '"><header><span class="yreg">' + h(l.reg) + '</span><small>' + h(l.driver) + '</small>' + (dn.length ? '<small class="ycap">' + plural(dn.length, 'job') + ' done today</small>' : '') + '</header><div class="ycol-b">' + open.map(pcard).join('') + (open.length ? '' : '<p class="ycol-e">Drop a job here</p>') + '</div></section>';
+          return '<section class="ycol" data-col="' + l.id + '" data-lk="' + l.kind + '"><header><span class="yreg">' + h(l.reg) + '</span><small>' + h(l.driver) + '</small>' + (dn.length ? '<small class="ycap">' + plural(dn.length, 'job') + ' done' + (d === 0 ? ' today' : '') + '</small>' : '') + '</header><div class="ycol-b">' + open.map(pcard).join('') + (open.length ? '' : '<p class="ycol-e">Drop a job here</p>') + '</div></section>';
         }).join('') + '</div></div>';
       }).join('');
-      return '<div class="ybar"><div class="seg">' + [[0, 'Today'], [t1, 'Tomorrow']].map(function (x) { return '<button data-act="yPlanDay" data-v="' + x[0] + '" class="' + (d === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div><span class="y2leg"><i class="svc-skip"></i>Skip<i class="svc-grab"></i>Grab<i class="svc-roro"></i>RoRo<b class="y2bang">!</b>access note, hover to read</span><span class="sp"></span><button class="btn pri" data-act="yBook">' + ic('plus') + 'New booking</button></div>' +
-        '<div class="yplan2" id="yPlan">' + tray + '<div class="ygrps">' + groups + '</div></div><p class="muted yfoot">Windows are 7 to 9, 8 to 12 and 12 to 4, suggested from the booking. Access notes come first and show a !. Drag a job onto a lorry, between lorries, or back to Unplanned. Only the lorries that can do it stay lit while you drag.</p>';
+      return '<div class="ybar y3dbar"><div class="seg y3seg" role="group" aria-label="Day to plan"><button data-act="yPlanDay" data-v="0" class="' + (d === 0 ? 'on' : '') + '">Today</button><button data-act="yPlanDay" data-v="' + t1 + '" class="' + (d === t1 && d !== 0 ? 'on' : '') + '">' + (t1 === 1 ? 'Tomorrow' : h(YC.dayDate(t1).toLocaleDateString('en-GB', { weekday: 'long' }))) + '</button>' +
+        '<label class="y3pick' + (picked ? ' on' : '') + '"><span>' + ic('calendar') + 'Pick a date</span><input type="date" id="yPlanPick" value="' + K.iso(d) + '" min="' + K.iso(0) + '" aria-label="Pick a date to plan"></label></div><b class="y3day" id="yPlanDayT">' + h(dayTitle(d)) + '</b><span class="sp"></span><button class="btn pri" data-act="yBook">' + ic('plus') + 'New booking</button></div>' +
+        '<div class="yplan2" id="yPlan">' + tray + '<div class="ygrps">' + groups + '</div></div><p class="muted yfoot">Plan today, tomorrow or any date. Windows are 7 to 9, 8 to 12 and 12 to 4, suggested from the booking. Access notes come first and show a !. Drag a job onto a lorry, between lorries, or back to Unplanned. Only the lorries that can do it stay lit while you drag.</p>';
     };
-    var vw = q('#view');
+    A.yUnTab = function (el) { ui.yUnTab = el.dataset.v; UI.render(); };
+    A.yPlanDay = function (el) { ui.yPlanDay = +el.dataset.v; ui.y2Runs = false; UI.render(); };
+    document.addEventListener('change', function (e) {
+      var el = e.target;
+      if (el.id === 'yPlanPick') { if (!el.value) return; var o = K.offOf(el.value); if (o == null) return; ui.yPlanDay = Math.max(0, Math.min(365, o)); ui.y2Runs = false; UI.render(); return; }
+      if (el.classList && el.classList.contains('ymove') && el.value === 'none') { var j = K.jobById(el.dataset.id); if (j) ui.yUnTab = kind(j); }
+    }, true);
+    var vw = q('#view'), dragKind = null;
     vw.addEventListener('dragstart', function (e) {
       var c = e.target.closest && e.target.closest('[data-pj]'); if (!c) return; var j = K.jobById(c.getAttribute('data-pj')); if (!j) return;
+      dragKind = kind(j); hideTip();
       document.body.classList.add('y2drag');
       Array.prototype.forEach.call(document.querySelectorAll('#yPlan .ycol[data-col]'), function (col) { var id = col.getAttribute('data-col'), ok = id === 'none' || K.lorryFits(YC.lorry(id), j); col.classList.toggle('y2ok', ok); col.classList.toggle('y2no', !ok); });
     }, true);
     function clearDrag() { document.body.classList.remove('y2drag'); Array.prototype.forEach.call(document.querySelectorAll('.y2ok,.y2no'), function (c) { c.classList.remove('y2ok', 'y2no'); }); }
-    vw.addEventListener('dragend', clearDrag, true); vw.addEventListener('drop', function () { setTimeout(clearDrag, 0); }, true);
+    vw.addEventListener('dragend', clearDrag, true);
+    vw.addEventListener('drop', function (e) { var c = e.target.closest && e.target.closest('[data-col="none"]'); if (c && dragKind) ui.yUnTab = dragKind; dragKind = null; setTimeout(clearDrag, 0); }, true);
+
+    /* ---------- the red ! : its note shows on hover with a mouse, and on a tap on a phone ---------- */
+    var tipEl = null, tipFor = null, tipAt = null;
+    function tipBox() { if (!tipEl) { tipEl = document.createElement('div'); tipEl.className = 'y3tip'; tipEl.id = 'y3Tip'; tipEl.setAttribute('role', 'tooltip'); document.body.appendChild(tipEl); } return tipEl; }
+    function showTip(el) {
+      var t = tipBox(), r = el.getBoundingClientRect(); tipAt = [r.left + r.width / 2, r.top + r.height / 2]; t.textContent = el.getAttribute('data-tip'); t.classList.add('on'); tipFor = el;
+      var w = t.offsetWidth, hh = t.offsetHeight, x = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2)), y = r.top - hh - 8, below = y < 8;
+      if (below) y = r.bottom + 8; t.style.left = Math.round(x) + 'px'; t.style.top = Math.round(y) + 'px'; t.classList.toggle('below', below);
+      t.style.setProperty('--ax', Math.round(r.left + r.width / 2 - x) + 'px');
+    }
+    function hideTip() { if (tipEl) tipEl.classList.remove('on'); tipFor = null; }
+    document.addEventListener('pointerover', function (e) { if (e.pointerType !== 'mouse') return; var el = e.target.closest && e.target.closest('[data-tip]'); if (el) showTip(el); else if (tipFor) hideTip(); }, true);
+    document.addEventListener('pointerout', function (e) { if (e.pointerType !== 'mouse' || !tipFor) return; var el = e.target.closest && e.target.closest('[data-tip]'); if (el === tipFor && !(e.relatedTarget && el.contains(e.relatedTarget))) hideTip(); }, true);
+    document.addEventListener('focusin', function (e) { var el = e.target.closest && e.target.closest('[data-tip]'); var kb = false; try { kb = el && el.matches(':focus-visible'); } catch (x) {} if (el && kb) showTip(el); }, true);   /* keyboard focus only, so a tap does not show and hide it at once */
+    document.addEventListener('focusout', function (e) { if (tipFor && e.target === tipFor) hideTip(); }, true);
+    document.addEventListener('click', function (e) {
+      var el = e.target.closest && e.target.closest('.y2bang[data-tip]');
+      if (!el) { if (tipFor) hideTip(); return; }
+      if (el.closest('.y3tab') && (e.pointerType === 'mouse' || !e.pointerType)) return;   /* a mouse click on a tab's ! still opens the tab */
+      e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+      if (e.pointerType === 'mouse' || !e.pointerType) { showTip(el); return; }
+      if (tipFor === el) hideTip(); else showTip(el);
+    }, true);
+    window.addEventListener('scroll', hideTip, true); window.addEventListener('resize', hideTip);
+    /* the plan redraws as the lorries move: keep the note up on the same ! if it is still under the mouse or finger */
+    new MutationObserver(function () {
+      if (!tipFor || document.body.contains(tipFor)) return; var n = tipAt && document.elementFromPoint(tipAt[0], tipAt[1]), el = n && n.closest && n.closest('[data-tip]');
+      if (el) showTip(el); else hideTip();
+    }).observe(vw, { childList: true });
 
     /* ======================================================================
        MONEY: extra weight (RoRo) and per tonne (grab) charges, then their own chasing list

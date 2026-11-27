@@ -112,3 +112,7 @@ body.embed .dv{max-width:none}
 .dv-nm textarea{border:1px solid #D4D4D8;border-radius:10px;padding:11px;font-size:16px;background:#fff;width:100%;font-family:inherit;resize:vertical}
 .dv-chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
 .dv-chip{border:1px solid #D4D4D8;background:#fff;border-radius:999px;padding:9px 12px;font-weight:700;font-size:13.5px;cursor:pointer}
+.dv-wait{display:flex;gap:10px;align-items:center;background:#EDE9FE;border:2px solid #6D28D9;color:#3B0764;border-radius:14px;padding:11px 13px;margin:0 0 12px}
+.dv-wait .ic{width:26px;height:26px;color:#6D28D9;flex:none}
+.dv-wait b{display:block;font-size:18px;letter-spacing:.01em}
+.dv-wait small{font-size:12.5px;font-weight:600}

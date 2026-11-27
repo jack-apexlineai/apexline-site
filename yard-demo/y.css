@@ -203,3 +203,38 @@ body.y2drag #yPlan .ycol.y2ok:not(.none){box-shadow:0 0 0 2px var(--brand);backg
 .ywc-b{display:flex;gap:6px;flex-wrap:wrap}
 #yMoneyChase{margin-bottom:16px}
 .ylt-hr .yplate{justify-self:start}
+/* round 3: day picker, colour key, unplanned tabs, the ! tooltip, wait and load */
+.y3dbar{align-items:center;gap:12px;flex-wrap:wrap}
+.y3seg{align-items:stretch}
+.y3seg>button{padding:8px 16px;font-size:13.5px}
+.y3pick{display:inline-flex;align-items:center;gap:8px;padding:3px 6px 3px 12px;border-radius:8px;font-weight:700;font-size:13.5px;color:var(--muted);cursor:pointer}
+.y3pick span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.y3pick .ic{width:15px;height:15px}
+.y3pick.on{background:var(--panel);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.y3pick input{font:inherit;font-weight:600;font-size:13px;border:1px solid var(--line);border-radius:7px;padding:4px 6px;background:var(--panel);color:var(--ink);min-width:0;max-width:150px}
+.y3day{font-size:15px;font-weight:800}
+.y3key{display:flex;align-items:center;gap:22px;flex-wrap:wrap;font-size:16px;font-weight:800;color:var(--ink);padding:12px 16px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+.y3key span{display:inline-flex;align-items:center;gap:9px}
+.y3key i{display:inline-block;width:26px;height:26px;border-radius:7px}
+.y3key i.svc-skip,.y3dot.svc-skip,.y3tab.svc-skip .y3dot{background:#EAB308}.y3key i.svc-grab,.y3tab.svc-grab .y3dot{background:#2563EB}.y3key i.svc-roro,.y3tab.svc-roro .y3dot{background:#16A34A}
+.y3key .y3key-n{font-size:14px;font-weight:700;color:var(--ink2)}.y3key .y2bang{width:24px;height:24px;font-size:15px;margin:0}
+.yplan2>.y3key{margin-bottom:-4px}
+.y3un header{gap:8px}
+.y3tabs{display:flex;gap:8px;flex-wrap:wrap}
+.y3tab{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1.5px solid var(--line2);background:var(--panel);font-weight:800;font-size:14px;color:var(--ink2);cursor:pointer}
+.y3tab .y3dot{display:inline-block;width:12px;height:12px;border-radius:4px}
+.y3tab .y3n{font-weight:700;color:var(--muted);font-size:12.5px}
+.y3tab.on{border-color:var(--ink);color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.y3tab .y2bang{margin-left:0}
+.y3un-t{font-size:30px;font-weight:900;letter-spacing:-.01em;margin:4px 0 0;line-height:1.1;color:var(--ink)}
+.y3tip{position:fixed;z-index:400;max-width:260px;background:#18181B;color:#fff;font-size:13px;font-weight:600;line-height:1.35;padding:8px 11px;border-radius:9px;box-shadow:0 8px 24px rgba(0,0,0,.28);pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s;left:0;top:0}
+.y3tip.on{opacity:1;transform:none}
+.y3tip::after{content:"";position:absolute;left:var(--ax,50%);top:100%;margin-left:-6px;border:6px solid transparent;border-top-color:#18181B}
+.y3tip.below::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:#18181B}
+[data-theme="dark"] .y3tip{background:#F4F4F5;color:#18181B}[data-theme="dark"] .y3tip::after{border-top-color:#F4F4F5}[data-theme="dark"] .y3tip.below::after{border-top-color:transparent;border-bottom-color:#F4F4F5}
+.y2bang:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.tag.ywl{background:#EDE9FE;color:#5B21B6;border-color:#DDD6FE}.tag.ywl .ic{width:12px;height:12px}
+[data-theme="dark"] .tag.ywl{background:#2E1065;color:#DDD6FE;border-color:#4C1D95}
+.y3wait .yprice{margin-bottom:6px}
+@media (max-width:700px){.y3dbar>.sp{display:none}.y3seg{flex-wrap:wrap;width:100%}.y3seg>button{flex:1}.y3pick{flex:1 1 100%;justify-content:space-between}.y3pick input{max-width:none;flex:1}.y3key{gap:14px;font-size:15px}.y3un-t{font-size:26px}.y3day{width:100%}}
+.y3un-k{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800}
+.ypc-x{flex-wrap:wrap;row-gap:4px}.ypc-x .tag{max-width:100%;overflow:hidden;text-overflow:ellipsis}

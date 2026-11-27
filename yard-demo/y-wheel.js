@@ -9,8 +9,8 @@
     var A = UI.A, ui = UI.ui, ic = window.ic, h = CS.esc;
     function q(s) { return document.querySelector(s); }
     var SECT = [['home', 'Home', 'home', '1'], ['inbox', 'Inbox', 'inbox', '2'], ['bookings', 'Bookings', 'calendar', '3'], ['plan', 'Day plan', 'route', '4'], ['skips', 'Skips on site', 'skip', '5'], ['permits', 'Permits', 'certificate', '6'],
-      ['tracking', 'Live tracking', 'map-pin', '7'], ['board', 'Yard board', 'dashboard', '8'], ['wastein', 'Waste in', 'stack', '9'], ['credit', 'Credit control', 'lock', '0'],
-      ['cash', 'Cash', 'pound', 'C'], ['lorryprofit', 'Profit per lorry', 'truck', 'P'], ['wasteout', 'Waste out', 'route', 'O'], ['compliance', 'Compliance', 'shield-check', 'M'], ['reports', 'Waste and carbon', 'leaf', 'R']];
+      ['tracking', 'Live tracking', 'map-pin', '7'], ['wastein', 'Waste in', 'stack', '8'], ['credit', 'Credit control', 'lock', '9'],
+      ['cash', 'Cash', 'pound', '0'], ['lorryprofit', 'Profit per lorry', 'truck', 'P'], ['wasteout', 'Waste out', 'route', 'O'], ['compliance', 'Compliance', 'shield-check', 'M'], ['reports', 'Waste and carbon', 'leaf', 'R']];
     var N = SECT.length, STEP = 360 / N, hi = -1, open = null;
     function f(n) { return Math.round(n * 100) / 100; }
     function pt(r, deg) { var a = deg * Math.PI / 180; return [r * Math.cos(a), r * Math.sin(a)]; }

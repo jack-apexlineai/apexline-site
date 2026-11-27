@@ -237,7 +237,7 @@
     view('paperwork', 'Yard', 'Duty of care', 'certificate', 'Our licences and permits, and every transfer note we have issued');
     view('reports', 'Yard', 'Waste and carbon', 'leaf', 'Our tonnes, recycling rate, landfill diverted and carbon, with the Defra return export');
     view('money', 'Money', 'Money', 'pound', 'Sales, invoices, cash and profit');
-    var ord = ['home', 'inbox', 'board', 'tracking', 'bookings', 'plan', 'orders', 'history', 'skips', 'permits', 'customers', 'quotes', 'chasing', 'portal', 'money', 'credit', 'cash', 'lorryprofit', 'prices', 'scoreboard', 'wastein', 'wasteout', 'tickets', 'defra', 'reports', 'recycling', 'compliance', 'paperwork'];
+    var ord = ['home', 'inbox', 'tracking', 'bookings', 'plan', 'orders', 'history', 'skips', 'permits', 'customers', 'quotes', 'chasing', 'portal', 'money', 'credit', 'cash', 'lorryprofit', 'prices', 'scoreboard', 'wastein', 'wasteout', 'tickets', 'defra', 'reports', 'recycling', 'compliance', 'paperwork'];
     UI.VIEWS.sort(function (a, b) { var ia = ord.indexOf(a.k), ib = ord.indexOf(b.k); return (ia < 0 ? 900 : ia) - (ib < 0 ? 900 : ib); });
     if (K.MAP) { K.MAP.lorryprofit = ['Money', 'Profit per lorry', 'truck']; K.MAP.wasteout = ['Yard', 'Waste out', 'route']; }
     window.DSGY5 = { profit: profit, drill: drill };

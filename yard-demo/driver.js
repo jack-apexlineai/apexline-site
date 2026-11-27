@@ -1,5 +1,5 @@
 /* Driver app: pick your lorry, PIN, then today's jobs in order. On the job: a site photo, the customer signs,
-   Send to office. The next job starts by itself and the office map and yard board show you on the way.
+   Send to office. The next job starts by itself and the office map and day plan show you on the way.
    Inside the office demo it works on the office's own data. On its own it saves in this browser. */
 (function () {
   var params = new URLSearchParams(location.search), embed = params.get('embed') === '1';
@@ -35,7 +35,7 @@
     if (c) o += card(c);
     else o += '<section class="dv-card dv-done-all">' + ic('circle-check') + '<h2>All done for today</h2><p>Every job has its photo and signature. Head back to the yard.</p></section>';
     var rest = L.filter(function (j) { return j.status !== 'done' && j !== c; });
-    if (rest.length) o += '<h3 class="dv-h">Still to do</h3>' + rest.map(function (j, i) { return '<div class="dv-mini"><span class="dv-n">' + (i + 2) + '</span><span><b>' + YC.hhmm(j.win[0]) + ' · ' + h(YC.whatShort(j)) + '</b><small>' + h(j.site.name) + '</small>' + (YC.isCash(j) ? '<em class="dv-cmini">Cash ' + h(YC.gbp(YC.cashAmt(j).gross)) + '</em>' : '') + '</span></div>'; }).join('');
+    if (rest.length) o += '<h3 class="dv-h">Still to do</h3>' + rest.map(function (j, i) { return '<div class="dv-mini"><span class="dv-n">' + (i + 2) + '</span><span><b>' + YC.hhmm(j.win[0]) + ' · ' + h(YC.whatShort(j)) + '</b><small>' + h(j.site.name) + (j.type === 'wait' ? ' · ' + YC.waitTerms(j, Y()).incl + ' min on site' : '') + '</small>' + (YC.isCash(j) ? '<em class="dv-cmini">Cash ' + h(YC.gbp(YC.cashAmt(j).gross)) + '</em>' : '') + '</span></div>'; }).join('');
     if (done.length) o += '<h3 class="dv-h">Done today</h3>' + done.map(function (j) { return '<div class="dv-mini done">' + ic('check') + '<span><b>' + h(YC.whatShort(j)) + '</b><small>' + h(j.site.name) + ' · ' + CS.clock(j.at.done) + '</small>' + (YC.isCash(j) ? '<em class="dv-cmini ' + YC.cashState(j) + '">' + (YC.cashState(j) === 'collected' ? 'Cash collected ' + h(YC.gbp(YC.cashAmt(j).gross)) : 'Cash NOT collected') + '</em>' : '') + '</span></div>'; }).join('');
     o += '<button class="dv-link dv-switch" data-a="switch">' + ic('truck') + 'Not ' + h(lo().reg) + '? Change lorry</button>';
     $('#main').innerHTML = o;
@@ -56,9 +56,10 @@
   }
   function card(j) {
     var sv = YC.STREAMS[j.stream], nm = YC.custName(S(), j.cust), ph = since(j, 'photo'), sg = since(j, 'sig');
-    var o = '<section class="dv-card cur"><div class="dv-ct"><span class="dv-tag ' + j.status + '">' + (j.status === 'onsite' ? 'On site' : 'Now') + '</span><span class="dv-win">' + YC.win(j) + '</span></div>' +
+    var o = '<section class="dv-card cur"><div class="dv-ct"><span class="dv-tag ' + j.status + '">' + (j.status === 'onsite' ? 'On site' : 'Now') + '</span><span class="dv-win">' + h(YC.winBand(j)) + '</span></div>' +
       '<h2>' + h(YC.what(j)) + '</h2><p class="dv-who"><b>' + h(nm) + '</b><br>' + h(j.site.name) + ', ' + h(j.site.pc) + '</p>' +
       (YC.isCash(j) ? '<div class="dv-cash" id="dvCash">' + ic('pound') + '<span><b>CASH: collect ' + h(YC.gbp(YC.cashAmt(j).gross)) + '</b><small>' + h(YC.gbp(YC.cashAmt(j).net)) + ' + VAT. Ask for it before you leave site</small></span></div>' : '') +
+      (j.type === 'wait' ? '<div class="dv-wait" id="dvWait">' + ic('clock') + '<span><b>WAIT AND LOAD: ' + YC.waitTerms(j, Y()).incl + ' min on site</b><small>Drop it, wait while they load, then bring it straight back. After ' + YC.waitTerms(j, Y()).incl + ' min the waiting is charged, so note the time you arrive</small></span></div>' : '') +
       '<div class="dv-facts"><span>' + ic('certificate') + h(sv.n) + ' · EWC ' + sv.ewc + '</span>' + (j.permit ? '<span class="warn">' + ic('alert') + 'On the road. Lights and cones. Permit ' + h(j.permit.ref) + '</span>' : '') + (j.notes ? '<span>' + ic('pencil') + h(j.notes) + '</span>' : '') + '</div>' +
       '<div class="dv-acts"><a class="dv-btn" href="' + mapsUrl(j) + '" target="_blank" rel="noopener">' + ic('route') + 'Navigate</a>' + (custPhone(j) ? '<a class="dv-btn" href="tel:' + h(String(custPhone(j)).replace(/\s/g, '')) + '">' + ic('phone') + 'Ring</a>' : '') + '</div>' +
       '<ol class="dv-steps">' +

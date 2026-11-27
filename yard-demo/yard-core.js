@@ -29,7 +29,7 @@
   YC.PRICES = {
     skip: { 2: 150, 4: 230, 6: 280, 8: 320, 10: 360, 12: 395, 14: 430, 16: 460 },
     roro: { 20: { price: 450, incl: 2 }, 40: { price: 595, incl: 3 } },
-    overRate: 75, grab: 380, muck: 360, hireDays: 14, permit: 65
+    overRate: 75, grab: 380, muck: 360, hireDays: 14, permit: 65, waitIncl: 30, waitPer15: 25
   };
   YC.prices = function (Y) { if (Y && !Y.prices) Y.prices = JSON.parse(JSON.stringify(YC.PRICES)); return (Y && Y.prices) || YC.PRICES; };
   YC.isRoro = function (j) { return (j.size || 0) >= 20 && j.type !== 'grab' && j.type !== 'muck'; };
@@ -62,9 +62,10 @@
   YC.KIND = { skip: 'Skip loader, up to 16 yards', roro: 'Hook lift, 20 and 40 yard', grab: '8-wheel grab lorry' };
   YC.GROUPS = [['skip', 'Skip lorries'], ['roro', 'Hook lift / RoRo'], ['grab', 'Grab lorries']];
   YC.TYPES = {
-    deliver: { n: 'Deliver', ic: 'skip', waste: false },
+    deliver: { n: 'Delivery', ic: 'skip', waste: false },
     exchange: { n: 'Exchange', ic: 'exchange', waste: true },
-    collect: { n: 'Collect', ic: 'truck', waste: true },
+    collect: { n: 'Collection', ic: 'truck', waste: true },
+    wait: { n: 'Wait and load', ic: 'clock', waste: true },
     grab: { n: 'Grab', ic: 'backhoe', waste: true },
     muck: { n: 'Muckaway', ic: 'truck', waste: true }
   };
@@ -110,6 +111,8 @@
   };
   YC.hhmm = function (m) { m = Math.round(m); return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
   YC.win = function (j) { return YC.hhmm(j.win[0]) + ' to ' + YC.hhmm(j.win[1]); };
+  /* the day plan's time windows: 7 to 9, 8 to 12, 12 to 4 (the day plan also moves a job for an access note) */
+  YC.winBand = function (j) { var K = window.DSGY && window.DSGY.kit; if (K && K.planWin) return K.planWin(j); return j.win[0] < 480 ? '7 to 9' : j.win[0] < 720 ? '8 to 12' : '12 to 4'; };
   YC.TRAVEL = 150000; YC.DWELL = 70000;   /* demo time: a leg takes two and a half minutes, a stop a little over one */
 
   /* ---------- building the day ---------- */
@@ -198,12 +201,17 @@
   YC.lorry = function (id) { return YC.LORRIES.filter(function (l) { return l.id === id; })[0] || null; };
   YC.what = function (j) {
     if (j.type === 'grab' || j.type === 'muck') return (j.type === 'grab' ? 'Grab' : 'Muckaway') + ', ' + j.loads + ' load' + (j.loads === 1 ? '' : 's') + ' (about ' + (j.loads * YC.LOAD_T) + 't)';
-    return YC.TYPES[j.type].n + ' ' + j.size + ' yard ' + (j.size >= 20 ? 'RoRo' : 'skip');
+    return YC.TYPES[j.type].n + ', ' + j.size + ' yard ' + (j.size >= 20 ? 'RoRo' : 'skip');
   };
   YC.whatShort = function (j) {
     if (j.type === 'grab' || j.type === 'muck') return j.loads + ' x ' + (j.type === 'grab' ? 'grab' : 'muckaway');
     return j.size + 'yd ' + YC.TYPES[j.type].n.toLowerCase();
   };
+  /* wait and load: the lorry drops the skip or RoRo, waits while the customer loads it, then takes it straight away.
+     Time on site is included up to a limit, then waiting is charged per 15 minutes */
+  YC.waitTerms = function (j, Y) { var P = YC.prices(Y), w = (j && j.wait) || {}; return { incl: w.incl || P.waitIncl || 30, rate: w.rate != null ? w.rate : (P.waitPer15 || 25) }; };
+  YC.waitLine = function (j, Y) { var t = YC.waitTerms(j, Y); return t.incl + ' min on site included, then ' + YC.gbp0(t.rate) + ' per 15 min waiting'; };
+  YC.gbp0 = function (n) { return '\u00a3' + (Math.round(n * 100) / 100).toLocaleString('en-GB', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 }); };
 
   /* history: yesterday's and earlier tickets, so the weighbridge and Defra lists are full on first look */
   function seedHistory(S, Y) {
@@ -374,13 +382,13 @@
     c3.status = 'onway'; c3.at.onway = Date.now() - 50000; c3.eta = { at: Date.now(), text: etaAt(S, c3, 12, now) }; Y.texts.unshift({ at: Date.now(), job: c3.id, to: YC.custName(S, c3.cust), text: c3.eta.text });
     /* earlier this month: cash jobs already banked, one not handed in yet, one still owed */
     var H = [
-      [1, 'Mrs Carol Dunne', 'Hermitage Road, St Johns', '6yd deliver', 'L1', 280, 'collected', false], [1, 'Mr Steve Aldridge', 'Oak Tree Close, Knaphill', '1 x grab', 'G1', 380, 'collected', false],
-      [2, 'Mrs Priya Shah', 'Maybury Hill, Woking', '8yd collect', 'L2', 320, 'collected', true], [3, 'Mr Ian Pell', 'Greenway, Mayford', '4yd exchange', 'L1', 230, 'not', true, 'Said he would pay by bank transfer that night'],
-      [3, 'Mr Neil Corbett', 'Chertsey Road, Byfleet', '1 x grab', 'G2', 380, 'collected', true], [4, 'Mrs Joanne Lacey', 'Horsell Rise, Horsell', '6yd deliver', 'L4', 280, 'collected', true],
-      [5, 'Mr Kevin Ross', 'Robin Hood Road, Knaphill', '8yd deliver', 'L2', 320, 'collected', true], [6, 'Mr Dean Walsh', 'Lockfield Drive, Goldsworth Park', '4yd collect', 'L1', 230, 'collected', true],
-      [7, 'Mrs Ruth Evans', 'Send Road, Send', '1 x muckaway', 'G1', 360, 'collected', true], [8, 'Mr Tony Marsh', 'Woodham Lane, New Haw', '12yd deliver', 'L4', 395, 'collected', true],
-      [9, 'Mrs Helen Ashworth', 'Station Road, St Johns', '4yd deliver', 'L2', 230, 'collected', true], [11, 'Mr Rob Kemp', 'Coldharbour Road, Pyrford', '6yd exchange', 'L1', 280, 'collected', true],
-      [12, 'Mrs Fiona Hart', 'Bisley Green, Bisley', '1 x grab', 'G2', 380, 'collected', true], [14, 'Mr Sam Ellis', 'Guildford Road, Lightwater', '8yd deliver', 'L4', 320, 'collected', true]
+      [1, 'Mrs Carol Dunne', 'Hermitage Road, St Johns', '6yd delivery', 'L1', 280, 'collected', false], [1, 'Mr Steve Aldridge', 'Oak Tree Close, Knaphill', '1 x grab', 'G1', 380, 'collected', false],
+      [2, 'Mrs Priya Shah', 'Maybury Hill, Woking', '8yd collection', 'L2', 320, 'collected', true], [3, 'Mr Ian Pell', 'Greenway, Mayford', '4yd exchange', 'L1', 230, 'not', true, 'Said he would pay by bank transfer that night'],
+      [3, 'Mr Neil Corbett', 'Chertsey Road, Byfleet', '1 x grab', 'G2', 380, 'collected', true], [4, 'Mrs Joanne Lacey', 'Horsell Rise, Horsell', '6yd delivery', 'L4', 280, 'collected', true],
+      [5, 'Mr Kevin Ross', 'Robin Hood Road, Knaphill', '8yd delivery', 'L2', 320, 'collected', true], [6, 'Mr Dean Walsh', 'Lockfield Drive, Goldsworth Park', '4yd collection', 'L1', 230, 'collected', true],
+      [7, 'Mrs Ruth Evans', 'Send Road, Send', '1 x muckaway', 'G1', 360, 'collected', true], [8, 'Mr Tony Marsh', 'Woodham Lane, New Haw', '12yd delivery', 'L4', 395, 'collected', true],
+      [9, 'Mrs Helen Ashworth', 'Station Road, St Johns', '4yd delivery', 'L2', 230, 'collected', true], [11, 'Mr Rob Kemp', 'Coldharbour Road, Pyrford', '6yd exchange', 'L1', 280, 'collected', true],
+      [12, 'Mrs Fiona Hart', 'Bisley Green, Bisley', '1 x grab', 'G2', 380, 'collected', true], [14, 'Mr Sam Ellis', 'Guildford Road, Lightwater', '8yd delivery', 'L4', 320, 'collected', true]
     ];
     var backs = [], d = 0; while (backs.length < 16 && d > -40) { d--; if (YC.dayDate(d).getDay() !== 0) backs.push(d); }
     Y.cashLog = H.map(function (r, i) {
@@ -475,7 +483,7 @@
     return etaAt(S, j, mins, at.getHours() * 60 + at.getMinutes() - mins);
   };
   function etaAt(S, j, mins, fromMin) {
-    var lo = YC.lorry(j.lorry), what = j.type === 'grab' || j.type === 'muck' ? 'with the grab lorry' : j.type === 'collect' ? 'to collect your ' + j.size + ' yard skip' : 'with your ' + j.size + ' yard skip';
+    var lo = YC.lorry(j.lorry), what = j.type === 'grab' || j.type === 'muck' ? 'with the grab lorry' : j.type === 'collect' ? 'to collect your ' + j.size + ' yard skip' : j.type === 'wait' ? 'with your ' + j.size + ' yard ' + (j.size >= 20 ? 'RoRo' : 'skip') + '. He will wait while you load it, ' + YC.waitTerms(j).incl + ' minutes included' : 'with your ' + j.size + ' yard skip';
     return 'Hi ' + YC.custFirst(S, j.cust) + ', ' + (lo ? lo.first : 'your driver') + ' from Demo Skip & Grab is on his way ' + what + '. About ' + mins + ' minutes, so around ' + YC.hhmm(fromMin + mins) + '.';
   }
   YC.act = function (S, Y, id, what, data) {

@@ -19,16 +19,13 @@
   var STEPS = [
     { id: 'home', act: 'yHome', m: '1 min', t: 'Your whole yard, on one screen',
       p: 'Skips, grabs, lorries, drivers, paperwork and money, in one place. Eight tiles, nothing else to learn. Cash collected this week sits first, because money in matters most. Tap any tile to go straight there.' },
-    { id: 'board', act: 'yBoard', m: '1 min', t: 'The yard board, for the office TV',
-      p: 'Lorries out, skips due back today, overdue skips, today\'s money and the drivers\' league. It updates by itself as the day goes. Press Full screen and leave it on the TV.',
-      x: [{ l: 'Show it full screen', act: 'yTVShow' }] },
     { id: 'bookings', act: 'yBookings', m: '1 min', t: 'Bookings, skips and grabs',
       p: 'Every job with its size or loads, the waste stream and the EWC code, and a road permit where it needs one. Press New booking: pick the customer, the skip or grab, the waste, and it suggests the right lorry.',
       x: [{ l: 'Open a new booking', act: 'yBookNew' }] },
     { id: 'plan', act: 'yPlan', m: '1 min', t: 'The day plan',
       p: 'One column per lorry. Drag a job onto a lorry and it is on that driver\'s phone straight away. A grab job will not go on a skip lorry, and a 40 yard RoRo only goes on the hook lorry.' },
     { id: 'skips', act: 'ySkips', m: '1 min', t: 'Skips on site',
-      p: 'Every skip out on hire, how many days it has been there, and which ones are over the hire period. Exchange or Collect is one tap: it goes on tomorrow\'s plan and the customer gets a text.',
+      p: 'Every skip out on hire, how many days it has been there, and which ones are over the hire period. Exchange or Collection is one tap: it goes on tomorrow\'s plan and the customer gets a text.',
       x: [{ l: 'Show only the overdue ones', act: 'ySkipsOver' }] },
     { id: 'permits', act: 'yPermits', m: 'half a min', t: 'Permits',
       p: 'Every road permit from To apply for, through Applied for, Paid and Waiting on council, to Approved. A road booking makes its permit card by itself, and if nobody has applied within 30 minutes, you get a nudge.' },
@@ -96,7 +93,7 @@
     document.body.classList.add('walking');
     b.className = st.paused ? 'paused' : '';
     if (st.paused) b.innerHTML = '<span class="wk-n">Tour' + (s ? ' · ' + (st.i + 1) + ' of ' + n : '') + '</span><button data-wk="resume" title="Put this screen back and show the card">Resume</button>' + (s ? '<button class="pri" data-wk="next" title="Go to the next screen">' + (st.i === n - 1 ? 'Finish' : 'Next') + '</button>' : '');
-    else if (st.i < 0) b.innerHTML = '<div class="wk-top"><span class="wk-n">Guided tour</span></div><b class="wk-t">' + n + ' screens, about fifteen minutes</b><p class="wk-p">The whole skip and grab system, one screen at a time: the yard board, bookings, the driver app, tracking, credit control and Defra. Press Start. Next moves to the next screen. Click anywhere on the page and this card folds out of the way.</p><div class="wk-b"><button class="pri" data-wk="start">Start</button></div>';
+    else if (st.i < 0) b.innerHTML = '<div class="wk-top"><span class="wk-n">Guided tour</span></div><b class="wk-t">' + n + ' screens, about fifteen minutes</b><p class="wk-p">The whole skip and grab system, one screen at a time: bookings, the driver app, tracking, credit control and Defra. Press Start. Next moves to the next screen. Click anywhere on the page and this card folds out of the way.</p><div class="wk-b"><button class="pri" data-wk="start">Start</button></div>';
     else if (st.i >= n) b.innerHTML = '<div class="wk-top"><span class="wk-n">Guided tour</span></div><b class="wk-t">That is the main run</b><p class="wk-p">Live inside 2 to 4 weeks. Download the templates, fill them in, and upload them here yourself. We walk you through it on a call. Ask to see anything again, or anything that was not shown.</p><div class="wk-prog"><i style="width:100%"></i></div><div class="wk-b"><button data-wk="back">Back</button><button data-wk="restart">Start again</button><button data-wk="close">Close</button></div>';
     else b.innerHTML = '<div class="wk-top"><span class="wk-n">' + (s.sec ? esc(s.sec) + ' · ' : 'Tour · ') + (st.i + 1) + ' of ' + n + '</span>' + (s.m ? '<span class="wk-m">' + s.m + '</span>' : '') + '<button class="mini" data-wk="pause" title="Fold the tour away. It also folds by itself as soon as you click anywhere on the page">Hide</button></div>' +
       '<b class="wk-t">' + esc(s.t) + '</b><p class="wk-p">' + esc(s.p) + '</p>' +

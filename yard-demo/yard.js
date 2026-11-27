@@ -1,4 +1,4 @@
-/* Yard layer for the skip and grab demo: Home, yard board, bookings, day plan, skips on site, live tracking,
+/* Yard layer for the skip and grab demo: Home, bookings, day plan, skips on site, live tracking,
    driver app, tickets and WTNs, Defra, recycling, credit control, scoreboard, problems and "make it yours".
    Sample data in this browser only. Nothing is sent anywhere. */
 (function () {
@@ -63,7 +63,7 @@
     /* ---------- the menu ---------- */
     var GROUPS = ['Today', 'Jobs', 'Customers', 'Money', 'Yard', 'More'];
     var MAP = {
-      home: ['Today', 'Home', 'home'], inbox: ['Today', 'Inbox', 'inbox'], board: ['Today', 'Yard board', 'dashboard'],
+      home: ['Today', 'Home', 'home'], inbox: ['Today', 'Inbox', 'inbox'],
       bookings: ['Jobs', 'Bookings', 'calendar'], plan: ['Jobs', 'Day plan', 'route'], skips: ['Jobs', 'Skips on site', 'skip'], permits: ['Jobs', 'Permits', 'certificate'], tracking: ['Jobs', 'Live tracking', 'map-pin'],
       customers: ['Customers', 'Customers', 'users'], quotes: ['Customers', 'Quotes', 'file-text'], portal: ['Customers', 'Customer portal', 'world'],
       credit: ['Money', 'Credit control', 'lock'], cash: ['Money', 'Cash', 'pound'], money: ['Money', 'Money', 'pound'],  prices: ['Money', 'Price list', 'list'], scoreboard: ['Money', 'Scoreboard', 'target'],
@@ -72,7 +72,6 @@
       team: ['More', 'Team', 'users'], suppliers: ['More', 'Supplier handbook', 'warehouse'], compliance: ['More'], find: ['More', 'Find a supplier', 'map-pin'], bills: ['More', 'Bill check', 'receipt'], paperwork: ['More', 'Duty of care', 'certificate'], reports: ['More', 'Waste and carbon', 'leaf']
     };
     var NEW = [
-      { k: 'board', sub: 'Lorries out, skips due back, today\'s money and the jobs league, for the office TV' },
       { k: 'bookings', sub: 'Every skip and grab job, with the waste stream, EWC code and permit' },
       { k: 'plan', sub: 'Drag a job onto a lorry. Drivers see the change straight away' },
       { k: 'skips', sub: 'Every skip out on hire, how long it has been there, and what is overdue' },
@@ -224,7 +223,7 @@
        HOME: calm, eight tiles by default, drag to rearrange, Arrange to add or hide
        ====================================================================== */
     var TILE_DEF = ['credit', 'jobs', 'lorries', 'skips', 'inbox', 'permits2'];
-    var TILE_EXTRA = ['defra', 'week', 'board', 'recycle', 'league', 'tickets', 'permits', 'unassigned', 'quotes'];
+    var TILE_EXTRA = ['defra', 'week', 'recycle', 'league', 'tickets', 'permits', 'unassigned', 'quotes'];
     function tiles() {
       var y = Y(), s = S(), t0 = YC.today(y), done = t0.filter(function (j) { return j.status === 'done'; }).length, road = YC.LORRIES.filter(function (l) { var w = YC.where(y, l.id); return w.state === 'onway' || w.state === 'onsite' || w.state === 'between'; }).length;
       var ag = aged(), st = stops(), cw = sum(cashWeek()), os = y.onsite.filter(function (o) { return !o.booked; }), od = os.filter(function (o) { return -o.since > o.hire; }).length, dueT = os.filter(function (o) { return -o.since === o.hire; }).length;
@@ -240,7 +239,6 @@
         inbox: { t: 'Messages', v: needs, s: needs ? 'need a reply' : 'All answered', go: 'inbox', i: 'inbox' },
         defra: { t: 'Ready for Defra', v: rdy, s: err ? err + ' need fixing first' : 'Nothing to fix', bad: err > 0, go: 'defra', i: 'shield-check' },
         week: { t: 'Booked this week', v: money(wr.v), s: plural(wr.n, 'order') + ' since Monday', go: 'trends', i: 'trending-up' },
-        board: { t: 'Yard board', v: ic('dashboard'), s: 'Put it on the office TV', act: 'yTV', i: 'dashboard', icon: true },
         recycle: { t: 'Recycled this month', v: REC.months[REC.months.length - 1].rec + '%', s: 'kept out of landfill', go: 'recycling', i: 'leaf' },
         league: { t: 'Top of the league', v: h(lead ? lead.first : ''), s: lead ? lead.today + ' jobs done today' : '', go: 'scoreboard', i: 'target' },
         tickets: { t: 'Tickets to match', v: unm, s: unm ? 'read from a photo' : 'All matched', bad: unm > 0, go: 'tickets', i: 'receipt' },
@@ -340,7 +338,7 @@
           : '<div class="ybk2"><div class="field"><label for="ybName">Name</label><input id="ybName" data-ybt="nname" value="' + h(b.nname || '') + '" placeholder="Mrs Jane Smith"></div><div class="field"><label for="ybPhone">Mobile</label><input id="ybPhone" data-ybt="nphone" value="' + h(b.nphone || '') + '" placeholder="07700 900000"></div></div>' +
             '<div class="ybk2"><div class="field"><label for="ybAddr">Address</label><input id="ybAddr" data-ybt="naddr" value="' + h(b.naddr || '') + '" placeholder="12 Church Lane, Knaphill"></div><div class="field"><label for="ybPc">Postcode</label><input id="ybPc" data-ybt="npc" value="' + h(b.npc || '') + '" placeholder="KT14 6EX"></div></div>') +
         '<div class="field"><label>What</label>' + seg('svc', b.svc, [['skip', 'Skip hire'], ['roro', 'RoRo'], ['grab', 'Grab hire'], ['muck', 'Muckaway']]) + '</div>' +
-        (bkSkipish(b) ? '<div class="field"><label>Job</label>' + seg('type', b.type, [['deliver', 'Deliver'], ['exchange', 'Exchange'], ['collect', 'Collect']]) + '</div>' +
+        (bkSkipish(b) ? '<div class="field"><label>Job</label>' + seg('type', b.type, [['deliver', 'Delivery'], ['exchange', 'Exchange'], ['collect', 'Collection'], ['wait', 'Wait and load']]) + '</div>' +
           (b.svc === 'skip' ? '<div class="field"><label>Skip size</label><div class="ysizes">' + YC.SIZES.map(function (z) { return '<button type="button" data-act="yBkSet" data-k="size" data-v="' + z + '" class="' + (+b.size === z ? 'on' : '') + '">' + z + '<small>yard</small></button>'; }).join('') + '</div></div>'
             : '<div class="field"><label>RoRo size</label><div class="ysizes four">' + YC.RORO_SIZES.map(function (z) { var r = YC.prices(Y()).roro[z]; return '<button type="button" data-act="yBkSet" data-k="rsize" data-v="' + z + '" class="' + (+b.rsize === z ? 'on' : '') + '">' + z + '<small>yard, ' + r.incl + ' t incl</small></button>'; }).join('') + '</div>' +
               '<div class="ycr ok" id="yRoroIncl">' + ic('stack') + '<span><b>Includes ' + YC.prices(Y()).roro[b.rsize].incl + ' tonnes.</b> Anything over is ' + money(YC.prices(Y()).overRate) + ' a tonne, invoiced from the weighbridge ticket when it comes back.</span></div></div>')
@@ -435,7 +433,7 @@
       var j = jobById(el.dataset.id); if (!j) return; var s = S(), lo = YC.lorry(j.lorry), st = YC.STREAMS[j.stream], t = j.ticket ? Y().tickets.filter(function (x) { return x.id === j.ticket; })[0] : null;
       var steps = [['Booked', true, j.log[0] && j.log[0].at], ['On the way', !!j.at.onway, j.at.onway], ['On site', !!j.at.arrived, j.at.arrived], ['Done', j.status === 'done', j.at.done]];
       var body = '<div class="ytl">' + steps.map(function (x) { return '<div class="' + (x[1] ? 'on' : '') + '"><i></i><b>' + x[0] + '</b><small>' + (x[1] && x[2] ? CS.clock(x[2]) : '') + '</small></div>'; }).join('') + '</div>' +
-        '<dl class="kv"><dt>Customer</dt><dd>' + h(YC.custName(s, j.cust)) + '</dd><dt>Site</dt><dd>' + h(j.site.name + ', ' + j.site.pc) + '</dd><dt>When</dt><dd>' + h(dayName(j.day)) + ', ' + YC.win(j) + '</dd>' +
+        '<dl class="kv"><dt>Customer</dt><dd>' + h(YC.custName(s, j.cust)) + '</dd><dt>Site</dt><dd>' + h(j.site.name + ', ' + j.site.pc) + '</dd><dt>When</dt><dd>' + h(dayName(j.day)) + ', ' + h(YC.winBand(j)) + '</dd>' +
         '<dt>Lorry</dt><dd>' + (lo ? h(lo.reg + ', ' + lo.driver) : 'Not given a lorry yet') + '</dd><dt>Waste</dt><dd>' + h(st.n) + '</dd><dt>EWC code</dt><dd>' + st.ewc + '</dd>' +
         (j.permit ? '<dt>Road permit</dt><dd>' + h(j.permit.council) + ', ref ' + h(j.permit.ref) + ', until ' + h(dayName(j.permit.to)) + '</dd>' : '') +
         (t ? '<dt>Tip ticket</dt><dd>' + h(t.id) + ', ' + t.net.toFixed(2) + ' t net at ' + h(YC.TIPS[t.site].n) + '</dd>' : '') +
@@ -540,7 +538,7 @@
           return '<div class="ysk' + (od ? ' od' : '') + (o.booked ? ' bk' : '') + '"><span class="ysk-n"><b>' + h(o.id) + '</b><small>' + o.size + (o.size >= 20 ? ' yd RoRo' : ' yard') + '</small></span>' +
             '<span class="ysk-m"><b>' + h(YC.custName(s, o.cust)) + '</b><small>' + h(o.site.name + ', ' + o.site.pc) + '</small></span>' +
             '<span class="ysk-h"><span class="yh-bar"><i style="width:' + pct + '%"></i></span><small>' + (od ? '<b class="bad">' + (days - o.hire) + ' day' + (days - o.hire === 1 ? '' : 's') + ' over</b> · ' : due ? '<b class="amber">Due back today</b> · ' : '') + days + ' of ' + o.hire + ' days</small>' + (o.permit ? '<small>' + ic('certificate') + 'Permit until ' + h(dayName(o.permit.to)) + '</small>' : '') + '</span>' +
-            '<span class="ysk-a">' + (o.booked ? '<span class="tag ok">' + ic('check') + h(o.booked) + '</span>' : '<button class="btn sm" data-act="ySkip" data-k="exchange" data-id="' + o.id + '">' + ic('exchange') + 'Exchange</button><button class="btn sm" data-act="ySkip" data-k="collect" data-id="' + o.id + '">' + ic('truck') + 'Collect</button>') + '</span></div>';
+            '<span class="ysk-a">' + (o.booked ? '<span class="tag ok">' + ic('check') + h(o.booked) + '</span>' : '<button class="btn sm" data-act="ySkip" data-k="exchange" data-id="' + o.id + '">' + ic('exchange') + 'Exchange</button><button class="btn sm" data-act="ySkip" data-k="collect" data-id="' + o.id + '">' + ic('truck') + 'Collection</button>') + '</span></div>';
         }).join('') + '</div><p class="muted yfoot">Hire runs from the day it was dropped. Anything past its hire period shows in red here and on Home, so the extra hire is charged or the skip comes back.</p>';
     };
     A.ySkF = function (el) { ui.ySkF = el.dataset.v; UI.render(); };
@@ -650,7 +648,7 @@
       return '<div class="ydrv"><div class="ydrv-txt"><h2>' + ic('mobile') + 'What your drivers see</h2><p>Each driver opens their own list on their phone. No training: the next job is at the top with one big button.</p>' +
         '<ul class="ydrv-l"><li>' + ic('route') + '<span><b>Today\'s jobs in order</b>, with the gate code, the waste and where it goes</span></li><li>' + ic('map-pin') + '<span><b>Navigate</b> opens their usual maps app on the site</span></li><li>' + ic('message') + '<span><b>On my way</b> texts the customer an ETA by itself</span></li><li>' + ic('eye') + '<span><b>A photo</b> on every drop and every collection</span></li><li>' + ic('pencil') + '<span><b>The customer signs</b> on the screen</span></li><li>' + ic('receipt') + '<span><b>Ticket and weight</b> typed in or read from a photo of the ticket</span></li></ul>' +
         '<div class="field"><label>Show the phone of</label><div class="ydrv-pick">' + YC.LORRIES.map(function (l) { return '<button class="ychip' + (cur === l.id ? ' on' : '') + '" data-act="yDrv" data-v="' + l.id + '"><span class="ylo" style="--lc:' + l.col + '"><i></i>' + h(l.first) + '</span></button>'; }).join('') + '</div></div>' +
-        '<p class="muted" style="font-size:12.5px">Press the buttons on the phone. The office map, the day plan and the board update as the driver goes.</p>' +
+        '<p class="muted" style="font-size:12.5px">Press the buttons on the phone. The office map, the day plan and live tracking update as the driver goes.</p>' +
         '<a class="btn" href="driver.html?l=' + cur + '" target="_blank" rel="noopener">' + ic('external') + 'Open it on its own</a></div><div class="ydrv-ph" id="yDrvSlot"></div></div>';
     };
     A.yDrv = function (el) { ui.yDrv = el.dataset.v; UI.render(); };
@@ -871,30 +869,8 @@
     };
     A.yScTab = function (el) { ui.yScTab = el.dataset.v; UI.render(); };
 
-    /* ======================================================================
-       YARD BOARD, and full screen for the office TV
-       ====================================================================== */
-    V.board = function () {
-      var y = Y(), s = S(), os = y.onsite, dueT = os.filter(function (o) { return -o.since === o.hire && !o.booked; }), over = os.filter(function (o) { return -o.since > o.hire && !o.booked; });
-      var paidToday = s.invoices.filter(function (i) { return i.status === 'paid' && i.paidDay === 0; }), inv = s.invoices.filter(function (i) { return i.issued === 0; }), ag = aged(), D = drivers(), t0 = YC.today(y), dn = t0.filter(function (j) { return j.status === 'done'; }).length;
-      var now = new Date();
-      return '<div class="yboard' + (document.body.classList.contains('ytv') ? ' tv' : '') + '" id="yBoard"><div class="yb-top"><div><b class="yb-clock">' + YC.hhmm(now.getHours() * 60 + now.getMinutes()) + '</b><small>' + h(CS.dayDate(0).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })) + '</small></div><div class="yb-big"><b>' + dn + '<i>/' + t0.length + '</i></b><small>jobs done today</small></div><span class="sp"></span>' +
-        (document.body.classList.contains('ytv') ? '<button class="btn" data-act="yTVOff">' + ic('x') + 'Exit full screen</button>' : '<button class="btn pri" data-act="yTV">' + ic('dashboard') + 'Full screen for the TV</button>') + '</div>' +
-        '<div class="yb-grid"><section class="yb-p yb-lor"><h3>' + ic('truck') + 'Lorries out</h3>' + YC.LORRIES.map(function (l) { var w = YC.where(y, l.id), L0 = YC.forLorry(y, l.id, 0), d = L0.filter(function (j) { return j.status === 'done'; }).length; return '<div class="yb-l"><span class="ylo" style="--lc:' + l.col + '"><i></i>' + h(l.n) + '</span><span class="yb-s">' + h(l.first) + ': ' + h(stateLine(y, l, w)) + '</span><b>' + d + '/' + L0.length + '</b></div>'; }).join('') + '</section>' +
-        '<section class="yb-p"><h3>' + ic('clock') + 'Skips due back today</h3><b class="yb-n">' + dueT.length + '</b>' + dueT.slice(0, 4).map(function (o) { return '<div class="yb-r">' + h(o.id) + ' · ' + o.size + ' yd · ' + h(o.site.name.split(',').slice(-1)[0].trim()) + '</div>'; }).join('') + '</section>' +
-        '<section class="yb-p bad"><h3>' + ic('alert') + 'Overdue skips</h3><b class="yb-n">' + over.length + '</b>' + over.slice(0, 4).map(function (o) { return '<div class="yb-r">' + h(o.id) + ' · ' + (-o.since - o.hire) + ' days over · ' + h(YC.custName(s, o.cust)) + '</div>'; }).join('') + '</section>' +
-        '<section class="yb-p"><h3>' + ic('pound') + 'Today\'s money</h3><div class="yb-m"><div><b>' + money(sum(paidToday)) + '</b><small>collected today</small></div><div><b>' + money(sum(cashWeek())) + '</b><small>this week</small></div><div><b>' + money(sum(inv)) + '</b><small>invoiced today</small></div><div><b class="bad">' + money(ag.over) + '</b><small>overdue</small></div></div></section>' +
-        '<section class="yb-p yb-lg"><h3>' + ic('target') + 'Jobs league, today</h3>' + D.map(function (d, i) { return '<div class="yb-l">' + medal(i) + '<span class="yb-s"><b>' + h(d.l.driver) + '</b></span><b>' + d.today + '</b></div>'; }).join('') + '</section></div></div>';
-    };
-    A.yTV = function () {
-      if (ui.view !== 'board') { ui.view = 'board'; location.hash = 'board'; }
-      document.body.classList.add('ytv'); try { var de = document.documentElement; if (de.requestFullscreen) de.requestFullscreen().catch(function () {}); } catch (e) {}
-      UI.render();
-    };
-    A.yTVOff = function () { document.body.classList.remove('ytv'); try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen(); } catch (e) {} UI.render(); };
-    document.addEventListener('fullscreenchange', function () { if (!document.fullscreenElement && document.body.classList.contains('ytv')) { document.body.classList.remove('ytv'); UI.render(); } });
+    /* B opens a new booking from anywhere */
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && document.body.classList.contains('ytv')) A.yTVOff();
       var t = e.target, typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
       if (!typing && !e.metaKey && !e.ctrlKey && !e.altKey && (e.key === 'b' || e.key === 'B') && !q('#layer').innerHTML) { e.preventDefault(); A.yBook(); }
     });
@@ -946,7 +922,7 @@
     /* ======================================================================
        The simulation: lorries drive, stop and finish. The screens follow.
        ====================================================================== */
-    var LIVEV = { home: 1, board: 1, plan: 1, tracking: 1, bookings: 1, skips: 0, tickets: 1, defra: 1, scoreboard: 1 };
+    var LIVEV = { home: 1, plan: 1, tracking: 1, bookings: 1, skips: 0, tickets: 1, defra: 1, scoreboard: 1 };
     var lastV = -1;
     setInterval(function () {
       var s = S(); if (!s) return; var y = Y(), ev = YC.tick(s, y, null, q('#yDrvPop') || ui.view === 'driver' ? ui.yDrv : null);
@@ -954,8 +930,8 @@
         save();
         ev.forEach(function (e) {
           var nm = e.j.site.name.split(',').slice(-1)[0].trim();
-          if (e.k === 'onway' && (ui.view === 'tracking' || ui.view === 'board')) toast(h(e.lo.first) + ' is on his way to ' + h(nm) + '. ETA text sent to ' + h(YC.custName(s, e.j.cust)), 'message');
-          if (e.k === 'done' && (ui.view === 'tracking' || ui.view === 'board' || ui.view === 'plan')) toast(h(e.lo.first) + ' finished ' + h(YC.whatShort(e.j)) + ' at ' + h(nm) + (e.j.wtn ? '. Transfer note made' : ''), 'circle-check');
+          if (e.k === 'onway' && ui.view === 'tracking') toast(h(e.lo.first) + ' is on his way to ' + h(nm) + '. ETA text sent to ' + h(YC.custName(s, e.j.cust)), 'message');
+          if (e.k === 'done' && (ui.view === 'tracking' || ui.view === 'plan')) toast(h(e.lo.first) + ' finished ' + h(YC.whatShort(e.j)) + ' at ' + h(nm) + (e.j.wtn ? '. Transfer note made' : ''), 'circle-check');
         });
       }
       if (y.v !== lastV) {
@@ -964,7 +940,6 @@
         if (LIVEV[ui.view] && !busy && !typing && !document.querySelector('.ydrag')) UI.render();
       }
       if (ui.view === 'tracking') mapUpdate(false);
-      if (ui.view === 'board') { var c = q('.yb-clock'); if (c) { var n = new Date(); c.textContent = YC.hhmm(n.getHours() * 60 + n.getMinutes()); } }
     }, 1000);
 
 
@@ -1069,7 +1044,7 @@
     };
 
     /* ======================================================================
-       ROUND 3: simpler screens. Card or table on every list, inbox of two, live board, bulk skip emails,
+       ROUND 3: simpler screens. Card or table on every list, inbox of two, bulk skip emails,
        booking with permits, days with capacity and AM or PM, and permits with their own screen
        ====================================================================== */
     function mode(key, def) { ui.yMode = ui.yMode || {}; return ui.yMode[key] || def || 'card'; }
@@ -1085,7 +1060,7 @@
     function iso(off) { var d = YC.dayDate(off); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
     function offOf(isoS) { var p = String(isoS).split('-'); if (p.length < 3) return null; var d = new Date(+p[0], +p[1] - 1, +p[2]), t = YC.dayDate(0); return Math.round((d - t) / 86400000); }
     function sat() { var y = Y(); if (y.sat == null) y.sat = true; return y.sat; }
-    function winLabel(j) { var a = j.win[0], b = j.win[1]; if (a === 450 && b === 720) return 'AM'; if (a === 720 && b === 1020) return 'PM'; return YC.hhmm(a) + (b - a === 60 ? '' : ' to ' + YC.hhmm(b)); }
+    function winLabel(j) { var a = j.win[0], b = j.win[1]; if (a === 420 && b === 540) return '7 to 9'; if (a === 480 && b === 720) return '8 to 12'; if (a === 720 && b === 960) return '12 to 4'; if (a === 450 && b === 720) return 'AM'; if (a === 720 && b === 1020) return 'PM'; return YC.hhmm(a) + (b - a === 60 ? '' : ' to ' + YC.hhmm(b)); }
     A.ySat = function () { var y = Y(); y.sat = !sat(); save(); UI.render(); toast(y.sat ? 'Saturday mornings are bookable' : 'Saturdays are closed for bookings', 'calendar'); };
 
     /* ---------- INBOX: two messages ---------- */
@@ -1150,7 +1125,7 @@
           : '<div class="ybk2"><div class="field"><label for="yb2Name">Name</label><input id="yb2Name" data-yb2t="nname" value="' + h(b.nname || '') + '" placeholder="Mrs Jane Smith"></div><div class="field"><label for="yb2Phone">Mobile</label><input id="yb2Phone" data-yb2t="nphone" value="' + h(b.nphone || '') + '" placeholder="07700 900000"></div></div>' +
             '<div class="ybk2"><div class="field"><label for="yb2Addr">Address</label><input id="yb2Addr" data-yb2t="naddr" value="' + h(b.naddr || '') + '" placeholder="12 Church Lane, Knaphill"></div><div class="field"><label for="yb2Pc">Postcode</label><input id="yb2Pc" data-yb2t="npc" value="' + h(b.npc || '') + '" placeholder="GU21 2AB"></div></div>') +
         '<div class="field"><label>What</label>' + sg('svc', b.svc, [['skip', 'Skip'], ['roro', 'RoRo'], ['grab', 'Grab hire'], ['muck', 'Muckaway']]) + '</div>' +
-        (skipish ? '<div class="field"><label>Job</label>' + sg('type', b.type, [['deliver', 'Deliver'], ['exchange', 'Exchange'], ['collect', 'Collect']]) + '</div>' +
+        (skipish ? '<div class="field"><label>Job</label>' + sg('type', b.type, [['deliver', 'Delivery'], ['exchange', 'Exchange'], ['collect', 'Collection'], ['wait', 'Wait and load']]) + '</div>' +
           (b.svc === 'skip' ? '<div class="field"><label>Skip size</label><div class="ysizes">' + YC.SIZES.map(function (z) { return '<button type="button" data-act="yB2" data-k="size" data-v="' + z + '" class="' + (+b.size === z ? 'on' : '') + '">' + z + '<small>yard</small></button>'; }).join('') + '</div></div>'
             : '<div class="field"><label>RoRo size</label><div class="ysizes two">' + YC.RORO_SIZES.map(function (z) { var r = P.roro[z]; return '<button type="button" data-act="yB2" data-k="rsize" data-v="' + z + '" class="' + (+b.rsize === z ? 'on' : '') + '">' + z + '<small>yard, ' + r.incl + ' t included</small></button>'; }).join('') + '</div><div class="ycr ok" id="yRoroIncl">' + ic('stack') + '<span><b>Includes ' + P.roro[b.rsize].incl + ' tonnes.</b> Anything over is ' + money(P.overRate) + ' a tonne, invoiced from the weighbridge ticket.</span></div></div>')
           : '<div class="field"><label>Loads</label><div class="ystep"><button type="button" data-act="yB2" data-k="loads" data-v="' + Math.max(1, b.loads - 1) + '" aria-label="One less load">-</button><b>' + b.loads + '</b><button type="button" data-act="yB2" data-k="loads" data-v="' + Math.min(8, b.loads + 1) + '" aria-label="One more load">+</button><span class="muted">8-wheeler, about ' + (b.loads * YC.LOAD_T) + ' tonnes</span></div></div>') +
@@ -1267,7 +1242,7 @@
           return '<div class="card ysc ' + k + (o.booked ? ' bk' : '') + '" data-skip="' + o.id + '"><span class="yjc-t"><b>' + h(o.id) + ' · ' + o.size + (o.size >= 20 ? ' yd RoRo' : ' yard') + '</b>' + (k === 'over' ? '<span class="tag bad">' + plural(days - o.hire, 'day') + ' over</span>' : k === 'soon' ? '<span class="tag">' + (o.hire - days <= 0 ? 'Due back today' : plural(o.hire - days, 'day') + ' left') + '</span>' : '') + '</span>' +
             '<b class="yjc-w">' + h(YC.custName(S(), o.cust)) + '</b><small>' + h(o.site.name + ', ' + o.site.pc) + '</small><span class="yh-bar"><i style="width:' + pct + '%"></i></span><small>' + days + ' of ' + o.hire + ' days' + (o.permit ? ' · permit until ' + h(dayLabel(o.permit.to)) : '') + '</small>' +
             (o.mail ? '<small class="ysc-mail">' + ic('mail') + h(mailWhen(o)) + '</small>' : '') +
-            '<span class="ysk-a">' + (o.booked ? '<span class="tag ok">' + ic('check') + h(o.booked) + '</span>' : '<button class="btn sm" data-act="ySkip" data-k="exchange" data-id="' + o.id + '">' + ic('exchange') + 'Exchange</button><button class="btn sm" data-act="ySkip" data-k="collect" data-id="' + o.id + '">' + ic('truck') + 'Collect</button>') + '</span></div>';
+            '<span class="ysk-a">' + (o.booked ? '<span class="tag ok">' + ic('check') + h(o.booked) + '</span>' : '<button class="btn sm" data-act="ySkip" data-k="exchange" data-id="' + o.id + '">' + ic('exchange') + 'Exchange</button><button class="btn sm" data-act="ySkip" data-k="collect" data-id="' + o.id + '">' + ic('truck') + 'Collection</button>') + '</span></div>';
         }).join('') + '</div>';
       }
       return head + sec('over', 'Overdue', 'Past the ' + YC.prices(y).hireDays + ' day hire') + sec('soon', 'Coming up for collection', 'Within 3 days of the end of hire') + sec('rest', 'On hire', 'Plenty of time left');
@@ -1338,21 +1313,6 @@
       document.body.appendChild(d);
     }, 1500);
 
-    /* ---------- YARD BOARD: where every job is right now ---------- */
-    V.board = function () {
-      var y = Y(), t0 = YC.today(y), dn = t0.filter(function (j) { return j.status === 'done'; }).length, now = new Date(), tv = document.body.classList.contains('ytv');
-      var rows = YC.LORRIES.map(function (l) {
-        var w = YC.where(y, l.id), list = YC.forLorry(y, l.id, 0), cur = YC.active(list), rest = list.filter(function (j) { return j.status === 'planned' && j !== cur; }), nx = rest[0], d = list.filter(function (j) { return j.status === 'done'; }).length;
-        var now1 = w.state === 'onway' ? 'En route to ' + cur.site.name.split(',').pop().trim() : w.state === 'onsite' ? 'On site at ' + cur.site.name.split(',').pop().trim() : w.state === 'returning' ? 'Heading back to the yard' : w.state === 'home' ? 'Back at the yard' : cur ? 'At the yard' : 'At the yard';
-        var eta = w.state === 'onway' ? YC.etaMins(y, cur) + ' min' : w.state === 'onsite' ? 'Here now' : '';
-        return '<div class="ybd-r"><span class="ybd-reg">' + h(l.reg) + '</span><span class="ybd-drv">' + h(l.driver) + '</span><span class="ybd-now"><b>' + h(now1) + '</b><small>' + (cur && (w.state === 'onway' || w.state === 'onsite') ? h(YC.whatShort(cur) + ', ' + YC.custName(S(), cur.cust)) : '') + '</small></span><span class="ybd-eta">' + h(eta) + '</span><span class="ybd-next">' + (nx ? '<b>' + h(YC.whatShort(nx)) + '</b><small>' + h(nx.site.name.split(',').pop().trim() + ', ' + winLabel(nx)) + '</small>' : '<small>Nothing else today</small>') + '</span><span class="ybd-done">' + d + '/' + list.length + '</span></div>';
-      }).join('');
-      return '<div class="yboard' + (tv ? ' tv' : '') + '" id="yBoard"><div class="yb-top"><div><b class="yb-clock">' + YC.hhmm(now.getHours() * 60 + now.getMinutes()) + '</b><small>' + h(YC.dayDate(0).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })) + '</small></div><div class="yb-big"><b>' + dn + '<i>/' + t0.length + '</i></b><small>jobs done today</small></div><span class="sp"></span>' +
-        (tv ? '<button class="btn" data-act="yTVOff">' + ic('x') + 'Exit full screen</button>' : '<button class="btn pri" data-act="yTV">' + ic('dashboard') + 'Full screen for the TV</button>') + '</div>' +
-        '<div class="ybd"><div class="ybd-r ybd-hd"><span>Lorry</span><span>Driver</span><span>Now</span><span>ETA</span><span>Next</span><span>Done</span></div>' + rows + '</div>' +
-        '<small class="ybd-foot">Live from the trackers and the driver app. Updates by itself.</small></div>';
-    };
-    LIVEV.board = 1;
 
     /* ---------- customers: card or table ---------- */
     var oldCust = V.customers;
@@ -1380,7 +1340,7 @@
       var y = Y(), L = YC.forLorry(y, id, 0), now = Date.now(), w = YC.where(y, id), steps = [], t = now;
       function tip(j) { var s = (j.stream === 'soil' || j.stream === 'concrete') ? YC.TIPS.soil : YC.TIPS.yard; return s.n; }
       L.forEach(function (j) {
-        var waste = YC.TYPES[j.type].waste, label = { deliver: 'Delivery', exchange: 'Swap', collect: 'Collection', grab: 'Grab', muck: 'Muckaway' }[j.type];
+        var waste = YC.TYPES[j.type].waste, label = { deliver: 'Delivery', exchange: 'Exchange', collect: 'Collection', wait: 'Wait and load', grab: 'Grab', muck: 'Muckaway' }[j.type];
         if (j.status === 'done') {
           if (j.type === 'deliver') steps.push({ done: true, at: (j.at.onway || j.at.done) - 600000, k: 'Loading at the yard', s: YC.whatShort(j) });
           steps.push({ done: true, at: j.at.done, k: label, s: YC.whatShort(j) + ', ' + j.site.name, j: j });
@@ -1432,7 +1392,7 @@
 
     /* ---------- the HGV wheel menu: W or the wheel button, bottom right ---------- */
     var WS = [['home', 'Home', 'home'], ['inbox', 'Inbox', 'inbox'], ['bookings', 'Bookings', 'calendar'], ['plan', 'Day plan', 'route'], ['skips', 'Skips on site', 'skip'], ['permits', 'Permits', 'certificate'],
-      ['tracking', 'Live tracking', 'map-pin'], ['board', 'Yard board', 'dashboard'], ['wastein', 'Waste in', 'stack'], ['credit', 'Credit control', 'lock']];
+      ['tracking', 'Live tracking', 'map-pin'], ['wastein', 'Waste in', 'stack'], ['credit', 'Credit control', 'lock']];
     function hgvWheel(cls) {
       function pt(r, d) { var a = d * Math.PI / 180; return [Math.round(r * Math.cos(a) * 100) / 100, Math.round(r * Math.sin(a) * 100) / 100]; }
       var s = '<svg class="ywh-svg ' + (cls || '') + '" viewBox="-100 -100 200 200" aria-hidden="true"><defs><radialGradient id="ywT" r="100" cx="0" cy="0" gradientUnits="userSpaceOnUse"><stop offset=".62" stop-color="#2A303A"/><stop offset=".85" stop-color="#15181E"/><stop offset="1" stop-color="#07090C"/></radialGradient>' +
@@ -1500,10 +1460,8 @@
        Steps for the guided tour
        ====================================================================== */
     var R = window.DSGG.RUN;
-    function closeAll() { var b = q('#boot'); if (b) b.remove(); A.close(); if (A.yWheelClose) A.yWheelClose(); if (A.yDrvClose) A.yDrvClose(); if (A.closePhone) A.closePhone(); if (A.closeSide) A.closeSide(); if (document.body.classList.contains('ytv')) A.yTVOff(); var sk = q('#skPanel'); if (sk && !sk.hidden && A.skToggle) A.skToggle(); ui.yArr = false; }
+    function closeAll() { var b = q('#boot'); if (b) b.remove(); A.close(); if (A.yWheelClose) A.yWheelClose(); if (A.yDrvClose) A.yDrvClose(); if (A.closePhone) A.closePhone(); if (A.closeSide) A.closeSide(); var sk = q('#skPanel'); if (sk && !sk.hidden && A.skToggle) A.skToggle(); ui.yArr = false; }
     R.yHome = function () { closeAll(); go('home'); };
-    R.yBoard = function () { closeAll(); go('board'); };
-    R.yTVShow = function () { closeAll(); go('board'); A.yTV(); };
     R.yBookings = function () { closeAll(); ui.yBkDay = 'today'; ui.yBkF = 'all'; go('bookings'); };
     R.yBookNew = function () { closeAll(); go('bookings'); A.yBook(); bk().place = 'road'; bookDraw(); };
     R.yBookStop = function () { closeAll(); go('credit'); var st = stops()[0]; A.yBook({ dataset: { c: st ? st.id : 'c3' } }); };
@@ -1532,7 +1490,6 @@
 
     /* ---------- start ---------- */
     var hv0 = location.hash.replace('#', ''); if (UI.VIEWS.some(function (v) { return v.k === hv0; })) ui.view = hv0;
-    if (new URLSearchParams(location.search).get('tv') === '1') { ui.view = 'board'; document.body.classList.add('ytv'); }
     drawMe(); UI.render();
   }
   start(0);
