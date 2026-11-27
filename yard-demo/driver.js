@@ -35,8 +35,8 @@
     if (c) o += card(c);
     else o += '<section class="dv-card dv-done-all">' + ic('circle-check') + '<h2>All done for today</h2><p>Every job has its photo and signature. Head back to the yard.</p></section>';
     var rest = L.filter(function (j) { return j.status !== 'done' && j !== c; });
-    if (rest.length) o += '<h3 class="dv-h">Still to do</h3>' + rest.map(function (j, i) { return '<div class="dv-mini"><span class="dv-n">' + (i + 2) + '</span><span><b>' + YC.hhmm(j.win[0]) + ' · ' + h(YC.whatShort(j)) + '</b><small>' + h(j.site.name) + '</small></span></div>'; }).join('');
-    if (done.length) o += '<h3 class="dv-h">Done today</h3>' + done.map(function (j) { return '<div class="dv-mini done">' + ic('check') + '<span><b>' + h(YC.whatShort(j)) + '</b><small>' + h(j.site.name) + ' · ' + CS.clock(j.at.done) + '</small></span></div>'; }).join('');
+    if (rest.length) o += '<h3 class="dv-h">Still to do</h3>' + rest.map(function (j, i) { return '<div class="dv-mini"><span class="dv-n">' + (i + 2) + '</span><span><b>' + YC.hhmm(j.win[0]) + ' · ' + h(YC.whatShort(j)) + '</b><small>' + h(j.site.name) + '</small>' + (YC.isCash(j) ? '<em class="dv-cmini">Cash ' + h(YC.gbp(YC.cashAmt(j).gross)) + '</em>' : '') + '</span></div>'; }).join('');
+    if (done.length) o += '<h3 class="dv-h">Done today</h3>' + done.map(function (j) { return '<div class="dv-mini done">' + ic('check') + '<span><b>' + h(YC.whatShort(j)) + '</b><small>' + h(j.site.name) + ' · ' + CS.clock(j.at.done) + '</small>' + (YC.isCash(j) ? '<em class="dv-cmini ' + YC.cashState(j) + '">' + (YC.cashState(j) === 'collected' ? 'Cash collected ' + h(YC.gbp(YC.cashAmt(j).gross)) : 'Cash NOT collected') + '</em>' : '') + '</span></div>'; }).join('');
     o += '<button class="dv-link dv-switch" data-a="switch">' + ic('truck') + 'Not ' + h(lo().reg) + '? Change lorry</button>';
     $('#main').innerHTML = o;
   }
@@ -58,6 +58,7 @@
     var sv = YC.STREAMS[j.stream], nm = YC.custName(S(), j.cust), ph = since(j, 'photo'), sg = since(j, 'sig');
     var o = '<section class="dv-card cur"><div class="dv-ct"><span class="dv-tag ' + j.status + '">' + (j.status === 'onsite' ? 'On site' : 'Now') + '</span><span class="dv-win">' + YC.win(j) + '</span></div>' +
       '<h2>' + h(YC.what(j)) + '</h2><p class="dv-who"><b>' + h(nm) + '</b><br>' + h(j.site.name) + ', ' + h(j.site.pc) + '</p>' +
+      (YC.isCash(j) ? '<div class="dv-cash" id="dvCash">' + ic('pound') + '<span><b>CASH: collect ' + h(YC.gbp(YC.cashAmt(j).gross)) + '</b><small>' + h(YC.gbp(YC.cashAmt(j).net)) + ' + VAT. Ask for it before you leave site</small></span></div>' : '') +
       '<div class="dv-facts"><span>' + ic('certificate') + h(sv.n) + ' · EWC ' + sv.ewc + '</span>' + (j.permit ? '<span class="warn">' + ic('alert') + 'On the road. Lights and cones. Permit ' + h(j.permit.ref) + '</span>' : '') + (j.notes ? '<span>' + ic('pencil') + h(j.notes) + '</span>' : '') + '</div>' +
       '<div class="dv-acts"><a class="dv-btn" href="' + mapsUrl(j) + '" target="_blank" rel="noopener">' + ic('route') + 'Navigate</a>' + (custPhone(j) ? '<a class="dv-btn" href="tel:' + h(String(custPhone(j)).replace(/\s/g, '')) + '">' + ic('phone') + 'Ring</a>' : '') + '</div>' +
       '<ol class="dv-steps">' +
@@ -65,7 +66,7 @@
         (ph ? '<img class="dv-ph" src="' + h(lastPhoto(j)) + '" alt="Site photo">' : '<label class="dv-btn pri">' + ic('eye') + 'Take photo<input type="file" accept="image/*" capture="environment" id="photoIn" hidden></label><button class="dv-link" data-a="samplePhoto">Use a sample photo</button>') + '</div></li>' +
       '<li class="' + (sg ? 'ok' : '') + '"><span class="dv-sn">' + (sg ? ic('check') : '2') + '</span><div><b>Customer signature</b>' +
         (sg ? '<small>' + (j.sig.none ? 'Customer not there, the photo is the proof' : 'Signed by ' + h(j.sig.name || 'the customer')) + '</small>' : '<button class="dv-btn pri" data-a="sign">' + ic('pencil') + 'Sign on the screen</button><button class="dv-link" data-a="nosig">Customer not there</button>') + '</div></li>' +
-      '</ol><button class="dv-big" data-a="send" id="sendBtn"' + (ph && sg ? '' : ' disabled') + '>' + ic('send') + 'Send to office<small>' + (YC.TYPES[j.type].waste ? 'Makes the transfer note, then your next job' : 'Tells the office, then your next job') + '</small></button>';
+      '</ol><button class="dv-big" data-a="send" id="sendBtn"' + (ph && sg ? '' : ' disabled') + '>' + ic('send') + 'Send to office<small>' + (YC.isCash(j) ? 'Asks about the cash, then tells the office' : YC.TYPES[j.type].waste ? 'Makes the transfer note, then your next job' : 'Tells the office, then your next job') + '</small></button>';
     return o + '</section>';
   }
   function lastPhoto(j) { var p = j.photos[j.photos.length - 1]; return p.src || YC.samplePhoto(p.k, j.size); }
@@ -74,11 +75,13 @@
   function act(what, data) {
     var c = cur(); if (!c) return; start(c);
     if (what === 'send') {
-      YC.act(S(), Y(), c.id, 'done', {});
+      if (YC.cashState(c) === 'due' && !(data && data.cash)) { cashPop(c); return; }
+      var cashT = YC.isCash(c) ? (data.cash.ok ? '. Cash ' + h(YC.gbp(YC.cashAmt(c).gross)) + ' collected' : '. Cash not collected, the office will chase it') : '';
+      YC.act(S(), Y(), c.id, 'done', { cash: data && data.cash });
       var nx = cur();
       if (nx) { YC.act(S(), Y(), nx.id, 'onway'); nx.at.started = Date.now(); }
       save(); draw(); window.scrollTo(0, 0);
-      toast('Sent to the office' + (c.wtn ? ', ' + h(c.wtn) + ' made' : '') + (nx ? '. On your way to ' + h(nx.site.name.split(',').pop().trim()) : ''), 'send');
+      toast('Sent to the office' + cashT + (c.wtn ? ', ' + h(c.wtn) + ' made' : '') + (nx ? '. On your way to ' + h(nx.site.name.split(',').pop().trim()) : ''), 'send');
       return;
     }
     YC.act(S(), Y(), c.id, what, data); c.manual = true; save(); draw();
@@ -100,6 +103,12 @@
     if (a === 'nosig') act('sig', { none: true, name: '' });
     if (a === 'sign') signPad();
     if (a === 'send') act('send');
+    if (a === 'cashYes') { $('#sheet').innerHTML = ''; act('send', { cash: { ok: true } }); }
+    if (a === 'cashNo') cashPop(c, true);
+    if (a === 'cashBack') cashPop(c);
+    if (a === 'cashWhy') { var t = $('#cashWhy'); if (t) { t.value = b.getAttribute('data-v'); t.focus(); } }
+    if (a === 'cashNoGo') { var why = (($('#cashWhy') || {}).value || '').trim(); if (!why) { toast('Say why, so the office can chase it', 'alert'); var w0 = $('#cashWhy'); if (w0) w0.focus(); return; } $('#sheet').innerHTML = ''; act('send', { cash: { ok: false, why: why } }); }
+    if (a === 'cashClose') $('#sheet').innerHTML = '';
     if (a === 'sigClear') { var cv = $('#sigCv'); cv.getContext('2d').clearRect(0, 0, cv.width, cv.height); cv.dataset.ink = ''; }
     if (a === 'sigCancel') $('#sheet').innerHTML = '';
     if (a === 'sigOk') { var cv2 = $('#sigCv'), nm = ($('#sigName') || {}).value || ''; if (!cv2.dataset.ink) { toast('Ask them to sign in the box first', 'alert'); return; } var src = cv2.toDataURL('image/png'); $('#sheet').innerHTML = ''; act('sig', { name: nm.trim() || YC.custFirst(S(), c.cust), src: src }); }
@@ -115,6 +124,15 @@
     };
     fr.readAsDataURL(e.target.files[0]);
   });
+  /* the cash question, asked after the photo and signature and before the job goes to the office */
+  function cashPop(c, no) {
+    if (!c) return; var a = YC.cashAmt(c);
+    var head = '<div class="dv-scrim" data-a="cashClose"></div><div class="dv-sheet dv-cashq" role="dialog" aria-label="Cash collected?"><h2>Cash collected?</h2><div class="dv-camt"><b>' + h(YC.gbp(a.gross)) + '</b><small>(' + h(YC.gbp(a.net)) + ' + VAT)</small></div><p>' + h(YC.custName(S(), c.cust)) + ', ' + h(YC.whatShort(c)) + ' at ' + h(c.site.name) + '</p>';
+    if (!no) { $('#sheet').innerHTML = head + '<div class="dv-acts dv-cashb"><button class="dv-btn" data-a="cashNo" id="cashNo">' + ic('x') + 'Not collected</button><button class="dv-btn ok" data-a="cashYes" id="cashYes">' + ic('check') + 'Yes, collected</button></div></div>'; return; }
+    $('#sheet').innerHTML = head + '<label class="dv-nm">Why not?<textarea id="cashWhy" rows="2" placeholder="Nobody in, will pay by card tonight"></textarea></label>' +
+      '<div class="dv-chips">' + ['Nobody in', 'Says they will pay by card', 'Says it is on account', 'Refused to pay'].map(function (x) { return '<button class="dv-chip" data-a="cashWhy" data-v="' + h(x) + '">' + h(x) + '</button>'; }).join('') + '</div>' +
+      '<div class="dv-acts"><button class="dv-btn" data-a="cashBack">Back</button><button class="dv-btn pri" data-a="cashNoGo" id="cashNoGo">' + ic('send') + 'Send to office</button></div></div>';
+  }
   function signPad() {
     var c = cur(); if (!c) return;
     $('#sheet').innerHTML = '<div class="dv-scrim"></div><div class="dv-sheet" role="dialog" aria-label="Customer signature"><h2>' + h(YC.custName(S(), c.cust)) + ', please sign</h2><p>' + h(YC.what(c)) + ' at ' + h(c.site.name) + '</p>' +

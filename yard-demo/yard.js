@@ -36,6 +36,8 @@
     function lorryTag(id) { var l = YC.lorry(id); return l ? '<span class="yplate yx">' + h(l.reg) + '</span>' : '<span class="tag bad">No lorry yet</span>'; }
     var STAT = { planned: ['Booked', ''], onway: ['On the way', 'brand'], onsite: ['On site', 'mail'], done: ['Done', 'ok'] };
     function stTag(j) { var s = STAT[j.status] || STAT.planned; return '<span class="tag ' + s[1] + '">' + s[0] + '</span>'; }
+    /* cash jobs: a Cash job tag and where the money is up to */
+    function cashBadge(j) { return YC.isCash(j) ? '<span class="tag ycashjob">Cash job</span>' + YC.cashTag(j) : ''; }
     function streamTxt(k) { var s = YC.STREAMS[k]; return s ? h(s.n) + ' <span class="yewc">EWC ' + s.ewc + '</span>' : ''; }
 
     /* ======================================================================
@@ -64,7 +66,7 @@
       home: ['Today', 'Home', 'home'], inbox: ['Today', 'Inbox', 'inbox'], board: ['Today', 'Yard board', 'dashboard'],
       bookings: ['Jobs', 'Bookings', 'calendar'], plan: ['Jobs', 'Day plan', 'route'], skips: ['Jobs', 'Skips on site', 'skip'], permits: ['Jobs', 'Permits', 'certificate'], tracking: ['Jobs', 'Live tracking', 'map-pin'],
       customers: ['Customers', 'Customers', 'users'], quotes: ['Customers', 'Quotes', 'file-text'], portal: ['Customers', 'Customer portal', 'world'],
-      credit: ['Money', 'Credit control', 'lock'], money: ['Money', 'Money', 'pound'],  prices: ['Money', 'Price list', 'list'], scoreboard: ['Money', 'Scoreboard', 'target'],
+      credit: ['Money', 'Credit control', 'lock'], cash: ['Money', 'Cash', 'pound'], money: ['Money', 'Money', 'pound'],  prices: ['Money', 'Price list', 'list'], scoreboard: ['Money', 'Scoreboard', 'target'],
       wastein: ['Yard', 'Waste in', 'stack'], driver: ['Yard', 'Driver app', 'mobile'], tickets: ['Yard', 'Tickets and WTNs', 'receipt'], defra: ['Yard', 'Defra tracking', 'shield-check'], recycling: ['Yard', 'Recycling report', 'leaf'],
       trends: ['More', 'Trends', 'trending-up'], chasing: ['More', 'Chasing', 'bell'], orders: ['More', 'Order diary', 'calendar'], history: ['More'], today: ['More', 'Day summary', 'dashboard'], jobs: ['More', 'Partner jobs', 'truck'], sales: ['More', 'Sales', 'target'],
       team: ['More', 'Team', 'users'], suppliers: ['More', 'Supplier handbook', 'warehouse'], compliance: ['More'], find: ['More', 'Find a supplier', 'map-pin'], bills: ['More', 'Bill check', 'receipt'], paperwork: ['More', 'Duty of care', 'certificate'], reports: ['More', 'Waste and carbon', 'leaf']
@@ -82,6 +84,7 @@
       { k: 'wastein', sub: 'Weighbridge tickets for lorries tipping at the yard' },
       { k: 'permits', sub: 'Every road permit, from applying to approved' },
       { k: 'prices', sub: 'Skips, RoRos with the tonnage included, grabs and muckaway. New bookings price from here' },
+      { k: 'cash', sub: 'Cash on the day: collected, still to collect, not collected, and what each driver hands in' },
       { k: 'scoreboard', sub: 'Who is top this week, in the office and on the road, with commission worked out' },
       { k: 'problems', hide: true, n: 'Reported problems', ic: 'alert', sub: 'Everything reported through the assistant, and where it is up to' }
     ];
@@ -111,11 +114,12 @@
         c.plan = YC.today(y).filter(function (j) { return !j.lorry; }).length;
         c.defra = YC.defraRows(s, y).filter(function (r) { return r.status === 'error'; }).length;
         c.tickets = y.tickets.filter(function (t) { return !t.matched; }).length;
+        c.cash = YC.cashItems(s, y).filter(function (x) { return x.state === 'not' && !x.cash.settled; }).length;
         c.credit = s.customers.filter(function (x) { return x.stop; }).length + s.invoices.filter(function (i) { return i.status !== 'paid' && i.due <= -30; }).length;
       } catch (e) {}
       return c;
     }
-    var RED = { inbox: 1, credit: 1, defra: 1, skips: 1, permits: 1 };
+    var RED = { inbox: 1, credit: 1, cash: 1, defra: 1, skips: 1, permits: 1 };
     window.DSGNAV = function (ctx) {
       var s = S(); s.settings.navShut = s.settings.navShut || {};
       if (!s.settings.navMoreSet) { s.settings.navMoreSet = true; s.settings.navShut.More = true; save(); }
@@ -418,7 +422,7 @@
         '<div class="card ylist">' + (show.length ? show.map(function (j) {
           return '<button class="yrow' + (j.isNew ? ' new' : '') + '" data-act="yJob" data-id="' + j.id + '"><span class="yt"><b>' + (d === 'week' && j.day ? h(dayName(j.day)) + ' ' : '') + YC.hhmm(j.win[0]) + '</b><small>to ' + YC.hhmm(j.win[1]) + '</small></span>' +
             '<span class="ym"><b>' + h(YC.what(j)) + '</b><small>' + h(YC.custName(s, j.cust)) + ', ' + h(j.site.name) + ' ' + h(j.site.pc) + '</small></span>' +
-            '<span class="ys"><span class="ystream">' + streamTxt(j.stream) + '</span>' + (j.permit ? '<span class="tag amber">' + ic('certificate') + 'Permit</span>' : '') + '</span>' +
+            '<span class="ys"><span class="ystream">' + streamTxt(j.stream) + '</span>' + (j.permit ? '<span class="tag amber">' + ic('certificate') + 'Permit</span>' : '') + cashBadge(j) + '</span>' +
             '<span class="yl">' + lorryTag(j.lorry) + stTag(j) + '</span></button>';
         }).join('') : '<p class="muted yempty">Nothing here.</p>') + '</div>' +
         '<p class="muted yfoot">Every job carries its waste stream and EWC code from the moment it is booked, so the transfer note, the tip ticket and the Defra record all match.</p>';
@@ -437,15 +441,22 @@
         (t ? '<dt>Tip ticket</dt><dd>' + h(t.id) + ', ' + t.net.toFixed(2) + ' t net at ' + h(YC.TIPS[t.site].n) + '</dd>' : '') +
         (j.price ? '<dt>Price</dt><dd>' + money(j.price) + ' + VAT</dd>' : '') + (j.incl != null && YC.isRoro(j) ? '<dt>Tonnage included</dt><dd>' + j.incl + ' t, then ' + money(YC.prices(Y()).overRate) + ' a tonne</dd>' : '') +
         (t && t.over ? '<dt>Extra weight</dt><dd>' + t.over.over.toFixed(2) + ' t over, ' + money(t.over.amount, true) + ' + VAT, ' + (t.over.status === 'sent' ? 'invoiced on ' + h(t.over.inv) : 'waiting on the weighbridge screen') + '</dd>' : '') +
-        (j.notes ? '<dt>Driver note</dt><dd>' + h(j.notes) + '</dd>' : '') + '</dl>' +
+        (j.notes ? '<dt>Driver note</dt><dd>' + h(j.notes) + '</dd>' : '') + cashRows(j) + '</dl>' +
         (j.eta && j.eta.text ? '<div class="ytext">' + ic('message') + '<span><b>Text to the customer, ' + CS.clock(j.eta.at) + '</b>' + h(j.eta.text) + '</span></div>' : '') +
         (j.photos.length || j.sig ? '<div class="yproof">' + j.photos.map(function (p) { return '<figure><img src="' + h(p.src || YC.samplePhoto(p.k, j.size)) + '" alt="Photo on ' + (p.k === 'drop' ? 'drop' : 'collection') + '"><figcaption>' + (p.k === 'drop' ? 'On drop' : 'On collection') + ', ' + CS.clock(p.at) + '</figcaption></figure>'; }).join('') +
           (j.sig ? '<figure class="sig"><img src="' + h(j.sig.src || YC.sampleSig()) + '" alt="Customer signature"><figcaption>' + (j.sig.none ? 'Customer not there, photo taken' : 'Signed by ' + h(j.sig.name || 'the customer')) + '</figcaption></figure>' : '') + '</div>' : '');
       var foot = '<button class="btn" data-act="close">Close</button><span class="sp"></span>' + (j.wtn ? '<button class="btn" data-act="yWtn" data-id="' + j.id + '">' + ic('certificate') + 'Waste transfer note</button>' : '') +
         (j.status !== 'done' && j.day === 0 && j.lorry ? '<button class="btn pri" data-act="yTrackJob" data-id="' + j.id + '">' + ic('map-pin') + 'See it on the map</button>' : '') +
         (!j.lorry ? '<button class="btn pri" data-act="yToPlan" data-id="' + j.id + '">' + ic('route') + 'Give it a lorry</button>' : '');
-      drawer(h(j.id) + ' · ' + h(YC.what(j)), stTag(j) + ' ' + (j.permit ? '<span class="tag amber">Road permit</span>' : ''), body, foot);
+      drawer(h(j.id) + ' · ' + h(YC.what(j)), stTag(j) + ' ' + (j.permit ? '<span class="tag amber">Road permit</span>' : '') + (YC.isCash(j) ? ' ' + YC.cashTag(j) : ''), body, foot);
     };
+    function cashRows(j) {
+      if (!YC.isCash(j)) return '<dt>Payment</dt><dd>Invoice</dd>';
+      var st = YC.cashState(j), c = j.cash || {}, a = YC.cashAmt(j);
+      return '<dt>Payment</dt><dd>Cash on the day: ' + h(YC.gbp(a.net)) + ' + VAT = <b>' + h(YC.gbp(a.gross)) + '</b></dd>' +
+        '<dt>Cash</dt><dd>' + YC.cashTag(j) + (st === 'collected' ? '<small style="display:block">Collected by ' + h(c.by || 'the driver') + ' at ' + CS.clock(c.at) + (c.banked ? ', banked' : ', with the driver to hand in') + '</small>' : st === 'not' ? '<small style="display:block">' + h(c.why || '') + (c.settled ? ' Paid since by ' + h(c.settled.how) + '.' : '') + '</small>' : '<small style="display:block">The driver is asked on his phone before the job goes to the office</small>') + '</dd>' +
+        (c.post ? '<dt>Accounts</dt><dd>' + h(c.post.ref) + ' in your accounts package as ' + (c.post.kind === 'paid' ? 'a paid cash sale' : c.settled ? 'a sale, paid since' : 'an unpaid sale to chase') + ', ' + h(YC.gbp(a.net)) + ' + ' + h(YC.gbp(a.vat)) + ' VAT</dd>' : '');
+    }
     A.yTrackJob = function (el) { var j = jobById(el.dataset.id); A.close(); ui.yFocus = j && j.lorry; go('tracking'); };
     A.yToPlan = function (el) { var j = jobById(el.dataset.id); A.close(); ui.yPlanDay = j ? j.day : 0; go('plan'); };
 
@@ -487,7 +498,7 @@
       function card(j) {
         var locked = j.status !== 'planned';
         return '<div class="ypc' + (locked ? ' locked' : '') + '" ' + (locked ? '' : 'draggable="true"') + ' data-pj="' + j.id + '"><button class="ypc-b" data-act="yJob" data-id="' + j.id + '"><span class="ypc-t"><b>' + YC.win(j) + '</b>' + (locked ? stTag(j) : '') + '</span><b>' + h(YC.whatShort(j)) + '</b><small>' + h(YC.custName(S(), j.cust)) + '</small><small>' + h(j.site.name) + '</small>' +
-          '<span class="ypc-x"><span class="yewc">' + YC.STREAMS[j.stream].ewc + '</span>' + (j.permit ? '<span class="tag">Permit</span>' : '') + '</span></button>' +
+          '<span class="ypc-x"><span class="yewc">' + YC.STREAMS[j.stream].ewc + '</span>' + (j.permit ? '<span class="tag">Permit</span>' : '') + cashBadge(j) + '</span></button>' +
           (locked ? '' : '<label class="ypc-mv"><span>Move to</span><select class="ymove" data-id="' + j.id + '" aria-label="Move ' + j.id + ' to a lorry"><option value="none"' + (!j.lorry ? ' selected' : '') + '>Unplanned</option>' + YC.LORRIES.map(function (l) { return '<option value="' + l.id + '"' + (j.lorry === l.id ? ' selected' : '') + '>' + h(l.reg + ', ' + l.driver) + '</option>'; }).join('') + '</select></label>') + '</div>';
       }
       var un = y.jobs.filter(function (j) { return j.day === d && !j.lorry; }).sort(function (a, b) { return a.win[0] - b.win[0]; });
@@ -587,7 +598,7 @@
           if (!j.lorry) { if (JM[j.id]) { MAP.removeLayer(JM[j.id]); delete JM[j.id]; } return; }
           var lo = YC.lorry(j.lorry);
           if (!JM[j.id]) { JM[j.id] = window.L.circleMarker([j.lat, j.lng], { radius: 7, weight: 3, color: lo.col, fillColor: jobCol(j), fillOpacity: 1 }).addTo(MAP); JM[j.id].on('click', function () { A.yJob({ dataset: { id: j.id } }); }); }
-          JM[j.id].setStyle({ fillColor: jobCol(j), color: lo.col }); JM[j.id].bindTooltip(h(j.id + ', ' + YC.whatShort(j) + ', ' + (STAT[j.status] || STAT.planned)[0]), { direction: 'top' });
+          JM[j.id].setStyle({ fillColor: jobCol(j), color: lo.col }); JM[j.id].bindTooltip(h(j.id + ', ' + YC.whatShort(j) + ', ' + (STAT[j.status] || STAT.planned)[0]) + (YC.isCash(j) ? '<br>' + YC.cashTag(j) : ''), { direction: 'top' });
         });
       }
       YC.LORRIES.forEach(function (l) {
@@ -938,7 +949,7 @@
     var LIVEV = { home: 1, board: 1, plan: 1, tracking: 1, bookings: 1, skips: 0, tickets: 1, defra: 1, scoreboard: 1 };
     var lastV = -1;
     setInterval(function () {
-      var s = S(); if (!s) return; var y = Y(), ev = YC.tick(s, y, null, q('#yDrvPop') ? ui.yDrv : null);
+      var s = S(); if (!s) return; var y = Y(), ev = YC.tick(s, y, null, q('#yDrvPop') || ui.view === 'driver' ? ui.yDrv : null);
       if (ev.length) {
         save();
         ev.forEach(function (e) {
@@ -1119,13 +1130,14 @@
     };
 
     /* ---------- NEW BOOKING ---------- */
-    function bk2() { if (!ui.yb2) ui.yb2 = { cust: 'c1', site: 0, svc: 'skip', type: 'deliver', size: 8, rsize: 20, loads: 1, stream: 'mixed', place: 'site', permit: true, day: null, time: 'am', at: '10:00', notes: '', price: null, sure: false }; return ui.yb2; }
+    function bk2() { if (!ui.yb2) ui.yb2 = { cust: 'c1', site: 0, svc: 'skip', type: 'deliver', size: 8, rsize: 20, loads: 1, stream: 'mixed', place: 'site', permit: true, day: null, time: 'am', at: '10:00', notes: '', price: null, pay: 'invoice', sure: false }; return ui.yb2; }
     function b2Job(b) { return { type: b.svc === 'skip' || b.svc === 'roro' ? b.type : b.svc, size: b.svc === 'skip' ? b.size : b.svc === 'roro' ? b.rsize : null, loads: b.svc === 'grab' || b.svc === 'muck' ? b.loads : null }; }
     function b2Permit(b) { return (b.svc === 'skip' || b.svc === 'roro') && b.type === 'deliver' && b.place === 'road' && b.permit; }
     function b2Earliest(b) { var e = b2Permit(b) ? YC.nthWorkDay(5) : 1; while (YC.isSun(e) || (!sat() && YC.isSat(e))) e++; return e; }
     function b2Price(b) { var P = YC.prices(Y()), J0 = b2Job(b); return YC.priceFor(Y(), J0) + (b2Permit(b) ? P.permit : 0); }
     function b2Days(b) { return YC.workDays(b2Earliest(b), 4, sat()); }
     function b2Day(b) { var L = b2Days(b); if (b.day != null && b.day >= b2Earliest(b) && !YC.full(Y(), b.day)) return b.day; var so = YC.soonest(Y(), b2Earliest(b), sat()); return so; }
+    function b2CashLine(b) { var p = parseFloat(String(b.price == null ? '' : b.price).replace(/[^\d.]/g, '')); return YC.cashLine({ price: p > 0 ? p : b2Price(b) }); }
     function bookHTML2() {
       var b = bk2(), s = S(), y = Y(), c = b.cust !== 'new' ? CS.cust(b.cust) : null, J0 = b2Job(b), P = YC.prices(y), st = YC.STREAMS[b.stream];
       var custs = s.customers.slice().sort(function (x, z) { return x.name < z.name ? -1 : 1; }), skipish = b.svc === 'skip' || b.svc === 'roro', days = b2Days(b), day = b2Day(b), early = b2Earliest(b);
@@ -1152,6 +1164,8 @@
         (firstFull ? '<small class="ydays-note" id="ySoonest">' + ic('alert') + h(dayLabel(days[0])) + ' is full. Soonest is ' + h(dayName(YC.soonest(y, early, sat()))) + '.</small>' : '') + '</div>' +
         '<div class="field"><label>Time</label>' + sg('time', b.time, YC.isSat(day) ? [['am', 'AM']] : [['am', 'AM'], ['pm', 'PM'], ['at', 'A set time']]) + (b.time === 'at' && !YC.isSat(day) ? '<input type="time" id="yb2At" data-yb2t="at" value="' + h(b.at) + '" min="07:30" max="16:00" style="margin-top:6px;max-width:140px">' : '') + '</div>' +
         '<div class="field"><label for="yb2Price">Price</label><div class="yprice"><span>£</span><input id="yb2Price" data-yb2t="price" inputmode="decimal" value="' + h(b.price != null ? b.price : b2Price(b)) + '"><span class="muted">+ VAT' + (b2Permit(b) ? ', includes the ' + money(P.permit) + ' permit' : '') + ', from your price list</span></div></div>' +
+        '<div class="field"><label>Payment</label>' + sg('pay', b.pay, [['invoice', 'Invoice'], ['cash', 'Pay cash on the day']]) +
+          (b.pay === 'cash' ? '<div class="ycr amber" id="yb2Cash" style="margin-top:8px">' + ic('pound') + '<span><b id="yb2CashAmt">' + h(b2CashLine(b)) + '</b> The driver collects it on the day and ticks it off on his phone. It goes to your accounts package as a paid cash sale, with the VAT.</span></div>' : '') + '</div>' +
         '<div class="field"><label for="yb2Notes">Note for the driver</label><input id="yb2Notes" data-yb2t="notes" value="' + h(b.notes || '') + '" placeholder="Gate code, where to put it, access"></div>' +
         '<small class="muted">The lorry is given on the day plan, not here.</small></div>';
     }
@@ -1189,7 +1203,7 @@
         b.day = off; if (YC.isSat(off)) b.time = 'am'; bookDraw2();
       }
     });
-    document.addEventListener('input', function (e) { var el = e.target; if (el.dataset && el.dataset.yb2t && el.closest && el.closest('.ybk2m')) bk2()[el.dataset.yb2t] = el.value; });
+    document.addEventListener('input', function (e) { var el = e.target; if (el.dataset && el.dataset.yb2t && el.closest && el.closest('.ybk2m')) { bk2()[el.dataset.yb2t] = el.value; var ca = q('#yb2CashAmt'); if (ca && el.dataset.yb2t === 'price') ca.textContent = b2CashLine(bk2()); } });
     A.yB2Go = function () {
       var b = bk2(), s = S(), y = Y(), c = b.cust !== 'new' ? CS.cust(b.cust) : null;
       if (!c && (!String(b.nname || '').trim() || !String(b.npc || '').trim())) { toast('Put the customer\'s name and postcode in first', 'alert'); var f = q(!String(b.nname || '').trim() ? '#yb2Name' : '#yb2Pc'); if (f) f.focus(); return; }
@@ -1200,12 +1214,12 @@
       var p = YC.pos(site.pc), id = 'DSG-' + (y.counters.job++), perm = b2Permit(b);
       var j = { id: id, day: off, lorry: null, win: win, type: J0.type, cust: c ? c.id : 'new:' + id, cname: c ? null : String(b.nname).trim(), site: site, lat: p.lat, lng: p.lng, size: J0.size, loads: J0.loads,
         price: parseFloat(String(b.price == null ? '' : b.price).replace(/[^\d.]/g, '')) || b2Price(b), incl: YC.inclFor(y, J0), stream: b.stream, place: perm || (b.place === 'road' && J0.type === 'deliver') ? 'road' : 'drive',
-        permit: perm ? YC.permitFor(site.pc, id, off, off + 14) : null, status: 'planned', at: {}, photos: [], sig: null, ticket: null, wtn: null, eta: null, notes: b.notes || '', log: [{ at: Date.now(), t: 'Booked by ' + uName(meU()).split(' ')[0] + (c && c.stop ? ', while on stop' : '') }], isNew: true };
+        permit: perm ? YC.permitFor(site.pc, id, off, off + 14) : null, status: 'planned', at: {}, photos: [], sig: null, ticket: null, wtn: null, eta: null, notes: b.notes || '', log: [{ at: Date.now(), t: 'Booked by ' + uName(meU()).split(' ')[0] + (c && c.stop ? ', while on stop' : '') + (b.pay === 'cash' ? ', cash on the day' : '') }], isNew: true, pay: b.pay === 'cash' ? 'cash' : 'invoice' };
       y.jobs.push(j);
       if (perm) { y.permits = y.permits || []; y.permits.unshift({ id: 'PM-' + (600 + y.permits.length), job: id, cust: j.cust, addr: site.name, pc: site.pc, council: YC.councilFor(site.pc), status: 'apply', paidBy: null, price: YC.prices(y).permit, ref: j.permit.ref, from: off, to: off + 14, createdAt: Date.now(), log: [] }); }
       if (b.fromMsg) { var m = msgs().filter(function (x) { return x.id === b.fromMsg; })[0]; if (m) { m.done = true; m.doneAt = Date.now(); m.job = id; m.reply = 'Booked in for ' + dayName(off) + ' morning, ' + (J0.size ? J0.size + ' yarder' : 'grab lorry') + ' on the drive at ' + site.name.split(',')[0] + '. Cheers, Dave'; } }
       y.v++; save(); A.close(); var from = b.fromMsg; ui.yb2 = null;
-      toast('Booked ' + h(id) + ' for ' + h(dayLabel(off)) + ' ' + (b.time === 'pm' ? 'PM' : b.time === 'at' ? YC.hhmm(win[0]) : 'AM') + '. Give it a lorry on the day plan' + (perm ? '. Permit card made, apply within 30 minutes' : ''), 'circle-check');
+      toast('Booked ' + h(id) + ' for ' + h(dayLabel(off)) + ' ' + (b.time === 'pm' ? 'PM' : b.time === 'at' ? YC.hhmm(win[0]) : 'AM') + '. Give it a lorry on the day plan' + (perm ? '. Permit card made, apply within 30 minutes' : '') + (j.pay === 'cash' ? '. Cash on the day: ' + h(YC.cashLine(j)) : ''), 'circle-check');
       if (from) UI.render(); else { ui.yBkF = 'all'; ui.yBkDay = 'week'; if (ui.view !== 'bookings') go('bookings'); else UI.render(); }
     };
 
@@ -1214,7 +1228,7 @@
     function jobCard(j) {
       var s = S();
       return '<button class="card yjc' + (j.isNew ? ' new' : '') + '" data-act="yJob" data-id="' + j.id + '"><span class="yjc-t"><b>' + h(winLabel(j)) + '</b>' + stTag(j) + '</span><b class="yjc-w">' + h(YC.what(j)) + '</b><span>' + h(YC.custName(s, j.cust)) + '</span><small>' + h(j.site.name + ', ' + j.site.pc) + '</small>' +
-        '<span class="yjc-x"><span class="yewc">EWC ' + YC.STREAMS[j.stream].ewc + '</span>' + (j.permit ? '<span class="tag">' + ic('certificate') + 'Permit</span>' : '') + (j.lorry ? '<span class="tag">' + h(YC.lorry(j.lorry).reg) + '</span>' : '<span class="tag bad">No lorry yet</span>') + '</span></button>';
+        '<span class="yjc-x"><span class="yewc">EWC ' + YC.STREAMS[j.stream].ewc + '</span>' + (j.permit ? '<span class="tag">' + ic('certificate') + 'Permit</span>' : '') + cashBadge(j) + (j.lorry ? '<span class="tag">' + h(YC.lorry(j.lorry).reg) + '</span>' : '<span class="tag bad">No lorry yet</span>') + '</span></button>';
     }
     V.bookings = function () {
       var y = Y(), m = mode('bookings', 'card'), head = '<div class="ybar">' + modeSeg('bookings', [['card', 'Cards', 'dashboard'], ['calendar', 'Calendar', 'calendar'], ['table', 'Table', 'list']]) + '<span class="sp"></span><button class="btn pri" data-act="yBook">' + ic('plus') + 'New booking</button></div>';
@@ -1393,8 +1407,8 @@
         var D = lorryDay(sel.id), w = YC.where(y, sel.id);
         side = '<aside class="card ytrack-list" id="yLorryPanel"><div class="ylp-h"><button class="iconbtn sm" data-act="yLorryOff" aria-label="All lorries">' + ic('chevron-left') + '</button><span class="yplate sm">' + h(sel.reg) + '</span><div><b>' + h(sel.driver) + '</b></div></div>' +
           '<p class="ylp-now">' + h(lorryLine(sel, w, y).replace(/^[^:]+: /, '')) + '</p>' +
-          '<h4>Still to go</h4>' + (D.togo.map(function (x) { return '<div class="ylp-s' + (x.now ? ' now' : '') + '"><span class="ylp-t">' + (x.now === 'onsite' ? 'Now' : 'ETA ' + CS.clock(x.at)) + '</span><span><b>' + h(x.k) + '</b><small>' + h(x.s) + '</small></span></div>'; }).join('') || '<p class="muted">Nothing left today.</p>') +
-          '<h4>Done today</h4>' + (D.done.map(function (x) { return '<div class="ylp-s done"><span class="ylp-t">' + CS.clock(x.at) + '</span><span><b>' + h(x.k) + '</b><small>' + h(x.s) + '</small></span></div>'; }).join('') || '<p class="muted">Nothing yet.</p>') + '</aside>';
+          '<h4>Still to go</h4>' + (D.togo.map(function (x) { return '<div class="ylp-s' + (x.now ? ' now' : '') + '"><span class="ylp-t">' + (x.now === 'onsite' ? 'Now' : 'ETA ' + CS.clock(x.at)) + '</span><span><b>' + h(x.k) + '</b><small>' + h(x.s) + '</small>' + (x.j && YC.isCash(x.j) ? YC.cashTag(x.j) : '') + '</span></div>'; }).join('') || '<p class="muted">Nothing left today.</p>') +
+          '<h4>Done today</h4>' + (D.done.map(function (x) { return '<div class="ylp-s done"><span class="ylp-t">' + CS.clock(x.at) + '</span><span><b>' + h(x.k) + '</b><small>' + h(x.s) + '</small>' + (x.j && YC.isCash(x.j) ? YC.cashTag(x.j) : '') + '</span></div>'; }).join('') || '<p class="muted">Nothing yet.</p>') + '</aside>';
       } else {
         side = '<aside class="card ytrack-list"><div class="yh-rh"><h3>' + ic('truck') + 'Lorries</h3><span class="livepill"><i></i>Live</span></div>' + YC.LORRIES.map(function (l) {
           var w = YC.where(y, l.id), L = YC.forLorry(y, l.id, 0), d = L.filter(function (j) { return j.status === 'done'; }).length;

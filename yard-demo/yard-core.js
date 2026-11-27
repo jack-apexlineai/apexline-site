@@ -84,7 +84,11 @@
     o2: { name: 'Mr Ian Pell', site: 'Greenway, Mayford', pc: 'GU22 0EF', phone: '07700 900366' },
     o3: { name: 'Mrs Lisa Moreton', site: 'Holt Road, West End', pc: 'GU24 9PS', phone: '07700 900377' },
     o4: { name: 'Mr Tom Garside', site: 'Linden Road, Send', pc: 'GU23 7JB', phone: '07700 900388' },
-    o5: { name: 'Mrs Sarah Okafor', site: '14 Oakfield Road, Woking', pc: 'GU22 7XQ', phone: '07700 900399' }
+    o5: { name: 'Mrs Sarah Okafor', site: '14 Oakfield Road, Woking', pc: 'GU22 7XQ', phone: '07700 900399' },
+    /* householders who pay cash on the day */
+    o6: { name: 'Mr Gary Holt', site: '9 Lye Road, Brookwood', pc: 'GU24 0RT', phone: '07700 900411' },
+    o7: { name: 'Mrs Dawn Reeve', site: '31 Bagshot Road, Knaphill', pc: 'GU21 2RX', phone: '07700 900422' },
+    o8: { name: 'Mr Paul Finch', site: '22 Kingfield Road, Woking', pc: 'GU22 7HT', phone: '07700 900433' }
   };
   YC.oneoff = function (id) { return ONEOFF[id]; };
 
@@ -293,14 +297,95 @@
       j.site = st; var pp = YC.pos(st.pc); j.lat = pp.lat; j.lng = pp.lng; j.price = YC.priceFor(null, j); j.incl = YC.inclFor(null, j); Y.jobs.push(j);
     });
     YC.LORRIES.forEach(function (lo) { var act = YC.active(YC.forLorry(Y, lo.id, 0)); Y.jobs.forEach(function (j) { if (j.day === 0 && j.lorry === lo.id && j.status === 'planned' && j !== act) j.lorry = null; }); });
+    seedCash(S, Y);
     return Y;
   };
   YC.ensure = function (S, CS) {
     if (!S) return null;
     if (!S.yard || S.yard.day !== S.seededDay || !S.yard.jobs) S.yard = YC.fresh(S, CS);
     else if (!YC._caught) { YC._caught = true; YC.settle(S, S.yard, false); }   /* opened again later in the day: catch up to the clock once */
+    if (!S.yard.cashV) seedCash(S, S.yard);   /* a day opened before cash jobs existed gets them too */
     return S.yard;
   };
+
+  /* ---------- cash on the day ----------
+     A cash job carries pay: 'cash'. The driver is asked on his phone if the cash was collected before the job goes to the office.
+     Collected or not, every cash job goes to the accounts package as a sale with its VAT: collected is a paid cash sale,
+     not collected is an unpaid invoice that is chased like any other. Nothing is ever left out of the sales or the VAT. */
+  YC.isCash = function (j) { return !!(j && j.pay === 'cash'); };
+  YC.cashState = function (j) { return YC.isCash(j) ? ((j.cash && j.cash.status) || 'due') : null; };
+  YC.cashAmt = function (j) {
+    if (j.cash && j.cash.net != null) return { net: j.cash.net, vat: j.cash.vat, gross: j.cash.gross };
+    var net = Math.round((+j.price || 0) * 100) / 100, vat = Math.round(net * 20) / 100;
+    return { net: net, vat: vat, gross: Math.round((net + vat) * 100) / 100 };
+  };
+  function gbp(n) { n = +n || 0; var M = window.CS && window.CS.money; return M ? M(n, Math.round(n * 100) % 100 !== 0) : '£' + n; }
+  YC.gbp = gbp;
+  YC.cashLine = function (j) { var a = YC.cashAmt(j); return gbp(a.net) + ' + VAT = ' + gbp(a.gross) + ' cash'; };
+  YC.cashTag = function (j) {
+    var s = YC.cashState(j); if (!s) return ''; var a = YC.cashAmt(j), I = window.ic ? window.ic('pound') : '';
+    if (s === 'collected') return '<span class="tag ok ycash">' + I + 'Cash collected ' + gbp(a.gross) + '</span>';
+    if (s === 'not') return '<span class="tag bad ycash">' + I + (j.cash.settled ? 'Cash NOT collected, paid since' : 'Cash NOT collected') + '</span>';
+    return '<span class="tag amber ycash">' + I + 'Cash to collect ' + gbp(a.gross) + '</span>';
+  };
+  YC.cashSet = function (Y, j, ok, why, when) {
+    var a = YC.cashAmt(j), lo = YC.lorry(j.lorry); when = when || Date.now(); Y.counters.cash = Y.counters.cash || 7101;
+    j.cash = { status: ok ? 'collected' : 'not', at: when, by: lo ? lo.driver : '', lorry: j.lorry, why: ok ? null : (String(why || '').trim() || 'No reason given'), net: a.net, vat: a.vat, gross: a.gross,
+      banked: false, chased: 0, settled: null, post: { ref: 'CS-' + (Y.counters.cash++), at: when, kind: ok ? 'paid' : 'owed' } };
+    j.log.push({ at: when, t: ok ? 'Cash collected, ' + gbp(a.gross) + ' (' + gbp(a.net) + ' + VAT)' : 'Cash not collected: ' + j.cash.why });
+    Y.v++;
+  };
+  /* every cash job, today's and earlier this month, in one shape: for the Cash screen, the menu count and the accounts posting */
+  YC.cashItems = function (S, Y) {
+    var o = [];
+    Y.jobs.filter(function (j) { return YC.isCash(j) && j.day === 0; }).forEach(function (j) {
+      var a = YC.cashAmt(j);
+      o.push({ day: 0, at: j.cash && j.cash.at, time: j.cash && j.cash.at ? new Date(j.cash.at).getHours() * 60 + new Date(j.cash.at).getMinutes() : j.win[0], cname: YC.custName(S, j.cust), site: j.site.name, what: YC.whatShort(j), lorry: j.lorry, job: j, cash: j.cash || { status: 'due', net: a.net, vat: a.vat, gross: a.gross }, state: YC.cashState(j) });
+    });
+    (Y.cashLog || []).forEach(function (x) { o.push({ day: x.day, at: null, time: x.time, cname: x.cname, site: x.site, what: x.what, lorry: x.lorry, job: null, ref: x.id, cash: x.cash, state: x.cash.status }); });
+    return o;
+  };
+  YC.cashLater = function (Y) { return Y.jobs.filter(function (j) { return YC.isCash(j) && j.day > 0 && YC.cashState(j) === 'due'; }); };
+  function seedCash(S, Y) {
+    if (Y.cashV) return; Y.cashV = 1; Y.counters.cash = Y.counters.cash || 7101;
+    var now = YC.nowMin(), b0 = new Date(); b0.setHours(0, 0, 0, 0);
+    function ts(m) { return b0.getTime() + m * 60000; }
+    function mk(id, lorry, w0, type, cust, size, stream, price) {
+      var j = J(id, lorry, w0, w0 + 60, type, cust, 0, size, stream), s = siteOf(S, cust, 0); j.site = s; var p = YC.pos(s.pc); j.lat = p.lat; j.lng = p.lng;
+      j.price = price || YC.priceFor(null, j); j.incl = YC.inclFor(null, j); j.pay = 'cash'; j.manual = true;
+      j.log.push({ at: ts(w0) - 2 * 86400000, t: 'Booked by Ellie, cash on the day' }); Y.jobs.push(j); return j;
+    }
+    /* Marcus: one paid in cash, one where nobody was in */
+    var d1 = Math.max(445, now - 75), d2 = Math.max(452, now - 30);
+    var c1 = mk('DSG-3191', 'L4', d1 - 40, 'deliver', 'o6', 6, 'house');
+    c1.at.onway = ts(d1 - 30); c1.at.arrived = ts(d1 - 8); YC.complete(S, Y, c1, { cash: { ok: true } }, ts(d1));
+    var c2 = mk('DSG-3192', 'L4', d2 - 40, 'collect', 'o7', 4, 'house');
+    c2.at.onway = ts(d2 - 25); c2.at.arrived = ts(d2 - 8); YC.complete(S, Y, c2, { cash: { ok: false, why: 'Nobody in. Rang her twice, no answer. Skip collected.' } }, ts(d2));
+    /* Darren: on his way now to a cash job. It waits on site until the driver answers the cash question on his phone */
+    var L2 = YC.active(YC.forLorry(Y, 'L2', 0));
+    if (L2 && L2.status !== 'done') { L2.status = 'planned'; L2.at = {}; L2.eta = null; L2.lorry = null; L2.manual = false; Y.texts = Y.texts.filter(function (t) { return t.job !== L2.id; }); }
+    var c3 = mk('DSG-3193', 'L2', Math.min(960, Math.max(450, now - 10)), 'deliver', 'o8', 6, 'house', 290);
+    c3.notes = 'Cash on the day. Ask for it before you drop the skip.';
+    c3.status = 'onway'; c3.at.onway = Date.now() - 50000; c3.eta = { at: Date.now(), text: etaAt(S, c3, 12, now) }; Y.texts.unshift({ at: Date.now(), job: c3.id, to: YC.custName(S, c3.cust), text: c3.eta.text });
+    /* earlier this month: cash jobs already banked, one not handed in yet, one still owed */
+    var H = [
+      [1, 'Mrs Carol Dunne', 'Hermitage Road, St Johns', '6yd deliver', 'L1', 280, 'collected', false], [1, 'Mr Steve Aldridge', 'Oak Tree Close, Knaphill', '1 x grab', 'G1', 380, 'collected', false],
+      [2, 'Mrs Priya Shah', 'Maybury Hill, Woking', '8yd collect', 'L2', 320, 'collected', true], [3, 'Mr Ian Pell', 'Greenway, Mayford', '4yd exchange', 'L1', 230, 'not', true, 'Said he would pay by bank transfer that night'],
+      [3, 'Mr Neil Corbett', 'Chertsey Road, Byfleet', '1 x grab', 'G2', 380, 'collected', true], [4, 'Mrs Joanne Lacey', 'Horsell Rise, Horsell', '6yd deliver', 'L4', 280, 'collected', true],
+      [5, 'Mr Kevin Ross', 'Robin Hood Road, Knaphill', '8yd deliver', 'L2', 320, 'collected', true], [6, 'Mr Dean Walsh', 'Lockfield Drive, Goldsworth Park', '4yd collect', 'L1', 230, 'collected', true],
+      [7, 'Mrs Ruth Evans', 'Send Road, Send', '1 x muckaway', 'G1', 360, 'collected', true], [8, 'Mr Tony Marsh', 'Woodham Lane, New Haw', '12yd deliver', 'L4', 395, 'collected', true],
+      [9, 'Mrs Helen Ashworth', 'Station Road, St Johns', '4yd deliver', 'L2', 230, 'collected', true], [11, 'Mr Rob Kemp', 'Coldharbour Road, Pyrford', '6yd exchange', 'L1', 280, 'collected', true],
+      [12, 'Mrs Fiona Hart', 'Bisley Green, Bisley', '1 x grab', 'G2', 380, 'collected', true], [14, 'Mr Sam Ellis', 'Guildford Road, Lightwater', '8yd deliver', 'L4', 320, 'collected', true]
+    ];
+    var backs = [], d = 0; while (backs.length < 16 && d > -40) { d--; if (YC.dayDate(d).getDay() !== 0) backs.push(d); }
+    Y.cashLog = H.map(function (r, i) {
+      var day = backs[r[0] - 1], lo = YC.lorry(r[4]), net = r[5], vat = Math.round(net * 20) / 100, time = 500 + (hash(r[1]) % 360);
+      return { id: 'DSG-' + (3000 + i * 7), day: day, time: time, cname: r[1], site: r[2], what: r[3], lorry: r[4],
+        cash: { status: r[6], at: null, by: lo ? lo.driver : '', lorry: r[4], why: r[8] || null, net: net, vat: vat, gross: Math.round((net + vat) * 100) / 100, banked: r[6] === 'collected' && r[7], bankedDay: r[6] === 'collected' && r[7] ? day + 1 : null, chased: r[6] === 'not' ? 1 : 0, settled: null,
+          post: { ref: 'CS-' + (7000 + i), kind: r[6] === 'collected' ? 'paid' : 'owed' } } };
+    });
+    Y.v++;
+  }
   YC.today = function (Y) { return Y.jobs.filter(function (j) { return j.day === 0; }); };
   YC.forLorry = function (Y, id, day) { return Y.jobs.filter(function (j) { return j.lorry === id && (j.day || 0) === (day || 0); }).sort(function (a, b) { return a.win[0] - b.win[0]; }); };
 
@@ -314,6 +399,7 @@
   };
   YC.complete = function (S, Y, j, data, when) {
     data = data || {}; when = when || Date.now();
+    if (YC.cashState(j) === 'due') YC.cashSet(Y, j, data.cash ? !!data.cash.ok : true, data.cash && data.cash.why, when);
     j.status = 'done'; j.at.done = when; if (!j.at.arrived) j.at.arrived = when - 600000; if (!j.at.onway) j.at.onway = j.at.arrived - 1500000;
     if (!j.photos.length) j.photos.push({ k: j.type === 'deliver' ? 'drop' : 'collect', sample: true, at: when });
     if (!j.sig) j.sig = { name: YC.custFirst(S, j.cust) + (YC.oneoff(j.cust) ? '' : ' (site)'), sample: true, at: when };
@@ -423,7 +509,7 @@
         }
       } else if (j.status === 'onway' && nowTs - (j.at.onway || 0) >= YC.TRAVEL) {
         j.status = 'onsite'; j.at.arrived = nowTs; ev.push({ k: 'arrived', j: j, lo: lo }); Y.v++;
-      } else if (j.status === 'onsite' && nowTs - (j.at.arrived || 0) >= YC.DWELL) {
+      } else if (j.status === 'onsite' && nowTs - (j.at.arrived || 0) >= YC.DWELL && YC.cashState(j) !== 'due') {   /* a cash job waits on site until the driver says if the cash was collected */
         YC.complete(S, Y, j, null, nowTs); ev.push({ k: 'done', j: j, lo: lo });
       }
     });

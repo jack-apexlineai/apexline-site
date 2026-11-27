@@ -97,3 +97,18 @@ body.embed .dv{max-width:none}
 .dv-k.sm{font-size:14px;color:var(--muted);display:grid;place-items:center}
 .dv-k:active{background:#E4E4E7}
 .dv-switch{margin:18px auto 0;display:flex}
+/* cash on the day */
+.dv-cash{display:flex;gap:10px;align-items:center;background:#FEF3C7;border:2px solid #B45309;color:#78350F;border-radius:14px;padding:11px 13px;margin:0 0 12px}
+.dv-cash .ic{width:26px;height:26px;color:#B45309}
+.dv-cash b{display:block;font-size:19px;letter-spacing:.01em}
+.dv-cash small{font-size:12.5px;font-weight:600}
+.dv-cmini{display:inline-block;margin-top:3px;font-style:normal;font-size:12px;font-weight:800;color:#B45309;background:var(--amber-l);border-radius:999px;padding:2px 8px}
+.dv-cmini.collected{color:var(--ok);background:var(--ok-l)}.dv-cmini.not{color:#B42318;background:rgba(180,35,24,.1)}
+.dv-camt{display:flex;align-items:baseline;gap:8px;margin:8px 0 2px}
+.dv-camt b{font-size:40px;letter-spacing:-.02em;line-height:1}
+.dv-camt small{font-size:16px;font-weight:700;color:var(--ink2)}
+.dv-btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.dv-cashb .dv-btn{min-height:58px;font-size:16px}
+.dv-nm textarea{border:1px solid #D4D4D8;border-radius:10px;padding:11px;font-size:16px;background:#fff;width:100%;font-family:inherit;resize:vertical}
+.dv-chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.dv-chip{border:1px solid #D4D4D8;background:#fff;border-radius:999px;padding:9px 12px;font-weight:700;font-size:13.5px;cursor:pointer}
