@@ -142,7 +142,7 @@
     var mx = Math.max.apply(null, tr.map(function (x) { return x.t; }).concat([1]));
     var wtnPct = r.wtnAll ? Math.round(r.moves / r.wtnAll * 100) : 0;
     var sites = Object.keys(r.sites).map(function (k) { var x = r.sites[k]; return { n: k, t: r1(x.t), loads: x.n, p: x.t ? Math.round(x.d / x.t * 100) : 0 }; }).sort(function (a, b) { return b.t - a.t; });
-    return '<div class="cp-hero"><div class="bd"><h1>Waste and carbon</h1><p>' + h(c.name) + '. Every load we have moved for you, how much was kept out of landfill and the carbon, from the notes on file.</p></div><button class="btn pri" data-act="greenCsv">' + ic('download') + 'Download your report</button></div>' +
+    return '<div class="cp-hero"><div class="bd"><h1>Waste and carbon</h1><p>' + h(c.name) + '. Every load we have moved for you, how much was kept out of landfill and the carbon, from the notes on file.</p></div><button class="btn pri" data-act="greenCsv">' + ic('download') + 'Download for your ESG or carbon reporting</button></div>' +
       '<div class="grid g4 kpis cp-gk">' +
       '<div class="card kpi hero"><small>' + ic('leaf') + 'Kept out of landfill</small><b>' + (r.moves ? r.pct + '%' : 'n/a') + '</b><span class="d">' + r1(r.diverted) + ' of ' + r.tonnes + ' tonnes</span></div>' +
       '<div class="card kpi"><small>' + ic('truck') + 'Waste moved</small><b>' + r.tonnes + ' t</b><span class="d">' + r.moves + (r.moves === 1 ? ' load' : ' loads') + ' across ' + sites.length + (sites.length === 1 ? ' site' : ' sites') + '</span></div>' +
@@ -158,7 +158,7 @@
       '<div class="card cp-gk"><div class="hd"><h2>' + ic('map-pin') + 'Every site</h2></div><div class="tw"><table class="t"><thead><tr><th>Site</th><th class="r">Tonnes</th><th class="r">Loads</th><th class="r">Out of landfill</th></tr></thead><tbody>' +
       (sites.map(function (x) { return '<tr><td><b>' + h(x.n) + '</b></td><td class="r num">' + x.t + '</td><td class="r num">' + x.loads + '</td><td class="r"><span class="tag ' + (x.p >= 90 ? 'ok' : 'amber') + '">' + x.p + '%</span></td></tr>'; }).join('') || '<tr><td colspan="4">No notes on file yet.</td></tr>') +
       '</tbody></table></div></div>' +
-      '<p class="cp-note">Sample figures. Tonnes are the weighbridge weight when the supplier sends one, otherwise a typical weight for the container. Recovery is each recycling site\'s own reported rate. Carbon is an estimate from the UK government\'s 2026 conversion factors.</p>';
+      '<p class="cp-note">Sample figures. Tonnes are our weighbridge weight for every load, otherwise a typical weight for the container. Recovery is each recycling site\'s own reported rate. Carbon is an estimate from the UK government\'s 2026 conversion factors.</p>';
   }
 
   /* ---------- orders ---------- */

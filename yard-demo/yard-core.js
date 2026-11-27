@@ -77,7 +77,12 @@
     'KT15 3JP': [51.3510, -0.4970], 'KT16 9PH': [51.3890, -0.5080], 'GU19 5AA': [51.3600, -0.6920], 'GU21 7AA': [51.3120, -0.5820], 'GU22 0EF': [51.2930, -0.5670],
     'GU24 9PS': [51.3380, -0.6320], 'GU23 7JB': [51.2850, -0.5290], 'GU22 7XQ': [51.3140, -0.5470]
   };
-  YC.pos = function (pc) { var p = P[pc]; return p ? { lat: p[0], lng: p[1] } : { lat: YC.YARD.lat, lng: YC.YARD.lng }; };
+  YC.pos = function (pc) {
+    var p = P[pc];
+    if (!p) { var d = String(pc || '').toUpperCase().trim().split(' ')[0], n = 0, la = 0, ln = 0; for (var k in P) if (k.split(' ')[0] === d) { la += P[k][0]; ln += P[k][1]; n++; } if (n) p = [la / n + (hash(pc) % 9 - 4) * 0.002, ln / n + (hash(pc + 'x') % 9 - 4) * 0.003]; }   /* a new postcode lands in its own district */
+    return p ? { lat: p[0], lng: p[1] } : { lat: YC.YARD.lat, lng: YC.YARD.lng };
+  };
+  YC.PC = P;
   /* extra one-off sites (domestic and small trade, not account customers) */
   var ONEOFF = {
     o1: { name: 'Mrs Helen Ashworth', site: 'Station Road, St Johns', pc: 'GU21 7AA', phone: '07700 900355' },

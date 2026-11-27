@@ -1491,6 +1491,11 @@
       }
     });
 
+    /* the helpers the newer yard screens (y-*.js) share */
+    window.DSGY.kit = { modal: modal, drawer: drawer, toast: toast, go: go, jobById: jobById, dayLabel: dayLabel, dayLong: dayLong, dayName: dayName, winLabel: winLabel, stTag: stTag, STAT: STAT,
+      cashBadge: cashBadge, lorryFits: lorryFits, fitWhy: fitWhy, movePlan: movePlan, sat: sat, plural: plural, uName: uName, meU: meU, mode: mode, modeSeg: modeSeg, iso: iso, offOf: offOf,
+      agedC: agedC, aged: aged, stops: stops, sum: sum, LIVEV: LIVEV, msgs: msgs, msgCust: msgCust, msgSite: msgSite, quoteText: quoteText, creditBox: creditBox, navCounts: navCounts,
+      bk2: bk2, b2Job: b2Job, b2Permit: b2Permit, b2Earliest: b2Earliest, b2Price: b2Price, b2Days: b2Days, b2Day: b2Day, b2CashLine: b2CashLine, WS: WS, MAP: MAP, view: view, save: save, commit: commit, q: q, qa: qa };
     /* ======================================================================
        Steps for the guided tour
        ====================================================================== */
