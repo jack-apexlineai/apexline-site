@@ -526,6 +526,66 @@ body.pdragging,body.pdragging *{cursor:grabbing!important}
   input[type=number]{width:80px}
   .grid-auto{grid-template-columns:minmax(0,1fr)}
 }
+/* think: deep thinking sessions (hq_think). Calm full-screen writing page, same feel as the Command planner */
+.th-hero{display:flex;align-items:center;justify-content:space-between;gap:14px 18px;flex-wrap:wrap}
+.th-hero p{margin:0;color:#C3CCDA;max-width:560px}
+.th-hero .muted{display:block;margin-top:4px;font-size:13px}
+.th-hero button{padding:12px 20px}
+.th-list{list-style:none;margin:0;padding:0}
+.th-row{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:14px;align-items:start;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);border-radius:0;padding:14px 6px;color:var(--text);font-weight:400;cursor:pointer}
+.th-list li:first-child .th-row{border-top:0}
+.th-row:hover{background:rgba(255,255,255,.03)}
+.th-date{font:600 12px/1.6 var(--mono);color:var(--muted)}
+.th-main{min-width:0}
+.th-main b{display:block;font-weight:600;overflow-wrap:anywhere}
+.th-main small{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:#AEB8CA;font-size:13.5px;margin-top:4px;overflow-wrap:anywhere}
+.th-main small.tbc{color:var(--muted);font-style:italic}
+.th-main .chip{margin-top:6px}
+.th-mins{font:600 12px/1.6 var(--mono);color:var(--muted);white-space:nowrap}
+.th-opt{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card2);cursor:pointer;margin-bottom:8px;font-weight:500;line-height:1.4}
+.th-opt:has(input:checked){border-color:var(--accent);background:rgba(92,200,245,.1)}
+.th-opt input{width:18px;height:18px;margin:1px 0 0;padding:0;flex:none;accent-color:var(--accent)}
+.th-opt span{min-width:0;overflow-wrap:anywhere}
+#thOwn{width:100%;margin:2px 0 0}
+#thScreen{position:fixed;inset:0;z-index:95;overflow-y:auto;overscroll-behavior:contain;background:radial-gradient(900px 480px at 50% -10%,rgba(40,90,150,.2) 0%,transparent 65%),var(--bg)}
+.th-inner{max-width:780px;min-height:100%;margin:0 auto;padding:calc(18px + env(safe-area-inset-top)) 24px 0;display:flex;flex-direction:column}
+.th-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:30px}
+.th-tools{display:flex;align-items:center;gap:6px;margin-left:auto}
+.th-tool{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 10px;background:transparent;border:0;color:var(--muted);font:600 13px var(--mono);border-radius:10px}
+.th-tool:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.th-tool svg,.th-speak svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+#thScreen:not(.show-time) #thClock{display:none}
+.th-saved{font-size:12px;color:var(--muted);opacity:0;min-width:40px;text-align:right}
+.th-saved.fade{animation:thfade 2.2s ease forwards}
+.th-saved.bad{color:var(--warn);opacity:1;animation:none}
+@keyframes thfade{0%,60%{opacity:1}100%{opacity:0}}
+.th-q{font-family:var(--head);font-size:34px;line-height:1.18;font-weight:800;letter-spacing:-.6px;margin:0 0 22px;overflow-wrap:anywhere;text-wrap:balance}
+.th-text{flex:1;min-height:50vh;width:100%;resize:none;border:0;border-radius:0;background:transparent;padding:0;color:var(--text);font:400 19px/1.7 Inter,system-ui,-apple-system,sans-serif}
+.th-text:focus{outline:none}
+.th-text::placeholder{color:var(--muted);opacity:.7}
+.th-bar{position:sticky;bottom:0;display:flex;align-items:center;gap:12px;padding:12px 0 calc(14px + env(safe-area-inset-bottom));background:linear-gradient(rgba(10,15,26,0),var(--bg) 30%);min-height:64px}
+.th-speak{display:inline-flex;align-items:center;gap:8px;border-radius:99px;padding:10px 18px;background:rgba(92,200,245,.1);color:var(--accent);border:1px solid rgba(92,200,245,.35);flex:none}
+.th-speak.on{background:rgba(248,113,113,.12);color:var(--bad);border-color:rgba(248,113,113,.45)}
+.th-speak .stdot{display:none}
+.th-speak.on .stdot{display:inline-block;animation:pulse 1.4s infinite}
+.th-interim{flex:1;min-width:0;color:var(--muted);opacity:.8;font-style:italic;line-height:1.4;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.th-hint{color:var(--muted);font-size:13px;margin:0}
+.th-back{background:none;border:0;padding:0;color:var(--accent);font-weight:600;font-size:14px;cursor:pointer;margin-bottom:14px}
+.th-readq{font-family:var(--head);font-size:30px;line-height:1.2;font-weight:800;letter-spacing:-.5px;margin:6px 0 0;overflow-wrap:anywhere}
+.th-body{white-space:pre-wrap;overflow-wrap:anywhere;font-size:16px;line-height:1.7;color:#D5DDEA}
+.th-acts{margin:0;padding-left:20px}
+.th-acts li{margin:6px 0;overflow-wrap:anywhere}
+@media (max-width:600px){
+  .th-row{grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:12px 2px}
+  .th-date{grid-column:1 / -1}
+  .th-inner{padding-left:16px;padding-right:16px}
+  .th-top{margin-bottom:18px}
+  .th-top .eyebrow{display:none}
+  .th-q{font-size:25px}
+  .th-text{font-size:17px}
+  .th-readq{font-size:24px}
+  .th-hero button{width:100%}
+}
 </style>
 </head>
 <body>
@@ -654,6 +714,7 @@ body.pdragging,body.pdragging *{cursor:grabbing!important}
     <div class="sep"></div>
     <a class="nav" href="#notes" data-nav="notes"><svg viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M9 12h6M9 16h6"/></svg>Notes</a>
     <a class="nav" href="#training" data-nav="training"><svg viewBox="0 0 24 24"><path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"/></svg>Training</a>
+    <a class="nav" href="#think" data-nav="think"><svg viewBox="0 0 24 24"><path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.2h5c0-.9.4-1.7 1.1-2.2A6 6 0 0 0 12 3z"/></svg>Think</a>
     <div class="foot">
       <button class="ghost sm" id="lockBtn">Lock</button>
     </div>
@@ -665,6 +726,7 @@ body.pdragging,body.pdragging *{cursor:grabbing!important}
     <button class="ghost sm" id="menuBtn" aria-label="Menu">☰</button>
   </div>
   <main class="content" id="page"></main>
+  <div id="thScreen" class="hide" role="dialog" aria-modal="true" aria-label="Deep thinking"></div>
 </div>
 <div id="tdBack" class="hide"></div>
 <div id="td" class="hide" role="dialog" aria-label="Task"></div>
@@ -1143,8 +1205,8 @@ $("#boot").addEventListener("click", () => BOOT.done && BOOT.done());
 document.addEventListener("keydown", () => { if (!$("#boot").classList.contains("hide") && BOOT.done) BOOT.done(); });
 
 /* ---------- app shell ---------- */
-const PAGES = { today: renderToday, calendar: renderCalendar, tasks: renderTasks, pipeline: renderPipeline, clients: renderClients, systems: renderSystems, crm: renderCRM, calls: renderCalls, money: renderMoney, payments: renderPayments, outreach: renderOutreach, notes: renderNotes, training: renderHealth };
-const curTab = () => { let t = (location.hash || "#today").slice(1); return PAGES[t] ? t : "today"; };
+const PAGES = { today: renderToday, calendar: renderCalendar, tasks: renderTasks, pipeline: renderPipeline, clients: renderClients, systems: renderSystems, crm: renderCRM, calls: renderCalls, money: renderMoney, payments: renderPayments, outreach: renderOutreach, notes: renderNotes, training: renderHealth, think: renderThink };
+const curTab = () => { let t = (location.hash || "#today").slice(1).split("/")[0]; return PAGES[t] ? t : "today"; };
 function route(){
   const tab = curTab();
   document.querySelectorAll("[data-nav]").forEach(a => a.classList.toggle("on", a.dataset.nav === tab));
@@ -2645,6 +2707,369 @@ async function renderNotes(el){
     drawChat();
   };
   $("#cQ").addEventListener("keydown", e => { if (e.key === "Enter") $("#cGo").click(); });
+}
+
+/* ---------- THINK (deep thinking sessions, hq_think) ----------
+   Same behaviour as the Command planner's Deep thinking. The row is created when a session starts, the text
+   autosaves about 2 seconds after typing or dictation, and on Finish, page hide and unload. A draft is also kept
+   on this device on every change, so if a save fails nothing is lost: it is restored and saved next time. */
+const TH_QS = [
+  "Where do I want ApexLine to be by 31 December, and what has to be true for that?",
+  "What would make 2027 my best year yet?",
+  "What am I avoiding, and why?",
+  "Which one deal would change everything this month?",
+  "What should I stop doing?",
+];
+const TH_DRAFT = "hq.think.draft";
+const TH = { rows: [], loaded: false, err: "", A: null, saveT: 0, retryT: 0, tick: 0, chain: Promise.resolve(true), rec: null, recOn: false, restarts: [], interim: "", sel: null, wake: null };
+const thSR = () => window.SpeechRecognition || window.webkitSpeechRecognition;
+const thOpen = () => !$("#thScreen").classList.contains("hide");
+const thSub = () => (location.hash.split("/")[1] || "");
+function thUuid(){
+  try { if (crypto.randomUUID) return crypto.randomUUID(); } catch {}
+  const b = crypto.getRandomValues(new Uint8Array(16)); b[6] = (b[6] & 15) | 64; b[8] = (b[8] & 63) | 128;
+  const h = [...b].map(x => x.toString(16).padStart(2, "0")).join("");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+function thSecs(A = TH.A){ return A ? Math.max(0, Math.round(A.secs + (A.runFrom ? (Date.now() - A.runFrom) / 1000 : 0))) : 0; }
+const thMins = s => { const n = Number(s || 0); return n <= 0 ? "0 min" : Math.max(1, Math.round(n / 60)) + " min"; };
+function thClockTxt(s){ const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, x = String(s % 60).padStart(2, "0"); return h ? `${h}:${String(m).padStart(2, "0")}:${x}` : `${m}:${x}`; }
+function thWhen(ts, long){
+  const d = new Date(ts), yr = d.getFullYear() !== new Date().getFullYear();
+  const day = d.toLocaleDateString("en-GB", long ? { weekday: "long", day: "numeric", month: "long", year: "numeric" } : { weekday: "short", day: "numeric", month: "short", ...(yr ? { year: "numeric" } : {}) });
+  return day + ", " + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+}
+const thActs = r => (Array.isArray(r && r.actions) ? r.actions : []).map(a => typeof a === "string" ? a : (a && (a.t || a.text)) || "").map(t => String(t).trim()).filter(Boolean);
+
+/* local draft: written on every change, cleared once Finish has saved */
+function thDraft(){
+  try { const d = JSON.parse(store.get(TH_DRAFT) || "null"); return d && d.id && typeof d.body === "string" && (!d.me || !ME || d.me === ME.id) ? d : null; } catch { return null; }
+}
+function thKeep(dirty){
+  const A = TH.A; if (!A) return;
+  if (dirty !== undefined) A.dirty = dirty;
+  store.set(TH_DRAFT, JSON.stringify({ id: A.id, me: ME && ME.id, question: A.question, body: A.body, secs: thSecs(A), startedAt: A.startedAt, created: A.created, dirty: !!A.dirty, at: Date.now() }));
+}
+/* the session to carry on: this tab's, else this device's draft, else the latest open one in hq_think */
+function thFromStored(){
+  const d = thDraft();
+  if (d) {
+    const row = TH.rows.find(r => r.id === d.id);
+    if (row && row.status === "done") {
+      if (d.dirty && d.body !== row.body) sb.from("hq_think").update({ body: d.body, updated_at: new Date().toISOString() }).eq("id", d.id).then(({ error }) => { if (!error) store.del(TH_DRAFT); });
+      else store.del(TH_DRAFT);
+    } else {
+      return { id: d.id, question: d.question || "", body: d.dirty || !row ? d.body : (row.body || ""), secs: Math.max(Number(d.secs || 0), Number(row && row.secs || 0)), runFrom: 0, startedAt: d.startedAt || (row && row.started_at) || new Date().toISOString(), created: row ? true : (TH.loaded && !TH.err ? false : !!d.created), dirty: !!d.dirty || (!row && TH.loaded && !TH.err) };
+    }
+  }
+  const row = TH.rows.find(r => r.status === "open");
+  return row ? thFromRow(row) : null;
+}
+const thFromRow = r => ({ id: r.id, question: r.question || "", body: r.body || "", secs: Number(r.secs || 0), runFrom: 0, startedAt: r.started_at, created: true, dirty: false });
+
+/* saves run one at a time, in order */
+function thSave(extra){ const p = TH.chain.then(() => thSaveOnce(extra)); TH.chain = p.catch(() => false); return p; }
+async function thSaveOnce(extra){
+  const A = TH.A; if (!A) return true;
+  if (!A.dirty && A.created && !extra) return true;
+  const body = A.body, secs = thSecs(A), now = new Date().toISOString();
+  try {
+    let error = null, done = false;
+    if (!A.created) {
+      ({ error } = await sb.from("hq_think").insert({ id: A.id, question: A.question, body, secs, status: "open", started_at: A.startedAt, updated_at: now, ...(extra || {}) }));
+      if (!error) done = true;
+      if (!error || error.code === "23505") { A.created = true; error = null; } // 23505: the row is already there, so update it
+    }
+    if (!done && !error) ({ error } = await sb.from("hq_think").update({ body, secs, updated_at: now, ...(extra || {}) }).eq("id", A.id));
+    if (error) throw error;
+    clearTimeout(TH.retryT);
+    if (TH.A === A) thKeep(A.body === body ? false : true); // anything typed during the save stays waiting
+    thSaved(true);
+    return true;
+  } catch (e) {
+    if (TH.A === A) thKeep(true);
+    thSaved(false, e);
+    clearTimeout(TH.retryT); TH.retryT = setTimeout(() => { if (TH.A && TH.A.dirty) thSave(); }, 15000);
+    return false;
+  }
+}
+function thSaved(ok){
+  const s = $("#thSaved"); if (!s) return;
+  s.classList.remove("fade", "bad");
+  if (ok) { s.textContent = "Saved"; void s.offsetWidth; s.classList.add("fade"); }
+  else { s.textContent = "Kept on this device"; s.classList.add("bad"); }
+}
+function thChanged(){
+  const A = TH.A, ta = $("#thText"); if (!A || !ta) return;
+  A.body = ta.value; thKeep(true);
+  clearTimeout(TH.saveT); TH.saveT = setTimeout(() => thSave(), 2000);
+}
+function thFlush(){
+  const A = TH.A; if (!A) return;
+  const ta = $("#thText"); if (ta) A.body = ta.value;
+  if (thOpen()) A.dirty = true; // minutes moved on too
+  thKeep(); clearTimeout(TH.saveT);
+  if (A.dirty) thSave();
+}
+window.addEventListener("pagehide", thFlush);
+window.addEventListener("beforeunload", thFlush);
+document.addEventListener("visibilitychange", () => {
+  const A = TH.A; if (!A || !thOpen()) return;
+  if (document.hidden) { A.secs = thSecs(A); A.runFrom = 0; thFlush(); }
+  else { A.runFrom = Date.now(); thWake(true); }
+});
+async function thWake(on){
+  try {
+    if (on && !TH.wake && navigator.wakeLock && !document.hidden) { TH.wake = await navigator.wakeLock.request("screen"); TH.wake.addEventListener("release", () => { TH.wake = null; }); }
+    else if (!on && TH.wake) { const w = TH.wake; TH.wake = null; await w.release(); }
+  } catch { TH.wake = null; }
+}
+
+/* session screen */
+function thOpenScreen(){
+  const A = TH.A; if (!A) return;
+  const el = $("#thScreen"), can = !!thSR(), showTime = store.get("hq.think.time") !== "0";
+  el.innerHTML = `<div class="th-inner">
+    <header class="th-top">
+      <span class="eyebrow">Deep thinking</span>
+      <div class="th-tools">
+        <button class="th-tool" id="thTime" aria-pressed="${showTime}" aria-label="${showTime ? "Hide" : "Show"} the timer" title="${showTime ? "Hide" : "Show"} the timer"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M10 2h4"/></svg><span id="thClock" class="num"></span></button>
+        <span class="th-saved" id="thSaved" aria-live="polite"></span>
+        <button class="ghost sm" id="thLater" title="Close for now. The session stays open.">Close</button>
+        <button class="sm" id="thFinish">Finish</button>
+      </div>
+    </header>
+    <h1 class="th-q" id="thQ"></h1>
+    <textarea class="th-text" id="thText" aria-label="Your answer" placeholder="Start writing. It saves as you go."></textarea>
+    <div class="th-bar">${can
+      ? `<button class="th-speak" id="thSpeak" aria-pressed="false"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg><span>Speak</span><i class="stdot"></i></button><span class="th-interim" id="thInterim" aria-live="polite"></span>`
+      : `<p class="th-hint">Tap the mic on your keyboard to speak.</p>`}</div>
+  </div>`;
+  $("#thQ").textContent = A.question;
+  const ta = $("#thText"); ta.value = A.body;
+  TH.sel = null;
+  const mark = () => { TH.sel = [ta.selectionStart, ta.selectionEnd]; };
+  ["keyup", "click", "select", "focus"].forEach(ev => ta.addEventListener(ev, () => setTimeout(mark, 0)));
+  ta.addEventListener("input", () => { mark(); thChanged(); });
+  el.classList.toggle("show-time", showTime);
+  $("#thTime").onclick = () => {
+    const on = !el.classList.contains("show-time"); el.classList.toggle("show-time", on); store.set("hq.think.time", on ? "1" : "0");
+    const b = $("#thTime"); b.setAttribute("aria-pressed", String(on)); b.setAttribute("aria-label", (on ? "Hide" : "Show") + " the timer"); b.title = (on ? "Hide" : "Show") + " the timer";
+  };
+  $("#thLater").onclick = thLater;
+  $("#thFinish").onclick = thFinish;
+  if (can) $("#thSpeak").onclick = thSpeak;
+  el.classList.remove("hide"); el.scrollTop = 0;
+  if (!A.runFrom) A.runFrom = Date.now();
+  const tick = () => { const c = $("#thClock"); if (c && TH.A) c.textContent = thClockTxt(thSecs()); };
+  tick(); clearInterval(TH.tick); TH.tick = setInterval(tick, 1000);
+  thWake(true);
+  if (canHover()) ta.focus({ preventScroll: true });
+}
+function thCloseScreen(){
+  thStopSpeak(true);
+  clearInterval(TH.tick); thWake(false);
+  const el = $("#thScreen"); el.classList.add("hide"); el.innerHTML = "";
+}
+function thLater(){
+  const A = TH.A; if (!A) return;
+  thFlush(); A.secs = thSecs(A); A.runFrom = 0; thKeep();
+  thCloseScreen();
+  if (curTab() === "think" && !thSub()) renderThink($("#page")); else location.hash = "think";
+}
+async function thFinish(){
+  const A = TH.A; if (!A) return;
+  thStopSpeak(true);
+  const ta = $("#thText"); if (ta) A.body = ta.value;
+  clearTimeout(TH.saveT);
+  if (!A.body.trim()) {
+    if (!confirm("Nothing written yet. Discard this session?")) return;
+    TH.A = null; store.del(TH_DRAFT); clearTimeout(TH.retryT); thCloseScreen();
+    if (A.created) { const { error } = await sb.from("hq_think").delete().eq("id", A.id); if (!error) TH.rows = TH.rows.filter(r => r.id !== A.id); }
+    toast("Nothing written, so nothing was kept.");
+    if (curTab() === "think" && !thSub()) renderThink($("#page")); else location.hash = "think";
+    return;
+  }
+  const b = $("#thFinish"); b.disabled = true; b.textContent = "Saving";
+  A.secs = thSecs(A); A.runFrom = 0; A.dirty = true; thKeep();
+  const finished_at = new Date().toISOString();
+  const ok = await thSave({ status: "done", finished_at });
+  if (!ok) {
+    A.runFrom = Date.now();
+    if ($("#thFinish")) { b.disabled = false; b.textContent = "Finish"; }
+    toast("Couldn't save just now. Your text is safe on this device. Try Finish again.");
+    return;
+  }
+  TH.A = null; store.del(TH_DRAFT); clearTimeout(TH.retryT);
+  const row = { ...(TH.rows.find(r => r.id === A.id) || { summary: null, actions: [] }), id: A.id, question: A.question, body: A.body, secs: A.secs, status: "done", started_at: A.startedAt, finished_at, updated_at: finished_at };
+  TH.rows = [row, ...TH.rows.filter(r => r.id !== A.id)];
+  thCloseScreen();
+  toast("Session saved");
+  location.hash = "think/" + A.id;
+}
+
+/* speaking: the browser's own speech recognition, British English, interim words shown greyed until they settle */
+function thSpeakBtn(on){
+  const b = $("#thSpeak"); if (!b) return;
+  b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); b.querySelector("span").textContent = on ? "Stop" : "Speak";
+}
+function thSpeak(){
+  if (TH.recOn) return thStopSpeak();
+  if (!thSR()) return;
+  TH.recOn = true; TH.restarts = []; thSpeakBtn(true); thRecStart();
+}
+function thStopSpeak(hard){
+  TH.recOn = false; thSpeakBtn(false);
+  const rec = TH.rec;
+  if (rec) { try { hard ? rec.abort() : rec.stop(); } catch {} }
+  if (hard) { TH.rec = null; TH.interim = ""; }
+  const it = $("#thInterim"); if (it && hard) it.textContent = "";
+}
+function thRecStart(){
+  const Rec = thSR();
+  let rec;
+  try { rec = new Rec(); } catch { thStopSpeak(true); toast("Speaking isn't available here. Tap the mic on your keyboard instead."); return; }
+  rec.lang = "en-GB"; rec.continuous = true; rec.interimResults = true;
+  rec.onresult = e => {
+    if (TH.rec !== rec) return;
+    let fin = "", interim = "";
+    for (let i = e.resultIndex; i < e.results.length; i++) { const r = e.results[i]; if (r.isFinal) fin += r[0].transcript; else interim += r[0].transcript; }
+    if (fin.trim()) thInsert(fin);
+    TH.interim = interim.trim();
+    const it = $("#thInterim"); if (it) it.textContent = TH.interim;
+  };
+  rec.onerror = e => {
+    if (TH.rec !== rec) return;
+    if (["not-allowed", "service-not-allowed", "audio-capture", "language-not-supported"].includes(e.error)) {
+      thStopSpeak();
+      toast(e.error === "audio-capture" ? "No microphone found. Type instead, or tap the mic on your keyboard." : e.error === "language-not-supported" ? "Speaking isn't available here. Tap the mic on your keyboard instead." : "The microphone is blocked for this site. Allow it in your browser settings, or tap the mic on your keyboard.");
+    }
+  };
+  rec.onend = () => {
+    if (TH.rec !== rec) return;
+    TH.rec = null;
+    if (TH.interim) { thInsert(TH.interim); TH.interim = ""; } // words heard but never settled still go in
+    const it = $("#thInterim"); if (it) it.textContent = "";
+    if (!TH.recOn || !thOpen()) return;
+    // the browser ends listening after a pause: start again while Speak is still on
+    const now = Date.now(); TH.restarts = TH.restarts.filter(t => now - t < 10000); TH.restarts.push(now);
+    if (TH.restarts.length > 6) { thStopSpeak(); toast("Listening stopped. Tap Speak to carry on."); return; }
+    setTimeout(() => { if (TH.recOn && !TH.rec && thOpen()) thRecStart(); }, 250);
+  };
+  TH.rec = rec;
+  try { rec.start(); } catch { TH.rec = null; thStopSpeak(true); toast("Couldn't start listening. Tap Speak to try again, or type."); }
+}
+/* said text goes in at the cursor (or the end), with a space either side as needed and a capital after a full stop */
+function thInsert(raw){
+  const ta = $("#thText"); if (!TH.A || !ta) return;
+  let said = String(raw).replace(/\s+/g, " ").trim(); if (!said) return;
+  const v = ta.value;
+  let [s, e] = TH.sel || [v.length, v.length];
+  s = Math.min(Math.max(0, s), v.length); e = Math.min(Math.max(s, e), v.length);
+  const before = v.slice(0, s), after = v.slice(e), prev = before.replace(/\s+$/, "");
+  if (!prev || /[.!?]["')\]]?$/.test(prev) || /\n[ \t]*$/.test(before)) said = said.charAt(0).toUpperCase() + said.slice(1);
+  if (!after.trim() && !/[.!?,;:]$/.test(said)) said += ".";
+  const lead = before && !/\s$/.test(before) ? " " : "";
+  const tail = after && !/^\s/.test(after) ? " " : "";
+  const head = before + lead + said + tail;
+  ta.value = head + after;
+  TH.sel = [head.length, head.length];
+  if (document.activeElement === ta) ta.setSelectionRange(head.length, head.length);
+  thChanged();
+}
+
+/* pages: #think list, #think/pick start, #think/<id> read */
+async function renderThink(el){
+  const sub = thSub();
+  if (sub === "pick") return thPick(el);
+  if (!TH.loaded) el.innerHTML = phead("Deep thinking", "Think") + `<div class="card muted small">Loading…</div>`;
+  try { TH.rows = await q(sb.from("hq_think").select("*").order("started_at", { ascending: false }).limit(300)); TH.err = ""; }
+  catch (e) { TH.err = (e && e.message) || "Couldn't load your sessions"; }
+  TH.loaded = true;
+  if (curTab() !== "think" || thSub() !== sub) return; // moved on while loading
+  if (!TH.A) TH.A = thFromStored();
+  if (TH.A && TH.A.dirty && !thOpen()) thSave(); // a save that failed last time goes now
+  if (sub) return thRead(el, sub);
+  const rows = TH.rows, done = rows.filter(r => r.status === "done"), mins = Math.round(sum(done, "secs") / 60);
+  el.innerHTML = phead("Deep thinking", "Think") +
+  `<div class="card th-hero" style="margin-bottom:16px"><p>One question, no distractions. Write or speak and let it run. It saves as you go.<span class="muted">${done.length ? `${done.length} ${done.length === 1 ? "session" : "sessions"}, ${mins} min in all.` : "Your sessions collect here."}</span></p>
+    <button id="thGo">${TH.A ? "Back to my session" : "Start a session"}</button></div>
+  <div class="card"><div class="card-h"><h2>Past sessions</h2><span class="cnt">${rows.length || ""}</span></div>
+    ${TH.err ? `<p class="ferr" style="margin:0 0 8px">Couldn't load past sessions: ${esc(TH.err)}</p>` : ""}
+    ${rows.length ? `<ul class="th-list">${rows.map(r => `<li><button class="th-row" data-thid="${esc(r.id)}">
+      <span class="th-date">${esc(thWhen(r.started_at))}</span>
+      <span class="th-main"><b>${esc(r.question)}</b>${r.status === "open" ? `<span class="chip hud">In progress</span>` : r.summary ? `<small>${esc(r.summary)}</small>` : `<small class="tbc">Summary to come</small>`}</span>
+      <span class="th-mins">${thMins(r.secs)}</span></button></li>`).join("")}</ul>` : TH.err ? "" : `<p class="empty">No sessions yet. Start one above.</p>`}
+  </div>`;
+  $("#thGo").onclick = () => { if (TH.A) thOpenScreen(); else location.hash = "think/pick"; };
+  el.querySelectorAll("[data-thid]").forEach(b => b.onclick = () => { location.hash = "think/" + b.dataset.thid; });
+}
+function thPick(el){
+  if (TH.A) {
+    el.innerHTML = phead("Deep thinking", "Think") + `<div class="card th-hero"><p>You have a session open. Finish it before you start another.</p><button id="thGo">Back to my session</button></div>`;
+    $("#thGo").onclick = () => thOpenScreen();
+    return;
+  }
+  const next = Number(store.get("hq.think.next") || 0) % TH_QS.length;
+  el.innerHTML = `<button class="th-back" id="thBack">‹ Think</button>` + phead("Deep thinking", "Pick a question") +
+  `<div class="card" style="max-width:760px">
+    <p class="muted" style="margin:0 0 14px">Pick one, or write your own. Switch on Do Not Disturb first.</p>
+    <div role="radiogroup" aria-label="Questions">
+      ${TH_QS.map((x, i) => `<label class="th-opt"><input type="radio" name="thq" value="${i}" ${i === next ? "checked" : ""}><span>${esc(x)}</span></label>`).join("")}
+      <label class="th-opt"><input type="radio" name="thq" value="own"><span>Write my own</span></label>
+    </div>
+    <input id="thOwn" class="hide" maxlength="240" placeholder="Write your question" aria-label="Your own question">
+    <p class="ferr" id="thErr"></p>
+    <div class="row"><button id="thBegin">Begin</button><button class="ghost" id="thCancel">Cancel</button></div>
+  </div>`;
+  const own = $("#thOwn");
+  el.querySelectorAll("input[name=thq]").forEach(r => r.onchange = () => { const on = r.value === "own" && r.checked; own.classList.toggle("hide", !on); if (on) own.focus(); $("#thErr").textContent = ""; });
+  own.addEventListener("keydown", e => { if (e.key === "Enter") $("#thBegin").click(); });
+  $("#thBack").onclick = $("#thCancel").onclick = () => { location.hash = "think"; };
+  $("#thBegin").onclick = () => {
+    if (TH.A) return thOpenScreen();
+    const v = (el.querySelector("input[name=thq]:checked") || {}).value;
+    let question;
+    if (v === "own") { question = own.value.trim(); if (!question) { $("#thErr").textContent = "Write your question, or pick one above."; own.focus(); return; } }
+    else { const i = Number(v || 0); question = TH_QS[i]; store.set("hq.think.next", String(i + 1)); }
+    TH.A = { id: thUuid(), question, body: "", secs: 0, runFrom: Date.now(), startedAt: new Date().toISOString(), created: false, dirty: true };
+    thKeep(true);
+    thOpenScreen();
+    thSave(); // creates the row now
+    location.hash = "think";
+  };
+}
+function thRead(el, id){
+  const r = TH.rows.find(x => x.id === id);
+  const back = `<button class="th-back" id="thBack">‹ All sessions</button>`;
+  if (!r) {
+    el.innerHTML = back + phead("Deep thinking", "Session not found") + `<div class="card muted">${TH.err ? "Couldn't load it: " + esc(TH.err) : "This session isn't here any more."}</div>`;
+    $("#thBack").onclick = () => { location.hash = "think"; };
+    return;
+  }
+  const acts = thActs(r), open = r.status === "open";
+  el.innerHTML = back +
+  `<div class="phead"><div style="min-width:0"><div class="eyebrow">${esc(thWhen(r.started_at, true))}. ${thMins(r.secs)}</div><h1 class="th-readq">${esc(r.question)}</h1></div></div>
+  <div class="dash"><div class="col">
+    <div class="card"><div class="card-h"><h2>What I wrote</h2><div class="row">${open ? `<button class="sm" id="thCarry">Carry on</button>` : ""}<button class="ghost sm" id="thCopy">Copy text</button></div></div>
+      <div class="th-body">${r.body && r.body.trim() ? esc(r.body) : `<span class="muted">Nothing written.</span>`}</div></div>
+  </div><div class="col">
+    <div class="card"><div class="card-h"><h2>Summary</h2></div>${r.summary ? `<div class="th-body">${esc(r.summary)}</div>` : `<p class="empty" style="padding:0">${open ? "Finish the session first." : "Summary to come."}</p>`}</div>
+    ${acts.length ? `<div class="card"><div class="card-h"><h2>Actions</h2><span class="cnt">${acts.length}</span></div><ul class="th-acts">${acts.map(a => `<li>${esc(a)}</li>`).join("")}</ul></div>` : ""}
+  </div></div>`;
+  $("#thBack").onclick = () => { location.hash = "think"; };
+  $("#thCopy").onclick = async () => {
+    const text = r.question + "\n\n" + (r.body || "");
+    let ok = false;
+    try { await navigator.clipboard.writeText(text); ok = true; } catch {}
+    if (!ok) { const t = document.createElement("textarea"); t.value = text; t.setAttribute("readonly", ""); t.style.cssText = "position:fixed;top:0;left:0;opacity:0"; document.body.appendChild(t); t.select(); try { ok = document.execCommand("copy"); } catch {} t.remove(); }
+    toast(ok ? "Copied" : "Couldn't copy. Select the text and copy it instead.");
+  };
+  if (open) $("#thCarry").onclick = () => {
+    if (TH.A && TH.A.id !== r.id) { thFlush(); if (TH.A.dirty) { toast("Your other open session hasn't saved yet. Open it from Think first."); return; } }
+    if (!TH.A || TH.A.id !== r.id) { TH.A = thFromRow(r); thKeep(false); }
+    thOpenScreen();
+  };
 }
 
 window.HQ = { money, todayTasks, todayCounts, liStats, followUps, parseCSV, S, payItems, payMonth, payWeek, validCost, validExpected, PV };
