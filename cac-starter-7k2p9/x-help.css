@@ -1,0 +1,21 @@
+/* Help menu (x-help.js) */
+.top .xh-btn{flex:none;color:var(--muted)}
+.top .xh-btn:hover{color:var(--ink)}
+.modal.xh{width:min(520px,calc(100vw - 24px))}
+.xh-round{display:block;width:100%;text-align:left;background:var(--brand);color:#1A1A1A;border-radius:12px;padding:14px 16px;margin-bottom:16px}
+.xh-round:hover{filter:brightness(1.04)}
+.xh-round b{display:block;font-size:16px;font-weight:800}
+.xh-round small{display:block;font-size:13px;margin-top:2px;opacity:.85}
+.xh-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0 8px}
+.xh-h b{font-size:14px;margin-right:auto}
+.xh-list{display:flex;flex-direction:column;gap:6px}
+.xh-v{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font-size:13.5px;font-weight:600}
+.xh-v i{width:26px;height:26px;border-radius:50%;background:var(--sunk);color:var(--muted);display:grid;place-items:center;flex:none}
+.xh-v i svg{width:13px;height:13px}
+.xh-v span{flex:1;min-width:0}
+.xh-v small{color:var(--muted);font-weight:500;font-size:12px}
+.xh-f{padding:9px 12px;border:1px solid var(--line);border-radius:10px}
+.xh-f b{display:block;font-size:13.5px}
+.xh-f small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;line-height:1.4}
+.xh-foot{font-size:12.5px;color:var(--muted);margin:14px 0 0}
+@media (max-width:620px){.top .xh-btn{display:none}}

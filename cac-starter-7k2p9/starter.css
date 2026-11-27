@@ -1,0 +1,24 @@
+/* CAC Starter: hidden extras, the plain Home and the sidebar label */
+.st-x, .st-empty { display: none !important; }
+header.top .livepill, header.top .asstbtn, header.top [data-act="tryIt"], header.top [data-act="phone"], header.top [data-act="skDemo"] { display: none !important; }
+.st-label { margin: 8px 12px 6px; padding: 6px 10px; border: 1px solid rgba(255,255,255,.14); border-radius: 8px; color: rgba(255,255,255,.62); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; text-align: center; }
+.st-hello { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 4px 0 18px; }
+.st-hello h2 { margin: 4px 0 0; font-size: clamp(26px, 4vw, 38px); font-weight: 800; letter-spacing: -.02em; }
+.st-date { color: var(--brand); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.st-kpis { margin-bottom: 16px; }
+.st-kpi { text-align: left; cursor: pointer; font: inherit; color: inherit; display: flex; flex-direction: column; gap: 2px; }
+.st-kpi b { font-size: 30px; }
+.st-kpi small { font-size: 14px; color: var(--ink); font-weight: 600; }
+.st-row { width: 100%; background: none; border: 0; border-bottom: 1px solid var(--line); text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.st-row:last-child { border-bottom: 0; }
+.st-row:hover b { color: var(--brand); }
+.st-sage { margin-bottom: 16px; }
+@media (max-width: 900px) { .st-grid { grid-template-columns: 1fr !important; } }
+.xm-crm { display: none !important; }
+.xp-besthd, #xpBest { display: none !important; }
+#linkCard { display: none !important; }
+.st-h3 { margin: 18px 0 8px; font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--ink2); }
+.st-site { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; }
+.st-sitehd { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.st-sitehd .muted { margin-left: auto; font-size: 12.5px; }
+.st-none { font-size: 13px; padding: 4px 0; }
