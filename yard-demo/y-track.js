@@ -193,7 +193,7 @@
       return r.jobs.length;
     }
     A.y2UseRun = function (el) { var r = (ui.y2RunsL || [])[+el.dataset.i]; if (!r) return; var n = useRun(r); Y().v++; K.save(); UI.render(); toast(plural(n, 'job') + ' on ' + h(YC.lorry(r.lorry).reg) + '. It shows in live tracking and on ' + h(YC.lorry(r.lorry).first) + '\'s phone now', 'route'); };
-    A.y2UsePlan = function () { var n = 0, R = ui.y2RunsL || suggest(); R.forEach(function (r) { n += useRun(r); }); Y().v++; K.save(); ui.y2Runs = false; UI.render(); toast('Plan used: ' + plural(n, 'job') + ' on ' + plural(R.filter(function (r) { return r.lorry; }).map(function (r) { return r.lorry; }).filter(function (v, i, a) { return a.indexOf(v) === i; }).length, 'lorry') + '. Live tracking and the drivers\' phones have it', 'route'); };
+    A.y2UsePlan = function () { var n = 0, R = ui.y2RunsL || suggest(); R.forEach(function (r) { n += useRun(r); }); Y().v++; K.save(); ui.y2Runs = false; UI.render(); toast('Plan used: ' + plural(n, 'job') + ' on ' + plural(R.filter(function (r) { return r.lorry; }).map(function (r) { return r.lorry; }).filter(function (v, i, a) { return a.indexOf(v) === i; }).length, 'lorry', 'lorries') + '. Live tracking and the drivers\' phones have it', 'route'); };
 
     /* ======================================================================
        30 SECOND BOOKING: customer, tap the site, what, when, done
