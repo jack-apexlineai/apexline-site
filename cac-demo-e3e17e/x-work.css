@@ -124,7 +124,3 @@
   .xwhint{display:none}
   .modal .mhd .xwbk{padding-left:8px;padding-right:10px}
 }
-
-.xwst[data-late="1"]{background-color:var(--amber-l);color:var(--amber);border-color:transparent}
-.xwlate{color:var(--amber)!important;font-weight:700}
-.xwlate svg{width:14px;height:14px;vertical-align:-2px;margin-right:4px}

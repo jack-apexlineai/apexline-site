@@ -127,8 +127,8 @@
     job('CAC-1047', 'c10', 0, 'skip', 8, 1, 's11', 235, 310, 'booked', 1, 'pending', { bookedMins: 52, permit: true }),
     job('CAC-1048', 'c1', 1, 'grab', null, 1, 's2', 275, 340, 'booked', 3, 'pending', { bookedMins: 95 }),
     /* a full day today and the next working day, so the live jobs sheet looks like a real Monday */
-    job('CAC-1022', 'c1', 1, 'skip', 6, 1, 's1', 180, 240, 'collection', -9, 'received', { colDay: 0, eta: '3 to 5', liveSt: 'Confirmed', liveStWas: 'collection', etaFlag: 1 }),
-    job('CAC-1024', 'c2', 1, 'skip', 8, 1, 's3', 210, 280, 'exchange', -6, 'received', { exDay: 0, eta: '3 to 5', liveSt: 'Confirmed', liveStWas: 'exchange', etaFlag: 1 }),
+    job('CAC-1022', 'c1', 1, 'skip', 6, 1, 's1', 180, 240, 'collection', -9, 'received', { colDay: 0, eta: '3 to 5' }),
+    job('CAC-1024', 'c2', 1, 'skip', 8, 1, 's3', 210, 280, 'exchange', -6, 'received', { exDay: 0, eta: '3 to 5' }),
     job('CAC-1049', 'c1', 0, 'skip', 8, 1, 's1', 205, 275, 'onhire', 0, 'pending', { eta: '7 to 8:30', note: 'Drop by the site cabin' }),
     job('CAC-1050', 'c2', 0, 'grab', null, 1, 's2', 275, 340, 'confirmed', 0, 'pending', { eta: '2 to 4' }),
     job('CAC-1051', 'c6', 1, 'skip', 12, 1, 's3', 270, 355, 'confirmed', 0, 'pending', { eta: '2 to 4', note: 'Gate code 2580' }),

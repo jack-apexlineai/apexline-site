@@ -43,11 +43,10 @@
     var tk = track0(j, d, what); if (d !== 0) return tk;
     var s = liveSt(j, what); return s ? [s, STC[s][0], STC[s][1]] : tk;
   };
-  function late(j) { return !!(j.etaFlag && j.liveSt === 'Confirmed' && j.liveStWas === j.status); }
-  function etaCell(j) { return j.status === 'booked' ? '<b class="muted">' + h(X.eta(j)) + '</b><small>Asked for, not confirmed yet</small>' : late(j) ? '<b class="xwlate">' + ic('alert') + h(X.eta(j)) + '</b><small class="xwlate">Confirmed, not on the way yet</small>' : '<b>' + h(X.eta(j)) + '</b>'; }
+  function etaCell(j) { return j.status === 'booked' ? '<b class="muted">' + h(X.eta(j)) + '</b><small>Asked for, not confirmed yet</small>' : '<b>' + h(X.eta(j)) + '</b>'; }
   function stSelect(j, what) {
     var cur = liveSt(j, what);
-    return '<select class="xwst" id="xwst-' + j.id + '" data-xwst="' + j.id + '" data-st="' + h(cur) + '"' + (late(j) && cur === 'Confirmed' ? ' data-late="1"' : '') + ' aria-label="Status for ' + j.id + '">' +
+    return '<select class="xwst" id="xwst-' + j.id + '" data-xwst="' + j.id + '" data-st="' + h(cur) + '" aria-label="Status for ' + j.id + '">' +
       (cur ? '' : '<option value="" selected disabled hidden>Not confirmed yet</option>') +
       ST.map(function (s) { return '<option value="' + s + '"' + (s === cur ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select>' +
       (cur ? '' : '<small class="xwwait">Waiting on supplier</small>');
