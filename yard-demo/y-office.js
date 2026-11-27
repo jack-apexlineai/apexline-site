@@ -122,7 +122,7 @@
       y.tickets.filter(function (t) { return t.over && (t.over.status === 'pending' || t.over.status === 'held'); }).forEach(function (t) {
         var j = K.jobById(t.job); if (!j) return; var c = CS.cust(t.cust), inv = invNo(j);
         t.over.status = 'sent'; t.over.inv = inv; t.over.auto = true; t.over.at = t.over.at || Date.now();
-        if (c && !s.invoices.some(function (i) { return i.id === inv; })) s.invoices.unshift({ id: inv, cust: t.cust, amount: j.price + t.over.amount, issued: 0, due: c.limit ? 30 : 7, status: 'unpaid', jobs: [], pay: c.limit ? 'account' : 'link', what: YC.what(j) + ', plus excess weight ' + t.over.over.toFixed(2) + ' t', ticket: t.id, over: t.over.amount });
+        if (c && !s.invoices.some(function (i) { return i.id === inv; })) s.invoices.unshift({ id: inv, cust: t.cust, amount: j.price + t.over.amount, issued: 0, due: c.limit ? 30 : 7, status: 'unpaid', jobs: [], pay: c.limit ? 'account' : 'link', what: YC.what(j) + ', ' + t.net.toFixed(2) + ' t on the weighbridge, plus excess weight ' + t.over.over.toFixed(2) + ' t', ticket: t.id, over: t.over.amount });
         j.log.push({ at: Date.now(), t: 'Excess weight ' + t.over.over.toFixed(2) + ' t at ' + money(t.over.rate) + '/t added to ' + inv + ' by itself' }); j.overweight = true; n++;
       });
       if (n) { y.v++; save(); }
@@ -167,6 +167,7 @@
     function mJob(m) { var t = m.type || (m.svc === 'grab' || m.svc === 'muck' ? m.svc : 'deliver'); if (t === 'grab' || t === 'muck') return (t === 'grab' ? 'Grab, ' : 'Muckaway, ') + plural(m.loads || 1, 'load') + (m.wl ? ', wait and load' : ''); return YC.TYPES[t].n + ', ' + m.size + ' yard ' + (m.size >= 20 ? 'RoRo' : 'skip') + (t === 'wait' ? ' (' + YC.waitLine({}, Y()) + ')' : ''); }
     function mWhen(m, so) { var w = { early: '7 to 9', am: '8 to 12', pm: '12 to 4' }; if (m.day != null && m.day > 0) return K.dayLong(m.day) + (m.time ? ', ' + w[m.time] : ''); return K.dayLong(so) + ', morning. The first day with room'; }
     function chTag(m) { var c = CH[m.ch] || CH.wa; return '<span class="tag ' + c[2] + ' ych-tag">' + ic(c[1]) + c[0] + '</span>'; }
+    K.msgFirst = function (m) { var c = m.cust ? CS.cust(m.cust) : null; return c ? (c.first || String(c.contact).split(' ')[0]) : String(m.who || 'there').replace(/^(Mrs|Mr|Ms|Miss)\s+/, '').split(' ')[0]; };
     var ACT = { quote: 'Approve and send a quote', book: 'Book it in', reply: 'Reply', call: 'Call back' };
     V.inbox = function () {
       seedInbox();
@@ -185,9 +186,10 @@
       var bub = '<div class="yin-b in">' + (m.subject ? '<b class="yin-subj">' + h(m.subject) + '</b>' : '') + '<p>' + h(m.text) + '</p><small>' + ic(cm[1]) + cm[0] + ', ' + h(CS.ago(m.at)) + '</small></div>' +
         (m.reply ? '<div class="yin-b out"><p>' + h(m.reply) + '</p><small>' + ic('check') + (m.kind === 'call' ? 'Called back ' : 'Sent ') + h(CS.ago(m.doneAt || Date.now())) + '</small></div>' : '');
       var card = '';
-      if (m.done) card = '<div class="card yin-a done">' + ic('circle-check') + '<span>' + (m.kind === 'quote' ? 'Quote ' + h(m.quote || '') + ' sent to ' + h(w.name) + '.' : m.kind === 'book' ? 'Booked in as ' + h(m.job || '') + '. It is on the day plan to give it a lorry.' : m.kind === 'call' ? 'Called back. Logged on ' + h(w.co) + '.' : 'Reply sent to ' + h(w.name) + '.') + '</span></div>';
+      if (m.done) card = '<div class="card yin-a done">' + ic('circle-check') + '<span>' + (m.kind === 'quote' ? 'Quote ' + h(m.quote || '') + ' sent to ' + h(w.name) + '.' : m.kind === 'book' ? 'Booked in as ' + h(m.job || '') + (m.booked ? ' and sent to ' + h(K.msgFirst(m)) : '') + '. It is on the day plan to give it a lorry.' : m.kind === 'call' ? 'Called back. Logged on ' + h(w.co) + '.' : 'Reply sent to ' + h(w.name) + '.') + '</span></div>';
       else if (m.kind === 'quote') card = '<div class="card yin-a"><b class="yin-t">' + ic('sparkles') + 'Wants a price</b><dl class="kv"><dt>Skip</dt><dd>' + m.size + ' yard, on the drive</dd><dt>Site</dt><dd>' + h(s.name + ', ' + s.pc) + '</dd><dt>Price</dt><dd>' + money(YC.priceFor(Y(), { type: 'deliver', size: m.size })) + ' + VAT, from your price list</dd><dt>Soonest</dt><dd>' + h(K.dayLong(so)) + '</dd></dl>' +
         '<div class="field"><label for="yMsgDraft">Reply, with the quote</label><textarea id="yMsgDraft" rows="4">' + h(m.draft != null ? m.draft : mQuote(m)) + '</textarea></div><div class="yin-acts"><button class="btn pri lg" data-act="y4Quote" data-id="' + m.id + '" id="yMsgApprove">' + ic('check') + ACT.quote + '</button></div></div>';
+      else if (m.kind === 'book' && m.booked) card = '<div class="card yin-a"><b class="yin-t">' + ic('circle-check') + 'Booked in as ' + h(m.job || '') + '</b><div class="field"><label for="yMsgDraft">Send this to ' + h(K.msgFirst(m)) + '</label><textarea id="yMsgDraft" rows="3">' + h(m.draft || '') + '</textarea></div><div class="yin-acts"><button class="btn pri lg" data-act="y4SendBk" data-id="' + m.id + '" id="yMsgSendBk">' + ic('send') + 'Send to ' + h(K.msgFirst(m)) + '</button></div></div>';
       else if (m.kind === 'book') card = '<div class="card yin-a"><b class="yin-t">' + ic('sparkles') + 'Wants to book</b><dl class="kv"><dt>Job</dt><dd>' + h(mJob(m)) + '</dd><dt>Site</dt><dd>' + h(s.name + ', ' + s.pc) + '</dd><dt>When</dt><dd>' + h(mWhen(m, so)) + '</dd><dt>Price</dt><dd>' + money(YC.priceFor(Y(), { type: m.type || (m.svc === 'grab' || m.svc === 'muck' ? m.svc : 'deliver'), size: m.size, loads: m.loads })) + ' + VAT</dd></dl>' +
         '<div class="yin-acts"><button class="btn pri lg" data-act="yMsgBook" data-id="' + m.id + '" id="yMsgBook">' + ic('calendar') + ACT.book + '</button></div></div>';
       else if (m.kind === 'reply') card = '<div class="card yin-a"><b class="yin-t">' + ic('sparkles') + 'Reply drafted</b><div class="field"><label for="yMsgDraft">Your reply</label><textarea id="yMsgDraft" rows="4">' + h(m.draft || '') + '</textarea></div><div class="yin-acts"><button class="btn pri lg" data-act="y4Reply" data-id="' + m.id + '">' + ic('send') + ACT.reply + '</button></div></div>';
@@ -203,6 +205,12 @@
       m.quote = qid; doneMsg(m, text); toast('Quote ' + h(qid) + ' sent to ' + h(w.name) + ' by ' + h((CH[m.ch] || CH.wa)[0].replace('Website enquiry', 'email').replace('Voice note', 'WhatsApp')) + '. Demo, nothing is sent', 'send');
     };
     A.yMsgApprove = A.y4Quote;
+    /* after Book it in: the confirmation goes back to the customer, and the message stays in the inbox */
+    A.y4SendBk = function (el) {
+      var m = msgBy(el.dataset.id); if (!m || m.done) return; var ta = q('#y4SendTx') || q('#yMsgDraft'), text = (ta && ta.value.trim()) || m.draft || '';
+      if (q('#layer .y3m')) A.close(); ui.yMsg = m.id; if (ui.view !== 'inbox') K.go('inbox');
+      doneMsg(m, text); toast('Sent to ' + h(mWho(m).name) + ' on ' + h((CH[m.ch] || CH.wa)[0].replace('Website enquiry', 'email')) + '. It stays here in the inbox. Demo, nothing is sent', 'send');
+    };
     A.y4Reply = function (el) { var m = msgBy(el.dataset.id); if (!m || m.done) return; var ta = q('#yMsgDraft'); doneMsg(m, (ta && ta.value.trim()) || m.draft); toast('Reply sent to ' + h(mWho(m).name) + '. Demo, nothing is sent', 'send'); };
     A.y4Call = function (el) { var m = msgBy(el.dataset.id); if (!m || m.done) return; doneMsg(m, 'Rang back, spoke to ' + mWho(m).name.split(' ')[0] + '.'); toast('Calling ' + h(mWho(m).name) + '. Marked as called back', 'phone'); };
 

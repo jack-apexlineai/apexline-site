@@ -109,7 +109,7 @@
         '<div class="wicalc" id="wiCalc">' + c.calc + '</div>' +
         '<div class="field"><label>Payment</label>' + seg('pay', f.pay, [['Cash', 'Cash'], ['On account', 'On account'], ['Card', 'Card']]) + '</div>' +
         fld('wiNotes', 'Notes <i>(optional)</i>', f.notes) +
-        '<div class="wiacts"><button class="btn" data-act="wiPark" id="wiPark">' + ic('clock') + 'Park it, weigh the next lorry</button><button class="btn pri lg" data-act="wiSave" id="wiSave"' + (c.ok ? '' : ' disabled') + '>' + ic('check') + 'Save ticket</button></div></section>';
+        '<div class="wiacts"><button class="btn" data-act="wiPark" id="wiPark">' + ic('clock') + 'Create open ticket</button><button class="btn pri lg" data-act="wiSave" id="wiSave"' + (c.ok ? '' : ' disabled') + '>' + ic('check') + (f.job ? 'Mark as done' : 'Save ticket') + '</button></div></section>';
     }
     function refreshCalc() { var c = calcHTML(), n = q('#wiNet'), k = q('#wiCalc'), b = q('#wiSave'); if (n) n.innerHTML = c.net; if (k) k.innerHTML = c.calc; if (b) b.disabled = !c.ok; }
     function redrawForm() { var el = q('#wiForm'); if (!el) return; var ae = document.activeElement && document.activeElement.id, ss = document.activeElement && document.activeElement.selectionStart; el.outerHTML = formHTML(); if (ae && q('#' + ae)) { var x = q('#' + ae); x.focus(); try { x.setSelectionRange(ss, ss); } catch (e) {} } }
@@ -123,14 +123,13 @@
     /* typing the registration: own lorry, a regular, or a stranger */
     function lookup() {
       var f = F(), k = regKey(f.reg); if (k.length < 5) return;
+      var op = W().list.filter(function (o) { return o.status === 'Open' && regKey(o.reg) === k && o.no !== f.draft; })[0];
+      if (op) { A.wiResume({ dataset: { no: op.no } }); return; }   /* a lorry with an open ticket: typing its reg reopens it */
       var lo = own(f.reg);
       if (lo) {
         var L = ownLoads(lo.id); f.own = lo.id; f.driver = lo.driver; f.lic = YC.CARRIER.reg; f.tare = lo.kind === 'skip' ? 9800 : 15200; f.regNote = 'Stored tare for ' + lo.reg + ': ' + f.tare.toLocaleString('en-GB') + ' kg.';
-        if (L.length) {
-          var x = L[0];
-          f.note = '<b>' + h(lo.reg) + ' is one of your lorries. Is this load from ' + h(x.j.site.name) + '?</b><div class="muted">' + h(YC.custName(S(), x.j.cust)) + ' · ' + h(YC.whatShort(x.j)) + ' · ' + h(YC.STREAMS[x.j.stream].n) + ' · ' + h(x.j.id) + (x.t ? ' · estimate ' + x.t.net.toFixed(2) + ' t' : '') + '</div>' +
-            '<div class="wiacts left"><button class="btn sm pri" data-act="wiJob" data-id="' + x.j.id + '">Yes, fill it in</button>' + L.slice(1, 4).map(function (z) { return '<button class="btn sm" data-act="wiJob" data-id="' + z.j.id + '">No, it\'s ' + h(z.j.id) + ' at ' + h(z.j.site.name.split(',')[0]) + '</button>'; }).join('') + '<button class="btn sm" data-act="wiNotJob">No, a different load</button></div>';
-        } else { f.customer = YC.CARRIER.name; f.note = '<b>' + h(lo.reg) + ' is one of your lorries.</b> No finished job to link, so it is filed as your own load: your yard is the carrier, no charge.'; f.rate = 0; }
+        var tp = Y().tip && Y().tip[lo.id]; if (tp) L.sort(function (a, b) { return (b.j.id === tp.job) - (a.j.id === tp.job); });   /* the load it came back to tip comes first */
+        if (L.length) { fillJob(L[0].j, L, true); return; } else { f.customer = YC.CARRIER.name; f.note = '<b>' + h(lo.reg) + ' is one of your lorries.</b> No finished job to link, so it is filed as your own load: your yard is the carrier, no charge.'; f.rate = 0; }
       } else {
         var r = REGS[k]; f.own = null; f.note = '';
         if (r) { f.customer = r.customer; f.email = r.email || ''; f.driver = r.driver || ''; f.origin = r.origin || ''; f.load = r.load; f.waste = r.waste; f.ewc = YC.STREAMS[r.waste].ewc; f.lic = r.lic || ''; f.tare = r.tare; f.rate = f.basis === 'load' ? PER_LOAD : RATE[r.waste]; f.pay = r.biz ? 'On account' : 'Cash';
@@ -139,12 +138,21 @@
       }
       redrawForm();
     }
-    A.wiJob = function (el) {
-      var f = F(), j = Y().jobs.filter(function (x) { return x.id === el.dataset.id; })[0]; if (!j) return;
-      var t = Y().tickets.filter(function (x) { return x.id === j.ticket; })[0];
+    /* fill the ticket from the job: customer, address, load, waste, carrier, and the weight off the weighbridge */
+    function fillJob(j, L, ask) {
+      var f = F(), y = Y(), t = y.tickets.filter(function (x) { return x.id === j.ticket; })[0], lo = YC.lorry(j.lorry);
       f.job = j.id; f.customer = YC.custName(S(), j.cust); f.origin = j.site.name + ', ' + j.site.pc; f.waste = j.stream; f.ewc = YC.STREAMS[j.stream].ewc; f.load = j.size >= 20 ? 'Roll-on roll-off' : j.size ? j.size + ' yard skip' : 'Grab load'; f.rate = 0; f.basis = 'tonne'; f.pay = 'On account';
-      f.note = '<b>Linked to ' + h(j.id) + ' for ' + h(f.customer) + '.</b> Your own load: no tipping charge, it is on the skip price. ' + (t ? 'The estimate of ' + t.net.toFixed(2) + ' t is replaced by this weight on the transfer note and the Defra record.' : 'The weight goes on the transfer note and the Defra record.');
-      redrawForm(); var g = q('#wiGross'); if (g) g.focus();
+      if (lo) { f.own = lo.id; f.driver = lo.driver; f.lic = YC.CARRIER.reg; if (!f.tare) f.tare = lo.kind === 'skip' ? 9800 : 15200; }
+      var net = j.bridgeNet != null ? j.bridgeNet : t ? t.net : YC.weight(j); f.gross = (+f.tare || 0) + Math.round(net * 1000);
+      var others = (L || []).filter(function (z) { return z.j.id !== j.id; }).slice(0, 3);
+      f.note = '<b>Is this load from ' + h(j.site.pc) + ', ' + h(f.customer) + '?</b><div class="muted">' + h(YC.whatShort(j)) + ' at ' + h(j.site.name) + ' · ' + h(YC.STREAMS[j.stream].n) + ' · ' + h(j.id) + (j.incl != null ? ' · ' + j.incl + ' t included' : '') + '. Everything is filled in from the job and the weighbridge.</div>' +
+        '<div class="wiacts left">' + others.map(function (z) { return '<button class="btn sm" data-act="wiJob" data-id="' + z.j.id + '">No, it\'s ' + h(z.j.id) + ' at ' + h(z.j.site.pc) + '</button>'; }).join('') + '<button class="btn sm" data-act="wiNotJob">No, a different load</button></div>';
+      ui.wiOthers = (L || []).map(function (z) { return z.j.id; });
+      redrawForm();
+    }
+    A.wiJob = function (el) {
+      var j = Y().jobs.filter(function (x) { return x.id === el.dataset.id; })[0]; if (!j) return;
+      fillJob(j, (ui.wiOthers || []).map(function (id) { return { j: Y().jobs.filter(function (x) { return x.id === id; })[0] }; }).filter(function (z) { return z.j; }));
     };
     A.wiNotJob = function () { var f = F(); f.job = null; f.own = null; f.note = ''; f.customer = ''; f.rate = RATE[f.waste]; redrawForm(); };
     document.addEventListener('input', function (e) {
@@ -167,7 +175,8 @@
       if (f.job) {
         var j = y.jobs.filter(function (x) { return x.id === f.job; })[0], t = j && y.tickets.filter(function (x) { return x.id === j.ticket; })[0];
         if (j && !t) { YC.complete(S(), y, j, { net: n.net / 1000, gross: n.g / 1000, tare: n.t / 1000, plate: true }, Date.now()); t = y.tickets.filter(function (x) { return x.id === j.ticket; })[0]; }
-        else if (t) { var was = t.net; t.net = Math.round(n.net / 10) / 100; t.gross = n.g / 1000; t.tare = n.t / 1000; t.est = false; t.read = 'Weighbridge, number plate read'; t.over = null; t.onBridge = Date.now(); j.log.push({ at: Date.now(), t: 'Weighed in at ' + t.net.toFixed(2) + ' t, the estimate of ' + was.toFixed(2) + ' t replaced' }); if (YC.overCheck(y, t, j)) extra = ' This RoRo is over its tonnage: the extra weight invoice is ready.'; }
+        else if (t) { var was = t.net; t.net = Math.round(n.net / 10) / 100; t.gross = n.g / 1000; t.tare = n.t / 1000; t.est = false; t.read = 'Weighbridge, number plate read'; t.over = null; t.onBridge = Date.now(); j.log.push({ at: Date.now(), t: 'Weighed in at ' + t.net.toFixed(2) + ' t, the estimate of ' + was.toFixed(2) + ' t replaced' }); if (YC.overCheck(y, t, j)) extra = ' Over the ' + t.over.incl + ' t allowance by ' + t.over.over.toFixed(2) + ' t: the excess weight is on the invoice in Money.'; }
+        if (j && y.tip && y.tip[j.lorry] && y.tip[j.lorry].job === j.id) { delete y.tip[j.lorry]; j.log.push({ at: Date.now(), t: 'Tipped at the yard, weighed in' }); }
         o.ticket = t && t.id;
       }
       y.v++; save(); ui.wiDone = o; fresh(); UI.render();
@@ -176,13 +185,13 @@
     A.wiPark = function () {
       var f = F(), w = W(); if (!String(f.reg).trim() && !String(f.customer).trim() && !String(f.gross).trim()) { fresh(); UI.render(); toast('Fresh ticket ready', 'stack'); return; }
       var n = nums(), o = { no: f.draft || ('TI-' + (w.n++)), day: 0, time: f.time || hhmm(), reg: String(f.reg).toUpperCase().trim(), customer: String(f.customer).trim() || 'Not known yet', biz: isBiz(f.customer), email: f.email, driver: f.driver, origin: f.origin, load: f.load, waste: f.waste, ewc: f.ewc, lic: f.lic,
-        gross: n.g, tare: n.t, net: null, basis: f.basis, rate: n.r, charge: null, vat: null, total: null, pay: f.pay, status: 'Open', notes: f.notes };
+        gross: n.g, tare: n.t, net: null, basis: f.basis, rate: n.r, charge: null, vat: null, total: null, pay: f.pay, status: 'Open', notes: f.notes, job: f.job, own: f.own };
       if (f.draft) w.list = w.list.filter(function (x) { return x.no !== f.draft; });
-      w.list.push(o); save(); fresh(); ui.wiOpen = true; UI.render(); toast('Parked in Open tickets. Weigh the next lorry', 'clock');
+      w.list.push(o); save(); fresh(); ui.wiOpen = true; UI.render(); toast('Open ticket ' + h(o.no) + ' created, at the top. Type ' + h(o.reg || 'the reg') + ' again to reopen it', 'clock');
     };
     A.wiResume = function (el) {
       var o = W().list.filter(function (x) { return x.no === el.dataset.no; })[0]; if (!o) return;
-      var f = fresh(); f.draft = o.no; ['reg', 'customer', 'email', 'driver', 'origin', 'load', 'waste', 'ewc', 'lic', 'basis', 'pay', 'notes', 'time'].forEach(function (k) { if (o[k] != null) f[k] = o[k]; });
+      var f = fresh(); f.draft = o.no; ['reg', 'customer', 'email', 'driver', 'origin', 'load', 'waste', 'ewc', 'lic', 'basis', 'pay', 'notes', 'time', 'job', 'own'].forEach(function (k) { if (o[k] != null) f[k] = o[k]; });
       f.gross = o.gross || ''; f.tare = o.tare || (REGS[regKey(o.reg)] || {}).tare || ''; f.rate = o.rate != null ? o.rate : RATE[o.waste];
       ui.wiOpen = false; UI.render(); var t = q('#wiTare'); if (t) t.focus(); toast('Ticket ' + h(o.no) + ' reopened. Weigh it empty, then Save ticket', 'stack');
     };
@@ -216,15 +225,15 @@
       var today = w.list.filter(function (o) { return o.day === 0 && o.status !== 'Open'; }), open = w.list.filter(function (o) { return o.status === 'Open'; });
       var owed = w.list.filter(function (o) { return o.status === 'Unpaid' || o.status === 'On account'; }), tonnes = today.reduce(function (a, o) { return a + (o.net || 0); }, 0) / 1000, takings = today.filter(function (o) { return !o.own; }).reduce(function (a, o) { return a + (o.charge || 0); }, 0);
       var est = ownLoadsAll();
-      var head = '<div class="ybar"><span class="yhint">' + ic('stack') + 'Weighbridge tickets for lorries tipping at the yard</span><span class="sp"></span><button class="btn' + (open.length ? ' on' : '') + '" data-act="wiOpenT" id="wiOpenBtn">' + ic('clock') + 'Open tickets' + (open.length ? ' (' + open.length + ')' : '') + '</button><button class="btn pri" data-act="wiNew" id="wiNewBtn">' + ic('plus') + 'New ticket</button></div>';
+      var head = '<div class="ybar"><span class="yhint">' + ic('stack') + 'Weighbridge tickets for lorries tipping at the yard</span><span class="sp"></span><button class="btn pri" data-act="wiNew" id="wiNewBtn">' + ic('plus') + 'New ticket</button></div>';
       var stats = '<div class="ykpis"><div class="card kpi"><small>Loads in today</small><b>' + today.length + '</b><span class="d">' + today.filter(function (o) { return o.biz && !o.own; }).length + ' business, ' + today.filter(function (o) { return !o.biz && !o.own; }).length + ' residential and one-off</span></div><div class="card kpi"><small>Tonnes in today</small><b>' + tonnes.toFixed(2) + ' t</b><span class="d">net, off the weighbridge</span></div>' +
         '<div class="card kpi"><small>Tipping today (ex VAT)</small><b>' + gbp(takings) + '</b><span class="d">waste in revenue</span></div><div class="card kpi"><small>Tickets not paid</small><b class="' + (owed.length ? 'bad' : '') + '">' + owed.length + '</b><span class="d">' + gbp(owed.reduce(function (a, o) { return a + (o.total || 0); }, 0)) + ' inc VAT</span></div></div>';
       var estBar = est.length ? '<div class="ycr ok wiest" id="wiEst">' + ic('truck') + '<span><b>' + est.length + ' of your own loads came back with an estimated weight.</b> Weigh them in: type the lorry\'s registration and pick the job, and the real weight replaces the estimate. ' + est.slice(0, 3).map(function (x) { return '<span class="yplate yx">' + h(YC.lorry(x.j.lorry).reg) + '</span> ' + h(x.j.id); }).join(', ') + '</span></div>' : '';
-      var openL = ui.wiOpen ? '<section class="card wiopen" id="wiOpenList"><div class="yh-rh"><h3>' + ic('clock') + 'Open tickets</h3><small class="muted">' + (open.length ? open.length + ' waiting to finish' : 'Nothing parked') + '</small></div>' + (open.length ? open.map(function (o) { return '<div class="ych"><span class="bd"><b>' + h(o.no) + ' · <span class="yplate yx">' + h(o.reg) + '</span> ' + h(o.customer) + '</b><small>Weighed full ' + (o.gross ? o.gross.toLocaleString('en-GB') + ' kg' : '') + ' at ' + h(o.time) + '</small></span><button class="btn sm pri" data-act="wiResume" data-no="' + o.no + '">Resume</button><button class="btn sm" data-act="wiDiscard" data-no="' + o.no + '">Discard</button></div>'; }).join('') : '<p class="muted">Start a ticket, then Park it to weigh the next lorry.</p>') + '</section>' : '';
+      var openL = open.length ? '<section class="card wiopen" id="wiOpenList"><div class="yh-rh"><h3>' + ic('clock') + 'Open tickets</h3><small class="muted">' + (open.length ? open.length + ' waiting to finish' : 'Nothing parked') + '</small></div>' + (open.length ? open.map(function (o) { return '<div class="ych"><span class="bd"><b>' + h(o.no) + ' · <span class="yplate yx">' + h(o.reg) + '</span> ' + h(o.customer) + '</b><small>' + (o.gross ? 'Weighed full ' + o.gross.toLocaleString('en-GB') + ' kg at ' : 'Opened at ') + h(o.time) + '. Type the reg to reopen it</small></span><button class="btn sm pri" data-act="wiResume" data-no="' + o.no + '">Reopen</button><button class="btn sm" data-act="wiDiscard" data-no="' + o.no + '">Discard</button></div>'; }).join('') : '<p class="muted">Start a ticket, then Create open ticket to weigh the next lorry.</p>') + '</section>' : '';
       var done = ui.wiDone ? '<div class="card widone" id="wiDone"><div class="yh-rh"><h3>' + ic('circle-check') + h(ui.wiDone.no) + ' saved</h3><small class="muted">' + h(ui.wiDone.customer) + ' · ' + h(ui.wiDone.reg) + ' · ' + ((ui.wiDone.net || 0) / 1000).toFixed(2) + ' t' + (ui.wiDone.own ? '' : ' · ' + gbp(ui.wiDone.total)) + '</small></div><div class="wiacts left"><button class="btn sm pri" data-act="wiTicket" data-no="' + ui.wiDone.no + '">' + ic('printer') + 'Print ticket</button><button class="btn sm" data-act="wiNew">Next lorry</button></div><small class="muted">' + (ui.wiDone.email && !ui.wiDone.own ? 'Ticket emailed to ' + h(ui.wiDone.email) + '. ' : '') + 'Added to waste tracking, ready to submit. Filed under ' + h(ui.wiDone.own ? 'Waste in / Own loads' : ui.wiDone.biz ? 'Waste in / Business Customers / ' + ui.wiDone.customer : 'Waste in / Residential & One-Off Tips') + '.</small></div>' : '';
       var bridge = window.DSGBRIDGE ? window.DSGBRIDGE() : '';
       var tabs = '<div class="ufil"><div class="ychips" style="margin:0">' + [['today', 'Today'], ['owed', 'Unpaid'], ['acct', 'On account'], ['inv', 'Waste in invoices'], ['biz', 'Business customers'], ['res', 'Residential & one-off'], ['all', 'All tickets']].map(function (x) { return '<button class="ychip' + (f === x[0] ? ' on' : '') + '" data-act="wiF" data-v="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div><input class="wiq" id="wiQ" placeholder="Search customer, vehicle or ticket" value="' + h(ui.wiQ || '') + '" autocomplete="off"></div>';
-      return head + bridge + stats + estBar + openL + done + formHTML() + tabs + listHTML(f, qq);
+      return head + openL + bridge + stats + estBar + done + formHTML() + tabs + listHTML(f, qq);
     };
     function ownLoadsAll() { var o = []; YC.LORRIES.forEach(function (l) { ownLoads(l.id).forEach(function (x) { if (x.t && x.t.est) o.push(x); }); }); return o; }
     function listHTML(f, qq) {

@@ -27,7 +27,8 @@
       var now = '', to = '', eta = null;
       if (w.state === 'onway') { now = 'On the road'; to = 'On way to ' + pcOf(w.job) + ' (next job)'; eta = YC.etaMins(y, w.job); }
       else if (w.state === 'onsite') { now = 'At ' + pcOf(w.job); var nx = L.filter(function (j) { return j.status === 'planned'; })[0]; to = YC.cashState(w.job) === 'due' ? 'On the job, cash to take' : nx ? 'Next: ' + pcOf(nx) : 'Then back to the yard'; }
-      else if (w.state === 'returning') { now = 'On the road'; to = 'On way to yard'; var back = Math.max(0, Math.min(1, (Date.now() - (last.at.done || 0)) / YC.TRAVEL)), dx = (last.lat - YC.YARD.lat) * 111, dy = (last.lng - YC.YARD.lng) * 67; eta = Math.max(1, Math.round(Math.sqrt(dx * dx + dy * dy) * 1.6 * (1 - back))); }
+      else if (w.state === 'tipwait') { now = 'At the yard'; to = 'Waiting to tip'; }
+      else if (w.state === 'returning') { now = 'On the road'; to = w.tip ? 'On way to yard to tip' : 'On way to yard'; var back = Math.max(0, Math.min(1, (Date.now() - (last.at.done || 0)) / YC.TRAVEL)), dx = (last.lat - YC.YARD.lat) * 111, dy = (last.lng - YC.YARD.lng) * 67; eta = Math.max(1, Math.round(Math.sqrt(dx * dx + dy * dy) * 1.6 * (1 - back))); }
       else if (w.state === 'between') { now = 'At ' + pcOf(last); to = act ? 'On way to ' + pcOf(act) + ' (next job) soon' : 'On way to yard'; }
       else if (w.state === 'home') { now = 'At the yard'; to = 'Day done'; }
       else { now = 'At the yard'; to = act ? 'Next: ' + pcOf(act) + ', ' + K.winLabel(act) : 'Nothing booked yet'; }
@@ -159,7 +160,7 @@
       var groups = YC.GROUPS.map(function (g) {
         var L = YC.LORRIES.filter(function (l) { return l.kind === g[0]; });
         return '<div class="ygrp ygrp-' + g[0] + '" style="--n:' + L.length + '"><div class="ygrp-h">' + h(g[1]) + '</div><div class="ygrp-c">' + L.map(function (l) {
-          var js = y.jobs.filter(function (j) { return j.day === d && j.lorry === l.id; }).sort(planSort), dn = js.filter(function (j) { return j.status === 'done'; }), open = js.filter(function (j) { return j.status !== 'done'; });
+          var js = y.jobs.filter(function (j) { return j.day === d && j.lorry === l.id; }).sort(function (a, b) { return a.seq != null || b.seq != null ? YC.seqKey(a) - YC.seqKey(b) : planSort(a, b); }),   /* a run put in order by dragging keeps its order */ dn = js.filter(function (j) { return j.status === 'done'; }), open = js.filter(function (j) { return j.status !== 'done'; });
           return '<section class="ycol" data-col="' + l.id + '" data-lk="' + l.kind + '"><header><span class="yreg">' + h(l.reg) + '</span><small>' + h(l.driver) + '</small>' + (dn.length ? '<small class="ycap">' + plural(dn.length, 'job') + ' done' + (d === 0 ? ' today' : '') + '</small>' : '') + '</header><div class="ycol-b">' + open.map(pcard).join('') + (open.length ? '' : '<p class="ycol-e">Drop a job here</p>') + '</div></section>';
         }).join('') + '</div></div>';
       }).join('');
@@ -230,16 +231,18 @@
     }
     function wItems() {
       var y = Y(); y.wc = y.wc || {};
-      var L = y.tickets.filter(function (t) { return t.over && t.over.auto; }).map(function (t) { var j = K.jobById(t.job), st = y.wc[t.job] || (y.wc[t.job] = { status: 'raised', inv: t.over.inv }); return { j: j, t: t, kind: 'roro', st: st, amt: t.over.amount, chg: t.over.over, line: j.size + ' yd RoRo came back ' + t.net.toFixed(2) + ' t, ' + t.over.incl + ' t included on quote, excess ' + t.over.over.toFixed(2) + ' t at ' + money(t.over.rate) + '/t', label: j.size + ' yd RoRo' }; });
+      var L = y.tickets.filter(function (t) { return t.over && t.over.auto; }).map(function (t) { var j = K.jobById(t.job), st = y.wc[t.job] || (y.wc[t.job] = { status: 'raised', inv: t.over.inv }); return { j: j, t: t, kind: 'roro', st: st, amt: t.over.amount, chg: t.over.over, line: wUnit(j) + ' came back ' + t.net.toFixed(2) + ' t, ' + t.over.incl + ' t included on quote, excess ' + t.over.over.toFixed(2) + ' t at ' + money(t.over.rate) + '/t', label: wUnit(j, true) }; });
       y.jobs.filter(function (j) { return j.perT && j.status === 'done'; }).forEach(function (j) { var t = O.ticketOf(j), st = y.wc[j.id] || (y.wc[j.id] = { status: 'new' }); if (t) L.push({ j: j, t: t, kind: 'grab', st: st, amt: j.price, chg: t.net, line: wName(j) + ' grab, charged at ' + money(j.perT) + '/t, came back ' + t.net.toFixed(2) + ' t: ' + t.net.toFixed(2) + ' t x ' + money(j.perT) + ' = ' + money(j.price, true) + ' + VAT', label: wName(j) + ' grab' }); });
       return L;
     }
+    function wUnit(j, lbl) { return YC.isRoro(j) ? j.size + ' yd RoRo' + (lbl && j.type === 'wait' ? ' wait and load' : '') : j.size + ' yd ' + (lbl && j.type === 'wait' ? 'wait and load' : 'skip'); }
     function wName(j) { return j.stream === 'mixed' ? 'Mixed waste' : YC.STREAMS[j.stream].n; }
     function raise(x) { var s = S(), c = CS.cust(x.j.cust), id = O.invNo(x.j); if (!s.invoices.some(function (i) { return i.id === id; }) && c) s.invoices.unshift({ id: id, cust: x.j.cust, amount: x.amt, issued: 0, due: c.limit ? 30 : 7, status: 'unpaid', jobs: [x.j.id], what: x.label + ', ' + x.chg.toFixed(2) + ' t by weight', over: x.kind === 'roro' ? x.amt : null }); x.st.inv = id; if (x.st.status === 'new') x.st.status = 'raised'; x.j.invoiced = id; }
     window.DSGBRIDGE = function () {
       var L = wItems(); if (!L.length) return '';
+      L.sort(function (a, b) { return ((b.t.over && b.t.over.at) || b.t.onBridge || 0) - ((a.t.over && a.t.over.at) || a.t.onBridge || 0); });   /* the latest load weighed comes first */
       var open = L.filter(function (x) { return x.st.status !== 'sent'; }), sent = L.filter(function (x) { return x.st.status === 'sent'; });
-      return '<section class="card ywb yover" id="yBridge"><div class="yh-rh"><h3>' + ic('stack') + 'Charges by weight</h3><small class="muted">RoRos over the tonnes on the quote, and grabs charged by the tonne</small></div>' + (open.map(function (x) {
+      return '<section class="card ywb yover" id="yBridge"><div class="yh-rh"><h3>' + ic('stack') + 'Charges by weight</h3><small class="muted">Loads over the tonnes on the quote, and grabs charged by the tonne</small></div>' + (open.map(function (x) {
         var c = YC.custName(S(), x.j.cust);
         return '<div class="ywc"><div class="bd"><b>' + h(x.j.id) + ' · ' + h(c) + ' · ' + h(x.label) + ' · ' + x.chg.toFixed(2) + ' t chargeable</b><small>' + h(x.line) + '</small>' + (x.st.status === 'raised' ? '<span class="tag ok">' + ic('receipt') + 'On invoice ' + h(x.st.inv) + ', ' + money(x.amt, true) + ' + VAT</span>' : '<span class="tag amber">Not invoiced yet</span>') + '</div><div class="ywc-b">' +
           (x.st.status === 'raised' ? '<button class="btn sm" data-act="y4Doc" data-k="inv" data-id="' + h(x.j.id) + '">' + ic('receipt') + 'Invoice</button><button class="btn sm" data-act="y4Doc" data-k="tk" data-id="' + h(x.j.id) + '">' + ic('stack') + 'Ticket</button><button class="btn sm pri" data-act="ywcSend" data-id="' + h(x.j.id) + '">' + ic('send') + (x.kind === 'roro' ? 'Send invoice and ticket to customer' : 'Send invoice and ticket') + '</button>'

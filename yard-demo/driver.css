@@ -116,3 +116,4 @@ body.embed .dv{max-width:none}
 .dv-wait .ic{width:26px;height:26px;color:#6D28D9;flex:none}
 .dv-wait b{display:block;font-size:18px;letter-spacing:.01em}
 .dv-wait small{font-size:12.5px;font-weight:600}
+.dv-tip h2{font-size:24px}

@@ -118,7 +118,7 @@
       } catch (e) {}
       return c;
     }
-    var RED = { inbox: 1, credit: 1, cash: 1, defra: 1, skips: 1, permits: 1 };
+    var RED = {};   /* calm: counts in the menu are grey, the real issues show on the page */
     window.DSGNAV = function (ctx) {
       var s = S(); s.settings.navShut = s.settings.navShut || {};
       if (!s.settings.navMoreSet) { s.settings.navMoreSet = true; s.settings.navShut.More = true; save(); }

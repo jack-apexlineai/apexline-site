@@ -19,6 +19,10 @@
   function lo() { return YC.lorry(st.lid); }
   function jobs() { return YC.forLorry(Y(), st.lid, 0); }
   function cur() { return YC.active(jobs()); }
+  /* after a wait and load the lorry is carrying the customer's waste: it goes back to the yard to tip before the next job */
+  function tipOf() { var y = Y(); return y.tip && y.tip[st.lid] ? y.tip[st.lid] : null; }
+  /* the office shows "SMS sent to the customer" when the driver goes on his way */
+  function sms(j) { try { if (host && host.DSGY4R && host.DSGY4R.sms) host.DSGY4R.sms(j); } catch (e) {} }
   function custPhone(j) { var c = CS.cust && CS.cust(j.cust); if (c) return c.phone; var o = YC.oneoff(j.cust); return o ? o.phone : ''; }
   function mapsUrl(j) { return 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(j.site.name + ', ' + j.site.pc); }
   function since(j, k) { return k === 'photo' ? j.photos.some(function (p) { return p.at >= (j.at.started || 0); }) : !!j.sig && j.sig.at >= (j.at.started || 0); }
@@ -32,9 +36,11 @@
     var hr = new Date().getHours();
     var o = '<section class="dv-hi"><small>' + h(CS.dayDate(0).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })) + '</small><h1>' + (hr < 12 ? 'Morning' : 'Afternoon') + ', ' + h(lo().first) + '</h1>' +
       '<div class="dv-prog"><span><b>' + done.length + '</b> of ' + L.length + ' done</span><span class="dv-bar"><i style="width:' + (L.length ? Math.round(done.length / L.length * 100) : 0) + '%"></i></span></div></section>';
-    if (c) o += card(c);
+    var tp = tipOf();
+    if (tp) o += tipCard(tp, c);
+    else if (c) o += card(c);
     else o += '<section class="dv-card dv-done-all">' + ic('circle-check') + '<h2>All done for today</h2><p>Every job has its photo and signature. Head back to the yard.</p></section>';
-    var rest = L.filter(function (j) { return j.status !== 'done' && j !== c; });
+    var rest = L.filter(function (j) { return j.status !== 'done' && (j !== c || tp); });
     if (rest.length) o += '<h3 class="dv-h">Still to do</h3>' + rest.map(function (j, i) { return '<div class="dv-mini"><span class="dv-n">' + (i + 2) + '</span><span><b>' + YC.hhmm(j.win[0]) + ' · ' + h(YC.whatShort(j)) + '</b><small>' + h(j.site.name) + (j.type === 'wait' ? ' · ' + YC.waitTerms(j, Y()).incl + ' min on site' : '') + '</small>' + (YC.isCash(j) ? '<em class="dv-cmini">Cash ' + h(YC.gbp(YC.cashAmt(j).gross)) + '</em>' : '') + '</span></div>'; }).join('');
     if (done.length) o += '<h3 class="dv-h">Done today</h3>' + done.map(function (j) { return '<div class="dv-mini done">' + ic('check') + '<span><b>' + h(YC.whatShort(j)) + '</b><small>' + h(j.site.name) + ' · ' + CS.clock(j.at.done) + '</small>' + (YC.isCash(j) ? '<em class="dv-cmini ' + YC.cashState(j) + '">' + (YC.cashState(j) === 'collected' ? 'Cash collected ' + h(YC.gbp(YC.cashAmt(j).gross)) : 'Cash NOT collected') + '</em>' : '') + '</span></div>'; }).join('');
     o += '<button class="dv-link dv-switch" data-a="switch">' + ic('truck') + 'Not ' + h(lo().reg) + '? Change lorry</button>';
@@ -70,19 +76,27 @@
       '</ol><button class="dv-big" data-a="send" id="sendBtn"' + (ph && sg ? '' : ' disabled') + '>' + ic('send') + 'Send to office<small>' + (YC.isCash(j) ? 'Asks about the cash, then tells the office' : YC.TYPES[j.type].waste ? 'Makes the transfer note, then your next job' : 'Tells the office, then your next job') + '</small></button>';
     return o + '</section>';
   }
+  function tipCard(tp, nx) {
+    var j = Y().jobs.filter(function (x) { return x.id === tp.job; })[0];
+    return '<section class="dv-card cur dv-tip" id="dvTip"><div class="dv-ct"><span class="dv-tag onway">Now</span></div><h2>Head back to the yard and tip</h2>' +
+      (j ? '<p class="dv-who"><b>' + h(YC.whatShort(j)) + '</b><br>' + h(YC.custName(S(), j.cust)) + ', ' + h(j.site.name) + ', ' + h(j.site.pc) + '</p>' : '') +
+      '<div class="dv-facts"><span>' + ic('stack') + 'Go over the weighbridge. The office has the load ready to weigh in</span></div>' +
+      (nx ? '<button class="dv-big" data-a="tipped" id="tipBtn">' + ic('check') + 'Tipped, start next job<small>Then ' + h(YC.whatShort(nx)) + ' at ' + h(nx.site.name) + '</small></button>' : '<p class="dv-sub">That was your last job today.</p>') + '</section>';
+  }
   function lastPhoto(j) { var p = j.photos[j.photos.length - 1]; return p.src || YC.samplePhoto(p.k, j.size); }
   function start(j) { if (!j.at.started) { j.at.started = Date.now() - 1; } }
 
   function act(what, data) {
-    var c = cur(); if (!c) return; start(c);
+    var c = cur(); if (!c || tipOf()) return; start(c);
     if (what === 'send') {
       if (YC.cashState(c) === 'due' && !(data && data.cash)) { cashPop(c); return; }
       var cashT = YC.isCash(c) ? (data.cash.ok ? '. Cash ' + h(YC.gbp(YC.cashAmt(c).gross)) + ' collected' : '. Cash not collected, the office will chase it') : '';
       YC.act(S(), Y(), c.id, 'done', { cash: data && data.cash });
-      var nx = cur();
+      var nx = cur(), y = Y();
+      if (c.type === 'wait') { y.tip = y.tip || {}; y.tip[st.lid] = { job: c.id, at: Date.now() }; y.v++; nx = null; }
       if (nx) { YC.act(S(), Y(), nx.id, 'onway'); nx.at.started = Date.now(); }
-      save(); draw(); window.scrollTo(0, 0);
-      toast('Sent to the office' + cashT + (c.wtn ? ', ' + h(c.wtn) + ' made' : '') + (nx ? '. On your way to ' + h(nx.site.name.split(',').pop().trim()) : ''), 'send');
+      save(); draw(); window.scrollTo(0, 0); if (nx) sms(nx);
+      toast('Sent to the office' + cashT + (c.wtn ? ', ' + h(c.wtn) + ' made' : '') + (nx ? '. On your way to ' + h(nx.site.name.split(',').pop().trim()) : c.type === 'wait' ? '. Head back to the yard and tip' : ''), 'send');
       return;
     }
     YC.act(S(), Y(), c.id, what, data); c.manual = true; save(); draw();
@@ -94,11 +108,12 @@
     if (a === 'pk' && st.pin.length < 4) {
       st.pin += b.getAttribute('data-v'); st.bad = false;
       if (st.pin.length === 4) {
-        if (st.pin === PIN) { st.signed = true; tellHost(); var c0 = cur(); if (c0) { c0.at.started = Date.now(); if (c0.status === 'planned') { YC.act(S(), Y(), c0.id, 'onway'); save(); } } draw(); (function () { var n = jobs().filter(function (j) { return j.status !== 'done'; }).length; toast('Signed in. ' + n + (n === 1 ? ' job' : ' jobs') + ' to go today', 'truck'); })(); return; }
+        if (st.pin === PIN) { st.signed = true; tellHost(); var c0 = cur(); if (c0 && !tipOf()) { c0.at.started = Date.now(); if (c0.status === 'planned') { YC.act(S(), Y(), c0.id, 'onway'); save(); sms(c0); } } draw(); (function () { var n = jobs().filter(function (j) { return j.status !== 'done'; }).length; toast('Signed in. ' + n + (n === 1 ? ' job' : ' jobs') + ' to go today', 'truck'); })(); return; }
         st.bad = true; st.pin = '';
       }
       draw();
     }
+    if (a === 'tipped') { var y1 = Y(); if (y1.tip) delete y1.tip[st.lid]; y1.v++; var n1 = cur(); if (n1) { YC.act(S(), y1, n1.id, 'onway'); n1.at.started = Date.now(); } save(); draw(); window.scrollTo(0, 0); if (n1) { sms(n1); toast('Tipped. On your way to ' + h(n1.site.name.split(',').pop().trim()), 'truck'); } }
     if (a === 'pdel') { st.pin = st.pin.slice(0, -1); draw(); }
     if (a === 'samplePhoto') act('photo', { k: c && c.type === 'deliver' ? 'drop' : 'collect' });
     if (a === 'nosig') act('sig', { none: true, name: '' });

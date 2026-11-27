@@ -43,7 +43,7 @@
   YC.inclFor = function (Y, j) { var P = YC.prices(Y); return YC.isRoro(j) ? (P.roro[j.size >= 30 ? 40 : 20]).incl : null; };
   /* a RoRo ticket over its allowance: what is owed for the extra weight */
   YC.overCheck = function (Y, t, j) {
-    if (!t || !j || !YC.isRoro(j) || t.over) return null;
+    if (!t || !j || t.over || !(YC.isRoro(j) || j.incl != null)) return null;   /* RoRos, and any job booked with a weight allowance */
     var incl = j.incl != null ? j.incl : YC.inclFor(Y, j), rate = YC.prices(Y).overRate;
     if (!(t.net > incl)) return null;
     var over = Math.round((t.net - incl) * 100) / 100, amt = Math.round(over * rate * 100) / 100;
@@ -113,6 +113,7 @@
   YC.win = function (j) { return YC.hhmm(j.win[0]) + ' to ' + YC.hhmm(j.win[1]); };
   /* the day plan's time windows: 7 to 9, 8 to 12, 12 to 4 (the day plan also moves a job for an access note) */
   YC.winBand = function (j) { var K = window.DSGY && window.DSGY.kit; if (K && K.planWin) return K.planWin(j); return j.win[0] < 480 ? '7 to 9' : j.win[0] < 720 ? '8 to 12' : '12 to 4'; };
+  YC.DATAV = 4;   /* sample data version: a saved day from before round 4 is rebuilt */
   YC.TRAVEL = 150000; YC.DWELL = 70000;   /* demo time: a leg takes two and a half minutes, a stop a little over one */
 
   /* ---------- building the day ---------- */
@@ -257,7 +258,7 @@
   YC.fresh = function (S, CS) {
     YC._CS = CS || YC._CS;
     YC.wd1 = CS && CS.wd ? CS.wd(1) : 1;
-    var Y = { v: 1, day: S.seededDay, made: Date.now(), jobs: seedJobs(S), onsite: seedOnsite(S), tickets: [], defra: [], problems: [], texts: [], feed: [], counters: { job: 3300, ticket: 48700, wtn: 5200 } };
+    var Y = { v: 1, dv: YC.DATAV, tip: {}, day: S.seededDay, made: Date.now(), jobs: seedJobs(S), onsite: seedOnsite(S), tickets: [], defra: [], problems: [], texts: [], feed: [], counters: { job: 3300, ticket: 48700, wtn: 5200 } };
     seedHistory(S, Y);
     /* tomorrow and the next working day are full, so New booking offers the soonest day with room */
     var busy = YC.workDays(1, 2, true), nid = 3200; busy.forEach(function (off) { nid = fillDay(S, Y, off, nid); });
@@ -283,7 +284,8 @@
       { id: 'm1', kind: 'quote', ch: 'wa', cust: 'c5', site: 0, size: 8, at: now0 - 14 * 60000, unread: true,
         text: 'Hi Dave, how much for an 8 yard skip at Westgate Road in Weybridge? It can go on the drive. Thanks' },
       { id: 'm2', kind: 'book', ch: 'wa', cust: 'c4', site: 1, size: 6, voice: 11, at: now0 - 6 * 60000, unread: true,
-        text: 'Morning Dave, it\'s Rob. Can you drop a 6 yarder at the Horsell job, first day you\'ve got, morning please. On the drive like last time. Cheers mate' }
+        type: 'exchange', time: 'early',
+        text: 'Can you do an exchange at the Horsell job first, soonest availability?' }
     ];
     /* two tickets read off a photo that did not match a job by themselves */
     Y.tickets.push({ id: 'T-48690', day: 0, time: 560, site: 'yard', lorry: 'L2', net: 1.84, gross: 11.62, stream: 'mixed', cust: null, job: null, matched: false, read: 'Photo of the ticket' });
@@ -315,7 +317,7 @@
   };
   YC.ensure = function (S, CS) {
     if (!S) return null;
-    if (!S.yard || S.yard.day !== S.seededDay || !S.yard.jobs) S.yard = YC.fresh(S, CS);
+    if (!S.yard || S.yard.day !== S.seededDay || !S.yard.jobs || S.yard.dv !== YC.DATAV) S.yard = YC.fresh(S, CS);
     else if (!YC._caught) { YC._caught = true; YC.settle(S, S.yard, false); }   /* opened again later in the day: catch up to the clock once */
     if (!S.yard.cashV) seedCash(S, S.yard);   /* a day opened before cash jobs existed gets them too */
     return S.yard;
@@ -400,7 +402,8 @@
     Y.v++;
   }
   YC.today = function (Y) { return Y.jobs.filter(function (j) { return j.day === 0; }); };
-  YC.forLorry = function (Y, id, day) { return Y.jobs.filter(function (j) { return j.lorry === id && (j.day || 0) === (day || 0); }).sort(function (a, b) { return a.win[0] - b.win[0]; }); };
+  YC.seqKey = function (j) { return j.seq != null ? j.seq : 10000 + j.win[0]; };   /* a run the office has put in order keeps that order */
+  YC.forLorry = function (Y, id, day) { return Y.jobs.filter(function (j) { return j.lorry === id && (j.day || 0) === (day || 0); }).sort(function (a, b) { return YC.seqKey(a) - YC.seqKey(b); }); };
 
   /* ---------- finishing a job: ticket, WTN and Defra record ---------- */
   function tipFor(j) { return (j.stream === 'soil' || j.stream === 'concrete' || (j.stream === 'hardcore' && (j.type === 'grab' || j.type === 'muck'))) ? 'soil' : 'yard'; }
@@ -456,6 +459,9 @@
     nowTs = nowTs || Date.now();
     var all = YC.forLorry(Y, id, 0), yard = { lat: YC.YARD.lat, lng: YC.YARD.lng }, prev = yard, lastDone = null;
     var done = all.filter(function (x) { return x.status === 'done'; }).sort(function (a, b) { return (a.at.done || 0) - (b.at.done || 0); }), act = YC.active(all);
+    var tp = Y.tip && Y.tip[id];
+    var ld = done[done.length - 1];
+    if (tp && ld) { var bk = Math.max(0, Math.min(1, (nowTs - (tp.at || nowTs)) / YC.TRAVEL)); return { lat: lerp(ld, yard, bk).lat, lng: lerp(ld, yard, bk).lng, state: bk >= 1 ? 'tipwait' : 'returning', job: null, tip: true }; }
     var list = done.concat(act ? [act] : []);
     for (var i = 0; i < list.length; i++) {
       var j = list[i];
@@ -482,9 +488,10 @@
     var lo = YC.lorry(j.lorry), mins = YC.etaMins(Y, j) || 20, at = new Date(Date.now() + mins * 60000);
     return etaAt(S, j, mins, at.getHours() * 60 + at.getMinutes() - mins);
   };
+  YC.smsWin = function (mins) { var r5 = function (n) { return Math.round(n / 5) * 5; }, lo = Math.max(5, r5(mins * 0.5)), hi = Math.max(lo + 5, r5(mins * 1.5)); return [lo, hi]; };
   function etaAt(S, j, mins, fromMin) {
     var lo = YC.lorry(j.lorry), what = j.type === 'grab' || j.type === 'muck' ? 'with the grab lorry' : j.type === 'collect' ? 'to collect your ' + j.size + ' yard skip' : j.type === 'wait' ? 'with your ' + j.size + ' yard ' + (j.size >= 20 ? 'RoRo' : 'skip') + '. He will wait while you load it, ' + YC.waitTerms(j).incl + ' minutes included' : 'with your ' + j.size + ' yard skip';
-    return 'Hi ' + YC.custFirst(S, j.cust) + ', ' + (lo ? lo.first : 'your driver') + ' from Demo Skip & Grab is on his way ' + what + '. About ' + mins + ' minutes, so around ' + YC.hhmm(fromMin + mins) + '.';
+    return 'Hi ' + YC.custFirst(S, j.cust) + ', ' + (lo ? lo.first : 'your driver') + ' from Demo Skip & Grab is on his way ' + what + '. Arriving in about ' + YC.smsWin(mins)[0] + ' to ' + YC.smsWin(mins)[1] + ' minutes.';
   }
   YC.act = function (S, Y, id, what, data) {
     var j = Y.jobs.filter(function (x) { return x.id === id; })[0]; if (!j) return null;
@@ -511,6 +518,7 @@
     nowTs = nowTs || Date.now(); var ev = [];
     YC.LORRIES.forEach(function (lo) {
       if (lo.id === skip) return;   /* the lorry whose phone is on screen is driven by the buttons on the phone */
+      if (Y.tip && Y.tip[lo.id]) return;   /* back at the yard to tip: it waits for the weighbridge */
       var list = YC.forLorry(Y, lo.id, 0), j = YC.active(list);
       if (!j) return;
       if (j.status === 'planned') {

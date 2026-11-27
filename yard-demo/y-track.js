@@ -9,7 +9,7 @@
     function Y() { return YC.ensure(CS.S, CS); }
     function q(s) { return document.querySelector(s); }
     var toast = K.toast, plural = K.plural;
-    var COL = { L1: '#1F4FA8', L2: '#0E9F6E', L4: '#D97706', L3: '#7C3AED', G1: '#DC2626', G2: '#0891B2' };
+    var COL = { L1: '#1F4FA8', L2: '#0E9F6E', L4: '#D97706', L3: '#7C3AED', G1: '#65A30D', G2: '#0891B2' };
     function col(id) { return COL[id] || '#52525B'; }
     function street(j) { var p = String(j.site.name).split(','); var s = p[0].replace(/^\d+\s*/, '').trim(); return s.length > 24 ? s.slice(0, 23) + '.' : s; }
 
@@ -26,6 +26,7 @@
       if (j.status === 'done') return ['Complete ' + CS.clock(j.at.done), 'ok'];
       if (j.status === 'onway') { var m = YC.etaMins(Y(), j) || 10; return ['On the way, ETA ' + CS.clock(Date.now() + m * 60000), 'way']; }
       if (j.status === 'onsite') return [YC.cashState(j) === 'due' ? 'On site, cash to take' : j.type === 'wait' ? 'On site, waiting while they load' : 'On site', 'site'];
+      if (Y().tip && Y().tip[j.lorry] && j.status === 'planned' && d.act === j) return ['Next, after tipping', 'next'];
       if (d.rest[0] === j && d.act && d.act !== j) return ['Next', 'next'];
       if (d.act === j) return ['Next', 'next'];
       return ['Booked ' + K.winLabel(j), ''];
@@ -34,11 +35,13 @@
       var y = Y(), sel = ui.y2Sel;
       var cols = YC.LORRIES.map(function (l) {
         var d = dayList(l.id), w = YC.where(y, l.id);
-        var rows = d.all.map(function (j) {
+        /* a calm board: the last job done, the one it is on, then what is next (six at most) */
+        var shown = d.done.slice(-1).concat(d.act ? [d.act] : []).concat(d.rest).slice(0, 6);
+        var rows = shown.map(function (j) {
           var st = jobStatus(j, d);
           return '<button class="ylt-j ' + st[1] + '" data-act="yJob" data-id="' + j.id + '"><span class="ylt-pc">' + h(j.site.pc) + '</span><span class="ylt-ad">' + h(street(j)) + '</span><span class="ylt-st">' + h(st[0]) + '</span>' + (j.type === 'wait' ? '<span class="tag ywl">' + ic('clock') + 'Wait and load, ' + YC.waitTerms(j).incl + ' min</span>' : '') + (YC.isCash(j) ? YC.cashTag(j) : '') + '</button>';
         }).join('') || '<p class="ylt-e">No jobs yet. Give it some on the day plan.</p>';
-        var now = w.state === 'returning' ? 'Heading back to the yard' : w.state === 'home' ? 'Back at the yard' : '';
+        var now = w.tip ? (w.state === 'tipwait' ? 'At the yard, waiting to tip' : 'Heading back to the yard to tip') : w.state === 'returning' ? 'Heading back to the yard' : w.state === 'home' ? 'Back at the yard' : '';
         return '<section class="ylt-c' + (sel === l.id ? ' on' : '') + '" style="--lc:' + col(l.id) + '" data-act="y2Col" data-v="' + l.id + '" id="ylt-' + l.id + '"><header><span class="yplate">' + h(l.reg) + '</span><b>' + h(l.driver) + '</b><small>' + d.done.length + ' of ' + d.all.length + ' done' + (now ? ' · ' + now : '') + '</small><i class="ylt-k"></i></header><div class="ylt-l">' + rows + '</div></section>';
       }).join('');
       return '<div class="ybar ytr-bar"><span class="ytr-note">' + ic('map-pin') + '<span>Every lorry, every job, live. Tap a lorry to find it on the map. Positions come from your trackers or the driver app.</span></span><button class="btn pri" data-act="yDrvOpen" id="yDrvOpen">' + ic('mobile') + 'Open the driver app</button></div>' +
@@ -225,7 +228,7 @@
     function fresh3() { return { pc: '', looked: false, pick: null, cust: '', site: null, oneoff: null, npc: '', naddr: '', nname: '', nphone: '', found: null, svc: 'skip', type: 'deliver', size: 8, rsize: 20, loads: 1, stream: 'mixed', place: 'site', permit: true, day: null, time: 'am', wIncl: YC.prices(Y()).waitIncl || 30, wRate: YC.prices(Y()).waitPer15 || 25, notes: '', price: null, pmode: 'std', pay: 'invoice', more: false, t0: Date.now() }; }
     function chips(k, v, opts, act) { return '<div class="y3chips">' + opts.map(function (o) { return '<button type="button" class="y3c' + (String(v) === String(o[0]) ? ' on' : '') + '" data-act="' + (act || 'y3Set') + '" data-k="' + k + '" data-v="' + h(o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
     function siteObj(b) { if (b.pick && b.pick !== 'new') { var c = CS.cust(b.cust); if (c && b.site != null) { var s = c.sites[+b.site]; return { name: s.name, pc: s.pc }; } if (b.oneoff) { var o = YC.oneoff(b.oneoff); return { name: o.site, pc: o.pc }; } } if (b.naddr && b.npc) return { name: b.naddr, pc: b.npc }; return null; }
-    function ready(b) { return !!(siteObj(b) && (b.pick !== 'new' || (b.cust && b.cust !== 'new') || String(b.nname).trim())); }
+    function ready(b) { return !!(siteObj(b) && (b.pick !== 'new' || (b.who === 'existing' && b.cust && b.cust !== 'new' && CS.cust(b.cust)) || (b.who === 'new' && String(b.nname).trim()))); }
     function stdPrice(b) { return K.b2Price(b); }
     function price(b) { var p = parseFloat(String(b.price == null ? '' : b.price).replace(/[^\d.]/g, '')); return b.pmode === 'custom' && p > 0 ? p : stdPrice(b); }
     /* job types and the day plan's time windows, the same everywhere */
@@ -241,7 +244,7 @@
         '<small class="muted">The lorry drops the ' + (b.svc === 'roro' ? 'RoRo' : 'skip') + ', waits while the customer loads it, then takes it straight away.</small></div></div>';
     }
     function priceLine(b) {
-      var t = b.pay === 'cash' ? YC.cashLine({ price: price(b) }) : money(price(b)) + ' + VAT' + (b.pmode === 'std' ? ' from your price list' : ', custom') + (K.b2Permit(b) ? ', permit included' : '');
+      var t = b.pay === 'cash' ? YC.cashLine({ price: price(b) }) : b.pay === 'card' ? YC.cashLine({ price: price(b) }).replace(/ cash$/, ', paid by card now') : money(price(b)) + ' + VAT' + (b.pmode === 'std' ? ' from your price list' : ', custom') + (K.b2Permit(b) ? ', permit included' : '');
       if ((b.svc === 'skip' || b.svc === 'roro') && b.type === 'wait') t += '. ' + YC.waitLine({ wait: waitOf(b) }) + '.';
       return t;
     }
@@ -251,14 +254,16 @@
         '<div class="y3-s"><span class="y3-n">1</span><div class="field"><label for="y3Pc">Postcode</label><div class="y3pc"><input id="y3Pc" data-y3t="pc" value="' + h(b.pc) + '" placeholder="e.g. GU22 8BA" autocomplete="off" style="text-transform:uppercase"><button type="button" class="btn" data-act="y3Find" id="y3Find">' + ic('search') + 'Find</button></div>';
       if (b.looked) {
         o += '<div class="y3sites y3known">' + M.map(function (m) { return '<button type="button" class="y3site' + (b.pick === m.key ? ' on' : '') + '" data-act="y3Pick" data-v="' + h(m.key) + '"><b>' + h(m.name) + (m.stop ? ' (on stop)' : '') + '</b><small>site ' + h(m.addr.split(',')[0]) + ', ' + h(m.pc) + '</small></button>'; }).join('') +
-          '<button type="button" class="y3site add' + (b.pick === 'new' ? ' on' : '') + '" data-act="y3Pick" data-v="new">' + ic('plus') + '<b>New customer</b></button></div>' + (M.length ? '' : '<small class="muted">No customer site at ' + h(normPc(b.pc)) + ' yet.</small>');
+          '<button type="button" class="y3site add' + (b.pick === 'new' ? ' on' : '') + '" data-act="y3Pick" data-v="new" id="y3NewSite">' + ic('plus') + '<b>New site</b></button></div>' + (M.length ? '' : '<small class="muted">No customer site at ' + h(normPc(b.pc)) + ' yet.</small>');
       }
       o += '</div></div>';
       if (b.pick === 'new') {
         var custs = s.customers.slice().sort(function (x, z) { return x.name < z.name ? -1 : 1; });
-        o += '<div class="y3-s"><span class="y3-n">2</span><div class="field"><label for="y3Cust">Who for</label><select id="y3Cust" data-y3="cust"><option value="new"' + (!b.cust || b.cust === 'new' ? ' selected' : '') + '>New customer</option>' + custs.map(function (x) { return '<option value="' + x.id + '"' + (x.id === b.cust ? ' selected' : '') + '>' + h(x.name) + ', a new site</option>'; }).join('') + '</select>' +
-          (!b.cust || b.cust === 'new' ? '<div class="ybk2"><div class="field"><label for="y3Name">Name</label><input id="y3Name" data-y3t="nname" value="' + h(b.nname) + '" placeholder="Mrs Jane Smith"></div><div class="field"><label for="y3Phone">Mobile</label><input id="y3Phone" data-y3t="nphone" value="' + h(b.nphone) + '" placeholder="07700 900000"></div></div>' : K.creditBox(b.cust)) +
-          '<label>Address</label><div class="y3sites">' + addrs(b.npc).map(function (a) { return '<button type="button" class="y3site' + (b.naddr === a ? ' on' : '') + '" data-act="y3Addr" data-v="' + h(a) + '"><b>' + h(a.split(',')[0]) + '</b><small>' + h((a.split(',')[1] || '').trim() + ' ' + b.npc) + '</small></button>'; }).join('') + '</div></div></div>';
+        var cx = b.cust && b.cust !== 'new' ? CS.cust(b.cust) : null;
+        o += '<div class="y3-s"><span class="y3-n">2</span><div class="field"><label>Who for?</label>' + chips('who', b.who || '', [['new', 'New customer'], ['existing', 'Existing customer']]) +
+          (b.who === 'existing' ? '<label for="y3CustQ">Customer</label><input id="y3CustQ" list="y3CustL" value="' + h(cx ? cx.name : b.custQ || '') + '" placeholder="Pick or type a customer" autocomplete="off"><datalist id="y3CustL">' + custs.map(function (x) { return '<option value="' + h(x.name) + '">'; }).join('') + '</datalist>' : '') +
+          (b.who === 'new' || cx ? '<div class="ybk2"><div class="field"><label for="y3Name">Name</label><input id="y3Name" data-y3t="nname" value="' + h(b.nname) + '" placeholder="Mrs Jane Smith"></div><div class="field"><label for="y3Phone">Mobile</label><input id="y3Phone" data-y3t="nphone" value="' + h(b.nphone) + '" placeholder="07700 900000"></div></div>' : '') + (cx ? K.creditBox(b.cust) : '') +
+          (b.who ? '<label>Address</label><div class="y3sites">' + addrs(b.npc).map(function (a) { return '<button type="button" class="y3site' + (b.naddr === a ? ' on' : '') + '" data-act="y3Addr" data-v="' + h(a) + '"><b>' + h(a.split(',')[0]) + '</b><small>' + h((a.split(',')[1] || '').trim() + ' ' + b.npc) + '</small></button>'; }).join('') + '</div>' : '') + '</div></div>';
       } else if (b.pick) o += '<div class="y3-s"><span class="y3-n">2</span><div class="field">' + (b.oneoff ? '<div class="ycr ok">' + ic('user') + '<span><b>' + h(YC.oneoff(b.oneoff).name) + '</b>, ' + h(YC.oneoff(b.oneoff).phone) + '. Filled in from their last job.</span></div>' : K.creditBox(b.cust)) + '</div></div>';
       if (siteObj(b)) {
         o += '<div class="y3-s"><span class="y3-n">3</span><div class="field"><label>Service</label>' + chips('svc', b.svc, [['skip', 'Skip'], ['roro', 'RoRo'], ['grab', 'Grab'], ['muck', 'Muckaway']]) +
@@ -272,7 +277,7 @@
           '<label>Time window</label>' + chips('time', b.time, (YC.isSat(day) ? BWIN.slice(0, 2) : BWIN).map(function (w) { return [w[0], w[1]]; })) + '</div></div>';
         o += '<div class="y3-s"><span class="y3-n">' + ic('pound') + '</span><div class="field"><label>Price</label>' + chips('pmode', b.pmode, [['std', 'Standard price ' + money(stdPrice(b))], ['custom', 'Custom price']]) +
           (b.pmode === 'custom' ? '<div class="yprice" style="margin-bottom:8px"><span>£</span><input id="y3PriceIn" data-y3t="price" inputmode="decimal" value="' + h(b.price != null ? b.price : stdPrice(b)) + '"><span class="muted">+ VAT</span></div>' : '') +
-          '<label>Payment</label>' + chips('pay', b.pay, [['invoice', 'Invoice'], ['cash', 'Pay cash on the day']]) +
+          '<label>Payment</label>' + chips('pay', b.pay, [['invoice', 'Invoice'], ['cash', 'Cash'], ['card', 'Card (now)']]) +
           '<small class="muted" id="y3Price">' + h(priceLine(b)) + '</small></div></div>';
         o += '<details class="y3more"' + (b.more ? ' open' : '') + '><summary>Waste type and a note for the driver</summary><div class="field"><label for="y3Stream">Waste</label><select id="y3Stream" data-y3="stream">' + Object.keys(YC.STREAMS).map(function (k) { return '<option value="' + k + '"' + (k === b.stream ? ' selected' : '') + '>' + h(YC.STREAMS[k].n) + '</option>'; }).join('') + '</select></div><div class="field"><label for="y3Notes">Note for the driver</label><input id="y3Notes" data-y3t="notes" value="' + h(b.notes) + '" placeholder="Gate code, where to put it, no access before 9"></div></details>';
       }
@@ -293,7 +298,7 @@
     A.yWheelBook = function () { if (A.yWheelClose) A.yWheelClose(); A.yBook(); };
     function pickKey(b, key) {
       b.pick = key; b.owAck = false; b.cust = ''; b.site = null; b.oneoff = null;
-      if (key === 'new') { b.cust = 'new'; b.npc = normPc(b.pc); b.naddr = ''; return; }
+      if (key === 'new') { b.cust = 'new'; b.who = ''; b.nname = ''; b.nphone = ''; b.npc = normPc(b.pc); b.naddr = ''; return; }
       var m = knownSites(b.pc).filter(function (x) { return x.key === key; })[0]; if (!m) return;
       if (m.oneoff) { b.oneoff = m.cust; b.cust = m.cust; } else { b.cust = m.cust; b.site = m.site; }
       /* fill in from what is there now, or the last job at this site */
@@ -312,6 +317,7 @@
       if (k === 'svc') { b.stream = v === 'skip' || v === 'roro' ? 'mixed' : 'soil'; if (!(v === 'skip' || v === 'roro')) { b.place = 'site'; b.type = v; } else if (b.type === 'grab' || b.type === 'muck') b.type = 'deliver'; }
       if (k === 'type' && v !== 'deliver') b.place = 'site';
       if (k === 'type') b.owAck = false;
+      if (k === 'who') { b.cust = 'new'; b.custQ = ''; b.nname = ''; b.nphone = ''; b.owAck = false; }
       draw3(); if (k === 'pmode' && v === 'custom') { var pi = q('#y3PriceIn'); if (pi) { pi.focus(); pi.select(); } }
     };
     A.y3Find = function () {
@@ -332,6 +338,13 @@
       if (el.dataset.y3t === 'price' || el.dataset.y3t === 'wRate') { var pr = q('#y3Price'); if (pr) pr.textContent = priceLine(b); }
       if (el.dataset.y3t === 'nname') { var g = q('#yBkGo'); if (g) g.disabled = !ready(b); }
     });
+    function custPick(el, fin) {
+      var b = st3(), v = el.value.trim().toLowerCase(), c = S().customers.filter(function (x) { return x.name.toLowerCase() === v; })[0]; b.custQ = el.value;
+      if (c && c.id !== b.cust) { b.cust = c.id; b.nname = c.contact || ''; b.nphone = c.phone || ''; b.owAck = false; draw3(); var n = q('#y3CustQ'); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }
+      else if (!c && b.cust !== 'new') { b.cust = 'new'; b.nname = ''; b.nphone = ''; if (fin) draw3(); }
+    }
+    document.addEventListener('input', function (e) { if (e.target.id === 'y3CustQ') custPick(e.target); });
+    document.addEventListener('change', function (e) { if (e.target.id === 'y3CustQ') custPick(e.target, true); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.id === 'y3Pc') { e.preventDefault(); clearTimeout(ui.y3T); A.y3Find(); } });
     document.addEventListener('toggle', function (e) { if (e.target.classList && e.target.classList.contains('y3more')) st3().more = e.target.open; }, true);
     A.y3Go = function () {
@@ -343,30 +356,33 @@
       var cid = c ? c.id : b.oneoff || 'new:' + id, cn = c || b.oneoff ? null : String(b.nname).trim();
       var j = { id: id, day: off, lorry: null, win: win, type: J0.type, cust: cid, cname: cn, site: site, lat: p.lat, lng: p.lng, size: J0.size, loads: J0.loads,
         price: price(b), priceMode: b.pmode, incl: YC.inclFor(y, J0), stream: b.stream, place: perm || (b.place === 'road' && J0.type === 'deliver') ? 'road' : 'drive',
-        permit: perm ? YC.permitFor(site.pc, id, off, off + 14) : null, status: 'planned', at: {}, photos: [], sig: null, ticket: null, wtn: null, eta: null, notes: b.notes || '', pay: b.pay === 'cash' ? 'cash' : 'invoice',
-        log: [{ at: Date.now(), t: 'Booked by ' + K.uName(K.meU()).split(' ')[0] + (b.pay === 'cash' ? ', cash on the day' : '') + (b.pmode === 'custom' ? ', custom price' : '') }], isNew: true, bookedIn: Math.round((Date.now() - b.t0) / 1000) };
+        permit: perm ? YC.permitFor(site.pc, id, off, off + 14) : null, status: 'planned', at: {}, photos: [], sig: null, ticket: null, wtn: null, eta: null, notes: b.notes || '', pay: b.pay === 'cash' ? 'cash' : b.pay === 'card' ? 'card' : 'invoice',
+        log: [{ at: Date.now(), t: 'Booked by ' + K.uName(K.meU()).split(' ')[0] + (b.pay === 'cash' ? ', cash on the day' : b.pay === 'card' ? ', paid by card when booked' : '') + (b.pmode === 'custom' ? ', custom price' : '') }], isNew: true, bookedIn: Math.round((Date.now() - b.t0) / 1000) };
       if (j.type === 'wait') { j.wait = waitOf(b); j.log.push({ at: Date.now(), t: 'Wait and load: ' + YC.waitLine(j, y) }); }
       if (ow && b.owAck === 'add') { j.owed = ow.amt; j.notes = ('Collect ' + money(ow.amt, ow.amt % 1 !== 0) + ' cash owed from the last job. ' + j.notes).trim(); j.log.push({ at: Date.now(), t: 'Driver told to collect ' + money(ow.amt) + ' cash owed from the last job' }); }
       if (c && b.pick === 'new' && !c.sites.some(function (s) { return s.pc === site.pc && s.name === site.name; })) c.sites.push({ name: site.name, pc: site.pc });
       y.jobs.push(j);
       if (perm) { y.permits = y.permits || []; y.permits.unshift({ id: 'PM-' + (600 + y.permits.length), job: id, cust: j.cust, addr: site.name, pc: site.pc, council: YC.councilFor(site.pc), status: 'apply', paidBy: null, price: YC.prices(y).permit, ref: j.permit.ref, from: off, to: off + 14, createdAt: Date.now(), log: [] }); }
-      if (b.fromMsg) { var m = (y.inbox || []).filter(function (x) { return x.id === b.fromMsg; })[0]; if (m) { m.done = true; m.doneAt = Date.now(); m.job = id; m.reply = 'Booked in for ' + K.dayName(off) + ', ' + bwinLbl(b.time) + ', ' + YC.whatShort(j) + (j.type === 'wait' ? ' (' + YC.waitLine(j, y) + ')' : '') + ' at ' + site.name.split(',')[0] + '. Cheers, Dave'; } }
+      if (b.fromMsg) { var m = (y.inbox || []).filter(function (x) { return x.id === b.fromMsg; })[0]; if (m) { m.booked = true; m.job = id; m.draft = 'Hi ' + K.msgFirst(m) + ', booked in for ' + K.dayName(off) + ', ' + bwinLbl(b.time) + ', ' + YC.whatShort(j) + (j.type === 'wait' ? ' (' + YC.waitLine(j, y) + ')' : '') + ' at ' + site.name.split(',')[0] + '. Cheers, Dave'; } }
       y.v++; K.save();
       var s2 = j.bookedIn, tm = Math.floor(s2 / 60) + ':' + String(s2 % 60).padStart(2, '0');
       var m2 = q('#layer .y3m');
       if (m2) {
-        m2.querySelector('.mbd').innerHTML = '<div class="y3done" id="y3Done"><span class="y3tick">' + ic('circle-check') + '</span><h3>Booked in ' + tm + '</h3><p><b>' + h(id) + '</b> · ' + h(YC.what(j)) + '<br>' + h(YC.custName(S(), j.cust)) + ', ' + h(site.name + ', ' + site.pc) + '<br>' + h(K.dayLong(off)) + ', ' + h(bwinLbl(b.time)) + (j.type === 'wait' ? '<br>' + h(YC.waitLine(j, y)) : '') + '<br>' + h(money(j.price)) + ' + VAT' + (b.pmode === 'custom' ? ', custom price' : '') + (j.pay === 'cash' ? '<br><span class="tag ycashjob">Cash job</span> ' + h(YC.cashLine(j)) : '') + (j.owed ? '<br><span class="tag bad">Collect ' + h(money(j.owed)) + ' owed</span>' : '') + '</p>' +
+        m2.querySelector('.mbd').innerHTML = '<div class="y3done" id="y3Done"><span class="y3tick">' + ic('circle-check') + '</span><h3>Booked in ' + tm + '</h3><p><b>' + h(id) + '</b> · ' + h(YC.what(j)) + '<br>' + h(YC.custName(S(), j.cust)) + ', ' + h(site.name + ', ' + site.pc) + '<br>' + h(K.dayLong(off)) + ', ' + h(bwinLbl(b.time)) + (j.type === 'wait' ? '<br>' + h(YC.waitLine(j, y)) : '') + '<br>' + h(money(j.price)) + ' + VAT' + (b.pmode === 'custom' ? ', custom price' : '') + (j.pay === 'cash' ? '<br><span class="tag ycashjob">Cash job</span> ' + h(YC.cashLine(j)) : j.pay === 'card' ? '<br><span class="tag ok">Paid by card</span> ' + h(YC.cashLine(j).replace(/ cash$/, '')) : '') + (j.owed ? '<br><span class="tag bad">Collect ' + h(money(j.owed)) + ' owed</span>' : '') + '</p>' +
           '<small class="muted">Confirmation sent to the customer. Give it a lorry on the day plan' + (perm ? '. Permit card made: apply within 30 minutes' : '') + '.</small></div>';
         m2.querySelector('.mft').innerHTML = '<span class="sp"></span><button class="btn" data-act="yBook">' + ic('plus') + 'Book another</button><button class="btn pri" data-act="y3Done">Done</button>';
       }
       ui.yBkDay = 'week'; ui.yBkF = 'all';
+      if (b.fromMsg && m2) { var mm = (y.inbox || []).filter(function (x) { return x.id === b.fromMsg; })[0]; if (mm) {
+        m2.querySelector('.mbd').insertAdjacentHTML('beforeend', '<div class="card y4send" id="y4Send"><b>' + ic('whatsapp') + 'Send this to ' + h(K.msgFirst(mm)) + '</b><textarea id="y4SendTx" rows="3">' + h(mm.draft) + '</textarea></div>');
+        m2.querySelector('.mft').innerHTML = '<span class="sp"></span><button class="btn" data-act="y3Done">Not now</button><button class="btn pri lg" data-act="y4SendBk" data-id="' + h(mm.id) + '" id="y4SendBk">' + ic('send') + 'Send to ' + h(K.msgFirst(mm)) + '</button>'; } }
     };
-    A.y3Done = function () { A.close(); if (ui.view !== 'bookings') K.go('bookings'); else UI.render(); };
+    A.y3Done = function () { var fm = ui.y3 && ui.y3.fromMsg; A.close(); if (fm) { ui.yMsg = fm; if (ui.view !== 'inbox') K.go('inbox'); else UI.render(); return; } if (ui.view !== 'bookings') K.go('bookings'); else UI.render(); };
     A.yMsgBook = function (el) {
       var m = (Y().inbox || []).filter(function (x) { return x.id === el.dataset.id; })[0]; if (!m) return;
       A.yBook(); var b = st3(), c = m.cust && CS.cust(m.cust);
       if (c) { var s = c.sites[m.site || 0] || c.sites[0]; b.pc = s.pc; b.looked = true; pickKey(b, c.id + ':' + c.sites.indexOf(s)); }
-      else { var full = /^[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}$/i.test(String(m.pc || '').trim()); b.pc = m.pc || ''; b.looked = full; b.pick = full ? 'new' : null; b.cust = full ? 'new' : ''; b.npc = normPc(m.pc); b.nname = m.test ? '' : m.who || ''; b.nphone = m.test ? '' : m.phone || ''; }
+      else { var full = /^[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}$/i.test(String(m.pc || '').trim()); b.pc = m.pc || ''; b.looked = full; b.pick = full ? 'new' : null; b.cust = full ? 'new' : ''; b.who = full ? 'new' : '';   /* a message from someone new is a new customer */ b.npc = normPc(m.pc); b.nname = m.test ? '' : m.who || ''; b.nphone = m.test ? '' : m.phone || ''; }
       b.svc = m.svc || (m.size >= 20 ? 'roro' : 'skip'); b.type = m.type || (b.svc === 'grab' || b.svc === 'muck' ? b.svc : 'deliver'); if (m.size) { if (m.size >= 20) b.rsize = m.size >= 30 ? 40 : 20; else b.size = m.size; } if (m.loads) b.loads = m.loads; if (b.svc === 'grab' || b.svc === 'muck') b.stream = 'soil';
       if (m.day != null && m.day > 0) b.day = m.day; if (m.time) b.time = m.time; b.place = 'site'; b.fromMsg = m.id; b.notes = m.note || ''; draw3();
     };
