@@ -113,7 +113,7 @@
   YC.win = function (j) { return YC.hhmm(j.win[0]) + ' to ' + YC.hhmm(j.win[1]); };
   /* the day plan's time windows: 7 to 9, 8 to 12, 12 to 4 (the day plan also moves a job for an access note) */
   YC.winBand = function (j) { var K = window.DSGY && window.DSGY.kit; if (K && K.planWin) return K.planWin(j); return j.win[0] < 480 ? '7 to 9' : j.win[0] < 720 ? '8 to 12' : '12 to 4'; };
-  YC.DATAV = 4;   /* sample data version: a saved day from before round 4 is rebuilt */
+  YC.DATAV = 6;   /* sample data version: a saved day from before round 4 is rebuilt */
   YC.TRAVEL = 150000; YC.DWELL = 70000;   /* demo time: a leg takes two and a half minutes, a stop a little over one */
 
   /* ---------- building the day ---------- */
@@ -139,7 +139,7 @@
     var L = [
       J('DSG-3101', 'L1', 450, 510, 'deliver', 'c1', 0, 8, 'mixed'),
       J('DSG-3102', 'L1', 540, 600, 'exchange', 'c4', 1, 6, 'mixed'),
-      J('DSG-3103', 'L1', 660, 720, 'collect', 'c11', 0, 8, 'wood'),
+      J('DSG-3103', 'L1', 660, 720, 'deliver', 'c11', 0, 8, 'wood'),   /* a delivery: Wayne leaves the yard with two empties nested, drops one here, then exchanges at GU22 8LT and goes back to tip */
       J('DSG-3104', 'L1', 780, 840, 'deliver', 'c13', 0, 6, 'house', { place: 'road' }),
       J('DSG-3105', 'L1', 870, 930, 'exchange', 'c1', 1, 8, 'mixed'),
       J('DSG-3111', 'L2', 450, 510, 'collect', 'c7', 0, 12, 'green'),
@@ -262,6 +262,8 @@
     seedHistory(S, Y);
     /* tomorrow and the next working day are full, so New booking offers the soonest day with room */
     var busy = YC.workDays(1, 2, true), nid = 3200; busy.forEach(function (off) { nid = fillDay(S, Y, off, nid); });
+    /* the next working day: every skip job starts unplanned, so Suggest plan has a full board to route (Jack, 28 Nov) */
+    Y.jobs.forEach(function (j) { if (j.day === busy[0] && j.lorry && YC.lorry(j.lorry) && YC.lorry(j.lorry).kind === 'skip' && j.status === 'planned') { j.lorry = null; j.seq = null; } });
     /* permits: every road job and road skip has a card; one booked half an hour ago has not been applied for yet */
     var pn = 501, now0 = Date.now();
     Y.permits = [];

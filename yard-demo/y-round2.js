@@ -147,6 +147,23 @@
       return f ? f[0] : 'skip';
     }
     K.planWin = winLbl;
+    /* trips back to the yard between runs (Jack, 28 Nov): a skip lorry takes up to 2 empties out and brings 1 full skip back,
+       a hook lorry carries 1 container, a grab lorry tips after every job */
+    K.withTrips = function (open, lk) {
+      var o = '', empties = 0;
+      function trip(t) { return '<div class="y5trip">' + ic(t === 'tip' ? 'truck' : 'home') + '<span>' + (t === 'tip' ? 'Tip, back to the yard' : t === 'next' ? 'Back to the yard for the next container' : 'Back to the yard for empties') + '</span></div>'; }
+      open.forEach(function (j, i) {
+        var nx = open[i + 1], pick = j.type === 'exchange' || j.type === 'collect' || j.type === 'wait';
+        o += pcard(j);
+        if (!nx) return;
+        if (lk === 'grab') { o += trip('tip'); return; }
+        if (lk === 'roro') { o += trip(pick ? 'tip' : 'next'); return; }
+        if (j.type !== 'collect') empties++;
+        if (pick) { o += trip('tip'); empties = 0; return; }
+        if (nx.type !== 'collect' && empties >= 2) { o += trip('empties'); empties = 0; }
+      });
+      return o;
+    };
     K.planBase = function () {
       seedPlan();
       var y = Y(), d = planDay(), t1 = nextDay(), picked = d !== 0 && d !== t1;
@@ -156,12 +173,12 @@
         return '<button type="button" role="tab" aria-selected="' + (tab === x[0]) + '" class="y3tab svc-' + x[0] + (tab === x[0] ? ' on' : '') + '" data-act="yUnTab" data-v="' + x[0] + '"><i class="y3dot"></i>' + x[1] + ' <b class="y3n">' + n + '</b>' + (n ? '<i class="y2bang" data-tip="Work still to plan" aria-label="Work still to plan">!</i>' : '') + '</button>';
       }).join('') + '</div>';
       var key = '<div class="y3key" aria-label="Colour key"><span><i class="svc-skip"></i>Skip</span><span><i class="svc-grab"></i>Grab</span><span><i class="svc-roro"></i>RoRo</span><span class="y3key-n"><b class="y2bang">!</b>Access note, hover or tap to read</span></div>';
-      var tray = key + '<section class="ycol none y3un" data-col="none"><header><b class="y3un-k">Unplanned</b>' + tabs + '<h2 class="y3un-t" id="yUnTitle">' + T[1] + '</h2><small>' + (shown.length ? plural(shown.length, T[2]) + ' still to plan for ' + h(d === 0 ? 'today' : d === 1 ? 'tomorrow' : K.dayLong(d).replace(/^\w+, /, '')) + '. Drag each one onto a registration' : 'Every ' + T[2] + ' for ' + h(d === 0 ? 'today' : d === 1 ? 'tomorrow' : YC.dayDate(d).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })) + ' is on a lorry. Drag one back here to take it off') + '</small></header><div class="ycol-b">' + shown.map(pcard).join('') + '</div></section>';
+      var tray = '<section class="ycol none y3un" data-col="none"><header><span class="y3un-top"><b class="y3un-k">Unplanned</b>' + (un.length ? '<button class="btn pri y3sugg" data-act="y2Suggest" id="y2Suggest">' + ic('route') + 'Suggest plan</button>' : '') + '</span>' + tabs + '<h2 class="y3un-t" id="yUnTitle">' + T[1] + '</h2><small>' + (shown.length ? plural(shown.length, T[2]) + ' still to plan for ' + h(d === 0 ? 'today' : d === 1 ? 'tomorrow' : K.dayLong(d).replace(/^\w+, /, '')) + '. Drag each one onto a registration' : 'Every ' + T[2] + ' for ' + h(d === 0 ? 'today' : d === 1 ? 'tomorrow' : YC.dayDate(d).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })) + ' is on a lorry. Drag one back here to take it off') + '</small></header><div class="ycol-b">' + shown.map(pcard).join('') + '</div></section>';
       var groups = YC.GROUPS.map(function (g) {
         var L = YC.LORRIES.filter(function (l) { return l.kind === g[0]; });
         return '<div class="ygrp ygrp-' + g[0] + '" style="--n:' + L.length + '"><div class="ygrp-h">' + h(g[1]) + '</div><div class="ygrp-c">' + L.map(function (l) {
           var js = y.jobs.filter(function (j) { return j.day === d && j.lorry === l.id; }).sort(function (a, b) { return a.seq != null || b.seq != null ? YC.seqKey(a) - YC.seqKey(b) : planSort(a, b); }),   /* a run put in order by dragging keeps its order */ dn = js.filter(function (j) { return j.status === 'done'; }), open = js.filter(function (j) { return j.status !== 'done'; });
-          return '<section class="ycol" data-col="' + l.id + '" data-lk="' + l.kind + '"><header><span class="yreg">' + h(l.reg) + '</span><small>' + h(l.driver) + '</small>' + (dn.length ? '<small class="ycap">' + plural(dn.length, 'job') + ' done' + (d === 0 ? ' today' : '') + '</small>' : '') + '</header><div class="ycol-b">' + open.map(pcard).join('') + (open.length ? '' : '<p class="ycol-e">Drop a job here</p>') + '</div></section>';
+          return '<section class="ycol" data-col="' + l.id + '" data-lk="' + l.kind + '"><header><span class="yreg">' + h(l.reg) + '</span><small>' + h(l.driver) + '</small>' + (dn.length ? '<small class="ycap">' + plural(dn.length, 'job') + ' done' + (d === 0 ? ' today' : '') + '</small>' : '') + '</header><div class="ycol-b">' + K.withTrips(open, l.kind) + (open.length ? '' : '<p class="ycol-e">Drop a job here</p>') + '</div></section>';
         }).join('') + '</div></div>';
       }).join('');
       return '<div class="ybar y3dbar"><div class="seg y3seg" role="group" aria-label="Day to plan"><button data-act="yPlanDay" data-v="0" class="' + (d === 0 ? 'on' : '') + '">Today</button><button data-act="yPlanDay" data-v="' + t1 + '" class="' + (d === t1 && d !== 0 ? 'on' : '') + '">' + (t1 === 1 ? 'Tomorrow' : h(YC.dayDate(t1).toLocaleDateString('en-GB', { weekday: 'long' }))) + '</button>' +

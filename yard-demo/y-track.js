@@ -23,7 +23,7 @@
       return { done: done, act: act, rest: rest, all: done.concat(act ? [act] : []).concat(rest) };
     }
     function jobStatus(j, d) {
-      if (j.status === 'done') return ['Complete ' + CS.clock(j.at.done), 'ok'];
+      if (j.status === 'done') { var tk = j.ticket && (Y().tickets || []).filter(function (t) { return t.id === j.ticket; })[0]; return ['Complete ' + CS.clock(j.at.done) + (tk && tk.time != null ? ', tipped ' + String(Math.floor(tk.time / 60)).padStart(2, '0') + ':' + String(tk.time % 60).padStart(2, '0') : ''), 'ok']; }
       if (j.status === 'onway') { var m = YC.etaMins(Y(), j) || 10; return ['On the way, ETA ' + CS.clock(Date.now() + m * 60000), 'way']; }
       if (j.status === 'onsite') return [YC.cashState(j) === 'due' ? 'On site, cash to take' : j.type === 'wait' ? 'On site, waiting while they load' : 'On site', 'site'];
       if (Y().tip && Y().tip[j.lorry] && j.status === 'planned' && d.act === j) return ['Next, after tipping', 'next'];
@@ -164,31 +164,50 @@
         '<ol class="yrun-l">' + r.jobs.map(function (j) { return '<li><b>' + h(j.site.pc) + '</b><span>' + h(YC.whatShort(j)) + ', ' + h(street(j)) + '</span>' + (YC.isCash(j) ? '<span class="tag ycashjob">Cash job</span>' : '') + '</li>'; }).join('') + (r.jobs.some(function (j) { return YC.TYPES[j.type].waste; }) ? '<li class="tip"><b>Tip</b><span>' + h(tipOf(r.jobs[r.jobs.length - 1]).n) + '</span></li>' : '') + '<li class="tip"><b>Yard</b><span>Back to Lakeside Way</span></li></ol>' +
         '<p class="yrun-why">' + ic('route') + '<span>' + h(r.why) + '</span></p><button class="btn sm' + (lo ? ' pri' : '') + '" data-act="y2UseRun" data-i="' + i + '"' + (lo ? '' : ' disabled') + '>' + ic('check') + 'Use this run</button></div>';
     }
-    var plan0 = V.plan;
-    V.plan = function () {
-      var html = (K.planBase || plan0).apply(this, arguments), d = planDay();
-      var btn = '<button class="btn" data-act="y2Suggest" id="y2Suggest">' + ic('route') + 'Suggest runs</button>';
-      html = html.replace('<span class="sp"></span>', '<span class="sp"></span>' + btn);
-      if (ui.y2Runs) {
-        var R = ui.y2RunsL = suggest();
-        var panel = '<section class="yruns" id="yRuns"><div class="yh-rh"><h3>' + ic('route') + 'Suggested runs</h3><small class="muted">' + (R.length ? plural(R.reduce(function (a, r) { return a + r.jobs.length; }, 0), 'unplanned job') + ' for ' + (d === 0 ? 'today' : K.dayLong(d)) + ' in ' + plural(R.length, 'run') + ', grouped by how close the postcodes are and what each lorry can carry' : 'Nothing unplanned for ' + (d === 0 ? 'today' : K.dayLong(d))) + '</small><span class="sp"></span>' +
-          (R.length ? '<button class="btn pri" data-act="y2UsePlan" id="y2UsePlan">' + ic('check') + 'Use this plan</button>' : '') + '<button class="btn" data-act="y2RunsOff">' + ic('x') + 'Hide</button></div>' +
-          '<p class="muted yruns-rule">Skip loaders take up to 2 empty skips out but only 1 full one back, so an exchange or collection ends the run with a tip. A hook lorry carries 1 container. A grab lorry tips after every load.</p>' +
-          '<div class="yruns-g">' + R.map(runCard).join('') + '</div></section>';
-        html = html.replace('<div class="yplan2"', panel + '<div class="yplan2"');
-      }
-      return html;
-    };
-    A.y2Suggest = function () { ui.y2Runs = true; UI.render(); var p = q('#yRuns'); if (p && p.scrollIntoView) p.scrollIntoView({ block: 'start', behavior: 'smooth' }); };
-    A.y2RunsOff = function () { ui.y2Runs = false; UI.render(); };
-    function useRun(r) {
-      var lo = YC.lorry(r.lorry); if (!lo) return 0; var day = r.jobs[0] ? r.jobs[0].day : 0;
-      var list = YC.forLorry(Y(), lo.id, day), start = day === 0 ? YC.nowMin() + 15 : 450, last = list.length ? Math.max.apply(null, list.map(function (j) { return j.win[0]; })) + 30 : start, t = Math.max(last, start);
-      r.jobs.forEach(function (j) { if (j.lorry) return; j.lorry = lo.id; j.manual = false; var len = j.win[1] - j.win[0]; j.win = [Math.min(t, 990), Math.min(t, 990) + Math.min(len, 60)]; t += 35; j.log.push({ at: Date.now(), t: 'Given to ' + lo.reg + ', ' + lo.driver + ' (suggested run)' }); });
-      return r.jobs.length;
+    /* SUGGEST PLAN (Jack, 28 Nov): one press routes every unplanned job for the day.
+       Skip runs are only ever: a delivery then an exchange, a delivery then a collection, a delivery then a wait and load,
+       two deliveries, or one job on its own. A skip lorry takes 2 empties out and brings 1 full skip back, so an exchange,
+       collection or wait and load always ends the run, then the tip. Runs are paired by postcode, inside the customer's booked window.
+       A hook lorry carries 1 container and a grab tips after every job, so those are one job a run. */
+    function winK(j) { return j.win[0] < 480 ? 0 : j.win[0] < 720 ? 1 : 2; }
+    function isPick(j) { return j.type === 'exchange' || j.type === 'collect' || j.type === 'wait'; }
+    function planRuns(day) {
+      var y = Y(), un = y.jobs.filter(function (j) { return j.day === day && !j.lorry && j.status === 'planned'; }), runs = [], used = {};
+      var sk = un.filter(function (j) { return kindOf(j) === 'skip'; });
+      var picks = sk.filter(isPick).sort(function (a, b) { return winK(a) - winK(b) || a.win[0] - b.win[0]; }), dels = sk.filter(function (j) { return j.type === 'deliver'; });
+      picks.forEach(function (pj) {
+        var d = dels.filter(function (x) { return !used[x.id] && winK(x) === winK(pj) && miles(x, pj) <= 6; }).sort(function (a, b) { return miles(a, pj) - miles(b, pj); })[0];
+        if (d) used[d.id] = 1; used[pj.id] = 1;
+        runs.push({ k: 'skip', w: winK(pj), jobs: d ? [d, pj] : [pj] });
+      });
+      dels.filter(function (x) { return !used[x.id]; }).forEach(function (d) {
+        if (used[d.id]) return; used[d.id] = 1;
+        var e = dels.filter(function (x) { return !used[x.id] && winK(x) === winK(d) && miles(x, d) <= 6; }).sort(function (a, b) { return miles(a, d) - miles(b, d); })[0];
+        if (e) used[e.id] = 1;
+        runs.push({ k: 'skip', w: winK(d), jobs: e ? [d, e].sort(function (a, b) { return miles(YARD(), a) - miles(YARD(), b); }) : [d] });
+      });
+      un.filter(function (j) { return kindOf(j) !== 'skip'; }).forEach(function (j) { runs.push({ k: kindOf(j), w: winK(j), jobs: [j] }); });
+      runs.forEach(function (r) { r.mins = Math.round(legMiles(r.jobs) / 22 * 60 + r.jobs.length * 25 + (r.jobs.some(isPick) ? 20 : 0) + r.jobs.reduce(function (a, j) { return a + (j.type === 'wait' ? 30 : 0) + (j.loads ? (j.loads - 1) * 45 : 0); }, 0)); });
+      return runs.sort(function (a, b) { return a.w - b.w || b.mins - a.mins; });
     }
-    A.y2UseRun = function (el) { var r = (ui.y2RunsL || [])[+el.dataset.i]; if (!r) return; var n = useRun(r); Y().v++; K.save(); UI.render(); var dd = planDay(); toast(plural(n, 'job') + ' on ' + h(YC.lorry(r.lorry).reg) + (dd === 0 ? '. It shows in live tracking and on ' + h(YC.lorry(r.lorry).first) + '\'s phone now' : ' for ' + h(K.dayLong(dd)) + '. ' + h(YC.lorry(r.lorry).first) + ' sees it on his phone that morning'), 'route'); };
-    A.y2UsePlan = function () { var n = 0, R = ui.y2RunsL || suggest(); R.forEach(function (r) { n += useRun(r); }); Y().v++; K.save(); ui.y2Runs = false; UI.render(); toast('Plan used: ' + plural(n, 'job') + ' on ' + plural(R.filter(function (r) { return r.lorry; }).map(function (r) { return r.lorry; }).filter(function (v, i, a) { return a.indexOf(v) === i; }).length, 'lorry', 'lorries') + (planDay() === 0 ? '. Live tracking and the drivers\' phones have it' : ' for ' + K.dayLong(planDay())), 'route'); };
+    function applyPlan(day) {
+      var y = Y(), runs = planRuns(day), load = {}, seq = {}, n = 0, per = {};
+      YC.LORRIES.forEach(function (l) { var L = YC.forLorry(y, l.id, day).filter(function (j) { return j.status !== 'done'; }); load[l.id] = L.length * 60; seq[l.id] = 20000 + L.length; per[l.id] = 0; });
+      runs.forEach(function (r) {
+        var lo = YC.LORRIES.filter(function (l) { return l.kind === r.k; }).sort(function (a, b) { return load[a.id] - load[b.id]; })[0]; if (!lo) return;
+        r.jobs.forEach(function (j) { j.lorry = lo.id; j.manual = false; j.seq = seq[lo.id]++; j.log.push({ at: Date.now(), t: 'Given to ' + lo.reg + ', ' + lo.driver + ' (suggested plan)' }); n++; });
+        load[lo.id] += r.mins; per[lo.id]++;
+      });
+      return { n: n, runs: runs.length, lorries: Object.keys(per).filter(function (k) { return per[k]; }).length, skipRuns: runs.filter(function (r) { return r.k === 'skip'; }).length };
+    }
+    K.planRuns = planRuns; K.applyPlan = applyPlan;
+    var plan0 = V.plan;
+    V.plan = function () { return (K.planBase || plan0).apply(this, arguments); };
+    A.y2Suggest = function () {
+      var d = planDay(), r = applyPlan(d); Y().v++; K.save(); UI.render();
+      toast(r.n ? 'Planned ' + plural(r.n, 'job') + ' on ' + plural(r.lorries, 'lorry', 'lorries') + '. ' + plural(r.skipRuns, 'skip run') + ', each a delivery then an exchange or collection, or a job on its own, then the tip' : 'Nothing left to plan', 'route');
+    };
+    A.y2RunsOff = function () { ui.y2Runs = false; UI.render(); };
 
     /* ======================================================================
        30 SECOND BOOKING: customer, tap the site, what, when, done

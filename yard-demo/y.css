@@ -254,3 +254,8 @@ body.y2drag #yPlan .ycol.y2ok:not(.none){box-shadow:0 0 0 2px var(--brand);backg
 .y4send{margin-top:14px;padding:14px;display:flex;flex-direction:column;gap:8px}.y4send b{display:flex;gap:8px;align-items:center}.y4send textarea{width:100%;box-sizing:border-box;font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line,#E4E4E7)}
 @media (max-width:600px){.ysms{top:10px;right:10px;left:10px;align-items:stretch}.ysms-t{max-width:none}}
 @media (max-width:600px){.y4grip{width:34px;height:36px;top:4px;right:4px}.ypc.y2pc .ypc-t{padding-right:36px}}
+/* Day plan (28 Nov): trips back to the yard between runs, Suggest plan in the Unplanned window */
+.y5trip{display:flex;align-items:center;gap:8px;margin:2px 4px;padding:6px 10px;border:1px dashed var(--line2);border-radius:10px;font-size:12.5px;font-weight:700;color:var(--muted);background:var(--sunk)}
+.y5trip .ic{width:15px;height:15px}
+.y3un-top{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%}
+.y3sugg{font-size:15px}
