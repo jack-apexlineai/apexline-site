@@ -436,6 +436,7 @@
     var now = YC.nowMin(), base = new Date(); base.setHours(0, 0, 0, 0);
     function ts(m) { return base.getTime() + m * 60000; }
     YC.LORRIES.forEach(function (lo) {
+      if (!first && lo.id === 'L1') return;   /* Wayne's story only moves from his phone, never on a reload */
       var list = YC.forLorry(Y, lo.id, 0), cur = null;
       list.forEach(function (j) {
         if (j.status === 'done') return;
@@ -517,7 +518,7 @@
   YC.tick = function (S, Y, nowTs, skip) {
     nowTs = nowTs || Date.now(); var ev = [];
     YC.LORRIES.forEach(function (lo) {
-      if (lo.id === skip) return;   /* the lorry whose phone is on screen is driven by the buttons on the phone */
+      if (lo.id === skip || lo.id === 'L1') return;   /* the lorry whose phone is on screen is driven by the buttons on the phone; Wayne (L1) only ever moves from his phone, so the demo story never runs ahead */
       if (Y.tip && Y.tip[lo.id]) return;   /* back at the yard to tip: it waits for the weighbridge */
       var list = YC.forLorry(Y, lo.id, 0), j = YC.active(list);
       if (!j) return;
