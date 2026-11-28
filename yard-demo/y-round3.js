@@ -35,7 +35,7 @@
       var y = Y(); if (y.r3V === 1) return; y.r3V = 1;
       var t1 = YC.workDays(1, 1, true)[0], now = YC.nowMin(), w0 = Math.min(900, Math.max(720, Math.ceil((now + 90) / 15) * 15));
       /* today: one wait and load on a skip lorry (it shows in live tracking and on Wayne's phone), and a RoRo wait and load still to plan */
-      mk('DSG-3194', 0, 'L1', [w0, w0 + 60], 'wait', 'c13', 0, 8, null, 'mixed', { manual: false, notes: 'Wait and load. Customer has a gang of four ready to load it.' });
+      mk('DSG-3194', 0, 'L1', [w0, w0 + 60], 'exchange', 'c13', 0, 8, null, 'mixed', { manual: false, notes: 'Exchange. The full skip comes back to the yard to tip.' });
       mk('DSG-3195', 0, null, [480, 720], 'wait', 'c11', 0, 20, null, 'wood');
       /* tomorrow: skips and grabs still to plan, every RoRo already on a lorry */
       mk('DSG-3171', t1, null, [420, 540], 'deliver', 'c1', 0, 6, null, 'mixed');

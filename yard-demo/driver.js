@@ -93,10 +93,11 @@
       var cashT = YC.isCash(c) ? (data.cash.ok ? '. Cash ' + h(YC.gbp(YC.cashAmt(c).gross)) + ' collected' : '. Cash not collected, the office will chase it') : '';
       YC.act(S(), Y(), c.id, 'done', { cash: data && data.cash });
       var nx = cur(), y = Y();
-      if (c.type === 'wait') { y.tip = y.tip || {}; y.tip[st.lid] = { job: c.id, at: Date.now() }; y.v++; nx = null; }
+      var back = c.type === 'wait' || c.id === 'DSG-3194';   /* Wayne's exchange brings the full skip back to tip */
+      if (back) { y.tip = y.tip || {}; y.tip[st.lid] = { job: c.id, at: Date.now() }; y.v++; nx = null; }
       if (nx) { YC.act(S(), Y(), nx.id, 'onway'); nx.at.started = Date.now(); }
       save(); draw(); window.scrollTo(0, 0); if (nx) sms(nx);
-      toast('Sent to the office' + cashT + (c.wtn ? ', ' + h(c.wtn) + ' made' : '') + (nx ? '. On your way to ' + h(nx.site.name.split(',').pop().trim()) : c.type === 'wait' ? '. Head back to the yard and tip' : ''), 'send');
+      toast('Sent to the office' + cashT + (c.wtn ? ', ' + h(c.wtn) + ' made' : '') + (nx ? '. On your way to ' + h(nx.site.name.split(',').pop().trim()) : back ? '. Head back to the yard and tip' : ''), 'send');
       return;
     }
     YC.act(S(), Y(), c.id, what, data); c.manual = true; save(); draw();
