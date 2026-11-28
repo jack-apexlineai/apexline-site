@@ -35,7 +35,7 @@
     st.seen = y.v;
     var hr = new Date().getHours();
     var o = '<section class="dv-hi"><small>' + h(CS.dayDate(0).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })) + '</small><h1>' + (hr < 12 ? 'Morning' : 'Afternoon') + ', ' + h(lo().first) + '</h1>' +
-      '<div class="dv-prog"><span><b>' + done.length + '</b> of ' + L.length + ' done</span><span class="dv-bar"><i style="width:' + (L.length ? Math.round(done.length / L.length * 100) : 0) + '%"></i></span></div></section>';
+      '<div class="dv-prog"><span>' + (L.length - done.length ? '<b>' + (L.length - done.length) + '</b> to go today' : 'All done today') + '</span><span class="dv-bar"><i style="width:' + (L.length ? Math.round(done.length / L.length * 100) : 0) + '%"></i></span></div></section>';
     var tp = tipOf();
     if (tp) o += tipCard(tp, c);
     else if (c) o += card(c);

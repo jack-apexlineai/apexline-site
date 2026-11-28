@@ -1345,7 +1345,8 @@
     /* the 30 minute nudge: a road permit booked but not applied for */
     var PNOTE = new URLSearchParams(location.search).get('pnote'), notedThisLoad = {}, loadedAt = Date.now();
     setInterval(function () {
-      if (PNOTE === '0' || q('#yPmNote') || q('#boot') || q('#xsign')) return;
+      if (PNOTE !== '1' && PNOTE !== 'fast') return;   /* off unless asked for (?pnote=1): it popped up over buttons mid-recording */
+      if (q('#yPmNote') || q('#boot') || q('#xsign')) return;
       var limit = PNOTE === 'fast' ? 0 : 30 * 60000, wait = PNOTE === 'fast' ? 1500 : 45000;
       if (Date.now() - loadedAt < wait) return;
       var pm = permits().filter(function (x) { return x.status === 'apply' && !x.noted && !notedThisLoad[x.id] && Date.now() - x.createdAt >= limit; })[0];
