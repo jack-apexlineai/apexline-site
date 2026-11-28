@@ -448,7 +448,7 @@
           var body = '';
           if (p.k === 'sales') body = tk('Orders placed', p.s.orders) + tk('Revenue booked', money(p.s.rev)) + tk('Gross profit', money(p.s.gp)) + tk('Quotes won', p.s.won + ' of ' + p.s.sent, p.s.rate + '% win rate') + (p.com ? tk('Commission', money(p.s.gp * COMM / 100), COMM + '% of gross profit, your setting') : '');
           if (p.k === 'admin') body = tk('Messages answered', p.a.msgs) + tk('Average reply', p.a.reply + ' min') + tk('Orders placed', p.a.orders) + tk('ETAs chased', p.a.etas) + tk('Notes filed', p.a.wtn);
-          if (p.k === 'fin') body = tk('Invoices sent', p.f.inv) + tk('Payments chased', p.f.chased) + tk('Cash collected', money(p.f.cash)) + tk('Overdue cleared', money(p.f.over)) + tk('Supplier bills checked', p.f.bills);
+          if (p.k === 'fin') body = tk('Invoices sent', p.f.inv) + tk('Payments chased', p.f.chased) + tk('Payments received', money(p.f.cash)) + tk('Overdue cleared', money(p.f.over)) + tk('Supplier bills checked', p.f.bills);
           return '<div class="card xm-tm"><div class="xm-tmh"><span class="av" style="--c:' + p.c + '">' + h(CS.initials(p.n)) + '</span><div><b>' + h(p.n) + '</b><small>' + h(p.r) + '</small></div></div><div class="xm-tks">' + body + '</div></div>';
         }).join('') + '</div>' +
         '<p class="muted" style="font-size:12.5px;margin:12px 0 0">Each person sees their own figures. Only you and your ops manager see everyone. Commission works off the gross profit on what each salesperson brings in, at the rate you set.</p>';

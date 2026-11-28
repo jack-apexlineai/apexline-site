@@ -232,7 +232,7 @@
       var lead = drivers()[0], unm = y.tickets.filter(function (t) { return !t.matched; }).length, perm = permitsSoon().length, un = t0.filter(function (j) { return !j.lorry; }).length;
       var quiet = s.quotes.filter(function (x) { return x.status === 'sent' && x.day <= -3; }).length;
       return {
-        credit: { t: 'Cash collected this week', v: money(cw), s: money(ag.over) + ' overdue' + (st.length ? ', ' + st.length + ' on stop' : ''), bad: !!st.length, go: 'credit', hero: true, i: 'pound' },
+        credit: { t: 'Revenue this week', v: money(wr.v), s: plural(wr.n, 'job') + ' since Monday, ' + money(ag.over) + ' overdue' + (st.length ? ', ' + st.length + ' on stop' : ''), bad: !!st.length, go: 'trends', hero: true, i: 'trending-up' },
         jobs: { t: 'Jobs today', v: done + '<i>/' + t0.length + '</i>', s: (t0.length - done) + ' still to do', go: 'plan', i: 'route' },
         lorries: { t: 'Lorries out', v: road + '<i>/' + YC.LORRIES.length + '</i>', s: 'Live on the map', go: 'tracking', i: 'truck' },
         skips: { t: 'Skips on site', v: os.length, s: od ? od + ' overdue' + (dueT ? ', ' + dueT + ' due back today' : '') : 'None overdue', bad: od > 0, go: 'skips', i: 'skip' },
@@ -254,7 +254,7 @@
       var t0 = YC.today(y), done = t0.filter(function (j) { return j.status === 'done'; }).length, arr = !!ui.yArr;
       var hidden = TILE_DEF.concat(TILE_EXTRA).filter(function (k) { return ord.indexOf(k) < 0; });
       var o = '<div class="yh-head"><div><small class="yh-date">' + h(now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })) + '</small><h2 id="greet">' + greet + ', ' + h(uName(meU()).split(' ')[0]) + '</h2>' +
-        '<p class="yh-hook">' + t0.length + ' jobs on today, ' + done + ' done. ' + money(sum(cashWeek())) + ' collected this week.</p></div>' +
+        '<p class="yh-hook">' + t0.length + ' jobs on today, ' + done + ' done. ' + money(weekRevenue().v) + ' revenue this week.</p></div>' +
         '<div class="yh-acts"><button class="btn" data-act="yArrange" id="yArrBtn">' + ic(arr ? 'check' : 'dashboard') + (arr ? 'Done' : 'Arrange') + '</button><button class="btn pri" data-act="yBook">' + ic('plus') + 'New booking</button></div></div>';
       if (arr) o += '<div class="note yh-arrnote">' + ic('dashboard') + '<span>Drag a tile to move it. Press the cross to take one off. Add one from the list underneath. Saved for ' + h(uName(meU()).split(' ')[0]) + '.</span></div>';
       o += '<div class="yh-tiles' + (arr ? ' arr' : '') + '" id="yTiles">' + ord.map(function (k) {
@@ -797,7 +797,7 @@
       function bucket(lbl, v, cls) { var w = ag.total ? Math.max(v ? 4 : 0, Math.round(v / ag.total * 100)) : 0; return '<div class="yag ' + cls + '"><small>' + lbl + '</small><b>' + money(v) + '</b><span class="yh-bar"><i style="width:' + w + '%"></i></span></div>'; }
       function cell(v, bad) { return '<td class="r num hide-sm">' + (v ? '<span class="' + (bad ? 'bad' : '') + '">' + money(v) + '</span>' : '<span class="faint">0</span>') + '</td>'; }
       function sw(k, label, sub) { return '<div class="rowline"><div class="bd"><b>' + label + '</b><small>' + sub + '</small></div><button class="switch' + (auto[k] ? ' on' : '') + '" data-act="yCrAuto" data-k="' + k + '" aria-label="' + h(label) + '"></button></div>'; }
-      return '<div class="ykpis"><div class="card kpi hero"><small>' + ic('pound') + 'Cash collected this week</small><b id="yCash">' + money(sum(cw)) + '</b><span class="d">' + plural(cw.length, 'payment') + ' in the last 7 days</span></div>' +
+      return '<div class="ykpis"><div class="card kpi hero"><small>' + ic('pound') + 'Payments received this week</small><b id="yCash">' + money(sum(cw)) + '</b><span class="d">' + plural(cw.length, 'payment') + ' in the last 7 days</span></div>' +
         '<div class="card kpi"><small>' + ic('receipt') + 'Owed to you</small><b>' + money(ag.total) + '</b><span class="d">' + money(ag.cur) + ' not due yet</span></div>' +
         '<div class="card kpi"><small>' + ic('alert') + 'Overdue</small><b class="bad">' + money(ag.over) + '</b><span class="d">' + plural(late.length, 'invoice') + ' past their date</span></div>' +
         '<div class="card kpi"><small>' + ic('lock') + 'On stop</small><b class="' + (st.length ? 'bad' : '') + '" id="yStopN">' + st.length + '</b><span class="d">' + (st.length ? h(st.map(function (c) { return c.name; }).join(', ')) : 'nobody') + '</span></div></div>' +

@@ -75,23 +75,14 @@
         M = window.L.map(BOX, { zoomControl: true, scrollWheelZoom: false });
         window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap contributors' }).addTo(M);
         window.L.marker([YC.YARD.lat, YC.YARD.lng], { icon: window.L.divIcon({ className: 'yyard', html: '<span>' + ic('home') + '</span>', iconSize: [30, 30], iconAnchor: [15, 15] }), zIndexOffset: 500 }).addTo(M).bindTooltip('Our yard', { direction: 'top' });
-        var all = [[YC.YARD.lat, YC.YARD.lng]]; YC.today(y).forEach(function (j) { if (j.lorry) all.push([j.lat, j.lng]); });
-        M.fitBounds(all, { padding: [24, 24] });
+        var all = [[YC.YARD.lat, YC.YARD.lng]]; YC.LORRIES.forEach(function (l) { var w = YC.where(y, l.id); all.push([w.lat, w.lng]); });
+        M.fitBounds(all, { padding: [60, 60], maxZoom: 13 });
       }
       if (force || mv !== y.v) {
         mv = y.v;
         Object.keys(JM).forEach(function (k) { M.removeLayer(JM[k]); }); JM = {};
-        YC.LORRIES.forEach(function (l) {
-          var pts = routePts(l.id), on = !sel || sel === l.id;
-          if (RL[l.id]) M.removeLayer(RL[l.id]);
-          RL[l.id] = window.L.polyline(pts, { color: col(l.id), weight: sel === l.id ? 6 : 3.5, opacity: on ? 0.9 : 0.18, dashArray: sel === l.id ? null : '6 6' }).addTo(M);
-          dayList(l.id).all.forEach(function (j, i) {
-            var c = j.status === 'done' ? '#16A34A' : j.status === 'onsite' ? '#2563EB' : j.status === 'onway' ? col(l.id) : '#fff';
-            JM[j.id] = window.L.circleMarker([j.lat, j.lng], { radius: sel === l.id ? 8 : 6, weight: 3, color: col(l.id), fillColor: c, fillOpacity: 1, opacity: on ? 1 : 0.3 }).addTo(M)
-              .bindTooltip(h(l.reg + ': ' + (i + 1) + '. ' + j.site.pc + ' ' + street(j) + ', ' + jobStatus(j, dayList(l.id))[0]) + (YC.isCash(j) ? '<br>' + YC.cashTag(j) : ''), { direction: 'top' });
-            JM[j.id].on('click', function () { A.yJob({ dataset: { id: j.id } }); });
-          });
-        });
+        /* Map shows only where each lorry is now (Jack, 28 Nov): no route lines, no job stops */
+        YC.LORRIES.forEach(function (l) { if (RL[l.id]) { M.removeLayer(RL[l.id]); delete RL[l.id]; } });
       }
       YC.LORRIES.forEach(function (l) {
         var w = YC.where(y, l.id), html = lorryIcon(l, w, sel === l.id);

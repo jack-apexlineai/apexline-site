@@ -18,7 +18,7 @@
 
   var STEPS = [
     { id: 'home', act: 'yHome', m: '1 min', t: 'Your whole yard, on one screen',
-      p: 'Skips, grabs, lorries, drivers, paperwork and money, in one place. Eight tiles, nothing else to learn. Cash collected this week sits first, because money in matters most. Tap any tile to go straight there.' },
+      p: 'Skips, grabs, lorries, drivers, paperwork and money, in one place. Eight tiles, nothing else to learn. Revenue this week sits first, because money in matters most. Tap any tile to go straight there.' },
     { id: 'bookings', act: 'yBookings', m: '1 min', t: 'Bookings, skips and grabs',
       p: 'Every job with its size or loads, the waste stream and the EWC code, and a road permit where it needs one. Press New booking: pick the customer, the skip or grab, the waste, and it suggests the right lorry.',
       x: [{ l: 'Open a new booking', act: 'yBookNew' }] },
