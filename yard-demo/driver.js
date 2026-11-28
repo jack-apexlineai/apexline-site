@@ -61,6 +61,14 @@
       }).join('') + '</div>';
   }
   function card(j) {
+    if (j.status === 'planned') {
+      var nm0 = YC.custName(S(), j.cust);
+      return '<section class="dv-card cur"><div class="dv-ct"><span class="dv-tag planned">Next</span><span class="dv-win">' + h(YC.winBand(j)) + '</span></div>' +
+        '<h2>' + h(YC.what(j)) + '</h2><p class="dv-who"><b>' + h(nm0) + '</b><br>' + h(j.site.name) + ', ' + h(j.site.pc) + '</p>' +
+        (j.notes ? '<div class="dv-facts"><span>' + ic('pencil') + h(j.notes) + '</span></div>' : '') +
+        '<div class="dv-acts"><a class="dv-btn" href="' + mapsUrl(j) + '" target="_blank" rel="noopener">' + ic('route') + 'Navigate</a>' + (custPhone(j) ? '<a class="dv-btn" href="tel:' + h(String(custPhone(j)).replace(/\s/g, '')) + '">' + ic('phone') + 'Ring</a>' : '') + '</div>' +
+        '<button class="dv-big" data-a="onway" id="onwayBtn">' + ic('truck') + 'On my way<small>Texts ' + h(nm0) + ' that you are on the way</small></button></section>';
+    }
     var sv = YC.STREAMS[j.stream], nm = YC.custName(S(), j.cust), ph = since(j, 'photo'), sg = since(j, 'sig');
     var o = '<section class="dv-card cur"><div class="dv-ct"><span class="dv-tag ' + j.status + '">' + (j.status === 'onsite' ? 'On site' : 'Now') + '</span><span class="dv-win">' + h(YC.winBand(j)) + '</span></div>' +
       '<h2>' + h(YC.what(j)) + '</h2><p class="dv-who"><b>' + h(nm) + '</b><br>' + h(j.site.name) + ', ' + h(j.site.pc) + '</p>' +
@@ -81,13 +89,13 @@
     return '<section class="dv-card cur dv-tip" id="dvTip"><div class="dv-ct"><span class="dv-tag onway">Now</span></div><h2>Head back to the yard and tip</h2>' +
       (j ? '<p class="dv-who"><b>' + h(YC.whatShort(j)) + '</b><br>' + h(YC.custName(S(), j.cust)) + ', ' + h(j.site.name) + ', ' + h(j.site.pc) + '</p>' : '') +
       '<div class="dv-facts"><span>' + ic('stack') + 'Go over the weighbridge. The office has the load ready to weigh in</span></div>' +
-      (nx ? '<button class="dv-big" data-a="tipped" id="tipBtn">' + ic('check') + 'Tipped, start next job<small>Then ' + h(YC.whatShort(nx)) + ' at ' + h(nx.site.name) + '</small></button>' : '<p class="dv-sub">That was your last job today.</p>') + '</section>';
+      (nx ? '<button class="dv-big" data-a="tipped" id="tipBtn">' + ic('check') + 'Tipped<small>Next: ' + h(YC.whatShort(nx)) + ' at ' + h(nx.site.name) + '</small></button>' : '<p class="dv-sub">That was your last job today.</p>') + '</section>';
   }
   function lastPhoto(j) { var p = j.photos[j.photos.length - 1]; return p.src || YC.samplePhoto(p.k, j.size); }
   function start(j) { if (!j.at.started) { j.at.started = Date.now() - 1; } }
 
   function act(what, data) {
-    var c = cur(); if (!c || tipOf()) return; start(c);
+    var c = cur(); if (!c || tipOf() || c.status === 'planned') return; start(c);
     if (what === 'send') {
       if (YC.cashState(c) === 'due' && !(data && data.cash)) { cashPop(c); return; }
       var cashT = YC.isCash(c) ? (data.cash.ok ? '. Cash ' + h(YC.gbp(YC.cashAmt(c).gross)) + ' collected' : '. Cash not collected, the office will chase it') : '';
@@ -95,9 +103,8 @@
       var nx = cur(), y = Y();
       var back = c.type === 'wait' || c.id === 'DSG-3194';   /* Wayne's exchange brings the full skip back to tip */
       if (back) { y.tip = y.tip || {}; y.tip[st.lid] = { job: c.id, at: Date.now() }; y.v++; nx = null; }
-      if (nx) { YC.act(S(), Y(), nx.id, 'onway'); nx.at.started = Date.now(); }
-      save(); draw(); window.scrollTo(0, 0); if (nx) sms(nx);
-      toast('Sent to the office' + cashT + (c.wtn ? ', ' + h(c.wtn) + ' made' : '') + (nx ? '. On your way to ' + h(nx.site.name.split(',').pop().trim()) : back ? '. Head back to the yard and tip' : ''), 'send');
+      save(); draw(); window.scrollTo(0, 0);
+      toast('Sent to the office' + cashT + (c.wtn ? ', ' + h(c.wtn) + ' made' : '') + (nx ? '. Next: ' + h(YC.whatShort(nx)) + ' at ' + h(nx.site.name.split(',').pop().trim()) + '. Press On my way when you set off' : back ? '. Head back to the yard and tip' : ''), 'send');
       return;
     }
     YC.act(S(), Y(), c.id, what, data); c.manual = true; save(); draw();
@@ -109,12 +116,13 @@
     if (a === 'pk' && st.pin.length < 4) {
       st.pin += b.getAttribute('data-v'); st.bad = false;
       if (st.pin.length === 4) {
-        if (st.pin === PIN) { st.signed = true; tellHost(); var c0 = cur(); if (c0 && !tipOf()) { c0.at.started = Date.now(); if (c0.status === 'planned') { YC.act(S(), Y(), c0.id, 'onway'); save(); sms(c0); } } draw(); (function () { var n = jobs().filter(function (j) { return j.status !== 'done'; }).length; toast('Signed in. ' + n + (n === 1 ? ' job' : ' jobs') + ' to go today', 'truck'); })(); return; }
+        if (st.pin === PIN) { st.signed = true; tellHost(); var c0 = cur();  draw(); (function () { var n = jobs().filter(function (j) { return j.status !== 'done'; }).length; toast('Signed in. ' + n + (n === 1 ? ' job' : ' jobs') + ' to go today', 'truck'); })(); return; }
         st.bad = true; st.pin = '';
       }
       draw();
     }
-    if (a === 'tipped') { var y1 = Y(); if (y1.tip) delete y1.tip[st.lid]; y1.v++; var n1 = cur(); if (n1) { YC.act(S(), y1, n1.id, 'onway'); n1.at.started = Date.now(); } save(); draw(); window.scrollTo(0, 0); if (n1) { sms(n1); toast('Tipped. On your way to ' + h(n1.site.name.split(',').pop().trim()), 'truck'); } }
+    if (a === 'tipped') { var y1 = Y(); if (y1.tip) delete y1.tip[st.lid]; y1.v++; var n1 = cur(); save(); draw(); window.scrollTo(0, 0); if (n1) toast('Tipped. Next: ' + h(YC.whatShort(n1)) + ' at ' + h(n1.site.name.split(',').pop().trim()) + '. Press On my way when you set off', 'truck'); }
+    if (a === 'onway' && c && c.status === 'planned' && !tipOf()) { YC.act(S(), Y(), c.id, 'onway'); c.at.started = Date.now(); c.manual = true; save(); draw(); window.scrollTo(0, 0); sms(c); toast('On your way to ' + h(c.site.name.split(',').pop().trim()) + '. ' + h(YC.custName(S(), c.cust)) + ' has had a text', 'truck'); }
     if (a === 'pdel') { st.pin = st.pin.slice(0, -1); draw(); }
     if (a === 'samplePhoto') act('photo', { k: c && c.type === 'deliver' ? 'drop' : 'collect' });
     if (a === 'nosig') act('sig', { none: true, name: '' });

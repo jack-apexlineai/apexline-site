@@ -27,7 +27,7 @@
       if (j.status === 'onway') { var m = YC.etaMins(Y(), j) || 10; return ['On the way, ETA ' + CS.clock(Date.now() + m * 60000), 'way']; }
       if (j.status === 'onsite') return [YC.cashState(j) === 'due' ? 'On site, cash to take' : j.type === 'wait' ? 'On site, waiting while they load' : 'On site', 'site'];
       if (Y().tip && Y().tip[j.lorry] && j.status === 'planned' && d.act === j) return ['Next, after tipping', 'next'];
-      if (d.rest[0] === j && d.act && d.act !== j) return ['Next', 'next'];
+      if (d.rest[0] === j && d.act && d.act !== j && d.act.status !== 'planned') return ['Next', 'next'];   /* only one Next: while he is between jobs the next job is the Next one */
       if (d.act === j) return ['Next', 'next'];
       return ['Booked ' + K.winLabel(j), ''];
     }
