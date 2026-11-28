@@ -12,8 +12,20 @@
       var st = CS.stats(), f = V3.forecast(), cur = f.cur, prev = f.prev, moves = X2.movesOn(0), done = moves.filter(function (m) { return X2.track(m.j, 0, m.what)[2] >= 3; }).length;
       var needs = CS.S.threads.filter(function (t) { return !t.done && CS.needsYou(t); }).length, dr = prev ? cur.s.rev - prev.st.rev : 0, out = [];
       out.push(['inbox', needs ? '<b>' + needs + '</b> ' + plural(needs, 'message needs', 'messages need') + ' you. Every reply is already written.' : 'Nothing in the inbox needs you.']);
+      if (window.YREV && window.DSGYC) {   /* the yard demo: jobs and revenue from the yard itself */
+        var yy = window.DSGYC.ensure(CS.S, CS), tj = window.DSGYC.today(yy), td = tj.filter(function (j) { return j.status === 'done'; }).length;
+        var ni = (yy.inbox || []).filter(function (m) { return !m.done; }).length; out[0] = ['inbox', ni ? '<b>' + ni + '</b> ' + plural(ni, 'message', 'messages') + ' to reply to.' : 'Nothing in the inbox needs you.'];
+        var now0 = CS.dayDate(0), dom = now0.getDate(), mc = 0, mp = 0, i, MS = 86400000;
+        for (i = 0; i < dom; i++) mc += window.YREV.day(-i);
+        var pm = new Date(now0.getFullYear(), now0.getMonth() - 1, 1), plen = new Date(now0.getFullYear(), now0.getMonth(), 0).getDate();
+        for (i = 1; i <= Math.min(dom, plen); i++) { var pd = new Date(pm.getFullYear(), pm.getMonth(), i); mp += window.YREV.day(Math.round((pd - new Date(now0.getFullYear(), now0.getMonth(), now0.getDate())) / MS)); }
+        var mn = now0.toLocaleDateString('en-GB', { month: 'long' }), pn = pm.toLocaleDateString('en-GB', { month: 'long' }), md = mc - mp;
+        out.push(['truck', '<b>' + tj.length + '</b> jobs on today, <b>' + td + '</b> done so far.']);
+        out.push(['trending-up', '<b>' + money(mc) + '</b> taken in ' + mn + ', <b>' + money(Math.abs(md)) + '</b> ' + (md >= 0 ? 'ahead of' : 'behind') + ' ' + pn + ' at this point.']);
+      } else {
       out.push(['truck', '<b>' + moves.length + '</b> ' + plural(moves.length, 'job', 'jobs') + ' moving today, <b>' + done + '</b> done so far.']);
       out.push(['trending-up', '<b>' + money(cur.s.rev) + '</b> taken in ' + cur.long + (prev ? ', <b>' + money(Math.abs(dr)) + '</b> ' + (dr >= 0 ? 'ahead of' : 'behind') + ' ' + prev.long + ' at this point.' : ' so far.')]);
+      }
       out.push(['pound', st.overdue ? '<b>' + money(st.overdue) + '</b> is overdue to you. The chases are written.' : 'Nothing is overdue to you.']);
       return out;
     }

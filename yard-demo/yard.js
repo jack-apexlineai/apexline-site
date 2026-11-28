@@ -215,9 +215,19 @@
       return b;
     }
     function stops() { return S().customers.filter(function (c) { return c.stop; }); }
-    function weekRevenue() {
-      try { var all = window.DSGV3.all(), dow = (CS.dayDate(0).getDay() + 6) % 7; var wk = all.filter(function (o) { return o.off >= -dow && o.off <= 6 - dow; }); return { v: sum(wk, function (o) { return o.sell; }), n: wk.length }; } catch (e) { return { v: 0, n: 0 }; }
+    /* Revenue by day for this yard: today and ahead from the booked jobs, earlier days a steady sample (weekdays about £13k to £16.5k, Saturdays half that, Sundays shut) */
+    function yRevDay(off) {
+      if (off >= 0) return Y().jobs.filter(function (j) { return j.day === off; }).reduce(function (a, j) { return a + (j.price || 0); }, 0);
+      var d = CS.dayDate(off).getDay(); if (d === 0) return 0;
+      var r = Math.abs(Math.sin(off * 12.9898 + 4.1414) * 43758.5453) % 1;
+      return Math.round((d === 6 ? 6800 + r * 1800 : 13200 + r * 3600) / 5) * 5;
     }
+    window.YREV = { day: yRevDay };
+    function weekRevenue() {
+      var dow = (CS.dayDate(0).getDay() + 6) % 7, v = 0; for (var d = -dow; d <= 0; d++) v += yRevDay(d);
+      return { v: v, n: Math.round(v / 410) };
+    }
+
 
     /* ======================================================================
        HOME: calm, eight tiles by default, drag to rearrange, Arrange to add or hide
@@ -232,7 +242,7 @@
       var lead = drivers()[0], unm = y.tickets.filter(function (t) { return !t.matched; }).length, perm = permitsSoon().length, un = t0.filter(function (j) { return !j.lorry; }).length;
       var quiet = s.quotes.filter(function (x) { return x.status === 'sent' && x.day <= -3; }).length;
       return {
-        credit: { t: 'Revenue this week', v: money(wr.v), s: plural(wr.n, 'job') + ' since Monday, ' + money(ag.over) + ' overdue' + (st.length ? ', ' + st.length + ' on stop' : ''), bad: !!st.length, go: 'trends', hero: true, i: 'trending-up' },
+        credit: { t: 'Owed to you', v: money(ag.total), s: money(ag.over) + ' overdue' + (st.length ? ', ' + st.length + ' on stop' : ''), bad: !!st.length, go: 'credit', i: 'pound' },
         jobs: { t: 'Jobs today', v: done + '<i>/' + t0.length + '</i>', s: (t0.length - done) + ' still to do', go: 'plan', i: 'route' },
         lorries: { t: 'Lorries out', v: road + '<i>/' + YC.LORRIES.length + '</i>', s: 'Live on the map', go: 'tracking', i: 'truck' },
         skips: { t: 'Skips on site', v: os.length, s: od ? od + ' overdue' + (dueT ? ', ' + dueT + ' due back today' : '') : 'None overdue', bad: od > 0, go: 'skips', i: 'skip' },
@@ -248,6 +258,37 @@
         quotes: { t: 'Quotes gone quiet', v: quiet, s: 'sent 3 or more days ago', go: 'quotes', i: 'file-text' }
       };
     }
+
+    /* Home dashboard (Jack, 28 Nov): revenue this week racing last week, plus three rings */
+    function yRing(pct, big, label, sub) {
+      var r = 34, c = 2 * Math.PI * r, q = Math.max(0, Math.min(1, pct || 0));
+      return '<div class="xd-ring"><svg viewBox="0 0 84 84" aria-hidden="true"><circle class="bg" cx="42" cy="42" r="' + r + '"/><circle class="fg grow" cx="42" cy="42" r="' + r + '" stroke-dasharray="' + c.toFixed(1) + '" stroke-dashoffset="' + (c * (1 - q)).toFixed(1) + '" style="--c:' + c.toFixed(1) + '"/></svg><b class="v">' + big + '</b><div class="t"><b>' + h(label) + '</b><small>' + sub + '</small></div></div>';
+    }
+    function yDash() {
+      var dow = (CS.dayDate(0).getDay() + 6) % 7, a = [0, 0, 0, 0, 0, 0, 0], b = [0, 0, 0, 0, 0, 0, 0];
+      for (var q = 0; q < 7; q++) { a[q] = q <= dow ? yRevDay(q - dow) : 0; b[q] = yRevDay(q - dow - 7); }
+      var ca = [], cb = [], i, ta = 0, tb = 0; for (i = 0; i < 7; i++) { ta += a[i]; tb += b[i]; ca.push(ta); cb.push(tb); }
+      var week = ca[dow], lastAt = cb[dow], nowAt = ca[dow], diff = nowAt - lastAt, pct = lastAt ? Math.round(diff / lastAt * 100) : 0;
+      var top = Math.max(ta, tb) * 1.15 || 1, W = 640, Hh = 210, L = 46, R = 16, T = 14, B = 26;
+      function x(d) { return L + d / 6 * (W - L - R); }
+      function yy(v) { return T + (1 - v / top) * (Hh - T - B); }
+      function path(arr, to) { var o = ''; for (var d = 0; d <= to; d++) o += (d ? 'L' : 'M') + x(d).toFixed(1) + ' ' + yy(arr[d]).toFixed(1); return o; }
+      var grid = '', k; for (k = 1; k <= 3; k++) { var gv = top / 1.15 * k / 3; grid += '<line class="g" x1="' + L + '" x2="' + (W - R) + '" y1="' + yy(gv).toFixed(1) + '" y2="' + yy(gv).toFixed(1) + '"/><text class="ax" x="' + (L - 8) + '" y="' + (yy(gv) + 3.5).toFixed(1) + '" text-anchor="end">£' + Math.round(gv / 1000) + 'k</text>'; }
+      var xs = ''; ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(function (n, d) { xs += '<text class="ax" x="' + x(d).toFixed(1) + '" y="' + (Hh - 7) + '" text-anchor="middle">' + n + '</text>'; });
+      var area = path(ca, dow) + 'L' + x(dow).toFixed(1) + ' ' + yy(0).toFixed(1) + 'L' + x(0).toFixed(1) + ' ' + yy(0).toFixed(1) + 'Z';
+      var y = Y(), t0 = YC.today(y), done = t0.filter(function (j) { return j.status === 'done'; }).length;
+      var out = YC.LORRIES.filter(function (l) { var w = YC.where(y, l.id); return w.state !== 'home' && w.state !== 'yard' && !(w.tip && w.state === 'tipwait'); }).length;
+            return '<section class="xd-hero first ydash" id="yDash"><div class="xd-l"><div class="xd-top"><div><small class="xd-k">Revenue this week</small><b class="xd-big">' + money(week) + '</b>' +
+        '<span class="xd-d ' + (diff >= 0 ? 'up' : 'down') + '">' + (diff >= 0 ? '&#9650; ' : '&#9660; ') + Math.abs(pct) + '% ' + (diff >= 0 ? 'ahead of' : 'behind') + ' last week at this point (' + money(Math.abs(diff)) + ')</span></div>' +
+        '<div class="xd-leg"><span><i class="l1"></i>This week</span><span><i class="l2"></i>Last week, ' + money(tb) + ' in all</span></div></div>' +
+        '<svg class="xd-chart" viewBox="0 0 ' + W + ' ' + Hh + '" role="img" aria-label="Revenue this week day by day against last week"><defs><linearGradient id="xdg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1F4FA8" stop-opacity=".42"/><stop offset="1" stop-color="#1F4FA8" stop-opacity="0"/></linearGradient></defs>' +
+        grid + xs + '<path class="pm" d="' + path(cb, 6) + '"/><path class="ar" d="' + area + '"/><path class="tm" pathLength="1" d="' + path(ca, dow) + '"/>' +
+        '<circle class="pulse" cx="' + x(dow).toFixed(1) + '" cy="' + yy(ca[dow]).toFixed(1) + '" r="9"/><circle class="now" cx="' + x(dow).toFixed(1) + '" cy="' + yy(ca[dow]).toFixed(1) + '" r="4.5"/></svg></div>' +
+        '<div class="xd-r">' + yRing(t0.length ? done / t0.length : 0, done + '/' + t0.length, 'Jobs done today', (t0.length - done) + ' still to go') +
+        yRing(YC.LORRIES.length ? out / YC.LORRIES.length : 0, out + '/' + YC.LORRIES.length, 'Lorries out', (YC.LORRIES.length - out) + ' at the yard') +
+        (function () { var os = y.onsite.filter(function (o) { return !o.booked; }), od = os.filter(function (o) { return -o.since > o.hire; }).length, tot = os.length + (y.r4sk || 0); return yRing(tot ? (tot - od) / tot : 0, Math.round((tot ? (tot - od) / tot : 0) * 100) + '%', 'Skips within hire', (tot - od) + ' of ' + tot + ' on site'); })() +
+        '<button class="xd-go" data-act="go" data-v="trends">Open trends' + ic('chevron-right') + '</button></div></section>';
+    }
     function tileOrder() { var p = P(), l = (p.tiles || TILE_DEF).filter(function (k) { return TILE_DEF.indexOf(k) >= 0 || TILE_EXTRA.indexOf(k) >= 0; }); return l; }
     V.home = function () {
       var y = Y(), T = tiles(), ord = tileOrder(), now = CS.dayDate(0), hr = new Date().getHours(), greet = hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';
@@ -257,6 +298,7 @@
         '<p class="yh-hook">' + t0.length + ' jobs on today, ' + done + ' done. ' + money(weekRevenue().v) + ' revenue this week.</p></div>' +
         '<div class="yh-acts"><button class="btn" data-act="yArrange" id="yArrBtn">' + ic(arr ? 'check' : 'dashboard') + (arr ? 'Done' : 'Arrange') + '</button><button class="btn pri" data-act="yBook">' + ic('plus') + 'New booking</button></div></div>';
       if (arr) o += '<div class="note yh-arrnote">' + ic('dashboard') + '<span>Drag a tile to move it. Press the cross to take one off. Add one from the list underneath. Saved for ' + h(uName(meU()).split(' ')[0]) + '.</span></div>';
+      if (!arr) o += yDash();
       o += '<div class="yh-tiles' + (arr ? ' arr' : '') + '" id="yTiles">' + ord.map(function (k) {
         var t = T[k]; if (!t) return '';
         return '<div class="yh-tile' + (t.hero ? ' hero' : '') + (t.bad ? ' bad' : '') + '" draggable="true" data-tile="' + k + '"><button class="yh-tb" data-act="' + (t.act || 'go') + '" data-v="' + (t.go || '') + '"><small>' + ic(t.i) + h(t.t) + '</small><b class="' + (t.icon ? 'ic-big' : '') + '">' + t.v + '</b><span>' + h(t.s) + '</span></button>' +
